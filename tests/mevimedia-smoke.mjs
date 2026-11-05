@@ -68,12 +68,12 @@ win.meviMediaSection('songs');
 win.meviMediaSearch('Night Drive');
 assert.ok(getHTML().includes('value="Night Drive"'));
 win.meviMediaSearch('');
-win.meviMediaPlay(0);
+win.meviMediaPlay(1); // Alphabetical sort: Night Drive follows Morning Air.
 await Promise.resolve();
 assert.equal(win.meviMediaDebug().playing,true);
 assert.equal(win.meviMediaDebug().queue,2);
 assert.ok(urls.length>=1);
-win.meviMediaFav(0);
+win.meviMediaFav(1);
 assert.equal(JSON.parse(saved['mevicar-media-favorites-v1']).length,1);
 win.meviMediaSection('favorites');
 assert.match(getHTML(),/Night Drive/);
