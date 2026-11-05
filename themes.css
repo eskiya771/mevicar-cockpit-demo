@@ -130,3 +130,43 @@ html[data-theme="liquidglass"] .app-home-tile:hover{background:radial-gradient(e
 @media (max-height:450px){.app-home-surface{padding:4px!important}.app-home-heading{font-size:10px;padding:0 4px}.app-home{gap:2px}.app-home-grid{gap:1px}.app-home-tile{gap:1px;padding:1px!important}.app-home-label{font-size:clamp(9px,2.6vh,12px)}.app-home-icon{width:min(100%,18vh);height:18vh}.app-home-side .app-home-icon{width:min(100%,10.5vh);height:10.5vh}.app-home-side .app-home-label{font-size:clamp(7px,1.9vh,10px)}}
 @media (max-width:500px) and (orientation:portrait){.app-home-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr))}.app-home-side .app-home-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr))}.app-home-icon{width:min(100%,13vh);height:13vh}.app-home-side .app-home-icon{width:min(100%,6.8vh);height:6.8vh}}
 @media(prefers-reduced-motion:reduce){.app-home-tile{transition:none}}
+
+/* MeviCar Classic visual reference: near-black canvas, floating multicolour icons, no tile frames. */
+html[data-theme="cyberpunk"] .app-home-surface{
+  background:radial-gradient(ellipse at 50% 5%,#180b2659,transparent 58%),#06060b!important;
+  border-color:#24153170;
+}
+html[data-theme="cyberpunk"] .app-home-side{
+  background:linear-gradient(150deg,#0c0914,#06060b)!important;
+}
+html[data-theme="cyberpunk"] .app-home-heading{
+  color:#eaf5ff;text-shadow:0 0 8px #3aa8ee48;
+  justify-content:center;letter-spacing:.14em;
+}
+html[data-theme="cyberpunk"] .app-home-label{
+  color:#e4f2ff;text-shadow:0 2px 6px #0008;
+  font-weight:640;
+}
+html[data-theme="cyberpunk"] .app-home-tile{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+html[data-theme="cyberpunk"] .app-home-icon{color:#f53de1;--app-icon-second:#ab8bff;--app-icon-glow:#ff31db66}
+html[data-theme="cyberpunk"] .app-home-icon:before{opacity:.10;filter:blur(21px)}
+html[data-theme="cyberpunk"] .app-illustration{
+  filter:drop-shadow(0 0 5px var(--app-icon-glow,#f82dce66)) drop-shadow(0 0 12px var(--app-icon-glow,#f82dce44))
+}
+/* Individual tones echo the original Classic dashboard, with a distinct accent per app. */
+html[data-theme="cyberpunk"] .app-weather .app-home-icon{color:#ffe879;--app-icon-second:#ffa843;--app-icon-glow:#ffe87960}
+html[data-theme="cyberpunk"] .app-ha .app-home-icon{color:#9b88ff;--app-icon-second:#72e3ff;--app-icon-glow:#9a78ff60}
+html[data-theme="cyberpunk"] .app-obd .app-home-icon{color:#22e7f7;--app-icon-second:#7e83ff;--app-icon-glow:#25d9fa60}
+html[data-theme="cyberpunk"] .app-whatsapp .app-home-icon{color:#43f68e;--app-icon-second:#9affbd;--app-icon-glow:#36f49a60}
+html[data-theme="cyberpunk"] .app-youtube .app-home-icon{color:#ff6c80;--app-icon-second:#ffb28e;--app-icon-glow:#ff536a60}
+html[data-theme="cyberpunk"] .app-teams .app-home-icon{color:#a68bff;--app-icon-second:#ed8fff;--app-icon-glow:#937aff60}
+html[data-theme="cyberpunk"] .app-trips .app-home-icon{color:#20dbed;--app-icon-second:#5ff2cb;--app-icon-glow:#16dbea60}
+html[data-theme="cyberpunk"] .app-calendar .app-home-icon{color:#ff46db;--app-icon-second:#ff9aed;--app-icon-glow:#ff35c960}
+html[data-theme="cyberpunk"] .app-stocks .app-home-icon{color:#57f6bd;--app-icon-second:#f1f873;--app-icon-glow:#43f8a260}
+html[data-theme="cyberpunk"] .app-calculator .app-home-icon{color:#2ce4fe;--app-icon-second:#ad90ff;--app-icon-glow:#2ddffc60}
+html[data-theme="cyberpunk"] .app-clock .app-home-icon{color:#9a8dff;--app-icon-second:#d7acff;--app-icon-glow:#917aff60}
+html[data-theme="cyberpunk"] .app-settings .app-home-icon{color:#af8aff;--app-icon-second:#f090ff;--app-icon-glow:#af8aff60}
