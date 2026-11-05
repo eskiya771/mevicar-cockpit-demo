@@ -22,6 +22,8 @@ jobs:
       - uses: actions/configure-pages@v5
       - name: Test MeviMedia playback and library
         run: node tests/mevimedia-smoke.mjs
+      - name: Test split-screen Lichtshow effect app
+        run: node tests/lightshow-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
