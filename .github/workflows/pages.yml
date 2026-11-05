@@ -41,7 +41,7 @@ jobs:
           assert css_link in html, 'Theme CSS link missing'
           theme_css = pathlib.Path('themes.css').read_text()
           assert '.app-home-grid' in theme_css and '.app-illustration' in theme_css
-          html = html.replace(css_link, '<style id="mevicar-versioned-themes">\\n' + theme_css + '\\n</style>')
+          html = html.replace(css_link, '<style id="mevicar-versioned-themes">' + theme_css + '</style>')
           pathlib.Path('dist/index.html').write_text(html)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
           PY
