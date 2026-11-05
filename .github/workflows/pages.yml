@@ -20,6 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Test MeviMedia playback and library
+        run: node tests/mevimedia-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
