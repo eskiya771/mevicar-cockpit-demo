@@ -82,3 +82,51 @@ html[data-theme="liquidglass"] .theme-card{background:#daeaff1c;border-color:#ff
 html[data-theme="liquidglass"] .theme-card.selected{border-color:#e8f8ff;box-shadow:inset 0 1px #ffffff9b,0 0 18px #b5e6ff65}
 html[data-theme="liquidglass"] :is(.theme-check,.sectiontitle){color:#cdeeff}
 @media(prefers-reduced-motion:reduce){.theme-card{transition:none}}
+
+/* Classic-inspired launcher: large original vector artwork, no heavy tile frames. */
+.app-home-surface{overflow:hidden!important;padding:clamp(7px,1.4vh,20px)!important}
+.app-home-side{overflow:hidden!important;padding:clamp(4px,.7vh,10px)!important}
+.app-home-side>.row{display:none!important}
+.app-home{width:100%;height:100%;min-width:0;min-height:0;display:flex;flex-direction:column;gap:clamp(4px,1vh,10px);overflow:hidden}
+.app-home-heading{flex:0 0 auto;display:flex;align-items:center;gap:12px;line-height:1.2;padding:2px clamp(4px,1vw,15px);font-size:clamp(11px,1.8vh,16px);font-weight:750;letter-spacing:.15em;color:#89e5f2}
+.app-home-heading span{font-size:.68em;opacity:.42;letter-spacing:.2em}
+.app-home-grid{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:clamp(2px,.8vh,14px)}
+.app-home-tile{position:relative;min-width:0;min-height:0;border:1px solid transparent!important;border-radius:24px!important;background:transparent!important;box-shadow:none!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(2px,.8vh,12px);padding:clamp(3px,.8vh,14px)!important;color:inherit;cursor:pointer;isolation:isolate;transition:transform .18s ease,background .18s ease}
+.app-home-tile:hover{background:radial-gradient(ellipse at center,#9fc8ec16,transparent 73%)!important;transform:scale(1.025)}
+.app-home-tile:active{transform:scale(.96)}
+.app-home-tile:focus-visible{outline:2px solid currentColor;outline-offset:-3px}
+.app-home-icon{width:min(100%,min(18vh,195px));height:min(18vh,195px);min-height:0;position:relative;display:grid;place-items:center;flex:0 1 auto;color:#65e8fa}
+.app-home-icon:before{content:'';position:absolute;inset:19%;border-radius:50%;background:currentColor;opacity:.13;filter:blur(26px);pointer-events:none}
+.app-illustration{position:relative;width:100%;height:100%;overflow:visible;fill:none;color:inherit;filter:drop-shadow(0 0 5px #21bddc65)}
+.app-illustration :is(.main,.secondary,.soft){fill:none;stroke:currentColor;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.app-illustration .secondary{stroke:var(--app-icon-second,#af8bfa);stroke-width:3.3}
+.app-illustration .soft{stroke-width:1.8;opacity:.42}
+.app-illustration .solid{fill:var(--app-icon-second,#af8bfa);stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.app-illustration .node{fill:var(--app-icon-second,#af8bfa);stroke:currentColor;stroke-width:2.2}
+.app-home-label{font-size:clamp(12px,2.25vh,22px);font-weight:680;line-height:1.17;letter-spacing:.015em;text-align:center;max-width:100%;overflow-wrap:anywhere;color:#e7faff;text-shadow:0 2px 7px #05101f99}
+.app-home-side .app-home{gap:3px}
+.app-home-side .app-home-heading{font-size:clamp(9px,1.4vh,12px);padding:0 3px}
+.app-home-side .app-home-heading span{display:none}
+.app-home-side .app-home-grid{gap:clamp(1px,.45vh,6px)}
+.app-home-side .app-home-tile{gap:2px;padding:1px!important;border-radius:12px!important}
+.app-home-side .app-home-icon{width:min(100%,min(11vh,106px));height:min(11vh,106px)}
+.app-home-side .app-home-icon:before{filter:blur(11px);opacity:.13}
+.app-home-side .app-home-label{font-size:clamp(8px,1.4vh,12px);line-height:1.08;max-width:100%}
+html[data-theme="cyberpunk"] .app-home-surface{background:radial-gradient(ellipse at 30% 15%,#37103e91,transparent 50%),radial-gradient(ellipse at 85% 88%,#2c0b4677,transparent 48%),#11071d}
+html[data-theme="cyberpunk"] .app-home-heading{color:#ff81ec;text-shadow:0 0 13px #f522c788}
+html[data-theme="cyberpunk"] .app-home-icon{color:#ff3ade;--app-icon-second:#21ddf7}
+html[data-theme="cyberpunk"] .app-home-icon:before{opacity:.24;filter:blur(34px)}
+html[data-theme="cyberpunk"] .app-illustration{filter:drop-shadow(0 0 5px #ff2bde8c) drop-shadow(0 0 15px #e529d55c)}
+html[data-theme="cyberpunk"] .app-home-label{color:#ffedfb;text-shadow:0 0 9px #f620ac7d}
+html[data-theme="cyberpunk"] .app-home-tile:nth-child(3n+2) .app-home-icon{color:#f763ff;--app-icon-second:#5cefff}
+html[data-theme="cyberpunk"] .app-home-tile:hover{background:radial-gradient(ellipse at center,#ee2ccb24,transparent 71%)!important}
+html[data-theme="liquidglass"] .app-home-surface{background:radial-gradient(ellipse at 16% 4%,#9fd4ff32,transparent 60%),radial-gradient(ellipse at 89% 95%,#c8aeec2b,transparent 60%),#162941}
+html[data-theme="liquidglass"] .app-home-heading{color:#e5f6ff}
+html[data-theme="liquidglass"] .app-home-icon{color:#d5f4ff;--app-icon-second:#a2bdff}
+html[data-theme="liquidglass"] .app-home-icon:before{opacity:.17;filter:blur(35px)}
+html[data-theme="liquidglass"] .app-illustration{filter:drop-shadow(0 2px 5px #001e4755) drop-shadow(0 0 9px #99e7ff60)}
+html[data-theme="liquidglass"] .app-home-label{color:#f5faff}
+html[data-theme="liquidglass"] .app-home-tile:hover{background:radial-gradient(ellipse at center,#ffffff25,transparent 75%)!important}
+@media (max-height:450px){.app-home-surface{padding:4px!important}.app-home-heading{font-size:10px;padding:0 4px}.app-home{gap:2px}.app-home-grid{gap:1px}.app-home-tile{gap:1px;padding:1px!important}.app-home-label{font-size:clamp(9px,2.6vh,12px)}.app-home-icon{width:min(100%,18vh);height:18vh}.app-home-side .app-home-icon{width:min(100%,10.5vh);height:10.5vh}.app-home-side .app-home-label{font-size:clamp(7px,1.9vh,10px)}}
+@media (max-width:500px) and (orientation:portrait){.app-home-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr))}.app-home-side .app-home-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr))}.app-home-icon{width:min(100%,13vh);height:13vh}.app-home-side .app-home-icon{width:min(100%,6.8vh);height:6.8vh}}
+@media(prefers-reduced-motion:reduce){.app-home-tile{transition:none}}
