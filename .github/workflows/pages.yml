@@ -39,7 +39,7 @@ jobs:
           PY
       - name: Generate PWA icons and copy assets
         run: |
-          cp manifest.webmanifest sw.js dist/
+          cp manifest.webmanifest sw.js themes.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
