@@ -69,7 +69,7 @@
   }
   function current(){return st.tracks[st.index]||null}
   function updateNotice(){const el=$('mm-notice');if(el)el.textContent=st.status}
-  function showVideo(){const t=current();if(!t||!t.video)return;ensurePlayer();videoLayer.hidden=false;$('mm-video-title').textContent=t.title||t.name}
+  function showVideo(){const t=current();if(!t||!t.video)return;ensurePlayer();videoLayer.hidden=false;const title=$('mm-video-title');if(title)title.textContent=t.title||t.name}
   function closeVideo(){if(videoLayer&&!videoLayer.hidden){videoLayer.hidden=true;if(current()?.video)player.pause();syncPlaybackButtons()}}
   function onSourceChanged(source){if(source!=='media'){if(player)player.pause();closeVideo();}}
   function makeTrack(file,folder){
