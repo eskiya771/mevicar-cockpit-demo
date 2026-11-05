@@ -7,6 +7,15 @@ const source=readFileSync(new URL('../mevimedia.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../mevimedia.css',import.meta.url),'utf8');
 new Function(source);
 assert.ok(css.includes('.mm-shell')&&css.includes('.mm-transport')&&css.includes('.mm-video-overlay'));
+/* Guard against cropped and oversized transport SVGs in landscape split-screen. */
+for (const fragment of [
+  'grid-template-rows:minmax(0,1fr) auto auto',
+  'env(safe-area-inset-bottom',
+  '.mm-shell.is-compact .mm-transport button',
+  'max-width:80%;max-height:80%',
+  'aspect-ratio:1',
+  'flex:1 1 0',
+]) assert.ok(css.includes(fragment),'Media transport safe-layout rule missing: '+fragment);
 
 const handlers=new Map(),saved={},urls=[];
 let redrawCount=0;
