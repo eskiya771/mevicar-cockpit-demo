@@ -34,6 +34,14 @@ jobs:
           html = pathlib.Path('index.html').read_text()
           assert '__MEVICAR_BUILD__' in html, 'Build placeholder missing'
           html = html.replace('__MEVICAR_BUILD__', json.dumps(info, ensure_ascii=False))
+          # Critical: bundle theme CSS into the versioned HTML. An installed PWA may
+          # otherwise receive a fresh HTML shell with an outdated, cache-first CSS
+          # asset, collapsing the SVG launcher into small black default buttons.
+          css_link = '<link rel="stylesheet" href="./themes.css">'
+          assert css_link in html, 'Theme CSS link missing'
+          theme_css = pathlib.Path('themes.css').read_text()
+          assert '.app-home-grid' in theme_css and '.app-illustration' in theme_css
+          html = html.replace(css_link, '<style id="mevicar-versioned-themes">\\n' + theme_css + '\\n</style>')
           pathlib.Path('dist/index.html').write_text(html)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
           PY
