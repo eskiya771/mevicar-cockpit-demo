@@ -50,12 +50,20 @@ jobs:
           assert '#mevi-saver' in saver_css and 'meviSaverPreview' in saver_js
           html = html.replace(saver_css_link, '<style id="mevicar-screensaver-styles">' + saver_css + '</style>')
           html = html.replace(saver_js_tag, '<script id="mevicar-screensaver-script">' + saver_js + '</script>')
+          # Bundle the full original MeviDarts library in dependency order.
+          # Inlining prevents the PWA from mixing mismatched cached JS versions.
+          for name in ('mevidarts-parallax', 'mevidarts-showcase', 'mevidarts-light-renderer'):
+              script_tag = '<script src="./' + name + '.js"></script>'
+              assert script_tag in html, 'Missing MeviDarts dependency: ' + name
+              source = pathlib.Path(name + '.js').read_text()
+              assert len(source) > 2000, 'MeviDarts source incomplete: ' + name
+              html = html.replace(script_tag, '<script id="' + name + '">' + source + '</script>')
           pathlib.Path('dist/index.html').write_text(html)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
           PY
       - name: Generate PWA icons and copy assets
         run: |
-          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js dist/
+          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
