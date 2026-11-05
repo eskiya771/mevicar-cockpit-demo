@@ -198,7 +198,7 @@
         if(Math.hypot(e.clientX-motionX,e.clientY-motionY)<14)return;
       }
       motionX=null;motionY=null;
-      if(e.cancelable&&e.type!=='pointermove'&&e.type!=='mousemove')e.preventDefault();
+      if(e.cancelable&&e.type!=='pointermove'&&e.type!=='mousemove'&&e.type!=='touchstart')e.preventDefault();
       e.stopImmediatePropagation();hide();return;
     }
     if(e.type==='pointermove'||e.type==='mousemove'){
