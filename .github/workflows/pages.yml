@@ -20,8 +20,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Generate versioned site
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          BUILD_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p dist
+          python3 - <<'PY'
+          import os, json, pathlib
+          build = int(os.environ['BUILD_NUMBER'])
+          info = {'version': f'2.4.{build}', 'build': build, 'commit': os.environ['BUILD_SHA']}
+          html = pathlib.Path('index.html').read_text()
+          assert '__MEVICAR_BUILD__' in html, 'Build placeholder missing'
+          html = html.replace('__MEVICAR_BUILD__', json.dumps(info, ensure_ascii=False))
+          pathlib.Path('dist/index.html').write_text(html)
+          pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
+          PY
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: dist
       - id: deployment
         uses: actions/deploy-pages@v4
