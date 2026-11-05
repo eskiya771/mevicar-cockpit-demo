@@ -29,7 +29,8 @@ jobs:
           python3 - <<'PY'
           import os, json, pathlib
           build = int(os.environ['BUILD_NUMBER'])
-          info = {'version': f'2.4.{build}', 'build': build, 'commit': os.environ['BUILD_SHA']}
+          version = pathlib.Path('VERSION').read_text().strip()
+          info = {'version': version, 'build': build, 'commit': os.environ['BUILD_SHA']}
           html = pathlib.Path('index.html').read_text()
           assert '__MEVICAR_BUILD__' in html, 'Build placeholder missing'
           html = html.replace('__MEVICAR_BUILD__', json.dumps(info, ensure_ascii=False))
