@@ -36,6 +36,21 @@ jobs:
           pathlib.Path('dist/index.html').write_text(html)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
           PY
+      - name: Generate PWA icons and copy assets
+        run: |
+          cp manifest.webmanifest sw.js dist/
+          python3 -m pip install --quiet --break-system-packages pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw, ImageFont
+          for n in (192, 512):
+              im=Image.new('RGB',(n,n),'#08111b')
+              d=ImageDraw.Draw(im)
+              d.rounded_rectangle((n*.09,n*.09,n*.91,n*.91),radius=n*.2,fill='#102c42',outline='#18d7ed',width=max(3,n//70))
+              d.arc((n*.23,n*.23,n*.77,n*.77),145,395,fill='#24e2f7',width=max(6,n//24))
+              d.line((n*.5,n*.5,n*.68,n*.33),fill='#e8fbff',width=max(4,n//35))
+              d.ellipse((n*.46,n*.46,n*.54,n*.54),fill='#e8fbff')
+              im.save(f'dist/icon-{n}.png')
+          PY
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
