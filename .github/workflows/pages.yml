@@ -60,6 +60,15 @@ jobs:
           assert '.mm-shell' in media_css and 'meviMediaHTML' in media_js
           html = html.replace(media_css_link, '<style id="mevicar-media-styles">' + media_css + '</style>')
           html = html.replace(media_script_tag, '<script id="mevicar-media-script">' + media_js + '</script>')
+          # Lichtshow is an independent live app using the already bundled MeviDarts renderer.
+          lightshow_css_link = '<link rel="stylesheet" href="./lightshow.css">'
+          lightshow_script_tag = '<script src="./lightshow.js"></script>'
+          assert lightshow_css_link in html and lightshow_script_tag in html, 'Lichtshow assets missing'
+          lightshow_css = pathlib.Path('lightshow.css').read_text()
+          lightshow_js = pathlib.Path('lightshow.js').read_text()
+          assert '.lightshow-app' in lightshow_css and 'meviLightshowMount' in lightshow_js
+          html = html.replace(lightshow_css_link, '<style id="mevicar-lightshow-styles">' + lightshow_css + '</style>')
+          html = html.replace(lightshow_script_tag, '<script id="mevicar-lightshow-script">' + lightshow_js + '</script>')
           html = html.replace(saver_js_tag, '<script id="mevicar-screensaver-script">' + saver_js + '</script>')
           # Bundle the full original MeviDarts library in dependency order.
           # Inlining prevents the PWA from mixing mismatched cached JS versions.
@@ -74,7 +83,7 @@ jobs:
           PY
       - name: Generate PWA icons and copy assets
         run: |
-          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css dist/
+          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css lightshow.js lightshow.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
