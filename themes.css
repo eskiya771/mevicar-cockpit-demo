@@ -270,3 +270,42 @@ html[data-theme="liquidglass"] .status-action .toolbar-icon,html[data-theme="liq
   .dock button{transition:none}
   .status-right #updateBtn.checking .toolbar-icon{animation:none}
 }
+
+/* Branded Spotify SVG and source-aware Audio player.
+   All three themes retain the same clear brand silhouette. */
+.app-illustration .spotify-disc{fill:#1ed760;stroke:#74ff9f;stroke-width:1.35}
+.app-illustration .spotify-arc{fill:none;stroke:#073015;stroke-linecap:round;stroke-linejoin:round}
+.app-illustration .spotify-arc-top{stroke-width:9}
+.app-illustration .spotify-arc-mid{stroke-width:8}
+.app-illustration .spotify-arc-low{stroke-width:7}
+.app-illustration .spotify-gloss{fill:none;stroke:#ddffed;stroke-width:2.5;stroke-linecap:round;opacity:.19}
+.dock button[data-app="audio-spotify"] .ico .app-illustration{
+  filter:drop-shadow(0 1px 3px #06351285) drop-shadow(0 0 5px #1ed76075);
+}
+.dock button[data-app="audio-spotify"].active .ico .app-illustration,
+html[data-theme="cyberpunk"] .dock button[data-app="audio-spotify"].active .ico .app-illustration,
+html[data-theme="liquidglass"] .dock button[data-app="audio-spotify"].active .ico .app-illustration{
+  filter:drop-shadow(0 0 4px #36f77c) drop-shadow(0 0 12px #1ed7609a);
+}
+.dock button[data-app="audio-spotify"] .dock-label{letter-spacing:0}
+.media-cover-icon{display:block;width:clamp(65px,12vh,134px);height:clamp(65px,12vh,134px);
+  max-width:55%;max-height:62%;flex:none}
+.media-cover .media-cover-icon .app-illustration{display:block;width:100%;height:100%;filter:drop-shadow(0 0 12px #4ae0ff72)}
+.media-cover.media-cover-spotify{
+  background:radial-gradient(circle at 34% 20%,#1d5d42 0%,#082e25 56%,#091e1d 100%);
+  box-shadow:inset 0 1px #a8ffc02d,inset 0 0 35px #18ed6426,0 8px 30px #0009;
+}
+.media-cover.media-cover-spotify .media-cover-icon .app-illustration{
+  filter:drop-shadow(0 8px 8px #0007) drop-shadow(0 0 16px #23f16c8c)
+}
+.media-cover.media-cover-radio{
+  background:linear-gradient(145deg,#70451c,#3c2732 54%,#1d2746);
+}
+.media-cover.media-cover-media{
+  background:linear-gradient(145deg,#124a5b,#24397d 52%,#2a2252);
+}
+.media-cover.media-cover-spotify>span:last-child{color:#baffcd}
+.media-cover.media-cover-radio>span:last-child{color:#ffe0a6}
+.media-cover.media-cover-media>span:last-child{color:#aff4ff}
+.media-mini .media-cover-icon{width:clamp(28px,7vh,60px);height:clamp(28px,7vh,60px)}
+@media (max-height:450px){.media-cover-icon{width:clamp(33px,9vh,72px);height:clamp(33px,9vh,72px)}}
