@@ -77,7 +77,8 @@
   function canStart(){
     const routeActive=typeof s!=='undefined'&&!!s.route;
     const gpsActive=typeof gpsData!=='undefined'&&!!gpsData.active;
-    return !document.hidden&&!routeActive&&!gpsActive;
+    const lightshowActive=typeof s!=='undefined'&&s.app==='lightshow';
+    return !document.hidden&&!routeActive&&!gpsActive&&!lightshowActive;
   }
   function schedule(){
     clearTimeout(idleTimer);idleTimer=0;
