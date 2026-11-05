@@ -1,0 +1,26 @@
+{
+  "name": "MeviCar Next",
+  "short_name": "MeviCar",
+  "description": "MeviCar Next Cockpit – Navigation, Tacho, Kompass und Medien",
+  "id": "/mevicar-cockpit-demo/",
+  "start_url": "/mevicar-cockpit-demo/",
+  "scope": "/mevicar-cockpit-demo/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#08111b",
+  "theme_color": "#08111b",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
