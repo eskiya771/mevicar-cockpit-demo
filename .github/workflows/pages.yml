@@ -42,12 +42,20 @@ jobs:
           theme_css = pathlib.Path('themes.css').read_text()
           assert '.app-home-grid' in theme_css and '.app-illustration' in theme_css
           html = html.replace(css_link, '<style id="mevicar-versioned-themes">' + theme_css + '</style>')
+          saver_css_link = '<link rel="stylesheet" href="./screensaver.css">'
+          saver_js_tag = '<script src="./screensaver.js"></script>'
+          assert saver_css_link in html and saver_js_tag in html, 'Screensaver assets missing'
+          saver_css = pathlib.Path('screensaver.css').read_text()
+          saver_js = pathlib.Path('screensaver.js').read_text()
+          assert '#mevi-saver' in saver_css and 'meviSaverPreview' in saver_js
+          html = html.replace(saver_css_link, '<style id="mevicar-screensaver-styles">' + saver_css + '</style>')
+          html = html.replace(saver_js_tag, '<script id="mevicar-screensaver-script">' + saver_js + '</script>')
           pathlib.Path('dist/index.html').write_text(html)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
           PY
       - name: Generate PWA icons and copy assets
         run: |
-          cp manifest.webmanifest sw.js themes.css dist/
+          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
