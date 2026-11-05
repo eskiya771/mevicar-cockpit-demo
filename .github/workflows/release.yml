@@ -1,0 +1,51 @@
+name: Publish MeviCar Next Release
+
+# A new product version, not every Pages build, creates one immutable Git tag
+# and an official GitHub Release. The accompanying release notes must exist.
+on:
+  push:
+    branches: [main]
+    paths:
+      - VERSION
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-versioned-release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release commit
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate version, create tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < VERSION)"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid VERSION: $version" >&2
+            exit 1
+          fi
+          tag="v${version}"
+          notes="RELEASE_NOTES_${tag}.md"
+          test -s "$notes" || { echo "Missing release notes: $notes" >&2; exit 1; }
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "GitHub Release $tag already exists; no duplicate release."
+            exit 0
+          fi
+          gh release create "$tag" \
+            --target "$GITHUB_SHA" \
+            --title "MeviCar Next – Prototype $tag" \
+            --notes-file "$notes" \
+            --latest
+          gh release view "$tag" --json url,tagName,name
