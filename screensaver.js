@@ -6,12 +6,14 @@
   const EFFECTS=[['auto','Automatisch wechseln'],['aurora','Polarlicht'],['orbits','Lichtspuren'],['grid','Neonraster'],['stars','Sternenflug'],['nebula','Weltraum-Nebel']];
   const CYCLE=['aurora','orbits','grid','nebula','stars'];
   const DELAYS=[30,60,120,300];
-  const DEFAULT={enabled:true,timeout:120,effect:'auto',content:'clock'};
+  const CYCLE_DELAYS=[1,24];
+  const DEFAULT={enabled:true,timeout:120,effect:'auto',content:'clock',cycleSeconds:24};
   function normalize(v){
     const n=v&&typeof v==='object'?v:{};
     return {enabled:typeof n.enabled==='boolean'?n.enabled:DEFAULT.enabled,
       timeout:DELAYS.includes(Number(n.timeout))?Number(n.timeout):DEFAULT.timeout,
       effect:EFFECTS.some(a=>a[0]===n.effect)?n.effect:DEFAULT.effect,
+      cycleSeconds:CYCLE_DELAYS.includes(Number(n.cycleSeconds))?Number(n.cycleSeconds):DEFAULT.cycleSeconds,
       content:n.content==='lights'?'lights':'clock'};
   }
   function load(){try{return normalize(JSON.parse(localStorage.getItem(KEY)||'null'))}catch{return {...DEFAULT}}}
@@ -27,10 +29,12 @@
   function renderSettings(){
     const delays=DELAYS.map(n=>'<button type="button" aria-pressed="'+(config.timeout===n)+'" onclick="meviSaverSet(\'timeout\','+n+')">'+(n<60?n+' s':n/60+' min')+'</button>').join('');
     const options=EFFECTS.map(([id,label])=>'<option value="'+id+'"'+(config.effect===id?' selected':'')+'>'+label+'</option>').join('');
+    const cycleButtons=CYCLE_DELAYS.map(n=>'<button type="button" aria-pressed="'+(config.cycleSeconds===n)+'" onclick="meviSaverSet(\'cycleSeconds\','+n+')">'+(n===1?'1 Sek. · Test':'24 Sek. · Normal')+'</button>').join('');
     const content=['clock','lights'].map(id=>'<button type="button" aria-pressed="'+(config.content===id)+'" onclick="meviSaverSet(\'content\',\''+id+'\')">'+(id==='clock'?'Uhr + Logo':'Nur Lichteffekte')+'</button>').join('');
     return '<div class="saver-settings"><div class="saver-row"><div class="saver-row-info"><b>MeviCar Neon-Bildschirmschoner</b><small>Beendet sich bei Touch, Maus oder Tastatur</small></div><button type="button" class="saver-toggle" aria-pressed="'+config.enabled+'" onclick="meviSaverSet(\'enabled\','+(!config.enabled)+')">'+(config.enabled?'✓ Ein':'Aus')+'</button></div>'+
       '<div class="saver-row"><div class="saver-row-info"><b>Start nach Inaktivität</b><small>Während aktiver Route oder GPS-Fahrt pausiert</small></div><div class="saver-options">'+delays+'</div></div>'+
       '<div class="saver-row"><label class="saver-row-info" for="meviSaverEffect"><b>Lichteffekt aus MeviDarts</b><small>Polarlicht, Lichtspuren, Neonraster und mehr</small></label><select id="meviSaverEffect" onchange="meviSaverSet(\'effect\',this.value)">'+options+'</select></div>'+
+      (config.effect==='auto'?'<div class="saver-row"><div class="saver-row-info"><b>Automatischer Effektwechsel</b><small>1 Sekunde zum schnellen Testen aller Animationen</small></div><div class="saver-options">'+cycleButtons+'</div></div>':'')+
       '<div class="saver-row"><div class="saver-row-info"><b>Anzeige</b><small>Schriftzug und Uhr bewegen sich zum Einbrennschutz</small></div><div class="saver-options">'+content+'</div></div>'+
       '<div class="saver-bottom"><span class="small">Auf diesem Gerät gespeichert · Animiert nur im Bildschirmschoner</span><button class="saver-preview" type="button" onclick="meviSaverPreview()">✦ Jetzt ausprobieren</button></div></div>';
   }
@@ -148,7 +152,7 @@
     if(!previousFrame||now-previousFrame>=33){
       previousFrame=now;
       const t=(now-begin)/1000;
-      const effect=config.effect==='auto'?CYCLE[Math.floor(t/24)%CYCLE.length]:config.effect;
+      const effect=config.effect==='auto'?CYCLE[Math.floor(t/config.cycleSeconds)%CYCLE.length]:config.effect;
       try{draw(effect,t)}catch(err){console.warn('MeviCar Screensaver:',err);ctx=null}
     }
     if(ctx)frameId=requestAnimationFrame(frame);
