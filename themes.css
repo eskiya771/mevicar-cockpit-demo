@@ -1,0 +1,84 @@
+/* MeviCar Next theme engine: default preserves the existing cockpit. */
+.settings-ui{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,13px);width:100%;overflow:hidden}
+.settings-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.settings-heading h2{font-size:clamp(15px,3.2vh,25px);margin:0;line-height:1.2}
+.settings-heading p{margin:3px 0 0;color:#a5c5d4;font-size:clamp(10px,1.6vh,13px)}
+.settings-version{font-size:clamp(9px,1.5vh,12px);color:#a1bfcd;white-space:nowrap}
+.theme-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(5px,1vw,13px);min-height:0;flex:1}
+.theme-card{min-width:0;min-height:0;display:flex;flex-direction:column;gap:clamp(3px,.6vh,7px);text-align:left;padding:clamp(5px,1vw,12px);border-radius:clamp(11px,2vw,20px);border:2px solid #365b71;background:#142b3b;overflow:hidden;transition:border-color .2s,box-shadow .2s,transform .2s}
+.theme-card.selected{border-color:#49ddf6;box-shadow:0 0 0 1px #49ddf650,inset 0 0 22px #11dcfa13}
+.theme-card:active{transform:scale(.985)}
+.theme-visual{position:relative;display:flex;min-height:45px;flex:1;overflow:hidden;border-radius:clamp(8px,1vw,15px);border:1px solid #ffffff33;padding:clamp(5px,1vw,12px);gap:clamp(5px,1vw,14px)}
+.theme-mini-dock{width:22%;display:flex;flex-direction:column;gap:8%;justify-content:center}
+.theme-mini-dock i{display:block;flex:1;max-height:24px;border-radius:6px;background:#39b1d1}
+.theme-mini-screen{flex:1;display:flex;flex-direction:column;gap:10%;justify-content:center}
+.theme-mini-screen b{display:block;width:78%;height:20%;min-height:5px;border-radius:15px;background:#c8d8ee55}
+.theme-mini-screen b:nth-child(2){width:100%;height:38%;min-height:10px}
+.theme-visual-default{background:linear-gradient(140deg,#071724,#194356)}
+.theme-visual-cyberpunk{background:radial-gradient(circle at 80% 25%,#f51cb45c,transparent 47%),linear-gradient(130deg,#090514,#26092d)}
+.theme-visual-cyberpunk .theme-mini-dock i{background:#ff2bda;box-shadow:0 0 12px #ff2bdac0}
+.theme-visual-cyberpunk .theme-mini-screen b{background:#db47f688;box-shadow:0 0 13px #f51cb45b}
+.theme-visual-liquidglass{background:radial-gradient(circle at 68% 10%,#fc9edb,transparent 40%),linear-gradient(140deg,#284769,#111c38)}
+.theme-visual-liquidglass .theme-mini-dock i,.theme-visual-liquidglass .theme-mini-screen b{background:#ffffff52;border:1px solid #ffffff92;box-shadow:inset 0 1px #ffffff8c,0 4px 15px #060f3a44;backdrop-filter:blur(6px)}
+.theme-name{font-size:clamp(11px,2vh,17px);font-weight:750;line-height:1.15}
+.theme-description{font-size:clamp(9px,1.55vh,12px);color:#a6c2d0;line-height:1.2}
+.theme-check{font-size:clamp(9px,1.5vh,12px);font-weight:700;color:#7adcee;margin-top:auto}
+.settings-bottom{display:flex;flex-shrink:0;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.settings-bottom button{font-size:clamp(10px,1.7vh,12px);padding:clamp(4px,.8vh,8px) 11px}
+@media(max-width:760px){.settings-heading p{display:none}.theme-card{padding:5px}.theme-name{font-size:11px}.theme-description{font-size:9px}}
+@media(max-height:440px){.settings-ui{gap:5px}.settings-heading h2{font-size:14px}.theme-card{gap:2px;padding:4px}.theme-visual{min-height:32px}.theme-description{display:none}.settings-bottom{gap:5px}.settings-bottom button{padding:4px 7px}}
+@media(max-width:600px) and (orientation:portrait){.theme-options{grid-template-columns:1fr}.theme-card{flex-direction:row;align-items:center;gap:9px}.theme-visual{max-width:26%;height:74px;flex:1}.theme-name{flex:1}.theme-description{display:none}}
+
+/* Neon City: bold magenta, cyan accents, vivid large symbols. */
+html[data-theme="cyberpunk"] body{color:#fff2ff;background:radial-gradient(ellipse at 80% 100%,#5c104a 0,transparent 52%),radial-gradient(ellipse at 7% 0,#102e5e 0,transparent 48%),#07050e}
+html[data-theme="cyberpunk"] .cockpit{background:radial-gradient(ellipse at 86% 88%,#4e103a82,transparent 58%),linear-gradient(145deg,#111323,#090713 55%,#19091c);border:1px solid #fd32da9c;box-shadow:inset 0 0 26px #ff28d522,0 0 28px #ef1ebe29}
+html[data-theme="cyberpunk"] .dock{background:linear-gradient(150deg,#180a29,#140d26);border:1px solid #a527a679;box-shadow:inset 0 0 18px #e13ed115}
+html[data-theme="cyberpunk"] .dock button{background:linear-gradient(150deg,#280f36,#160e2b);color:#fbe1fa;border:1px solid #a62d9440}
+html[data-theme="cyberpunk"] .dock button.active{background:linear-gradient(145deg,#58115c,#29144f);border-color:#ff43de;box-shadow:inset 0 0 17px #ef27d442,0 0 16px #ff22d654}
+html[data-theme="cyberpunk"] .dock .ico{font-size:clamp(23px,4.3vh,37px);line-height:1;color:#ff42de;text-shadow:0 0 12px #ff23db,0 0 22px #ff23db69}
+html[data-theme="cyberpunk"] .dock button.active .ico{color:#fff0fc}
+html[data-theme="cyberpunk"] .full,html[data-theme="cyberpunk"] .side{background:radial-gradient(circle at 88% 8%,#6c16446e,transparent 47%),linear-gradient(150deg,#1a0a29,#0e1026);border:1px solid #a32d9b6b;box-shadow:inset 0 0 28px #f12bd40d}
+html[data-theme="cyberpunk"] .full h3,html[data-theme="cyberpunk"] .side h3,html[data-theme="cyberpunk"] .status,html[data-theme="cyberpunk"] .media-eyebrow{color:#ff64e8;text-shadow:0 0 12px #ff2ad06b}
+html[data-theme="cyberpunk"] button{background:linear-gradient(150deg,#361541,#211632);border-color:#aa329a;color:#ffe6fc}
+html[data-theme="cyberpunk"] .grid button{background:radial-gradient(circle at 50% 10%,#84277966,transparent 72%),linear-gradient(155deg,#300f3d,#17152c);border:1px solid #eb42cf8c;box-shadow:inset 0 1px #ffcdfb12,0 0 14px #f32ad024;border-radius:18px;font-weight:650}
+html[data-theme="cyberpunk"] .grid .bigicon{color:#ff3ce3;font-size:clamp(34px,8.5vh,66px);line-height:1;text-shadow:0 0 14px #ff1eca,0 0 28px #ff1eca86}
+html[data-theme="cyberpunk"] :is(.active,.primary,.media-play,.status-right button){background:linear-gradient(135deg,#9c168f,#4e1975);border-color:#ff66e2;box-shadow:0 0 15px #ed24c74d}
+html[data-theme="cyberpunk"] :is(.glass,.preview,.overlay){background:linear-gradient(145deg,#351341e8,#181b38ed);border-color:#d535c888;box-shadow:0 0 28px #ee2bc43a,0 15px 38px #0008}
+html[data-theme="cyberpunk"] :is(.suggestion,.routeopt,.media-card,.calculator-display,.searchbox,.keyboard,.navbanner,.map-weather,.map-badge){background:#2c1438ed;border-color:#aa329a88}
+html[data-theme="cyberpunk"] .side .grid button{min-height:70px}
+html[data-theme="cyberpunk"] .fav .bubble{background:linear-gradient(130deg,#ff39dc,#7325a4);box-shadow:0 0 13px #f51bc77b}
+html[data-theme="cyberpunk"] .map{background:#18152b;box-shadow:inset 0 0 0 1px #b82cac55}
+html[data-theme="cyberpunk"] .map:before{background:radial-gradient(ellipse at 70% 40%,#284561,#151b39 55%,#100e26)}
+html[data-theme="cyberpunk"] .gpspanel{background:radial-gradient(ellipse at 50% 45%,#361745,#0e1026 75%);border-color:#ec39cb80;box-shadow:inset 0 0 22px #e52dc81a}
+html[data-theme="cyberpunk"] .gpsreadout{color:#ffcbf6;text-shadow:0 0 16px #f72bd6}
+html[data-theme="cyberpunk"] .gpscompasslabel{color:#fd9cf0}
+html[data-theme="cyberpunk"] .media-cover{background:linear-gradient(135deg,#ff29bc,#6811b4 52%,#093e64);box-shadow:0 0 27px #f729b54a,inset 0 0 35px #fff2}
+html[data-theme="cyberpunk"] .media-progress-fill{background:#fd2bc9;box-shadow:0 0 12px #f72cdb}
+html[data-theme="cyberpunk"] .theme-card.selected{border-color:#ff49df;box-shadow:0 0 20px #f72dc751}
+html[data-theme="cyberpunk"] :is(.theme-check,.sectiontitle){color:#ff7be6}
+
+/* Liquid Glass: layered translucent surfaces and soft Apple-like lighting. */
+html[data-theme="liquidglass"] body{color:#f3f8ff;background:radial-gradient(ellipse at 85% 15%,#6f6494 0,transparent 43%),radial-gradient(ellipse at 15% 95%,#266a8c 0,transparent 46%),#081321}
+html[data-theme="liquidglass"] .cockpit{background:radial-gradient(circle at 75% -15%,#e9caea45,transparent 40%),linear-gradient(145deg,#1d3554,#0f2035 65%,#17283e);border:1px solid #e9f5ff6d;border-radius:26px;box-shadow:inset 0 1px #ffffff54,0 16px 48px #0712209e}
+html[data-theme="liquidglass"] .dock{background:#d8edff19;border:1px solid #f5faff63;box-shadow:inset 0 1px #ffffff69,0 12px 30px #03172935;backdrop-filter:blur(25px) saturate(170%);-webkit-backdrop-filter:blur(25px) saturate(170%);border-radius:22px}
+html[data-theme="liquidglass"] .dock button{background:#e9f3ff19;border:1px solid #ffffff2a;border-radius:16px;color:#f5f9ff}
+html[data-theme="liquidglass"] .dock button.active{background:linear-gradient(140deg,#e9f6ff51,#ffffff1a);border-color:#ffffff99;box-shadow:inset 0 1px #ffffff93,0 4px 18px #c9eafa38}
+html[data-theme="liquidglass"] .dock .ico{font-size:clamp(23px,4vh,34px);color:#eef8ff;text-shadow:0 2px 9px #7cd9ff80}
+html[data-theme="liquidglass"] :is(.full,.side,.glass,.preview,.overlay){background:linear-gradient(140deg,#e6f2ff35,#aacbde18 65%,#f7faff26);border:1px solid #eff8ff6f;border-radius:24px;box-shadow:inset 0 1px #ffffff63,0 14px 35px #051b3560;backdrop-filter:blur(26px) saturate(165%);-webkit-backdrop-filter:blur(26px) saturate(165%)}
+html[data-theme="liquidglass"] .full h3,html[data-theme="liquidglass"] .side h3,html[data-theme="liquidglass"] .status{color:#b9eaff}
+html[data-theme="liquidglass"] button{background:linear-gradient(145deg,#e4f0ff32,#8fa9ce18);border:1px solid #ebf6ff65;border-radius:17px;color:#f8fbff;box-shadow:inset 0 1px #ffffff36,0 4px 12px #0618322a}
+html[data-theme="liquidglass"] :is(.active,.primary,.media-play,.status-right button){background:linear-gradient(135deg,#a9d6ff67,#6f95dd66);border-color:#f0faffb0;box-shadow:inset 0 1px #fff9,0 7px 18px #68bbff35}
+html[data-theme="liquidglass"] .grid button{background:linear-gradient(155deg,#ffffff35,#9fb7e320);border:1px solid #ffffff75;border-radius:23px;box-shadow:inset 0 1px #fff9,0 10px 28px #061e3851}
+html[data-theme="liquidglass"] .grid .bigicon{font-size:clamp(32px,7.6vh,60px);color:#edf6ff;text-shadow:0 4px 13px #8dcdfd}
+html[data-theme="liquidglass"] :is(.suggestion,.routeopt,.media-card,.calculator-display,.searchbox,.keyboard,.navbanner,.map-weather,.map-badge){background:#d0e8ff28;border:1px solid #f4faff62;box-shadow:inset 0 1px #ffffff3d;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:18px}
+html[data-theme="liquidglass"] .fav .bubble{background:linear-gradient(145deg,#d6f2ff99,#6ca8e999);border:1px solid #ffffffaa;box-shadow:inset 0 1px #fff9,0 5px 18px #c0ebff50}
+html[data-theme="liquidglass"] .map{background:#1d3b58;border:1px solid #f5faff66;border-radius:22px}
+html[data-theme="liquidglass"] .map:before{background:radial-gradient(ellipse at 68% 44%,#506f8d,#264967 58%,#132a47)}
+html[data-theme="liquidglass"] .gpspanel{background:radial-gradient(ellipse at 50% 45%,#a2bdd844,#29466699 68%,#152843ac);border-color:#eaf7ff72;box-shadow:inset 0 1px #ffffff6b}
+html[data-theme="liquidglass"] .gpsreadout{color:#f5fbff;text-shadow:0 2px 15px #83d2ff}
+html[data-theme="liquidglass"] .media-cover{background:linear-gradient(145deg,#d4ace6aa,#6c80c6aa 58%,#6acccca9);border:1px solid #ffffff96;box-shadow:inset 0 1px #ffffff79,0 12px 36px #9dc9ff45}
+html[data-theme="liquidglass"] .media-progress-fill{background:linear-gradient(90deg,#9bd8ff,#f4d8ff)}
+html[data-theme="liquidglass"] .theme-card{background:#daeaff1c;border-color:#ffffff60}
+html[data-theme="liquidglass"] .theme-card.selected{border-color:#e8f8ff;box-shadow:inset 0 1px #ffffff9b,0 0 18px #b5e6ff65}
+html[data-theme="liquidglass"] :is(.theme-check,.sectiontitle){color:#cdeeff}
+@media(prefers-reduced-motion:reduce){.theme-card{transition:none}}
