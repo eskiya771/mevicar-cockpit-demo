@@ -1,5 +1,5 @@
 name: Deploy Cockpit Demo
-# Re-trigger deployment after enabling GitHub Pages
+# Trigger new deployment to test in-app update detection
 on:
   push:
     branches: [main]
