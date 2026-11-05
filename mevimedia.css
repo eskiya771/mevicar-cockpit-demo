@@ -224,14 +224,22 @@ html[data-theme="liquidglass"] .mm-track,html[data-theme="liquidglass"] .mm-grou
   gap:clamp(6px,1vw,12px);
 }
 .mm-shell.is-compact .mm-transport button{
-  width:clamp(43px,5.6vh,53px);
-  height:clamp(43px,5.6vh,53px);
+  flex:1 1 0;
+  min-width:0;
+  max-width:53px;
+  width:auto;
+  height:auto;
+  aspect-ratio:1;
   border-radius:13px;
   padding:7px;
 }
 .mm-shell.is-compact .mm-transport .mm-primary{
-  width:clamp(55px,7.2vh,68px);
-  height:clamp(55px,7.2vh,68px);
+  flex:1.25 1 0;
+  min-width:0;
+  max-width:68px;
+  width:auto;
+  height:auto;
+  aspect-ratio:1;
   border-radius:17px;
   padding:10px;
 }
@@ -249,6 +257,6 @@ html[data-theme="liquidglass"] .mm-track,html[data-theme="liquidglass"] .mm-grou
     gap:4px;
   }
   .mm-shell.is-compact .mm-transport{padding:3px 0}
-  .mm-shell.is-compact .mm-transport button{width:41px;height:41px;padding:6px}
-  .mm-shell.is-compact .mm-transport .mm-primary{width:51px;height:51px;padding:8px}
+  .mm-shell.is-compact .mm-transport button{max-width:41px;max-height:41px;padding:6px}
+  .mm-shell.is-compact .mm-transport .mm-primary{max-width:51px;max-height:51px;padding:8px}
 }
