@@ -181,3 +181,74 @@ html[data-theme="liquidglass"] .mm-track,html[data-theme="liquidglass"] .mm-grou
   .mm-now .mm-now-top{min-height:0}
   .mm-now .mm-now-top .mm-track-details{gap:4px}
 }
+
+/* FIX: Playback deck was pushed against (and clipped by) the bottom of a tall
+   split-screen panel. Allocate explicit grid rows for progress/transport,
+   preserve a bottom safe area and give all five touch controls real size. */
+.mm-now{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) auto auto auto;
+  align-content:stretch;
+  padding-bottom:max(26px,calc(env(safe-area-inset-bottom,0px) + 18px));
+}
+.mm-now-top{min-height:0;min-width:0;height:100%;overflow:hidden}
+.mm-progress{min-width:0;align-self:stretch}
+.mm-transport{
+  min-width:0;min-height:0;
+  align-self:center;justify-self:center;
+  width:100%;max-width:460px;
+  padding:clamp(5px,1vh,10px) 0 clamp(3px,.6vh,7px);
+  gap:clamp(6px,1vw,15px);
+  border-top:1px solid #55bbdf36;
+}
+.mm-transport button,.mm-transport .mm-primary{
+  flex:0 0 auto;display:grid;place-items:center;
+  overflow:visible;line-height:1;
+  padding:clamp(7px,1vh,10px);
+}
+.mm-transport button .mm-icon,.mm-transport .mm-primary .mm-icon{
+  display:block;flex:none;max-width:80%;max-height:80%;
+  overflow:visible;
+}
+.mm-shell.is-compact .mm-now{
+  display:grid;
+  grid-template-rows:minmax(0,1fr) auto auto;
+  gap:clamp(6px,1.1vh,12px);
+  padding:clamp(7px,1.3vh,13px) clamp(9px,1.2vw,16px) max(36px,calc(env(safe-area-inset-bottom,0px) + 24px));
+}
+.mm-shell.is-compact .mm-now-top{min-height:0;overflow:hidden}
+.mm-shell.is-compact .mm-transport{
+  max-width:380px;
+  padding:clamp(5px,1vh,9px) 0 clamp(3px,.8vh,8px);
+  gap:clamp(6px,1vw,12px);
+}
+.mm-shell.is-compact .mm-transport button{
+  width:clamp(43px,5.6vh,53px);
+  height:clamp(43px,5.6vh,53px);
+  border-radius:13px;
+  padding:7px;
+}
+.mm-shell.is-compact .mm-transport .mm-primary{
+  width:clamp(55px,7.2vh,68px);
+  height:clamp(55px,7.2vh,68px);
+  border-radius:17px;
+  padding:10px;
+}
+.mm-shell.is-compact .mm-transport button .mm-icon{
+  width:clamp(23px,3vh,31px);
+  height:clamp(23px,3vh,31px);
+}
+.mm-shell.is-compact .mm-transport .mm-primary .mm-icon{
+  width:clamp(28px,4vh,38px);
+  height:clamp(28px,4vh,38px);
+}
+@media(max-height:500px){
+  .mm-shell.is-compact .mm-now{
+    padding-bottom:max(20px,calc(env(safe-area-inset-bottom,0px) + 10px));
+    gap:4px;
+  }
+  .mm-shell.is-compact .mm-transport{padding:3px 0}
+  .mm-shell.is-compact .mm-transport button{width:41px;height:41px;padding:6px}
+  .mm-shell.is-compact .mm-transport .mm-primary{width:51px;height:51px;padding:8px}
+}
