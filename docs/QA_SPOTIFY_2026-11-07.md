@@ -76,3 +76,17 @@ Zusätzlich wurden die echten Bedienelemente im Browser mit geloggten API-Aufruf
 5. „Mit Spotify verbinden“ drücken, Premium-Konto bestätigen und die Wiedergabesteuerung prüfen.
 
 Dev Mode: maximal 5 Nutzer, App-Inhaber benötigt Premium. Auf dem iPhone kann die Anmeldung aus einer installierten PWA in Safari landen; dann die Verbindung dort herstellen. Das ist eine Plattformgrenze, keine stille Fehlfunktion.
+
+## Ergänzung – Abgleich mit MeviCar Classic und Sprachsuche
+
+Quellen: Classic `app/src/main/java/de/mevicar/app/SpotifyPanel.kt` und Next `spotify.js`, `spotify.css`.
+
+- Classic steuert die installierte Android-Spotify-App über Spotify App Remote und nutzt Android `RecognizerIntent` für Sprachsuche.
+- Next verwendet weiterhin Spotify Web API mit OAuth-PKCE und steuert Spotify auf dem aktiven Wiedergabegerät, nicht per direktem Audio-Streaming im Browser.
+- Next ergänzt nun im Suchbereich eine **optionale Sprachsuche** über Browser `SpeechRecognition` / `webkitSpeechRecognition`. Nur ein ausdrücklicher Mikrofon-Tipp startet die Erkennung, Sprache ist `de-DE`.
+- Erkannter Text durchläuft denselben Suchpfad wie eine manuelle Spotify-Suche (Suchverlauf und Suche mit API-Limit).
+- Verfügbarkeit ist browserabhängig: ohne Browserunterstützung ist der Mikrofonbutton deaktiviert; ohne Berechtigung/bei Fehlern erscheint ein erklärender Hinweis, manuelle Suche bleibt verfügbar.
+- Laufende Erkennung wird bei Verlassen der Spotify-Suche sowie beim Unmount gestoppt. Animationen respektieren `prefers-reduced-motion`.
+- Im kompakten Split-Screen hat die Mikrofon-Schaltfläche mindestens 44 × 44 CSS-Pixel. Spotify-Now-Playing sowie Geräte- und Warteschlangenfunktionen wurden nicht neu implementiert.
+
+**Prüfgrenzen:** Der ergänzte `tests/spotify-smoke.mjs` simuliert Browser-Spracherkennung einschließlich Erfolg, Fehler, Abbruch und fehlendem Support. Weder eine tatsächliche Mikrofonfreigabe in Safari/Chrome noch OAuth und Playback über ein echtes Spotify-Premium-Konto wurden damit nachgewiesen. Echte Gerätetests sind erforderlich. Produktversion bleibt 0.5.0, kein offizieller Release.
