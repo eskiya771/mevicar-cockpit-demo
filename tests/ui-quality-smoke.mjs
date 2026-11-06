@@ -2,7 +2,6 @@
    unique address search and source-backed SVGs. Run: node tests/ui-quality-smoke.mjs */
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {runInNewContext} from 'node:vm';
 
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../themes.css',import.meta.url),'utf8');
@@ -41,11 +40,12 @@ const context={
 const cut=js.indexOf('setInterval(updateClock,1000)');
 assert.ok(cut>0);
 const code=js.slice(0,cut).replace('const CURRENT_BUILD=__MEVICAR_BUILD__','const CURRENT_BUILD={version:"0.4.0",build:0}');
-const run=expression=>runInNewContext(code+';\n'+expression,context);
-function setup(){
-  return run('({state:s,openApp,launch,resultsHTML,browseOverlay,searchOverlay,previewHTML,mapHTML,appVector})');
-}
-const app=setup();
+// Execute the cockpit only once in a persistent VM context.
+const vm = await import('node:vm');
+const ctx=vm.createContext(context);
+vm.runInContext(code,ctx);
+const get=expr=>vm.runInContext(expr,ctx);
+const app=get('({state:s,openApp,launch,resultsHTML,browseOverlay,searchOverlay,previewHTML,mapHTML,appVector})');
 assert.equal(app.state.app,'nav');
 assert.equal(app.state.mode,'map');
 assert.deepEqual(Array.from(new Set(['default','cyberpunk','liquidglass'])),['default','cyberpunk','liquidglass']);
@@ -71,10 +71,6 @@ assert.match(app.previewHTML(),/keine Wegberechnung/);
 assert.match(app.previewHTML(),/Demo starten/);
 
 // Re-run the user's paths in one persistent JS VM using a small mock DOM.
-const vm = await import('node:vm');
-const ctx=vm.createContext(context);
-vm.runInContext(code,ctx);
-const get=expr=>vm.runInContext(expr,ctx);
 assert.equal(get('s.mode'),'map');
 get('openApp("apps")');
 assert.equal(get('s.mode'),'full');
