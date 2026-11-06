@@ -41,9 +41,13 @@ const touchChecks=[
   '.mm-shell.is-compact .mm-now .mm-icon-button{width:44px',
   '.mm-shell .mm-transport button{min-width:44px;min-height:44px}',
   '.mm-shell .mm-transport .mm-primary{min-width:56px;min-height:56px}',
-  '.map.searchmode .keyboard{width:60%;max-width:60%',
+  '.map.searchmode .keyboard{width:72%;max-width:72%',
   '.map.searchmode .keyboard .keyrow button{min-height:44px',
   '.nav-search .tool-control{min-height:44px}',
+  '.cockpit:has(.map.searchmode) .dock{display:none}',
+  '.map.searchmode .keyboard .keyrow button{',
+  'min-height:clamp(51px,13.5vh,58px)',
+  'width:26%;min-width:0;max-width:none',
 ];
 for (const rule of touchChecks){
   assert.ok(css.includes(rule),'Touch quality rule missing: '+rule);
