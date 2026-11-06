@@ -16,7 +16,7 @@
 - Bestehende SVGs, Komponenten, Datenmodelle und Lifecycle-APIs wiederverwenden. Keine pauschalen DOM-Rerenders für Sensor-/Animationsupdates.
 
 ## UI und Daten
-- Querformatprofile (CSS-Pixel): 874×402, 915×412, 1920×1200, 1920×1080, 1920×720. Details: `DISPLAY_PROFILE_MATRIX.md`.
+- **Verbindliche fünf Zielauflösungen:** `DISPLAY_PROFILE_MATRIX.md` ist die einzige maßgebliche Quelle (physische Pixel, CSS-Referenzviewports, Safe Areas und Abnahmeregeln). Keine abweichenden hardcodierten Profil-Listen in neuen Dokumenten oder Code anlegen. iPhone 17: 2622×1206 physisch / 874×402 CSS-Referenz; S20 FE: 2400×1080 physisch / 915×412 CSS-Referenz. Full HD 1920×1080, Panorama 1920×720, externer DeX-Monitor 1920×1200. Reale Browser-Viewports können abweichen.
 - Themes: Original (`default`), Cyberpunk Neon City (`cyberpunk`), Liquid Glass (`liquidglass`).
 - Keine globalen Scrollleisten, abgeschnittenen Bedienelemente oder Überlappungen. Listen dürfen scrollen. Touchziel möglichst mindestens 44×44 px; Abweichungen dokumentieren.
 - Mobile QWERTZ-Tastatur groß halten; derzeit 72 % Kartenbreite und Dock während Adresseingabe ausgeblendet. Safe Areas und beide Querformatrichtungen prüfen.
