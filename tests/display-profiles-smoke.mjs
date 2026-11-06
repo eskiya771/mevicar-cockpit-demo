@@ -36,6 +36,18 @@ for(const selector of [
 }
 assert.ok(css.includes('env(safe-area-inset-left'),'iPhone safe-area insets must be handled');
 assert.ok(css.includes('--car-touch:44px'),'Touch target baseline is missing');
+const touchChecks=[
+  '.mm-shell.is-compact .mm-mode-button{min-width:44px}',
+  '.mm-shell.is-compact .mm-now .mm-icon-button{width:44px',
+  '.mm-shell .mm-transport button{min-width:44px;min-height:44px}',
+  '.mm-shell .mm-transport .mm-primary{min-width:56px;min-height:56px}',
+  '.map.searchmode .keyboard{width:60%;max-width:60%',
+  '.map.searchmode .keyboard .keyrow button{min-height:44px',
+  '.nav-search .tool-control{min-height:44px}',
+];
+for (const rule of touchChecks){
+  assert.ok(css.includes(rule),'Touch quality rule missing: '+rule);
+}
 assert.ok(html.includes('<link rel="stylesheet" href="./display-profiles.css">'));
 assert.ok(workflow.includes('mevicar-display-profiles'),'Display profiles must be bundled into the deployed HTML');
 assert.ok(workflow.includes('display-profiles.css dist/'),'Display profiles must be copied into Pages assets');
