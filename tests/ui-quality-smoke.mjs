@@ -92,7 +92,7 @@ get('openApp("nav")');
 get('openSearch()');
 assert.equal(get('s.nav'),'search');
 assert.match(node('screen').innerHTML,/Ziel suchen/);
-assert.equal(get('resultsHTML().match(/Erlangen-Nord/g)?.length'),1);
+assert.equal(get('resultsHTML().match(/<strong>Erlangen-Nord<\\/strong>/g)?.length'),1);
 get('s.query="XYZ Testadresse 17"');
 assert.match(get('resultsHTML()'),/Eigene Zieleingabe · Demo/);
 get('selectPlace("Erlangen Arcaden")');
