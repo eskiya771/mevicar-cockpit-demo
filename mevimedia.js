@@ -9,6 +9,7 @@
     music:'<path d="M9 18V5l12-3v13"/><path d="M9 8l12-3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/>',
     folder:'<path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
     files:'<path d="M13 2H6a2 2 0 0 0-2 2v13"/><path d="M13 2v5h5"/><path d="M9 7h10a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Z"/>',
+    stop:'<rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor" stroke="none"/>',
     play:'<path d="m8 5 12 7-12 7Z" fill="currentColor" stroke="none"/>',
     pause:'<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/>',
     next:'<path d="m5 4 11 8-11 8Z" fill="currentColor" stroke="none"/><path d="M19 4v16" stroke-width="3"/>',
@@ -39,7 +40,7 @@
   const options=readStore('mevicar-media-options-v1',{});
   const st={tracks:[],index:-1,section:'songs',group:null,query:'',queue:[],shuffle:!!options.shuffle,repeat:[0,1,2].includes(options.repeat)?options.repeat:0,
     compactPane:'library',status:'Wähle einen Ordner oder Musikdateien auf dem Gerät.',loaded:false,source:'',scanning:false,artUrl:null,objectUrl:null,metadataBatch:0};
-  let player=null,videoLayer=null,scanSerial=0,metaSerial=0,uiProgress=0;
+  let player=null,videoLayer=null,scanSerial=0,metaSerial=0,uiProgress=0,audioOwner='media';
   function persist(){try{localStorage.setItem('mevicar-media-favorites-v1',JSON.stringify([...favorites].slice(-7000)));localStorage.setItem('mevicar-media-options-v1',JSON.stringify({shuffle:st.shuffle,repeat:st.repeat}))}catch{}}
   function isVideo(file){const ext=file.name.split('.').pop().toLowerCase();return VIDEO.has(ext)||(!AUDIO.has(ext)&&file.type.startsWith('video/'))}
   function supported(file){const ext=file.name.split('.').pop().toLowerCase();return AUDIO.has(ext)||VIDEO.has(ext)||file.type.startsWith('audio/')||file.type.startsWith('video/')}
@@ -53,25 +54,19 @@
     videoLayer.appendChild(player);document.body.appendChild(videoLayer);
     player.addEventListener('timeupdate',updateProgress);
     player.addEventListener('durationchange',()=>{const t=current();if(t&&Number.isFinite(player.duration)){t.duration=player.duration;}updateProgress();});
-    player.addEventListener('play',syncPlaybackButtons);
+    player.addEventListener('play',()=>{if(audioOwner!=='media'){player.pause();return;}syncPlaybackButtons();});
     player.addEventListener('pause',syncPlaybackButtons);
-    player.addEventListener('ended',()=>advance(true));
+    player.addEventListener('ended',()=>{if(audioOwner==='media')advance(true);});
     player.addEventListener('error',()=>{const t=current();st.status='Wiedergabe fehlgeschlagen'+(t?' · '+t.name:'')+'. Codec eventuell im Browser nicht unterstützt.';syncPlaybackButtons();updateNotice();});
     player.addEventListener('volumechange',()=>{const el=$('mm-volume');if(el)el.value=String(Math.round(player.volume*100))});
-    if('mediaSession'in navigator){try{
-      navigator.mediaSession.setActionHandler('play',()=>{player.play().catch(()=>{})});
-      navigator.mediaSession.setActionHandler('pause',()=>player.pause());
-      navigator.mediaSession.setActionHandler('nexttrack',()=>advance(false));
-      navigator.mediaSession.setActionHandler('previoustrack',previous);
-      navigator.mediaSession.setActionHandler('seekto',e=>{if(e.seekTime!=null&&Number.isFinite(player.duration))player.currentTime=e.seekTime});
-    }catch{}}
+    bindAudioSession();
     return player;
   }
   function current(){return st.tracks[st.index]||null}
   function updateNotice(){const el=$('mm-notice');if(el)el.textContent=st.status}
   function showVideo(){const t=current();if(!t||!t.video)return;ensurePlayer();videoLayer.hidden=false;const title=$('mm-video-title');if(title)title.textContent=t.title||t.name}
   function closeVideo(){if(videoLayer&&!videoLayer.hidden){videoLayer.hidden=true;if(current()?.video)player.pause();syncPlaybackButtons()}}
-  function onSourceChanged(source){if(source!=='media'){if(player)player.pause();closeVideo();}}
+  function onSourceChanged(source){audioOwner=source;if(source!=='media'){if(player)player.pause();closeVideo();}if(source!=='radio')radioStop();bindAudioSession();}
   function makeTrack(file,folder){
     const name=file.name,video=isVideo(file),path=(folder||'')+name;
     const bare=baseName(name),parts=bare.split(/\s+[-–]\s+/);
@@ -252,12 +247,11 @@
     return [['radio','Radio','music'],['spotify','Spotify','disc'],['media','Medien','folder']].map(([id,label,ic])=>'<button type="button" data-source="'+id+'" class="mm-mode-button '+(id===source?'active':'')+'" aria-pressed="'+(id===source)+'" onclick="selectAudioSource(\''+id+'\')">'+icon(ic)+label+'</button>').join('');
   }
   const demoCatalog={
-    radio:[['Mevi FM','Pop · Dein Mix für unterwegs'],['Neon Radio','Electronic · Night Drive'],['Roadtrip FM','Rock · Unterwegs zuhause'],['Lounge FM','Chillout · Entspannt ankommen']],
     spotify:[['Midnight Drive','Neon Horizon · Night Routes'],['Electric Roads','Skyline · City Lights'],['Afterglow','Lunar Echo · Slow Motion'],['Ocean Avenue','Daybreak · Weekend Escape']]
   };
-  const demoState={radio:{index:0,pane:'library',favorites:new Set(),filter:false},spotify:{index:0,pane:'library',favorites:new Set(),filter:false}};
+  const demoState={spotify:{index:0,pane:'library',favorites:new Set(),filter:false}};
   function demoAction(source,action,value){
-    const state=demoState[source];if(!state)return;
+    const state=Object.hasOwn(demoState,source)?demoState[source]:null;if(!state)return;
     if(action==='select'&&Number.isInteger(value)&&demoCatalog[source][value]){state.index=value;state.pane='player';}
     else if(action==='pane'&&['library','player'].includes(value))state.pane=value;
     else if(action==='filter')state.filter=!state.filter;
@@ -266,7 +260,7 @@
     redraw();
   }
   function demoHTML(source,compact){
-    if(!demoState[source])return '';
+    if(!Object.hasOwn(demoState,source))return '';
     const state=demoState[source],radio=source==='radio',label=radio?'Radio':'Spotify',catalog=demoCatalog[source],current=catalog[state.index];
     const action=(name,value)=>"meviAudioDemoAction('"+source+"','"+name+"'"+(value===undefined?'':','+JSON.stringify(value).replace(/"/g,"'"))+")";
     const rows=catalog.map((item,i)=>({item,i})).filter(({i})=>!state.filter||state.favorites.has(i)).map(({item,i})=>
@@ -277,6 +271,103 @@
       '<div class="mm-content"><div class="mm-library"><div class="mm-demo-library-head"><strong>'+(radio?'Demo-Sender':'Demo-Playlist')+'</strong><button type="button" class="mm-tab '+(state.filter?'selected':'')+'" aria-pressed="'+state.filter+'" onclick="'+action('filter')+'">'+icon('heart')+' Favoriten</button></div><div class="mm-list">'+(rows||'<div class="mm-demo-empty">Noch keine Favoriten.<br>Wähle einen Eintrag und markiere das Herz im Player.</div>')+'</div></div>'+
       '<div class="mm-now"><div class="mm-now-top"><div class="mm-artwork mm-demo-art" aria-hidden="true">'+icon(radio?'music':'disc')+'<span>'+label.toUpperCase()+'</span></div><div class="mm-track-details"><div class="mm-now-eyebrow">DEMO-AUSWAHL</div><div class="mm-now-title">'+esc(current[0])+'</div><div class="mm-now-sub">'+esc(current[1])+'</div><div class="mm-now-buttons"><button type="button" class="mm-icon-button" aria-label="Favorit umschalten" aria-pressed="'+state.favorites.has(state.index)+'" onclick="'+action('favorite')+'">'+icon('heart')+'</button></div></div></div>'+
       '<div class="mm-demo-unavailable">'+icon('play')+'<span>Wiedergabe nicht verfügbar</span></div><div class="mm-demo-help">'+(radio?'Senderauswahl als Vorschau.':'Beispieltitel · Keine Spotify-Anmeldung.')+' Musik abspielen über „Medien“.</div></div></div></section>';
+  }
+
+  // Classic's direct HTTPS MP3 catalog, no aggregator, API key or proxy.
+  const RADIO_STATIONS=[
+    ['bayern1-franken','BAYERN 1 Franken','Oldies & Pop · Franken','https://dispatcher.rndfnk.com/br/br1/franken/mp3/mid'],
+    ['bayern3','BAYERN 3','Pop & Hits · Bayern','https://dispatcher.rndfnk.com/br/br3/live/mp3/mid'],
+    ['antenne-bayern','ANTENNE BAYERN','Pop & Hits · Bayern','https://stream.antenne.de/antenne/stream/mp3'],
+    ['rock-antenne','ROCK ANTENNE','Rock · Deutschland','https://stream.rockantenne.de/rockantenne/stream/mp3'],
+    ['oldie-antenne','OLDIE ANTENNE','80er & 90er · Deutschland','https://stream.antenne.de/oldie-antenne/stream/mp3'],
+    ['deutschlandfunk','Deutschlandfunk','Nachrichten & Hintergrund','https://st01.sslstream.dlf.de/dlf/01/128/mp3/stream.mp3'],
+    ['bayern2','BAYERN 2','Kultur & Wissen · Bayern','https://dispatcher.rndfnk.com/br/br2/live/mp3/mid'],
+    ['br24','BR24','Nachrichten · Bayern','https://dispatcher.rndfnk.com/br/br24/live/mp3/mid'],
+    ['br-schlager','BR Schlager','Schlager · Bayern','https://dispatcher.rndfnk.com/br/brschlager/live/mp3/mid'],
+    ['br-heimat','BR Heimat','Volksmusik · Bayern','https://dispatcher.rndfnk.com/br/brheimat/live/mp3/mid'],
+    ['br-klassik','BR-KLASSIK','Klassische Musik · Bayern','https://dispatcher.rndfnk.com/br/brklassik/live/mp3/mid'],
+    ['dlf-kultur','Deutschlandfunk Kultur','Kultur & Musik','https://st02.sslstream.dlf.de/dlf/02/128/mp3/stream.mp3'],
+    ['dlf-nova','Deutschlandfunk Nova','Wissen & Pop','https://st03.sslstream.dlf.de/dlf/03/128/mp3/stream.mp3']
+  ].map(([id,name,description,url])=>({id,name,description,url}));
+  const radioSaved=readStore('mevicar-radio-v1',{});
+  const radioSettings=radioSaved&&typeof radioSaved==='object'?radioSaved:{};
+  const radioState={index:Math.max(0,RADIO_STATIONS.findIndex(x=>x.id===radioSettings.station)),pane:'library',filter:false,
+    favorites:new Set(Array.isArray(radioSettings.favorites)?radioSettings.favorites.filter(id=>RADIO_STATIONS.some(x=>x.id===id)):[]),
+    volume:Number.isFinite(radioSettings.volume)?Math.min(1,Math.max(0,radioSettings.volume)):.8,status:'Bereit · Sender wählen oder Abspielen drücken',wanted:false};
+  let radioPlayer=null,radioTimer=null,radioSerial=0;
+  function saveRadio(){try{localStorage.setItem('mevicar-radio-v1',JSON.stringify({station:RADIO_STATIONS[radioState.index].id,volume:radioState.volume,favorites:[...radioState.favorites]}))}catch{}}
+  function bindAudioSession(){
+    if(!('mediaSession'in navigator))return;
+    const handlers={
+      play:()=>{if(audioOwner==='radio')radioStart();else if(audioOwner==='media'&&player?.paused)toggle();},
+      pause:()=>{if(audioOwner==='radio')radioStop();else if(audioOwner==='media')player?.pause();},
+      stop:()=>{if(audioOwner==='radio')radioStop();else if(audioOwner==='media')player?.pause();},
+      nexttrack:()=>{if(audioOwner==='radio')radioStep(1);else if(audioOwner==='media')advance(false);},
+      previoustrack:()=>{if(audioOwner==='radio')radioStep(-1);else if(audioOwner==='media')previous();},
+      seekto:audioOwner==='media'?e=>{if(player&&e.seekTime!=null&&Number.isFinite(player.duration))player.currentTime=e.seekTime;}:null
+    };
+    for(const [action,handler] of Object.entries(handlers)){try{navigator.mediaSession.setActionHandler(action,handler)}catch{}}
+    try{if(!(audioOwner==='radio'&&radioPlayer)){navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none';}}catch{}
+    if(audioOwner==='media')updateMediaSession(current());
+  }
+  function paintRadio(){
+    const status=$('mm-radio-status');if(status)status.textContent=radioState.status;
+    const button=$('mm-radio-play');if(button){button.innerHTML=icon(radioState.wanted?'stop':'play');button.setAttribute('aria-label',radioState.wanted?'Radio stoppen':'Radio abspielen');}
+    if(audioOwner==='radio'&&'mediaSession'in navigator){try{navigator.mediaSession.playbackState=radioState.wanted&&radioPlayer&&!radioPlayer.paused?'playing':'paused'}catch{}}
+  }
+  function radioStop(message='Gestoppt · Abspielen startet wieder live'){
+    radioSerial++;radioState.wanted=false;clearTimeout(radioTimer);radioTimer=null;
+    const old=radioPlayer;radioPlayer=null;
+    if(old){old.pause();old.removeAttribute('src');old.load();old.remove();}
+    radioState.status=message;paintRadio();
+  }
+  function radioStart(){
+    onSourceChanged('radio');
+    radioStop();
+    const serial=radioSerial,station=RADIO_STATIONS[radioState.index],audio=document.createElement('audio');
+    radioPlayer=audio;radioState.wanted=true;radioState.status='Livestream wird geladen …';
+    audio.id='mevi-radio-audio';audio.hidden=true;audio.preload='none';audio.volume=radioState.volume;
+    document.body.appendChild(audio);
+    const active=()=>serial===radioSerial&&radioPlayer===audio&&radioState.wanted;
+    const timeout=()=>{if(radioTimer!==null)return;radioTimer=setTimeout(()=>{if(active())radioStop('Stream antwortet nicht · Erneut starten oder Sender wechseln');},15000);};
+    audio.addEventListener('playing',()=>{if(!active())return;clearTimeout(radioTimer);radioTimer=null;radioState.status='LIVE · '+station.name;paintRadio();});
+    for(const event of ['waiting','stalled'])audio.addEventListener(event,()=>{if(!active()||(event==='stalled'&&audio.readyState>=3))return;radioState.status='Verbindung wird gepuffert …';paintRadio();timeout();});
+    audio.addEventListener('pause',()=>{if(active())radioStop('Wiedergabe unterbrochen · Erneut starten');});
+    audio.addEventListener('ended',()=>{if(active())radioStop('Stream beendet · Erneut starten');});
+    audio.addEventListener('error',()=>{if(active())radioStop('Stream nicht erreichbar · Internet prüfen oder Sender wechseln');});
+    audio.addEventListener('volumechange',()=>{if(!active())return;radioState.volume=audio.volume;saveRadio();const input=$('mm-radio-volume');if(input)input.value=String(Math.round(audio.volume*100));});
+    if('mediaSession'in navigator&&'MediaMetadata'in window){try{navigator.mediaSession.metadata=new window.MediaMetadata({title:station.name,artist:station.description,album:'MeviCar Internetradio'});}catch{}}
+    audio.src=station.url;timeout();paintRadio();
+    try{Promise.resolve(audio.play()).catch(error=>{if(!active())return;radioStop(error?.name==='NotAllowedError'?'Browser blockiert Wiedergabe · Abspielen erneut drücken':'Stream nicht abspielbar · Erneut starten oder Sender wechseln');});}
+    catch{if(active())radioStop('Wiedergabe nicht möglich · Erneut starten');}
+  }
+  function radioSelect(index){
+    if(!Number.isInteger(index)||!RADIO_STATIONS[index])return;
+    radioState.index=index;radioState.pane='player';saveRadio();radioStart();redraw();
+  }
+  function radioStep(delta){radioSelect((radioState.index+delta+RADIO_STATIONS.length)%RADIO_STATIONS.length);}
+  function radioAction(action,value){
+    if(action==='select')radioSelect(value);
+    else if(action==='toggle'){if(radioState.wanted)radioStop();else radioStart();}
+    else if(action==='next')radioStep(1);
+    else if(action==='previous')radioStep(-1);
+    else if(action==='pane'&&['library','player'].includes(value)){radioState.pane=value;redraw();}
+    else if(action==='filter'){radioState.filter=!radioState.filter;redraw();}
+    else if(action==='favorite'){const id=RADIO_STATIONS[radioState.index].id;if(radioState.favorites.has(id))radioState.favorites.delete(id);else radioState.favorites.add(id);saveRadio();redraw();}
+    else if(action==='volume'&&Number.isFinite(Number(value))){radioState.volume=Math.min(100,Math.max(0,Number(value)))/100;if(radioPlayer)radioPlayer.volume=radioState.volume;saveRadio();}
+  }
+  window.addEventListener?.('offline',()=>{if(radioState.wanted)radioStop('Offline · Internetverbindung prüfen und erneut starten');});
+  function radioHTML(compact){
+    const station=RADIO_STATIONS[radioState.index];
+    const rows=RADIO_STATIONS.map((item,index)=>({item,index})).filter(({item})=>!radioState.filter||radioState.favorites.has(item.id)).map(({item,index})=>
+      '<button type="button" class="mm-demo-item '+(radioState.index===index?'selected':'')+'" aria-label="'+esc(item.name)+' abspielen" aria-pressed="'+(radioState.index===index)+'" onclick="meviRadioAction(\'select\','+index+')"><span class="mm-demo-item-icon">'+icon('music')+'</span><span class="mm-demo-item-text"><strong>'+esc(item.name)+'</strong><small>'+esc(item.description)+'</small></span>'+icon(radioState.favorites.has(item.id)?'heart':'play')+'</button>').join('');
+    return '<section class="mm-shell mm-demo mm-radio '+(compact?'is-compact':'')+'" data-source="radio" data-pane="'+radioState.pane+'" aria-label="Internetradio"><div class="mm-top"><div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">RADIO</span></div><div class="mm-top-actions">'+sourceButtons('radio')+'</div></div>'+
+      '<div class="mm-demo-notice">Internetradio · benötigt WLAN oder mobile Daten</div>'+
+      (compact?'<div class="mm-compact-toggle"><button type="button" aria-pressed="'+(radioState.pane==='library')+'" onclick="meviRadioAction(\'pane\',\'library\')">'+icon('list')+' Sender</button><button type="button" aria-pressed="'+(radioState.pane==='player')+'" onclick="meviRadioAction(\'pane\',\'player\')">'+icon('music')+' Player</button></div>':'')+
+      '<div class="mm-content"><div class="mm-library"><div class="mm-demo-library-head"><strong>'+RADIO_STATIONS.length+' Radiosender</strong><button type="button" class="mm-tab '+(radioState.filter?'selected':'')+'" aria-pressed="'+radioState.filter+'" onclick="meviRadioAction(\'filter\')">'+icon('heart')+' Favoriten</button></div><div class="mm-list">'+(rows||'<div class="mm-demo-empty">Noch keine Favoriten.<br>Markiere einen Sender mit dem Herz im Player.</div>')+'</div></div>'+
+      '<div class="mm-now"><div class="mm-now-top"><div class="mm-artwork mm-demo-art" aria-hidden="true">'+icon('music')+'<span>RADIO</span></div><div class="mm-track-details"><div class="mm-now-eyebrow">INTERNETRADIO</div><div class="mm-now-title">'+esc(station.name)+'</div><div class="mm-now-sub">'+esc(station.description)+'</div><button type="button" class="mm-icon-button" aria-label="Favorit umschalten" aria-pressed="'+radioState.favorites.has(station.id)+'" onclick="meviRadioAction(\'favorite\')">'+icon('heart')+'</button></div></div>'+
+      '<div class="mm-radio-status" id="mm-radio-status" role="status">'+esc(radioState.status)+'</div>'+
+      '<div class="mm-radio-controls"><div class="mm-transport"><button type="button" aria-label="Vorheriger Sender" onclick="meviRadioAction(\'previous\')">'+icon('prev')+'</button><button type="button" id="mm-radio-play" class="mm-primary" aria-label="'+(radioState.wanted?'Radio stoppen':'Radio abspielen')+'" onclick="meviRadioAction(\'toggle\')">'+icon(radioState.wanted?'stop':'play')+'</button><button type="button" aria-label="Nächster Sender" onclick="meviRadioAction(\'next\')">'+icon('next')+'</button></div><label class="mm-radio-volume">'+icon('volume')+'<input id="mm-radio-volume" type="range" min="0" max="100" value="'+Math.round(radioState.volume*100)+'" aria-label="Radio-Lautstärke" oninput="meviRadioAction(\'volume\',this.value)"></label></div></div></div></section>';
   }
 
   function html(isCompact){
@@ -292,7 +383,7 @@
   }
   function syncPlaybackButtons(){
     const b=$('mm-play');if(b){const isPlaying=!!player&&!player.paused;b.innerHTML=icon(isPlaying?'pause':'play');b.setAttribute('aria-label',isPlaying?'Pause':'Abspielen')}
-    if('mediaSession'in navigator){try{navigator.mediaSession.playbackState=player&&!player.paused?'playing':'paused'}catch{}}
+    if(audioOwner==='media'&&'mediaSession'in navigator){try{navigator.mediaSession.playbackState=player&&!player.paused?'playing':'paused'}catch{}}
   }
   function updateProgress(){
     const seek=$('mm-seek'),duration=player?.duration,elapsed=player?.currentTime;
@@ -310,12 +401,12 @@
     updateMediaSession(t);
   }
   function updateMediaSession(t){
-    if(!('mediaSession'in navigator)||!('MediaMetadata'in window))return;
+    if(audioOwner!=='media'||!t||!('mediaSession'in navigator)||!('MediaMetadata'in window))return;
     try{navigator.mediaSession.metadata=new window.MediaMetadata({title:t.title||t.name,artist:t.artist||'MeviMedia 3.0',album:t.album||'',artwork:st.artUrl?[{src:st.artUrl,type:'image/jpeg'}]:[]})}catch{}
   }
   function play(index,preserveQueue){
     const t=st.tracks[index];if(!t)return;
-    ensurePlayer();
+    onSourceChanged('media');ensurePlayer();
     if(!preserveQueue){
       const filter=filtered().filter(v=>v.video===t.video);
       st.queue=(filter.length?filter:st.tracks.filter(v=>v.video===t.video)).map(x=>x.key);
@@ -336,7 +427,7 @@
   }
   function toggle(){
     if(!player||st.index<0){if(st.tracks.length)play(0);return}
-    if(player.paused)player.play().catch(()=>{});else player.pause();
+    if(player.paused){onSourceChanged('media');player.play().catch(()=>{});updateMediaSession(current());}else player.pause();
   }
   function advance(automatic){
     if(!player||!st.queue.length)return;
@@ -369,6 +460,7 @@
   function repeat(){st.repeat=(st.repeat+1)%3;persist();redraw()}
   function stop(){if(player){player.pause();closeVideo()}}
   Object.assign(window,{
+    meviRadioHTML:radioHTML,meviRadioAction:radioAction,
     meviAudioDemoHTML:demoHTML,meviAudioDemoAction:demoAction,
     meviMediaHTML:html,meviMediaFolder:chooseFolder,meviMediaFiles:chooseFiles,meviMediaLoadFiles:loadFiles,
     meviMediaSection:setSection,meviMediaGroup:setGroup,meviMediaSearch:search,meviMediaPane:pane,

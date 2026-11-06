@@ -110,8 +110,8 @@ assert.ok(redrawCount>4);
 
 win.meviMediaStopForSource('spotify');
 assert.equal(player.paused,true);
-// Radio and Spotify are interactive previews; they must not fake playback.
-for(const source of ['radio','spotify']){
+// Spotify remains an interactive preview; it must not fake playback.
+for(const source of ['spotify']){
   let html=win.meviAudioDemoHTML(source,true);
   assert.match(html,/data-pane="library"/);
   assert.equal((html.match(/class="mm-mode-button /g)||[]).length,3);
@@ -133,3 +133,5 @@ for(const source of ['radio','spotify']){
 assert.equal(player.paused,true,'Demo selection must not start the local player');
 assert.equal(win.meviMediaDebug().count,3,'Demo selection must preserve the local library');
 console.log('MeviMedia smoke checks passed: import, library, group, search, play, queue, favorites, video, volume, source switch.');
+
+await import('./radio-smoke.mjs');

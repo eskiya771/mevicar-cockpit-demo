@@ -58,7 +58,8 @@ Adresssuche: feste Ortsliste, deduplizierte Recents, Freitext als ausdrücklich 
 | Dock/Launcher | SVGs, Zusatzslot, Layoutwechsel, sourceabhängige Audiobeschriftung | Einige historische Symboldefinitionen werden später überschrieben |
 | Themes | Drei live umschaltbare Themes, lokale Speicherung | Noch kein durchgängiges gemeinsames Tokensystem |
 | MeviMedia | Dateien/Ordner, lokale Audio-/Videowiedergabe, Suche/Gruppen/Favoriten, Queue, Seek, Lautstärke, Shuffle/Repeat, begrenzte ID3-/Cover-Auswertung | Browsercodecs und Dateifreigabe erforderlich; keine dauerhafte Bibliothek oder stille USB-Suche |
-| Radio/Spotify | Gemeinsame MeviMedia-Oberfläche, Demo-Sender/Titel auswählen, Favoriten filtern, Bibliothek/Player im Split, Quellenwahl jederzeit sichtbar | Kein Streaming oder Login; Wiedergabe ausdrücklich nicht verfügbar; Demo-Auswahl und Favoriten nur für die Sitzung |
+| Radio | Echtes Internetradio mit 13 direkten HTTPS-MP3-Streams aus Classic, Start/Stopp, Senderwechsel, Lautstärke, gespeicherte Sender/Favoriten | Internet erforderlich; keine UKW-/DAB-Hardware, keine Sendungstitel/ICY-Metadaten; Browser-/OS-Grenzen bei Hintergrundbetrieb und Lautstärke |
+| Spotify | MeviMedia-Oberfläche, Demo-Titelauswahl und Favoriten, Quellenwahl im Split | Kein Streaming oder Login; Demo-Auswahl nur für die Sitzung |
 | Premium-Tacho | 0–220 km/h, 0–8000 U/min, GPS-Trip, Sensor-/GPS-Kompass, klarer Demo-Modus | RPM/Gesamt-km nur über API; kein physischer OBD-Transport |
 | OBD-App | Feste Anzeige 82 km/h / 2150 U/min | Nicht mit Tacho-Ingest verbunden; keine Hardwaredaten |
 | Home Assistant | Lokaler Licht-An/Aus-Schalter | Kein Serveraufruf oder echte Haussteuerung |
@@ -79,6 +80,14 @@ Ein Teil der Platzhalter trägt noch keine gut sichtbare eigene Demo-Kennzeichnu
 Ein `video`-Element übernimmt Audio und Video. `ensurePlayer()` hängt es in ein Overlay direkt an `document.body`, außerhalb von `#screen`. Deshalb ist absichtlich kein Mount/Unmount beim Appwechsel vorhanden; Audio kann beim Rerender weiterlaufen. Quellenwechsel weg von Medien pausiert den Player. Video schließen pausiert Video. Objekt-URLs werden beim Titel-/Coverwechsel freigegeben. Dateilisten bleiben nur für die Sitzung verfügbar.
 
 Ordner: `showDirectoryPicker` im sicheren Kontext, sonst Dateiinput mit `webkitdirectory`. Rekursion begrenzt auf Tiefe 10 und 3000 Dateien; Liste zeigt bis zu 350 Treffer. ID3v2.3/2.4 wird aus den ersten 256 KiB gelesen, kein allgemeiner Metadatenparser. Favoriten identifizieren Dateien anhand Pfad, Größe und Änderungszeit.
+
+### Internetradio
+
+Radio ist im vorhandenen mevimedia.js integriert und nutzt dessen Icons, Quellenwahl und Layout. Der feste Katalog entspricht [Classic RadioStations.kt](https://github.com/eskiya771/mevicar/blob/main/app/src/main/java/de/mevicar/app/RadioStations.kt). Ein audio-Element hängt während einer Wiedergabe direkt an document.body, außerhalb von #screen. App-, Theme- und Layoutwechsel zerstören es nicht. Start erfolgt ausschließlich durch Senderwahl oder Abspielen. Stopp, Quellenwechsel, Offline-Ereignis und Fehler entfernen Quelle und Element; erneuter Start verbindet live neu. Kein Stream-Proxy und keine neue Laufzeitbibliothek.
+
+Medien und Radio teilen sich die Media-Session-Steuerung nach aktiver Audioquelle. Radio pausiert lokale Medien, deren Start beendet Radio. Verspätete Events/Play-Promises alter Streams werden über eine Generation verworfen; verspätete Cover-Metadaten dürfen die Radioanzeige nicht überschreiben. Medienereignisse ändern nur Status und Schaltflächen, nicht den Screen-DOM. Nach 15 Sekunden ohne gestartete/fortgesetzte Wiedergabe endet der Ladeversuch mit einer erneuten Startmöglichkeit. Ein Download-Stall bei noch abspielbarem Puffer löst keinen unnötigen Stopp aus.
+
+LocalStorage-Schlüssel mevicar-radio-v1 speichert Sender-ID, Lautstärke und Favoriten. Wiederherstellung startet niemals automatisch. Sendersuche und frei eingegebene URLs sind nicht Bestandteil dieser Iteration. Nachweis: [Radio-QA](QA_RADIO_2026-11-06.md).
 
 ### Tacho
 
@@ -148,7 +157,7 @@ node tests/display-profiles-smoke.mjs
 node tests/speedometer-smoke.mjs
 ```
 
-- Media: Mockplayer/-DOM; Import, Gruppen, Favoriten, Video, Queue und Quellenwechsel.
+- Media: Mockplayer/-DOM; Import, Gruppen, Favoriten, Video, Queue und Quellenwechsel. Importiert zusätzlich radio-smoke.mjs: Streamzustände, Stopp/Retry, Offline, Timeout, veraltete Events, Persistenz, Media-Session und exklusive Audiowiedergabe.
 - Lichtshow: Mockrenderer/-DOM; Steuerung, Timer, Visibility, Unmount. Testet nicht die Darstellung aller echten Effekte.
 - UI: VM mit Mock-DOM; Navigation/Appwege, Suchtexte, Demo-Kennzeichnung und SVG-Markup. Konsolenmeldung ist breiter als tatsächliche Browserabdeckung.
 - Displayprofile: statische CSS-/Dokument-/Workflow-Assertions. Keine echten Viewports oder Touchmessungen.
@@ -171,7 +180,7 @@ Die folgenden Punkte sind offen, keine in dieser Übernahme vorgenommenen Korrek
 | P1 | Codebefund: iOS-Kompass wird nach Remount mit requestPermission-API nicht automatisch wieder gebunden | Erteilte Berechtigung/Lifecycle gezielt testen |
 | P1 | Codebefund: Such-Taste „123“ fügt nur „1“ ein; `scrollResults()` entfernt Tastatur und Searchmode beim Scrollen | Erwartetes Suchverhalten und Dock-Rückkehr prüfen, kleine Bedienkorrektur |
 | P1 | Codebefund: `placeButton` setzt encodeURIComponent-Ergebnis in ein einfach gequotetes Inline-JS-Argument; Apostroph bleibt unkodiert | Zielnamen mit Apostroph als Regression testen, Argumentescaping konsistent machen |
-| P1 | Mehrere Dienstplatzhalter außerhalb von Audio noch nicht ausdrücklich Demo. Radio/Spotify verwenden inzwischen die MeviMedia-Oberfläche mit sichtbarem Demo-/Verbindungsstatus und Quellenwahl im Split; wirkungslose Transporttasten entfernt | Verbleibende Dienstplatzhalter kennzeichnen, ohne neue Dienste anzubinden |
+| P1 | Mehrere Dienstplatzhalter außerhalb von Audio noch nicht ausdrücklich Demo. Radio bietet inzwischen echte Streams, Spotify bleibt klar gekennzeichnete Demo; beide haben eine sichtbare Quellenwahl im Split | Verbleibende Dienstplatzhalter kennzeichnen, ohne neue Dienste anzubinden |
 | P1 | Codebefund: Lichtshow reduziert Canvasbewegung bei reduced motion nicht; kompakte Buttons 32 px, Intervallknöpfe 29 px hoch | Bewegungsvorgabe und Touchflächen profilübergreifend prüfen |
 | P1 | Prüflücke: keine reproduzierbaren Browser-/Start-/PWA-Tests im Repository | Kleinen Browserprüfweg ergänzen, vorhandene 30 Layoutbehauptungen erneut belegen |
 | P2 | Codebefund: Buildanzeige kann Serverversion statt geladenem Code zeigen; SW entfernt fremde Cache-Namen | Versionsdarstellung und Cache-Eigentümerschaft isoliert absichern |

@@ -7,3 +7,7 @@ Live-Demo: https://eskiya771.github.io/mevicar-cockpit-demo/
 ## Entwicklung und Architektur
 
 Einstieg und Arbeitsregeln: [AGENTS.md](AGENTS.md). Architektur, tatsächlicher Funktionsumfang, lokale Startvoraussetzungen, Tests und priorisierte Qualitätsprobleme: [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md).
+
+## Internetradio
+
+Radio spielt 13 direkte HTTPS-MP3-Streams aus MeviCar Classic, einschließlich BAYERN 1 Franken, BAYERN 3, ANTENNE BAYERN und Deutschlandfunk. Sender antippen oder im Player Abspielen drücken. Stopp schließt den Stream; erneutes Starten beginnt live. Sender, Favoriten und Lautstärke werden lokal gespeichert. WLAN oder mobile Daten sind erforderlich. Spotify bleibt eine gekennzeichnete Demo.
