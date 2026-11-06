@@ -21,6 +21,7 @@
 - Vollbild auf großen Displays (DeX, Full HD, Panorama): beide Instrumente skalieren per CSS-Container-Query auf die verfügbare Höhe statt auf eine feste Maximalgröße.
 - Digitale Geschwindigkeit und Drehzahl-Readout wachsen mit dem Instrument; die Anmerkung „×1000“ liegt nicht mehr unter dem Drehzahlwert.
 - Service-Worker-Cache `mevicar-next-shell-v20`, damit installierte PWAs die neue Darstellung geschlossen übernehmen.
+- Tacho 2.1: Gesamt-km, Trip und Kompass im Vollbild und in großen Split-Flächen deutlich größer (Full HD: 45 px Werte, 103 px Kompassrose mit N/O/S/W). Hohe Split-Flächen (DeX, Full HD) stapeln Tacho und Drehzahlmesser; der Drehzahlmesser im Split ist nicht mehr auf 300 px begrenzt. Mobilprofile unverändert. Service-Worker-Cache `mevicar-next-shell-v21`.
 
 ## Hinweise
 - **v0.5.0 bleibt ein Web-/PWA-Prototyp, keine Android-APK.**

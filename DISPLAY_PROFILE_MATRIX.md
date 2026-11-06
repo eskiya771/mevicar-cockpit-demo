@@ -25,7 +25,7 @@ Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix f
 - Farbdesigns **Original**, **Cyberpunk Neon City** und **Liquid Glass** werden in allen fünf Profilen begutachtet (15 Theme/Viewport-Kombinationen).
 - Bestehende Medienwiedergabe, Lichtshow, PWA-Update und Touch-Eingaben bleiben erhalten.
 - Premium-Tacho 0.5.0: in jedem Profil Vollbild und Split-Screen, beide analogen Instrumente, Trip/Gesamt-km, Kompass und die Themen Original, Neon City und Liquid Glass. Der Split-Tacho bleibt in der rechten Fläche, die Karte links. Keine Tacho-Scrollleiste.
-- Premium-Tacho Vollbild auf DeX, Full HD und Panorama: beide Instrumente füllen die verfügbare Höhe (Chromium-Messung: 1013/731 px, 896/731 px, 565/565 px), Skalenziffern ohne Überlappung, Instrumente nicht abgeschnitten. Messwerte und Prüfkriterien siehe `TACHO_ARCHITECTURE.md`, Abschnitt 5.
+- Premium-Tacho Vollbild auf DeX, Full HD und Panorama: beide Instrumente füllen die verfügbare Höhe (Chromium-Messung: 955/731 px, 841/731 px, 540/540 px), Skalenziffern ohne Überlappung, Instrumente nicht abgeschnitten. Gesamt-km, Trip und Kompass skalieren im Vollbild und in großen Split-Flächen mit der Höhe (Full HD: 45 px Werte, 103 px Kompassrose mit N/O/S/W). Im DeX- und Full-HD-Split stehen Tacho und Drehzahl untereinander (469/346 px bzw. 405/299 px). Messwerte und Prüfkriterien siehe `TACHO_ARCHITECTURE.md`, Abschnitt 5.
 
 ## Quellen und Umsetzung
 

@@ -71,6 +71,8 @@ meviSpeedIngest({
 - **Split:** andere Anordnung, nicht nur verkleinert. Große Digitalgeschwindigkeit über der Fläche, darunter beide Nadeln, darunter die Infozeile. Die Karte bleibt links.
 - **Enge Fläche:** `ResizeObserver` setzt `is-tight`, wenn der Host schmaler als 460 px oder flacher als 430 px ist. Das betrifft die Mobilprofile iPhone 17 und Galaxy S20 FE in Vollbild und Split.
 - **Vollbild-Skalierung (Tacho 2.0, Build nach v0.5.0):** Im Vollbild ist `.tacho-cluster` ein CSS-Size-Container und jedes `.tacho-dial` ein quadratischer Container mit `width:min(100%,100cqh)`. Die Instrumente wachsen so bis zur Clusterhöhe oder Spaltenbreite, je nachdem was zuerst begrenzt, ohne Überlauf. Die Skalenziffern bleiben in SVG-viewBox-Einheiten und skalieren automatisch mit; nur die HTML-Overlays (digitale Geschwindigkeit, Drehzahl-Readout) nutzen `cqmin`. Container-Einheiten auf den SVG-Ziffern führten zu überlappenden Zahlen und sind per Test ausgeschlossen. Die Anmerkung „×1000“ sitzt unterhalb des Drehzahl-Readouts (y=206), damit sich beide nicht überlagern. Split- und Tight-Layouts bleiben unverändert.
+- **Infozeile und Kompass (Tacho 2.1):** Im Vollbild skalieren Gesamt-km, Trip und Kompass mit der Fensterhöhe (Werte `clamp(20px,4.2vh,46px)`, Beschriftungen `clamp(10px,1.4vh,15px)`, Kompass `clamp(40px,9.5vh,104px)`), in großen Split-Flächen mit kleinerer Obergrenze (`.tacho-app.is-compact:not(.is-tight)`). Mobile `is-tight`-Flächen behalten 14 px / 9 px / 28 px. Die Kompassrose zeigt N, O, S, W und vier Zwischenstriche und dreht sich weiterhin als Ganzes über `#tachoCompassRot`.
+- **Split-Instrumente:** Der Drehzahlmesser füllt im Split seine Rasterzelle (`width:100%;height:100%`, eigener Size-Container) statt an der intrinsischen SVG-Größe von 300 px zu enden; das Readout sitzt per Container-Einheiten auf 64 % des sichtbaren Zifferblatts. Hohe Split-Hosts (Höhe > 1,25 × Breite, z. B. DeX und Full HD neben der Karte) erhalten per `ResizeObserver` die Klasse `is-tall` und stapeln Digitalwert, Tacho und Drehzahl untereinander, sodass beide Instrumente die volle Breite nutzen.
 
 Profile: iPhone 17 874×402, Galaxy S20 FE 915×412, DeX 1920×1200, Full HD 1920×1080, Panorama 1920×720. Safe Area bleibt am Shell-Rand.
 
@@ -78,11 +80,13 @@ Profile: iPhone 17 874×402, Galaxy S20 FE 915×412, DeX 1920×1200, Full HD 192
 
 | Profil | Vollbild Tacho/Drehzahl (px) | Split Tacho/Drehzahl (px) | Layout |
 | --- | ---: | ---: | --- |
-| iPhone 17 874×402 | 167 / 167 | 151 / 151 | is-tight |
-| Galaxy S20 FE 915×412 | 174 / 174 | 158 / 158 | is-tight |
-| DeX 1920×1200 | 1013 / 731 | 300 / 300 | Vollbild frei, Split is-compact |
-| Full HD 1920×1080 | 896 / 731 | 300 / 300 | Vollbild frei, Split is-compact |
-| Panorama 1920×720 | 565 / 565 | 300 / 300 | Vollbild frei, Split is-compact |
+| iPhone 17 874×402 | 155 / 155 | 157 / 157 | is-tight |
+| Galaxy S20 FE 915×412 | 165 / 165 | 167 / 167 | is-tight |
+| DeX 1920×1200 | 955 / 731 | 469 / 346 | Vollbild frei, Split is-compact + is-tall (gestapelt) |
+| Full HD 1920×1080 | 841 / 731 | 405 / 299 | Vollbild frei, Split is-compact + is-tall (gestapelt) |
+| Panorama 1920×720 | 540 / 540 | 325 / 325 | Vollbild frei, Split is-compact nebeneinander |
+
+Infozeile (Chromium, Standardtheme): Full HD Vollbild Werte 45 px, Beschriftung 15 px, Kompass 103 px; DeX Split Werte 36 px, Beschriftung 14 px, Kompass 84 px; Panorama Split 23 px / 10 px / 54 px; iPhone 17 Split unverändert 14 px / 9 px / 28 px. Die Vollbild-Instrumente auf DeX/Full HD/Panorama sind gegenüber Tacho 2.0 um 25–58 px kleiner, weil die Infozeile mehr Höhe erhält.
 
 In allen 30 Kombinationen (5 Profile × Vollbild/Split × 3 Themes): keine Scrollleiste an Host, App oder Dokument, beide SVG-Instrumente vollständig im Host, keine überlappenden Skalenziffern, Karte im Split sichtbar, DEMO-Badge sichtbar, alle Aktionsflächen mindestens 44 px hoch.
 

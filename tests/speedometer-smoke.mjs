@@ -24,6 +24,11 @@ assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-cluste
 assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-dial{container-type:size;container-name:tacho-dial;width:min(100%,100cqh)'), 'dials must grow to the cluster height');
 assert.ok(!/.tacho-num[^{]*{[^}]*cq(min|h|w)/.test(css), 'SVG numerals must not use container units (they overlap on large dials)');
 assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero b{font-size:clamp(44px,13cqmin,124px)}'), 'hero speed scales with the dial');
+assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass svg{width:clamp(40px,9.5vh,104px)'), 'full-layout compass must scale with viewport height');
+assert.ok(css.includes('.tacho-app.is-compact:not(.is-tight) .tacho-stat strong,.tacho-app.is-compact:not(.is-tight) .tacho-compass b{font-size:clamp(18px,3.2vh,36px)'), 'large split odometer must scale, tight stays at 14px');
+assert.ok(css.includes('.tacho-app.is-compact.is-tall .tacho-cluster{grid-template-columns:minmax(0,1fr)'), 'tall split hosts must stack both dials');
+assert.ok(css.includes('.tacho-app.is-compact .tacho-dial-rpm,.tacho-app.is-tight .tacho-dial-rpm{width:100%;height:100%'), 'split RPM dial must fill its grid cell');
+assert.ok(src.includes('class="tacho-compass-c">O<') && src.includes('class="tacho-compass-c">W<'), 'compass rose must show cardinal letters');
 assert.ok(src.includes('y="206" class="tacho-scale-note"'), 'RPM ×1000 note must sit below the digital readout');
 assert.ok(html.includes('href="./speedometer.css"') && html.includes('src="./speedometer.js"'));
 assert.ok(html.includes('meviSpeedMount()') && html.includes('meviSpeedUnmount()'));
@@ -32,7 +37,7 @@ assert.ok(html.includes('mapHTML()'), 'Split screen must keep the navigation map
 assert.ok(workflow.includes('mevicar-speedometer-styles') && workflow.includes('speedometer.js speedometer.css'));
 assert.ok(workflow.includes('tests/speedometer-smoke.mjs'));
 assert.ok(sw.includes("'./speedometer.js'") && sw.includes("'./speedometer.css'"));
-assert.ok(sw.includes('mevicar-next-shell-v20'));
+assert.ok(sw.includes('mevicar-next-shell-v21'));
 
 const elements = new Map();
 function makeNode(id) {
@@ -241,6 +246,22 @@ app = makeApp();
 window.meviSpeedMount();
 assert.equal(app.classList['is-tight'], true);
 assert.equal(app.dataset.layout, 'tight');
+window.meviSpeedUnmount();
+
+rect = { width: 640, height: 1120, left: 0, top: 0 };
+app = makeApp();
+app.dataset.layout = 'split';
+window.meviSpeedMount();
+assert.equal(app.classList['is-tight'], false);
+assert.equal(app.classList['is-tall'], true, 'tall split host stacks the dials');
+assert.equal(app.dataset.layout, 'split');
+window.meviSpeedUnmount();
+
+rect = { width: 680, height: 660, left: 0, top: 0 };
+app = makeApp();
+app.dataset.layout = 'split';
+window.meviSpeedMount();
+assert.equal(app.classList['is-tall'], false, 'panorama split stays side by side');
 window.meviSpeedUnmount();
 
 console.log('Speedometer OK: scales, needles, GPS trip filter, demo isolation, OBD ingest, compass, remount cleanup, PWA bundle.');

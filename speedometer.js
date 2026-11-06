@@ -198,7 +198,7 @@
       '<footer class="tacho-info">' +
         '<div class="tacho-stat"><span>GESAMT</span><strong id="tachoOdo">—</strong><small id="tachoOdoSource">keine Fahrzeugdaten</small></div>' +
         '<div class="tacho-stat"><span>TRIP</span><strong id="tachoTrip">0,0</strong><small id="tachoTripSource">—</small></div>' +
-        '<div class="tacho-compass"><svg viewBox="0 0 80 80" role="img" aria-label="Kompass"><circle cx="40" cy="40" r="30" class="tacho-compass-ring"/><polygon points="40,6 44,14 36,14" class="tacho-lubber"/><g id="tachoCompassRot"><polygon points="40,14 44,40 40,36 36,40" class="tacho-north"/><polygon points="40,66 36,40 40,44 44,40" class="tacho-south"/><text x="40" y="28" class="tacho-compass-n">N</text></g></svg>' +
+        '<div class="tacho-compass"><svg viewBox="0 0 80 80" role="img" aria-label="Kompass"><circle cx="40" cy="40" r="27" class="tacho-compass-ring"/><polygon points="40,1 43.5,7 36.5,7" class="tacho-lubber"/><g id="tachoCompassRot"><line x1="59" y1="21" x2="56" y2="24" class="tacho-compass-tick"/><line x1="59" y1="59" x2="56" y2="56" class="tacho-compass-tick"/><line x1="21" y1="59" x2="24" y2="56" class="tacho-compass-tick"/><line x1="21" y1="21" x2="24" y2="24" class="tacho-compass-tick"/><polygon points="40,16 45,40 40,35 35,40" class="tacho-north"/><polygon points="40,64 35,40 40,45 45,40" class="tacho-south"/><text x="40" y="10" class="tacho-compass-n">N</text><text x="70" y="40" class="tacho-compass-c">O</text><text x="40" y="70" class="tacho-compass-c">S</text><text x="10" y="40" class="tacho-compass-c">W</text></g></svg>' +
         '<div><b id="tachoHeading">—</b><small id="tachoCardinal">keine Daten</small></div></div>' +
         '<div class="tacho-actions">' +
           '<button type="button" id="tachoGps" onclick="meviSpeedGps(true)">GPS</button>' +
@@ -482,7 +482,10 @@
     if (!root || !root.isConnected) return;
     const bounds = root.getBoundingClientRect();
     const tight = bounds.width > 0 && (bounds.width < 460 || bounds.height < 430);
+    // Tall split hosts (DeX, Full HD next to the map) stack both dials so they can use the full width.
+    const tall = !tight && root.dataset.layout === 'split' && bounds.height > bounds.width * 1.25;
     root.classList.toggle('is-tight', tight);
+    root.classList.toggle('is-tall', tall);
     if (root.dataset.layout !== 'split') root.dataset.layout = tight ? 'tight' : 'full';
   }
 
