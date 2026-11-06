@@ -57,6 +57,12 @@ assert.match(css,/html\[data-theme="cyberpunk"\] \.sp-shell/);
 assert.match(css,/html\[data-theme="liquidglass"\] \.sp-shell/);
 assert.match(css,/44px/,'Touch targets should reach 44 px where space allows');
 assert.match(css,/\.sp-shell\.is-compact/);
+assert.match(css,/\.sp-search-entry/);
+assert.match(css,/\.sp-voice-button/);
+assert.match(css,/width:44px;min-width:44px;min-height:44px/);
+assert.match(source,/window\.SpeechRecognition \|\| window\.webkitSpeechRecognition/);
+assert.match(source,/recognition\.lang = 'de-DE'/);
+assert.match(source,/meviSpotifyVoice: voice/);
 
 /* --- Cockpit wiring and lifecycle --- */
 assert.match(html,/<link rel="stylesheet" href="\.\/spotify\.css">/);
@@ -80,7 +86,7 @@ const json=(data,status=200)=>({
   headers:{get:name=>name==='Retry-After'?'2':null},
   text:async()=>JSON.stringify(data)
 });
-function createEnv({connected=false,fetchImpl,shell=null}={}){
+function createEnv({connected=false,fetchImpl,shell=null,speechCtor=null}={}){
   const saved={},session={},requests=[];
   if(connected){
     saved['mevicar-spotify-client-v1']='testclient1234';
@@ -109,6 +115,7 @@ function createEnv({connected=false,fetchImpl,shell=null}={}){
   const history={replaceState(){}};
   let renders=0;
   const win={render(){renders++},crypto:globalThis.crypto,addEventListener(){},removeEventListener(){},btoa:value=>Buffer.from(value,'binary').toString('base64')};
+  if(speechCtor)win.SpeechRecognition=speechCtor;
   const fetchStub=(url,options)=>Promise.resolve((fetchImpl||(()=>json({})))(String(url),options));
   new Function('window','document','navigator','localStorage','sessionStorage','location','history','fetch','URL','TextEncoder','setTimeout','clearTimeout','AbortController',source)(
     win,document,{},localStorage,sessionStorage,location,history,fetchStub,URL,TextEncoder,setTimeout,clearTimeout,AbortController
@@ -146,6 +153,9 @@ assert.match(markup,/SPOTIFY REMOTE|SPOTIFY <em>REMOTE<\/em>/);
 assert.match(markup,/id="sp-now-region"/);
 assert.match(markup,/id="sp-browse-region"/);
 assert.match(markup,/id="sp-search-region"/);
+assert.match(markup,/Sprachsuche im Browser nicht verfügbar/);
+assert.match(markup,/class="sp-voice-button/);
+assert.match(markup,/disabled/);
 assert.match(markup,/Wiedergabestatus wird geladen/);
 assert.match(markup,/role="tablist"/);
 assert.equal(connected.win.meviSpotifyDebug().connected,true);
@@ -157,6 +167,46 @@ assert.equal(connected.win.meviSpotifyDebug().polling,true);
 connected.win.meviSpotifyUnmount();
 assert.equal(connected.win.meviSpotifyDebug().mounted,false);
 assert.equal(connected.win.meviSpotifyDebug().polling,false);
+
+/* Browser speech recognition is optional; recognized text must enter existing search.
+   No permission request on mount and any active recognition stops during unmount. */
+const instances=[];
+class MockRecognition {
+  constructor(){instances.push(this);this.started=0;this.aborted=0}
+  start(){this.started++}
+  abort(){this.aborted++}
+}
+const spoken=createEnv({connected:true,shell:{},speechCtor:MockRecognition});
+let voiceMarkup=spoken.win.meviSpotifyHTML(true);
+assert.match(voiceMarkup,/Sprachsuche starten/);
+assert.doesNotMatch(voiceMarkup,/Sprachsuche im Browser nicht verfügbar/);
+assert.equal(instances.length,0,'Do not request microphone on initial render');
+spoken.win.meviSpotifyVoice();
+assert.equal(instances.length,1);
+assert.equal(instances[0].lang,'de-DE');
+assert.equal(instances[0].started,1);
+assert.match(spoken.win.meviSpotifyHTML(true),/Sprachsuche beenden/);
+instances[0].onresult({results:[[ {transcript:'Daft Punk'} ]]});
+assert.equal(spoken.doc.getElementById('sp-search-input').value,'Daft Punk');
+assert.equal(spoken.win.meviSpotifyDebug().tab,'search');
+assert.equal(spoken.win.meviSpotifyDebug().connected,true);
+assert.equal(instances[0].aborted,1,'Recognition must end on successful result');
+spoken.win.meviSpotifyVoice();
+assert.equal(instances.length,2);
+spoken.win.meviSpotifyUnmount();
+assert.equal(instances[1].aborted,1,'Unmount must stop the microphone');
+spoken.win.meviSpotifyVoice();
+instances[2].onerror({error:'not-allowed'});
+assert.match(spoken.win.meviSpotifyHTML(true),/Mikrofonzugriff verweigert/);
+spoken.win.meviSpotifyVoice();
+instances[3].onresult({results:[[ {transcript:'Nena'} ]]});
+assert.equal(spoken.doc.getElementById('sp-search-input').value,'Nena');
+spoken.win.meviSpotifyVoice();
+spoken.win.meviSpotifyTab('browse');
+assert.equal(instances[4].aborted,1,'Leaving search must stop microphone');
+const unsupported=createEnv({connected:true,shell:{}});
+unsupported.win.meviSpotifyVoice();
+assert.match(unsupported.win.meviSpotifyHTML(true),/Spracherkennung in diesem Browser nicht verfügbar/);
 
 /* Link parsing mirrors Classic's strict Spotify validation. */
 const api=connected.win.MeviSpotify;
