@@ -309,3 +309,65 @@ html[data-theme="liquidglass"] .dock button[data-app="audio-spotify"].active .ic
 .media-cover.media-cover-media>span:last-child{color:#aff4ff}
 .media-mini .media-cover-icon{width:clamp(28px,7vh,60px);height:clamp(28px,7vh,60px)}
 @media (max-height:450px){.media-cover-icon{width:clamp(33px,9vh,72px);height:clamp(33px,9vh,72px)}}
+
+/* Quality pass 01: consistent, single-purpose CarPlay-inspired navigation controls. */
+.nav-search-trigger{
+  width:100%;display:flex;gap:clamp(8px,1vw,13px);
+  min-height:clamp(55px,8vh,73px);padding:clamp(10px,1.5vh,16px);
+  text-align:left;border:1px solid #94d8e887;
+  border-radius:clamp(13px,1.6vw,20px);
+  background:linear-gradient(130deg,#265467d9,#263a5ff0);
+  box-shadow:inset 0 1px #fff3,0 4px 20px #0003;
+}
+.nav-search-trigger:hover{border-color:#87f0fb;background:linear-gradient(130deg,#296777d9,#2f476af0)}
+.nav-search-text{min-width:0;flex:1;font-size:clamp(13px,2.1vh,19px);font-weight:730;letter-spacing:.01em;color:#e6faff}
+.nav-search-hint{flex:0 0 auto;font-size:clamp(10px,1.6vh,13px);font-weight:770;white-space:nowrap;color:#92e8f3}
+.nav-search-symbol{flex:0 0 auto;width:clamp(22px,3.4vh,29px);height:clamp(22px,3.4vh,29px);display:grid;place-items:center;color:#83f0ff}
+.nav-search-symbol .app-illustration{width:100%;height:100%;filter:none}
+.nav-search-field{gap:clamp(7px,1vw,11px)}
+.nav-search-field:focus-within{border-color:#67eefd;box-shadow:0 0 0 2px #52d9ef28}
+.nav-search-heading{flex:none;padding:0 3px}
+.nav-search-heading b{font-size:clamp(12px,1.85vh,15px);color:#c9e6f5}
+.nav-clear[hidden]{display:none!important}
+.nav-clear{min-width:34px;min-height:34px;display:grid;place-items:center;color:#d0edf5;font-size:24px}
+.nav-browse .sectiontitle{font-size:clamp(13px,1.9vh,16px);letter-spacing:.025em}
+.nav-browse .list{flex:1;min-height:0}
+.nav-browse .inner,.nav-search .inner{overflow:hidden}
+.nav-browse .inner{gap:clamp(6px,1.25vh,13px)}
+.nav-search .inner{gap:clamp(6px,1.15vh,12px)}
+.nav-suggestions{min-height:0}
+.suggestion{min-height:clamp(56px,9vh,73px);gap:10px;flex:none}
+.suggestion:focus-visible,.fav:focus-visible{outline:2px solid #8af1ff;outline-offset:1px}
+.suggestion .circle{width:clamp(37px,6.6vh,46px);height:clamp(37px,6.6vh,46px);
+  flex:0 0 auto;background:linear-gradient(140deg,#15536a,#2f3c6f);border:1px solid #66dfe97c}
+.suggestion .circle .app-illustration{height:55%;width:55%;filter:none;color:#8ef3fb}
+.suggestion-chevron{margin-left:auto;flex:0 0 auto;font-size:22px;color:#9ed6e3}
+.fav .bubble .app-illustration{width:54%;height:54%;color:#eaffff;filter:drop-shadow(0 0 6px #a4f3fe77)}
+.nav-preview-destination{font-size:clamp(16px,2.8vh,24px);line-height:1.2;min-width:0;overflow-wrap:anywhere}
+.nav-preview-actions{gap:8px}
+.nav-preview-actions button{min-height:clamp(43px,7vh,54px);flex:1;font-weight:750;padding:6px}
+.navbanner{max-width:calc(100% - 32px);border:1px solid #8cdfe65b;box-shadow:0 10px 28px #04121b66}
+.navbanner .small{letter-spacing:.04em;color:#9ee7eb}
+.navbanner .controls button{min-height:43px}
+html[data-theme="cyberpunk"] .nav-search-trigger{background:linear-gradient(135deg,#3d194cdd,#1c1a41ed);border-color:#ea69d786}
+html[data-theme="cyberpunk"] .nav-search-symbol{color:#ff82e8}
+html[data-theme="cyberpunk"] .nav-search-hint{color:#f6a1e2}
+html[data-theme="cyberpunk"] .suggestion .circle{background:linear-gradient(130deg,#582162,#273b64);border-color:#f96bdb7a}
+html[data-theme="cyberpunk"] .suggestion .circle .app-illustration{color:#ffa7ef}
+html[data-theme="cyberpunk"] .navbanner{border-color:#e956d263}
+html[data-theme="liquidglass"] .nav-search-trigger{background:#d2eaff24;backdrop-filter:blur(16px);border-color:#ffffffa6;box-shadow:inset 0 1px #fff5,0 8px 30px #17335835}
+html[data-theme="liquidglass"] .suggestion .circle{background:#b2e2ff2e;border-color:#dcf5ff9c}
+@media(max-width:700px){
+  .overlay.nav-browse,.overlay.nav-search{width:min(94%,440px);max-height:calc(100% - 26px);left:13px;top:13px}
+  .preview.nav-preview{width:min(94%,460px);left:13px;top:13px}
+  .nav-search-hint{display:none}
+}
+@media(max-height:500px){
+  .nav-browse .inner,.nav-search .inner{padding:clamp(7px,1.5vh,12px);gap:clamp(4px,.9vh,9px)}
+  .fav .bubble{height:clamp(38px,10vh,60px);width:clamp(38px,10vh,60px)}
+  .fav{min-width:clamp(57px,12vw,85px)}
+  .nav-search-trigger{min-height:46px;padding:7px}
+  .nav-search-field{min-height:42px;padding:6px 10px}
+  .suggestion{min-height:48px;padding:7px}
+  .searchmode .overlay.nav-search{bottom:43%}
+}
