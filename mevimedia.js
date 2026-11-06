@@ -248,33 +248,6 @@
   function sourceButtons(source){
     return [['radio','Radio','music'],['spotify','Spotify','disc'],['media','Medien','folder']].map(([id,label,ic])=>'<button type="button" data-source="'+id+'" class="mm-mode-button '+(id===source?'active':'')+'" aria-pressed="'+(id===source)+'" onclick="selectAudioSource(\''+id+'\')">'+icon(ic)+label+'</button>').join('');
   }
-  const demoCatalog={
-    spotify:[['Midnight Drive','Neon Horizon · Night Routes'],['Electric Roads','Skyline · City Lights'],['Afterglow','Lunar Echo · Slow Motion'],['Ocean Avenue','Daybreak · Weekend Escape']]
-  };
-  const demoState={spotify:{index:0,pane:'library',favorites:new Set(),filter:false}};
-  function demoAction(source,action,value){
-    const state=Object.hasOwn(demoState,source)?demoState[source]:null;if(!state)return;
-    if(action==='select'&&Number.isInteger(value)&&demoCatalog[source][value]){state.index=value;state.pane='player';}
-    else if(action==='pane'&&['library','player'].includes(value))state.pane=value;
-    else if(action==='filter')state.filter=!state.filter;
-    else if(action==='favorite'){if(state.favorites.has(state.index))state.favorites.delete(state.index);else state.favorites.add(state.index);}
-    else return;
-    redraw();
-  }
-  function demoHTML(source,compact){
-    if(!Object.hasOwn(demoState,source))return '';
-    const state=demoState[source],radio=source==='radio',label=radio?'Radio':'Spotify',catalog=demoCatalog[source],current=catalog[state.index];
-    const action=(name,value)=>"meviAudioDemoAction('"+source+"','"+name+"'"+(value===undefined?'':','+JSON.stringify(value).replace(/"/g,"'"))+")";
-    const rows=catalog.map((item,i)=>({item,i})).filter(({i})=>!state.filter||state.favorites.has(i)).map(({item,i})=>
-      '<button type="button" class="mm-demo-item '+(state.index===i?'selected':'')+'" aria-pressed="'+(state.index===i)+'" onclick="'+action('select',i)+'"><span class="mm-demo-item-icon">'+icon(radio?'music':'disc')+'</span><span class="mm-demo-item-text"><strong>'+esc(item[0])+'</strong><small>'+esc(item[1])+'</small></span>'+icon(state.favorites.has(i)?'heart':'arrow')+'</button>').join('');
-    return '<section class="mm-shell mm-demo '+(compact?'is-compact':'')+'" data-source="'+source+'" data-pane="'+state.pane+'" aria-label="'+label+' Demo"><div class="mm-top"><div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">'+label.toUpperCase()+'</span></div><div class="mm-top-actions">'+sourceButtons(source)+'</div></div>'+
-      '<div class="mm-demo-notice">Demo · '+(radio?'Kein Radioempfang oder Stream':'Spotify nicht verbunden')+'</div>'+
-      (compact?'<div class="mm-compact-toggle"><button type="button" aria-pressed="'+(state.pane==='library')+'" onclick="'+action('pane','library')+'">'+icon('list')+(radio?' Sender':' Titel')+'</button><button type="button" aria-pressed="'+(state.pane==='player')+'" onclick="'+action('pane','player')+'">'+icon('disc')+' Player</button></div>':'')+
-      '<div class="mm-content"><div class="mm-library"><div class="mm-demo-library-head"><strong>'+(radio?'Demo-Sender':'Demo-Playlist')+'</strong><button type="button" class="mm-tab '+(state.filter?'selected':'')+'" aria-pressed="'+state.filter+'" onclick="'+action('filter')+'">'+icon('heart')+' Favoriten</button></div><div class="mm-list">'+(rows||'<div class="mm-demo-empty">Noch keine Favoriten.<br>Wähle einen Eintrag und markiere das Herz im Player.</div>')+'</div></div>'+
-      '<div class="mm-now"><div class="mm-now-top"><div class="mm-artwork mm-demo-art" aria-hidden="true">'+icon(radio?'music':'disc')+'<span>'+label.toUpperCase()+'</span></div><div class="mm-track-details"><div class="mm-now-eyebrow">DEMO-AUSWAHL</div><div class="mm-now-title">'+esc(current[0])+'</div><div class="mm-now-sub">'+esc(current[1])+'</div><div class="mm-now-buttons"><button type="button" class="mm-icon-button" aria-label="Favorit umschalten" aria-pressed="'+state.favorites.has(state.index)+'" onclick="'+action('favorite')+'">'+icon('heart')+'</button></div></div></div>'+
-      '<div class="mm-demo-unavailable">'+icon('play')+'<span>Wiedergabe nicht verfügbar</span></div><div class="mm-demo-help">'+(radio?'Senderauswahl als Vorschau.':'Beispieltitel · Keine Spotify-Anmeldung.')+' Musik abspielen über „Medien“.</div></div></div></section>';
-  }
-
   // Classic's direct HTTPS MP3 catalog, no aggregator, API key or proxy.
   const RADIO_STATIONS=[
     ['bayern1-franken','BAYERN 1 Franken','Oldies & Pop · Franken','https://dispatcher.rndfnk.com/br/br1/franken/mp3/mid'],
@@ -593,7 +566,6 @@
   Object.assign(window,{
     meviRadioHTML:radioHTML,meviRadioAction:radioAction,
     meviRadioAddStation:addRadioStation,meviRadioAddFromForm:addRadioFromForm,meviRadioRemoveStation:removeRadioStation,
-    meviAudioDemoHTML:demoHTML,meviAudioDemoAction:demoAction,
     meviMediaHTML:html,meviMediaFolder:chooseFolder,meviMediaFiles:chooseFiles,meviMediaLoadFiles:loadFiles,
     meviMediaSection:setSection,meviMediaGroup:setGroup,meviMediaSearch:search,meviMediaPane:pane,
     meviMediaPlay:play,meviMediaToggle:toggle,meviMediaNext:()=>advance(false),meviMediaPrev:previous,

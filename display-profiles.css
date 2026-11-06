@@ -216,9 +216,9 @@ html,body{min-height:0;overscroll-behavior:none}
  }
 }
 
-/* Radio/Spotify reuse MeviMedia's hosts and responsive library/player panes. */
+/* Radio reuses MeviMedia's demo shell and responsive library/player panes.
+   Spotify has its own sp-* shell. */
 .mm-demo{--demo-accent:#ffc978}
-.mm-demo[data-source="spotify"]{--demo-accent:#68eba1}
 .mm-demo .mm-heading,.mm-demo .mm-now-eyebrow{color:var(--demo-accent)}
 .mm-demo-notice{flex:none;padding:6px 12px;color:#d4e4ef;background:#07101c80;border-bottom:1px solid #8caac32b;font-size:12px;line-height:1.35}
 .mm-demo-library-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;font-size:clamp(12px,1.7vh,18px)}
@@ -235,7 +235,6 @@ html,body{min-height:0;overscroll-behavior:none}
 .mm-demo-empty{padding:16px;color:#c1d5e4;font-size:14px;line-height:1.5}
 .mm-demo.mm-shell .mm-now{grid-template-rows:minmax(0,1fr) auto auto;padding-bottom:12px}
 .mm-demo .mm-demo-art{background:radial-gradient(circle at 30% 20%,#98743360,#173047 70%);border-color:var(--demo-accent)}
-.mm-demo[data-source="spotify"] .mm-demo-art{background:radial-gradient(circle at 30% 20%,#3eb77160,#113b35 70%)}
 .mm-demo .mm-demo-art span{color:var(--demo-accent)}
 .mm-demo .mm-icon-button[aria-pressed="true"]{color:var(--demo-accent);border-color:var(--demo-accent)}
 .mm-demo-unavailable{display:flex;justify-content:center;align-items:center;gap:9px;min-height:44px;border-top:1px solid #7895b440;color:#b9c9d7;font-size:clamp(12px,1.8vh,17px)}

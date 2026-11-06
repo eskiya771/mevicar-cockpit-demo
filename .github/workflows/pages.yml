@@ -30,6 +30,8 @@ jobs:
         run: node tests/display-profiles-smoke.mjs
       - name: Test premium speedometer
         run: node tests/speedometer-smoke.mjs
+      - name: Test Spotify Connect remote integration
+        run: node tests/spotify-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
@@ -68,6 +70,15 @@ jobs:
           assert '.mm-shell' in media_css and 'meviMediaHTML' in media_js
           html = html.replace(media_css_link, '<style id="mevicar-media-styles">' + media_css + '</style>')
           html = html.replace(media_script_tag, '<script id="mevicar-media-script">' + media_js + '</script>')
+          # Spotify remote control is part of the same versioned shell.
+          spotify_css_link = '<link rel="stylesheet" href="./spotify.css">'
+          spotify_script_tag = '<script src="./spotify.js"></script>'
+          assert spotify_css_link in html and spotify_script_tag in html, 'Spotify assets missing'
+          spotify_css = pathlib.Path('spotify.css').read_text()
+          spotify_js = pathlib.Path('spotify.js').read_text()
+          assert '.sp-shell' in spotify_css and 'meviSpotifyHTML' in spotify_js
+          html = html.replace(spotify_css_link, '<style id="mevicar-spotify-styles">' + spotify_css + '</style>')
+          html = html.replace(spotify_script_tag, '<script id="mevicar-spotify-script">' + spotify_js + '</script>')
           # Lichtshow is an independent live app using the already bundled MeviDarts renderer.
           lightshow_css_link = '<link rel="stylesheet" href="./lightshow.css">'
           lightshow_script_tag = '<script src="./lightshow.js"></script>'
@@ -105,7 +116,7 @@ jobs:
           PY
       - name: Generate PWA icons and copy assets
         run: |
-          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css lightshow.js lightshow.css speedometer.js speedometer.css display-profiles.css dist/
+          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css lightshow.js lightshow.css speedometer.js speedometer.css display-profiles.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont

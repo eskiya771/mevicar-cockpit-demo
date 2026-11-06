@@ -1,12 +1,12 @@
 # MeviCar Next – Projektkontext
 
-Stand der Codeanalyse: 6. November 2026, Commit `69f7e0be24c23cd9bdce7d43570819b09822429e`.
+Stand der Codeanalyse: 7. November 2026.
 
 ## 1. Identität und verifizierter Ausgangsstand
 
 MeviCar Next ist ein browserbasierter Automotive-Cockpit-Prototyp, keine Android-APK und keine produktive Fahrzeugsteuerung. Repository: https://github.com/eskiya771/mevicar-cockpit-demo. Live: https://eskiya771.github.io/mevicar-cockpit-demo/.
 
-Bei Übernahme: `main` und `origin/main` nach Fetch identisch, Arbeitsbaum sauber, Produktversion `0.5.0`. Live-`build-info.json` meldete Build **137** mit obigem Commit; der im Auftrag genannte Build 136 war bereits überholt. Verifizierter erfolgreicher Pages-Run: https://github.com/eskiya771/mevicar-cockpit-demo/actions/runs/42284458814.
+Bei Übernahme: `main` und `origin/main` nach Fetch identisch, Arbeitsbaum sauber, Produktversion `0.5.0`. Live-`build-info.json` meldete Build **145** mit Commit `dd9a947`; verifizierter erfolgreicher Pages-Run: https://github.com/eskiya771/mevicar-cockpit-demo/actions/runs/42307132544.
 
 Diese Angaben sind ein datierter Ausgangspunkt, keine dauerhaft aktuelle Buildanzeige. Bei neuer Arbeit erneut prüfen. Lokales Git, Node und authentifizierter GitHub-CLI-Zugriff auf Actions sind verfügbar. Der NAS-Pfad kann außerhalb der Sandbox Zugriff und eine auf den einzelnen Git-Aufruf begrenzte `safe.directory`-Angabe erfordern; keine globale Vertrauensfreigabe für beliebige Repositories setzen.
 
@@ -14,7 +14,7 @@ Aktuelle Arbeitsphase: Quality First und kurze, getestete Verbesserungen am best
 
 ## 2. Struktur und Start
 
-Kein npm-Paket, Framework oder Transpiler. Versioniert sind HTML, CSS, klassische Browser-JavaScript-Dateien, fünf Node-Smoke-Tests, zwei GitHub-Workflows und Markdown-Dokumentation. Die Produktionsauslieferung hat dennoch einen Buildschritt in Python.
+Kein npm-Paket, Framework oder Transpiler. Versioniert sind HTML, CSS, klassische Browser-JavaScript-Dateien, sechs Node-Smoke-Tests, zwei GitHub-Workflows und Markdown-Dokumentation. Die Produktionsauslieferung hat dennoch einen Buildschritt in Python.
 
 | Bereich | Dateien und Verantwortung |
 | --- | --- |
@@ -22,13 +22,14 @@ Kein npm-Paket, Framework oder Transpiler. Versioniert sind HTML, CSS, klassisch
 | Theme und gemeinsame Oberfläche | `themes.css`: Themes, Launcher, Dock, SVG-Stile, Navigation; auch historische Layout-Overrides |
 | Displayprofile | `display-profiles.css`: zuletzt geladen, profilabhängige Such-/Medien-/Touch-Regeln |
 | Medien | `mevimedia.js`, `mevimedia.css`: lokale Dateien, Bibliothek und dauerhafter Player |
+| Spotify | `spotify.js`, `spotify.css`: OAuth-PKCE, Web-API-Fernsteuerung, eigene Moduloberfläche |
 | Tacho | `speedometer.js`, `speedometer.css`: SVG-Instrumente, GPS, Kompass, Demo, Trip, Ingest-API |
 | Lichtshow | `lightshow.js`, `lightshow.css`: App mit eigenem Canvas-Lifecycle |
 | Bildschirmschoner | `screensaver.js`, `screensaver.css`: globales Idle-Overlay |
 | Gemeinsame Effekte | `mevidarts-parallax.js`, `mevidarts-showcase.js`, `mevidarts-light-renderer.js` |
 | PWA und Auslieferung | `sw.js`, `manifest.webmanifest`, `VERSION`, `.github/workflows/pages.yml`, `release.yml` |
 
-Das Inline-Skript definiert die Shell und startet `render()`, Buildanzeige, Toolbar und Uhr. Anschließend werden die klassischen Skripte geladen: Parallax → Showcase → gemeinsamer Renderer → Screensaver → Media → Lichtshow → Tacho. Module sind IIFEs mit gezielt auf `window` veröffentlichten APIs; kein Modul-Bundler und kein Import-System.
+Das Inline-Skript definiert die Shell und startet `render()`, Buildanzeige, Toolbar und Uhr. Anschließend werden die klassischen Skripte geladen: Parallax → Showcase → gemeinsamer Renderer → Screensaver → Media → Spotify → Lichtshow → Tacho. Module sind IIFEs mit gezielt auf `window` veröffentlichten APIs; kein Modul-Bundler und kein Import-System.
 
 **Lokaler Start:** `const CURRENT_BUILD=__MEVICAR_BUILD__` ist ein echter Buildplatzhalter. Unverarbeitet erzeugt er einen Laufzeitfehler. Pages ersetzt ihn und erzeugt außerdem `build-info.json` sowie PWA-Icons. Für lokale Browserprüfung eine temporäre gebaute Ausgabe wie im Workflow herstellen und per HTTP auf localhost bereitstellen. Die Icons sind nicht im Repository; ein bloßer Server über den Rohdateien reicht daher auch für den SW-Precache nicht aus. Keine generierten Dateien unbeabsichtigt committen.
 
@@ -43,7 +44,7 @@ Das Inline-Skript definiert die Shell und startet `render()`, Buildanzeige, Tool
 - `launch(id)`: Zusatz-App im Split, Settings als Ausnahme im Vollbild.
 - `appBody()`: zentrale Verzweigung zwischen Modul-HTML und inline erzeugten Demoansichten.
 - `mapHTML()`: feste SVG-Demokarte und zustandsabhängige Overlays, keine Kartendienstintegration.
-- `render()`: Dock neu aufbauen, Layout wählen, Tacho/Lichtshow unmounten, `#screen.innerHTML` ersetzen, beide wieder mounten. Media, Tacho und Lichtshow erhalten spezielle Hosts ohne zusätzliche Überschrift.
+- `render()`: Dock neu aufbauen, Layout wählen, Spotify/Tacho/Lichtshow unmounten, `#screen.innerHTML` ersetzen, danach wieder mounten. Media, Spotify, Tacho und Lichtshow erhalten spezielle Hosts ohne zusätzliche Überschrift.
 - `updateQuery()` aktualisiert Suchtreffer gezielt; Sensorupdates im Tacho ersetzen den Screen nicht.
 
 `render()` zerstört lokalen DOM-Zustand wie Fokus und Scrollpositionen. Er wird auch durch Themewechsel, Rechnerbedienung und verschiedene Medienaktionen aufgerufen. Daten in `s` und Modul-Closures bleiben erhalten. `reset()` setzt nur `s` zurück; es ist kein vollständiger Reset von Medien, Tacho, Rechner oder Browser-Speicher.
@@ -59,7 +60,7 @@ Adresssuche: feste Ortsliste, deduplizierte Recents, Freitext als ausdrücklich 
 | Themes | Drei live umschaltbare Themes, lokale Speicherung | Noch kein durchgängiges gemeinsames Tokensystem |
 | MeviMedia | Dateien/Ordner, lokale Audio-/Videowiedergabe, Suche/Gruppen/Favoriten, Queue, Seek, Lautstärke, Shuffle/Repeat, begrenzte ID3-/Cover-Auswertung | Browsercodecs und Dateifreigabe erforderlich; keine dauerhafte Bibliothek oder stille USB-Suche |
 | Radio | Echtes Internetradio mit 13 direkten HTTPS-MP3-Streams aus Classic, Suche, Favoritenfilter, bis zu 20 eigene HTTPS-Streams, Start/Stopp, Senderwechsel, Lautstärke, automatische Wiederverbindung, gespeicherte Sender/eigene Streams/Favoriten | Internet erforderlich; keine UKW-/DAB-Hardware, keine Sendungstitel/ICY-Metadaten; eigene Streams nur HTTPS ohne Zugangsdaten; Browser-/OS-Grenzen bei Hintergrundbetrieb und Lautstärke |
-| Spotify | MeviMedia-Oberfläche, Demo-Titelauswahl und Favoriten, Quellenwahl im Split | Kein Streaming oder Login; Demo-Auswahl nur für die Sitzung |
+| Spotify | Echte Fernsteuerung des aktiven Spotify-Geräts über Web API: OAuth PKCE, Now Playing mit Cover/Fortschritt, Play/Pause/Vor/Zurück, Seek, Shuffle/Repeat, Bibliotheks-Like, Warteschlange, Gerätewahl, Lautstärke, Suche, Playlists/Alben/Podcasts, Link-Eingabe, Fehler-/Premium-/Offline-Zustände | Spotify Premium und aktives Gerät erforderlich; kein Audio im Browser; Login und echte Wiedergabe noch nicht mit realem Client ID verifiziert; Dev Mode max. 5 Nutzer; iPhone-PWA kann die Anmeldung in Safari öffnen |
 | Premium-Tacho | 0–220 km/h, 0–8000 U/min, GPS-Trip, Sensor-/GPS-Kompass, klarer Demo-Modus | RPM/Gesamt-km nur über API; kein physischer OBD-Transport |
 | OBD-App | Feste Anzeige 82 km/h / 2150 U/min | Nicht mit Tacho-Ingest verbunden; keine Hardwaredaten |
 | Home Assistant | Lokaler Licht-An/Aus-Schalter | Kein Serveraufruf oder echte Haussteuerung |
@@ -91,6 +92,14 @@ Medien und Radio teilen sich die Media-Session-Steuerung nach aktiver Audioquell
 
 LocalStorage-Schlüssel mevicar-radio-v1 speichert Sender-ID, Lautstärke, Favoriten und eigene Streams. Wiederherstellung startet niemals automatisch; gespeicherte Einträge werden validiert, ungültige URLs und Duplikate verworfen. Nachweis: [Radio-QA](QA_RADIO_2026-11-06.md).
 
+### Spotify
+
+`spotify.js` steuert das aktive Spotify-Gerät über die Web API; im Browser wird kein Spotify-Audio abgespielt. Authentifizierung ist Authorization Code mit PKCE, ohne Backend und ohne Client Secret. Client ID und Tokens liegen in localStorage, Verifier und State nur in sessionStorage. Die Redirect-URI wird aus `location` abgeleitet und muss im Spotify Developer Dashboard exakt hinterlegt sein. `meviSpotifyHTML(compact)`, `meviSpotifyMount()` und `meviSpotifyUnmount()` integrieren das Modul in den Cockpit-Lifecycle.
+
+Mount startet 3-Sekunden-Polling und einen 500-ms-Fortschrittstakt; Unmount entfernt beide Timer. Polling pausiert bei verborgenem Tab, nach `online` wird sofort aktualisiert, `Retry-After` blockiert weitere Anfragen. Quellenwechsel weg von Spotify pausiert die externe Wiedergabe best effort; Spotify-Start stoppt lokale Medien und Radio. Fehler werden unterschieden: 401 Token-Refresh beziehungsweise Trennung, 403 Premium, 404 kein Gerät, 429 Rate Limit, Offline/Timeout. Likes nutzen `/me/library` und `/me/library/contains`; die Suche bleibt bei 10 Treffern je Typ. Keine `/browse/*`- oder Batch-Endpunkte, kein Web Playback SDK.
+
+Live-OAuth, reales Premium-Konto, Hintergrundverhalten und der mögliche Wechsel einer installierten iPhone-PWA nach Safari sind offene Geräteprüfungen. Nachweis: [Spotify-QA](QA_SPOTIFY_2026-11-07.md).
+
 ### Tacho
 
 Live- und Demo-Modell getrennt in der Closure. `meviSpeedHTML(compact)`, `meviSpeedMount()`, `meviSpeedUnmount()` integrieren den Tacho. Mount bindet ResizeObserver und bei zuvor aktivierten Quellen Sensoren; Unmount entfernt Watch, Kompasslistener, Observer und Animationsframe. Quellwünsche und Messwerte bleiben in RAM. Bei `document.hidden` stoppt die Animation, die GPS-/Kompass-Subscriptions werden dabei jedoch nicht entfernt. iOS-Kompassberechtigung wird durch Benutzeraktion angefragt; automatisches Wiederanbinden nach Remount ist auf Plattformen mit `requestPermission` aktuell ausgeschlossen.
@@ -116,13 +125,16 @@ Screensaver verwaltet ein globales Body-Overlay, Idle- und Uhrtimer sowie Eingab
 | `mevicar-next-theme` | Theme-ID |
 | `mevicar-media-favorites-v1` | Dateiidentitäten der Favoriten |
 | `mevicar-media-options-v1` | Shuffle und Repeat |
+| `mevicar-spotify-client-v1` | Spotify Client ID (öffentlich) |
+| `mevicar-spotify-token-v1` | Access-/Refresh-Token mit Ablaufzeit |
+| `mevicar-spotify-history-v1` | letzte Spotify-Suchbegriffe |
 | `mevicar-next-saver-v1` | Screensaver-Konfiguration |
 | `mevicar-lightshow-v1` | Effekt und Wechselintervall |
 | `mevicar-tacho-trip-v1` | GPS-Trip |
 
 ## 6. Responsive- und Theme-Architektur
 
-Kaskadenreihenfolge: Inline-Basis in `index.html`, `themes.css`, `screensaver.css`, `mevimedia.css`, `lightshow.css`, `speedometer.css`, zuletzt `display-profiles.css`. Letzte Position gewinnt nur bei passender Spezifität; Theme-Selektoren und `!important` müssen mitgeprüft werden.
+Kaskadenreihenfolge: Inline-Basis in `index.html`, `themes.css`, `screensaver.css`, `mevimedia.css`, `spotify.css`, `lightshow.css`, `speedometer.css`, zuletzt `display-profiles.css`. Letzte Position gewinnt nur bei passender Spezifität; Theme-Selektoren und `!important` müssen mitgeprüft werden.
 
 Shell nutzt `100dvh`, feste Body-Fläche, Safe-Area-Padding und globales `overflow:hidden`. Flex-/Grid-Kinder benötigen `min-width:0`/`min-height:0`. Allgemeine `.side`/`.full` erlauben Inhaltsscrollen; spezialisierte Modulhosts verhindern es. Splitbreite ist modulspezifisch, kein einheitlicher globaler Anteil.
 
@@ -131,15 +143,16 @@ Zielprofile: iPhone 17 874×402, S20 FE 915×412, DeX 1920×1200, Full HD 1920×
 - Mobil bis 1024 px Breite und 480 px Höhe: Suche nutzt zuletzt 72 % Breite für Tastatur, 26 % für Treffer; Dock per `:has(.map.searchmode)` versteckt. Tastenhöhe 51–58 px. Frühere 54-/60-%-Regeln existieren weiterhin und werden überschrieben.
 - Ab 1150 px: Suchtreffer links, eigene Tastatur rechts.
 - Ab 1500×880: Media-Split zeigt Bibliothek und Player gleichzeitig übereinander; auf Mobil/Panorama Umschalter.
+- Spotify: unter 1200 px Breite oder 600 px Höhe einspaltig mit Tab-Umschalter (Jetzt/Durchsuchen/Suche); ab 1200×600 Now Playing und Bibliothek nebeneinander. Unter 480 px Höhe kompakte 34–38-px-Bedienelemente, Safe-Area unten bleibt frei.
 - Tacho: `ResizeObserver` misst `.tacho-app`; `is-tight` unter 460 px Breite oder 430 px Höhe. Hoher Split über Verhältnis 1,25 erhält `is-tall`; Instrumente werden gestapelt. Vollbild verwendet Größencontainer und Container-Einheiten, Infozeile teils `vh`.
 
 Risiken: wiederholte historische Override-Blöcke in Basis, Themes und Media; globale Launcherregeln in `lightshow.css`; hardcodierte Farben neben Modulvariablen. Noch keine umfassende zentrale Design-Token-Schicht. Vor Konsolidierung Screenshots und Verhalten sichern, nicht pauschal Styles ersetzen.
 
 ## 7. Build, PWA und Release
 
-`pages.yml` läuft bei jedem Push auf `main` und manuell. Er führt fünf Tests aus, ersetzt Buildplatzhalter, bettet alle verlinkten CSS-Dateien und die sieben externen JS-Dateien in `dist/index.html` ein, schreibt `build-info.json`, kopiert Assets und erzeugt mit Pillow Icons (192/512). Danach Pages-Artefakt und Deployment. Es gibt kein `setup-node`/festes Node-Pinning; die Runnerinstallation wird verwendet. Pillow wird ohne feste Version installiert.
+`pages.yml` läuft bei jedem Push auf `main` und manuell. Er führt sechs Tests aus, ersetzt Buildplatzhalter, bettet alle verlinkten CSS-Dateien und die acht externen JS-Dateien in `dist/index.html` ein, schreibt `build-info.json`, kopiert Assets und erzeugt mit Pillow Icons (192/512). Danach Pages-Artefakt und Deployment. Es gibt kein `setup-node`/festes Node-Pinning; die Runnerinstallation wird verwendet. Pillow wird ohne feste Version installiert.
 
-Produktversion aus `VERSION`, Buildnummer aus `github.run_number`, Commit aus `github.sha`. Cache-Name aktuell `mevicar-next-shell-v21`; das ist eine separate technische Versionsreihe. Inlining hält Code und Styles der ausgelieferten HTML zusammen, nicht eine identische Versionsnummer zwischen Cache und Produkt.
+Produktversion aus `VERSION`, Buildnummer aus `github.run_number`, Commit aus `github.sha`. Cache-Name aktuell `mevicar-next-shell-v23`; das ist eine separate technische Versionsreihe. Inlining hält Code und Styles der ausgelieferten HTML zusammen, nicht eine identische Versionsnummer zwischen Cache und Produkt.
 
 Service Worker: Shell-Precache bei Installation, `skipWaiting`, `clients.claim`; Navigation network-first mit Cache-Fallback, `build-info.json` ohne Cache, `themes.css` network-first, übrige Same-Origin-GETs cache-first. Aktivierung löscht alle anderen Cache-Namen des Origins, nicht nur MeviCar-Präfixe; bei anderen Apps auf demselben Origin ein abzugrenzendes Risiko.
 
@@ -151,7 +164,7 @@ Manifest ist auf `/mevicar-cockpit-demo/` festgelegt, standalone und landscape. 
 
 ## 8. Tests und visuelle Nachweise
 
-Alle fünf vorhandenen Tests wurden während der Architekturprüfung erfolgreich ausgeführt; nach Dokumentationsänderungen erneut ausführen:
+Alle sechs vorhandenen Tests wurden während der Architekturprüfung erfolgreich ausgeführt; nach Dokumentationsänderungen erneut ausführen:
 
 ```text
 node tests/mevimedia-smoke.mjs
@@ -159,6 +172,7 @@ node tests/lightshow-smoke.mjs
 node tests/ui-quality-smoke.mjs
 node tests/display-profiles-smoke.mjs
 node tests/speedometer-smoke.mjs
+node tests/spotify-smoke.mjs
 ```
 
 - Media: Mockplayer/-DOM; Import, Gruppen, Favoriten, Video, Queue und Quellenwechsel. Importiert zusätzlich radio-smoke.mjs: Streamzustände, Suche, eigene HTTPS-Streams samt Grenzen/Entfernen, Retry-Backoff 4/10/25 s, Offline-/Online-Wiederanlauf, Timeout, veraltete Events, Persistenz, Media-Session und exklusive Audiowiedergabe.
@@ -166,6 +180,7 @@ node tests/speedometer-smoke.mjs
 - UI: VM mit Mock-DOM; Navigation/Appwege, Suchtexte, Demo-Kennzeichnung und SVG-Markup. Konsolenmeldung ist breiter als tatsächliche Browserabdeckung.
 - Displayprofile: statische CSS-/Dokument-/Workflow-Assertions. Keine echten Viewports oder Touchmessungen.
 - Tacho: reine Berechnungen, Mock-Geolocation/Kompass/RAF/ResizeObserver, Live-/Demo-Modell, Remount, statische Layout-/Bundle-Regeln.
+- Spotify: Quelltext-/CSS-/Workflow-Assertions, VM mit Mock-DOM/-Storage: PKCE ohne Secret, Endpunkt- und Migrationsschutz, Linkvalidierung, Setup-/Verbunden-Zustand, Mount/Unmount, Premium-Fehler. Kein echter OAuth- oder Wiedergabetest.
 
 Kein versioniertes Browser-Testskript, keine Screenshot-Artefakte, kein eigener Screensaver-Integrationstest und kein durchgängiger Start-/PWA-Test. Frühere Dokumente berichten Chromium-Prüfungen (30 Tacho-Kombinationen); deren externe Ergebnisse wurden in dieser Übernahme nicht neu reproduziert. Es entstanden keine neuen Screenshots, da keine UI-Änderung vorgenommen wurde. Reale Sensor-, Safari-, Codec-, USB-, Touch- und Safe-Area-Prüfungen bleiben offen.
 
@@ -184,7 +199,8 @@ Die folgenden Punkte sind offen, keine in dieser Übernahme vorgenommenen Korrek
 | P1 | Codebefund: iOS-Kompass wird nach Remount mit requestPermission-API nicht automatisch wieder gebunden | Erteilte Berechtigung/Lifecycle gezielt testen |
 | P1 | Codebefund: Such-Taste „123“ fügt nur „1“ ein; `scrollResults()` entfernt Tastatur und Searchmode beim Scrollen | Erwartetes Suchverhalten und Dock-Rückkehr prüfen, kleine Bedienkorrektur |
 | P1 | Codebefund: `placeButton` setzt encodeURIComponent-Ergebnis in ein einfach gequotetes Inline-JS-Argument; Apostroph bleibt unkodiert | Zielnamen mit Apostroph als Regression testen, Argumentescaping konsistent machen |
-| P1 | Mehrere Dienstplatzhalter außerhalb von Audio noch nicht ausdrücklich Demo. Radio bietet inzwischen echte Streams, Spotify bleibt klar gekennzeichnete Demo; beide haben eine sichtbare Quellenwahl im Split | Verbleibende Dienstplatzhalter kennzeichnen, ohne neue Dienste anzubinden |
+| P1 | Mehrere Dienstplatzhalter außerhalb von Audio noch nicht ausdrücklich Demo. Radio und Spotify sind echte Integrationen; Spotify hängt an Premium, Client ID und aktivem Gerät | Verbleibende Dienstplatzhalter kennzeichnen, ohne neue Dienste anzubinden |
+| P1 | Prüflücke: Spotify-OAuth, Token-Refresh, Premium-Gerätesteuerung und iPhone-PWA-Safari-Wechsel sind nur statisch/mit Mocks geprüft | Mit realem Client ID auf iPhone 17 und S20 FE/DeX durchspielen, Fehlerfälle dokumentieren |
 | P1 | Codebefund: Lichtshow reduziert Canvasbewegung bei reduced motion nicht; kompakte Buttons 32 px, Intervallknöpfe 29 px hoch | Bewegungsvorgabe und Touchflächen profilübergreifend prüfen |
 | P1 | Prüflücke: keine reproduzierbaren Browser-/Start-/PWA-Tests im Repository | Kleinen Browserprüfweg ergänzen, vorhandene 30 Layoutbehauptungen erneut belegen |
 | P2 | Codebefund: Buildanzeige kann Serverversion statt geladenem Code zeigen; SW entfernt fremde Cache-Namen | Versionsdarstellung und Cache-Eigentümerschaft isoliert absichern |
@@ -193,7 +209,7 @@ Die folgenden Punkte sind offen, keine in dieser Übernahme vorgenommenen Korrek
 
 ## 10. Dokumentation und Zusammenarbeit
 
-`AGENTS.md` ist der kurze Einstieg; diese Datei enthält den aktuellen Gesamtzusammenhang. `TACHO_ARCHITECTURE.md` bleibt die detaillierte Tacho-Referenz, `DISPLAY_PROFILE_MATRIX.md` die Abnahmematrix. `UX_QUALITAETSPRUEFUNG.md` enthält historische Qualitätsrunden mit offenen Checklisten. Release Notes beschreiben jeweilige Meilensteine, nicht automatisch den aktuellen Iststand.
+`AGENTS.md` ist der kurze Einstieg; diese Datei enthält den aktuellen Gesamtzusammenhang. `TACHO_ARCHITECTURE.md` bleibt die detaillierte Tacho-Referenz, `DISPLAY_PROFILE_MATRIX.md` die Abnahmematrix. `UX_QUALITAETSPRUEFUNG.md` enthält historische Qualitätsrunden mit offenen Checklisten. `QA_RADIO_2026-11-06.md` und `QA_SPOTIFY_2026-11-07.md` dokumentieren die jeweiligen Modulprüfungen. Release Notes beschreiben jeweilige Meilensteine, nicht automatisch den aktuellen Iststand.
 
 Vor jeder Änderung Status/Fetch prüfen, fremde Arbeit erhalten, gezielte Dateien stagen, Tests und Diff prüfen. Vor Push erneut fetchen. Bei parallelen Änderungen kein Force-Push; Integration/Feature-Branch mit passenden Wiederholungsprüfungen. Nach Push Run für die konkrete SHA prüfen und Live-Metadaten abgleichen. Produktversion unverändert, solange kein Release beauftragt ist.
 
