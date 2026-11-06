@@ -37,7 +37,7 @@ assert.ok(html.includes('mapHTML()'), 'Split screen must keep the navigation map
 assert.ok(workflow.includes('mevicar-speedometer-styles') && workflow.includes('speedometer.js speedometer.css'));
 assert.ok(workflow.includes('tests/speedometer-smoke.mjs'));
 assert.ok(sw.includes("'./speedometer.js'") && sw.includes("'./speedometer.css'"));
-assert.ok(sw.includes('mevicar-next-shell-v21'));
+assert.ok(sw.includes('mevicar-next-shell-v22'));
 
 const elements = new Map();
 function makeNode(id) {

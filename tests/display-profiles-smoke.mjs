@@ -31,6 +31,11 @@ for(const selector of [
   '.mm-shell.is-compact .mm-content',
   '.mm-shell.is-compact[data-pane="player"] .mm-library',
   '.mm-shell.is-compact .mm-transport',
+  '.mm-radio-tools',
+  '.mm-radio.is-adding .mm-radio-tools',
+  '.mm-radio-add',
+  '.mm-radio-own',
+  '.mm-radio-remove',
 ]){
   assert.ok(css.includes(selector),'Responsive selector missing: '+selector);
 }
@@ -48,6 +53,8 @@ const touchChecks=[
   '.map.searchmode .keyboard .keyrow button{',
   'min-height:clamp(51px,13.5vh,58px)',
   'width:26%;min-width:0;max-width:none',
+  '.mm-radio-search{flex:none;width:100%;min-height:44px}',
+  '.mm-radio.is-compact .mm-radio-add input{min-height:44px',
 ];
 for (const rule of touchChecks){
   assert.ok(css.includes(rule),'Touch quality rule missing: '+rule);

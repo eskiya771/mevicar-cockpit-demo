@@ -26,7 +26,9 @@
     back:'<path d="m15 4-8 8 8 8M8 12h13"/>',
     expand:'<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
     list:'<path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/>',
-    grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'
+    grid:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    trash:'<path d="M3 6h18M8 6V4h8v2M6 6l1 15h10l1-15M10 11v6M14 11v6"/>'
   };
   const $=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,x=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[x]));
@@ -291,11 +293,38 @@
   ].map(([id,name,description,url])=>({id,name,description,url}));
   const radioSaved=readStore('mevicar-radio-v1',{});
   const radioSettings=radioSaved&&typeof radioSaved==='object'?radioSaved:{};
-  const radioState={index:Math.max(0,RADIO_STATIONS.findIndex(x=>x.id===radioSettings.station)),pane:'library',filter:false,
-    favorites:new Set(Array.isArray(radioSettings.favorites)?radioSettings.favorites.filter(id=>RADIO_STATIONS.some(x=>x.id===id)):[]),
-    volume:Number.isFinite(radioSettings.volume)?Math.min(1,Math.max(0,radioSettings.volume)):.8,status:'Bereit · Sender wählen oder Abspielen drücken',wanted:false};
-  let radioPlayer=null,radioTimer=null,radioSerial=0;
-  function saveRadio(){try{localStorage.setItem('mevicar-radio-v1',JSON.stringify({station:RADIO_STATIONS[radioState.index].id,volume:radioState.volume,favorites:[...radioState.favorites]}))}catch{}}
+  function normalizeStreamUrl(raw){
+    try{
+      const url=new URL(String(raw||'').trim());
+      if(url.protocol!=='https:'||url.username||url.password)return null;
+      url.hash='';
+      return url.href;
+    }catch{return null}
+  }
+  function normalizeCustomStations(list){
+    if(!Array.isArray(list))return [];
+    const seen=new Set(),out=[];
+    for(const item of list){
+      if(!item||typeof item!=='object')continue;
+      const url=normalizeStreamUrl(item.url);if(!url||seen.has(url))continue;
+      const id=typeof item.id==='string'&&/^custom-[a-z0-9-]+$/i.test(item.id)?item.id:'custom-'+out.length+'-'+Date.now().toString(36);
+      let name=String(item.name||'').trim().slice(0,60);
+      if(!name){try{name=new URL(url).hostname}catch{name='Eigener Sender'}}
+      out.push({id,name,description:'Eigener Stream · HTTPS',url,custom:true});
+      seen.add(url);
+      if(out.length>=20)break;
+    }
+    return out;
+  }
+  const restoredCustom=normalizeCustomStations(radioSettings.custom);
+  const restoredStations=RADIO_STATIONS.concat(restoredCustom);
+  const radioState={custom:restoredCustom,index:Math.max(0,restoredStations.findIndex(x=>x.id===radioSettings.station)),pane:'library',filter:false,query:'',adding:false,pendingRemove:null,
+    favorites:new Set(Array.isArray(radioSettings.favorites)?radioSettings.favorites.filter(id=>restoredStations.some(x=>x.id===id)):[]),
+    volume:Number.isFinite(radioSettings.volume)?Math.min(1,Math.max(0,radioSettings.volume)):.8,status:'Bereit · Sender wählen oder Abspielen drücken',wanted:false,resume:false,retries:0};
+  let radioPlayer=null,radioTimer=null,radioRetryTimer=null,radioSerial=0;
+  function radioStations(){return RADIO_STATIONS.concat(radioState.custom)}
+  function radioStation(){return radioStations()[radioState.index]||RADIO_STATIONS[0]}
+  function saveRadio(){try{const station=radioStation();localStorage.setItem('mevicar-radio-v1',JSON.stringify({station:station?station.id:RADIO_STATIONS[0].id,volume:radioState.volume,favorites:[...radioState.favorites].filter(id=>radioStations().some(x=>x.id===id)),custom:radioState.custom}))}catch{}}
   function bindAudioSession(){
     if(!('mediaSession'in navigator))return;
     const handlers={
@@ -310,64 +339,166 @@
     try{if(!(audioOwner==='radio'&&radioPlayer)){navigator.mediaSession.metadata=null;navigator.mediaSession.playbackState='none';}}catch{}
     if(audioOwner==='media')updateMediaSession(current());
   }
-  function paintRadio(){
-    const status=$('mm-radio-status');if(status)status.textContent=radioState.status;
-    const button=$('mm-radio-play');if(button){button.innerHTML=icon(radioState.wanted?'stop':'play');button.setAttribute('aria-label',radioState.wanted?'Radio stoppen':'Radio abspielen');}
-    if(audioOwner==='radio'&&'mediaSession'in navigator){try{navigator.mediaSession.playbackState=radioState.wanted&&radioPlayer&&!radioPlayer.paused?'playing':'paused'}catch{}}
+  function clearRadioTimers(){
+    clearTimeout(radioTimer);radioTimer=null;
+    clearTimeout(radioRetryTimer);radioRetryTimer=null;
   }
-  function radioStop(message='Gestoppt · Abspielen startet wieder live'){
-    radioSerial++;radioState.wanted=false;clearTimeout(radioTimer);radioTimer=null;
+  function detachRadio(){
+    radioSerial++;clearRadioTimers();
     const old=radioPlayer;radioPlayer=null;
     if(old){old.pause();old.removeAttribute('src');old.load();old.remove();}
+  }
+  function paintRadio(){
+    const status=$('mm-radio-status');if(status)status.textContent=radioState.status;
+    const notice=$('mm-radio-notice');if(notice)notice.textContent=radioState.status;
+    const active=radioState.wanted&&!!radioPlayer;
+    const button=$('mm-radio-play');if(button){button.innerHTML=icon(active?'stop':'play');button.setAttribute('aria-label',active?'Radio stoppen':'Radio abspielen');}
+    const remove=$('mm-radio-remove');if(remove)remove.classList.toggle('selected',radioState.pendingRemove===radioStation()?.id);
+    if(audioOwner==='radio'&&'mediaSession'in navigator){try{navigator.mediaSession.playbackState=active&&!radioPlayer.paused?'playing':'paused'}catch{}}
+  }
+  function radioStop(message='Gestoppt · Abspielen startet wieder live'){
+    detachRadio();
+    radioState.wanted=false;radioState.resume=false;radioState.retries=0;radioState.pendingRemove=null;
     radioState.status=message;paintRadio();
+  }
+  function scheduleRadioRetry(message){
+    if(!radioState.wanted||radioState.retries>=3)return false;
+    const delay=[4000,10000,25000][radioState.retries]||25000;
+    radioState.retries++;
+    radioState.status=message+' · Neuer Versuch in '+Math.round(delay/1000)+' s ('+radioState.retries+'/3)';
+    clearTimeout(radioRetryTimer);
+    radioRetryTimer=setTimeout(()=>{
+      radioRetryTimer=null;
+      if(radioState.wanted&&navigator.onLine!==false)radioStart();
+    },delay);
+    return true;
+  }
+  function radioFail(message,options={}){
+    detachRadio();
+    radioState.wanted=options.stop===true?false:true;
+    radioState.status=message;
+    if(options.retry===false){
+      radioState.retries=0;radioState.resume=options.resume===true;
+    }else if(!scheduleRadioRetry(message)){
+      radioState.resume=true;
+      radioState.status=message+' · Erneut versuchen';
+    }
+    paintRadio();
   }
   function radioStart(){
     onSourceChanged('radio');
-    radioStop();
-    const serial=radioSerial,station=RADIO_STATIONS[radioState.index],audio=document.createElement('audio');
-    radioPlayer=audio;radioState.wanted=true;radioState.status='Livestream wird geladen …';
+    if(navigator.onLine===false){
+      radioState.wanted=true;radioState.resume=true;radioState.status='Offline · Wiederverbindung automatisch';paintRadio();return;
+    }
+    detachRadio();
+    const station=radioStation(),serial=radioSerial,audio=document.createElement('audio');
+    radioPlayer=audio;radioState.wanted=true;radioState.resume=true;radioState.pendingRemove=null;
+    radioState.status='Livestream wird geladen …';
     audio.id='mevi-radio-audio';audio.hidden=true;audio.preload='none';audio.volume=radioState.volume;
     document.body.appendChild(audio);
     const active=()=>serial===radioSerial&&radioPlayer===audio&&radioState.wanted;
-    const timeout=()=>{if(radioTimer!==null)return;radioTimer=setTimeout(()=>{if(active())radioStop('Stream antwortet nicht · Erneut starten oder Sender wechseln');},15000);};
-    audio.addEventListener('playing',()=>{if(!active())return;clearTimeout(radioTimer);radioTimer=null;radioState.status='LIVE · '+station.name;paintRadio();});
-    for(const event of ['waiting','stalled'])audio.addEventListener(event,()=>{if(!active()||(event==='stalled'&&audio.readyState>=3))return;radioState.status='Verbindung wird gepuffert …';paintRadio();timeout();});
-    audio.addEventListener('pause',()=>{if(active())radioStop('Wiedergabe unterbrochen · Erneut starten');});
-    audio.addEventListener('ended',()=>{if(active())radioStop('Stream beendet · Erneut starten');});
-    audio.addEventListener('error',()=>{if(active())radioStop('Stream nicht erreichbar · Internet prüfen oder Sender wechseln');});
+    const armTimeout=()=>{if(radioTimer!==null)return;radioTimer=setTimeout(()=>{if(active())radioFail('Stream antwortet nicht · Erneut starten oder Sender wechseln');},15000);};
+    audio.addEventListener('playing',()=>{if(!active())return;clearRadioTimers();radioState.retries=0;radioState.resume=false;radioState.status='LIVE · '+station.name;paintRadio();});
+    for(const event of ['waiting','stalled'])audio.addEventListener(event,()=>{if(!active()||(event==='stalled'&&audio.readyState>=3))return;radioState.status='Verbindung wird gepuffert …';paintRadio();armTimeout();});
+    audio.addEventListener('pause',()=>{if(active())radioFail('Wiedergabe unterbrochen · Erneut starten');});
+    audio.addEventListener('ended',()=>{if(active())radioFail('Stream beendet · Erneut starten');});
+    audio.addEventListener('error',()=>{if(active())radioFail('Stream nicht erreichbar · Internet prüfen oder Sender wechseln');});
     audio.addEventListener('volumechange',()=>{if(!active())return;radioState.volume=audio.volume;saveRadio();const input=$('mm-radio-volume');if(input)input.value=String(Math.round(audio.volume*100));});
     if('mediaSession'in navigator&&'MediaMetadata'in window){try{navigator.mediaSession.metadata=new window.MediaMetadata({title:station.name,artist:station.description,album:'MeviCar Internetradio'});}catch{}}
-    audio.src=station.url;timeout();paintRadio();
-    try{Promise.resolve(audio.play()).catch(error=>{if(!active())return;radioStop(error?.name==='NotAllowedError'?'Browser blockiert Wiedergabe · Abspielen erneut drücken':'Stream nicht abspielbar · Erneut starten oder Sender wechseln');});}
-    catch{if(active())radioStop('Wiedergabe nicht möglich · Erneut starten');}
+    audio.src=station.url;armTimeout();paintRadio();
+    try{Promise.resolve(audio.play()).catch(error=>{
+      if(!active())return;
+      if(error?.name==='NotAllowedError')radioFail('Browser blockiert Wiedergabe · Abspielen erneut drücken',{retry:false,stop:true});
+      else if(error?.name==='NotSupportedError')radioFail('Streamformat wird nicht unterstützt · Anderen Sender wählen',{retry:false,stop:true});
+      else radioFail('Stream nicht abspielbar · Erneut starten oder Sender wechseln');
+    });}
+    catch{if(active())radioFail('Wiedergabe nicht möglich · Erneut starten');}
   }
   function radioSelect(index){
-    if(!Number.isInteger(index)||!RADIO_STATIONS[index])return;
-    radioState.index=index;radioState.pane='player';saveRadio();radioStart();redraw();
+    if(!Number.isInteger(index)||!radioStations()[index])return;
+    radioState.index=index;radioState.pane='player';radioState.adding=false;radioState.pendingRemove=null;saveRadio();radioStart();redraw();
   }
-  function radioStep(delta){radioSelect((radioState.index+delta+RADIO_STATIONS.length)%RADIO_STATIONS.length);}
+  function radioStep(delta){const total=radioStations().length;radioSelect((radioState.index+delta+total)%total);}
+  function radioRows(){
+    const q=radioState.query.trim().toLocaleLowerCase('de');
+    return radioStations().map((item,index)=>({item,index})).filter(({item})=>(!radioState.filter||radioState.favorites.has(item.id))&&(!q||[item.name,item.description].some(x=>String(x).toLocaleLowerCase('de').includes(q))));
+  }
+  function radioCountLabel(){const total=radioStations().length;return radioState.filter||radioState.query.trim()?radioRows().length+' von '+total+' Sendern':total+' Sender';}
+  function radioRowsHTML(){
+    const rows=radioRows();
+    if(!rows.length)return '<div class="mm-demo-empty">Keine Sender gefunden.<br>Suche ändern oder Favoritenfilter ausschalten.</div>';
+    return rows.map(({item,index})=>
+      '<button type="button" class="mm-demo-item '+(radioState.index===index?'selected':'')+'" aria-label="'+esc(item.name)+' abspielen" aria-pressed="'+(radioState.index===index)+'" onclick="meviRadioAction(\'select\','+index+')"><span class="mm-demo-item-icon">'+icon('music')+'</span><span class="mm-demo-item-text"><strong>'+esc(item.name)+(item.custom?' <span class="mm-radio-own">EIGEN</span>':'')+'</strong><small>'+esc(item.description)+'</small></span>'+icon(radioState.favorites.has(item.id)?'heart':'play')+'</button>').join('');
+  }
+  function refreshRadioList(){
+    const list=$('mm-radio-list');if(list)list.innerHTML=radioRowsHTML();
+    const count=$('mm-radio-count');if(count)count.textContent=radioCountLabel();
+    const filter=$('mm-radio-filter');if(filter){filter.classList.toggle('selected',radioState.filter);filter.setAttribute('aria-pressed',String(radioState.filter));}
+  }
+  function addRadioStation(name,url){
+    const clean=normalizeStreamUrl(url);
+    if(!clean){radioState.status='Ungültige Stream-URL · Nur vollständige HTTPS-Adressen';paintRadio();return false}
+    if(radioStations().some(item=>item.url===clean)){radioState.status='Sender ist bereits vorhanden';paintRadio();return false}
+    if(radioState.custom.length>=20){radioState.status='Maximal 20 eigene Sender';paintRadio();return false}
+    let label=String(name||'').trim().slice(0,60);
+    if(!label){try{label=new URL(clean).hostname}catch{label='Eigener Sender'}}
+    const item={id:'custom-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),name:label,description:'Eigener Stream · HTTPS',url:clean,custom:true};
+    radioState.custom.push(item);
+    radioState.index=radioStations().length-1;
+    radioState.adding=false;radioState.filter=false;radioState.query='';radioState.pane='player';radioState.pendingRemove=null;
+    radioState.status='Sender hinzugefügt · Abspielen drücken';
+    saveRadio();redraw();return true;
+  }
+  function addRadioFromForm(){
+    return addRadioStation($('mm-radio-name')?.value||'',$('mm-radio-url')?.value||'');
+  }
+  function removeRadioStation(){
+    const station=radioStation();
+    if(!station?.custom)return;
+    if(radioState.pendingRemove!==station.id){
+      radioState.pendingRemove=station.id;
+      radioState.status='Erneut auf Entfernen tippen, um „'+station.name+'“ zu löschen';
+      redraw();return;
+    }
+    if(radioPlayer)radioStop('Eigener Sender entfernt');
+    radioState.custom=radioState.custom.filter(item=>item.id!==station.id);
+    radioState.favorites.delete(station.id);
+    radioState.pendingRemove=null;
+    radioState.index=Math.min(radioState.index,Math.max(0,radioStations().length-1));
+    radioState.status='Eigener Sender entfernt';
+    saveRadio();redraw();
+  }
   function radioAction(action,value){
     if(action==='select')radioSelect(value);
-    else if(action==='toggle'){if(radioState.wanted)radioStop();else radioStart();}
+    else if(action==='toggle'){if(radioState.wanted&&radioPlayer)radioStop();else radioStart();}
     else if(action==='next')radioStep(1);
     else if(action==='previous')radioStep(-1);
     else if(action==='pane'&&['library','player'].includes(value)){radioState.pane=value;redraw();}
-    else if(action==='filter'){radioState.filter=!radioState.filter;redraw();}
-    else if(action==='favorite'){const id=RADIO_STATIONS[radioState.index].id;if(radioState.favorites.has(id))radioState.favorites.delete(id);else radioState.favorites.add(id);saveRadio();redraw();}
+    else if(action==='filter'){radioState.filter=!radioState.filter;refreshRadioList();}
+    else if(action==='query'){radioState.query=String(value||'').slice(0,80);refreshRadioList();}
+    else if(action==='addform'){radioState.adding=!radioState.adding;radioState.pane='library';redraw();}
+    else if(action==='favorite'){const id=radioStation().id;if(radioState.favorites.has(id))radioState.favorites.delete(id);else radioState.favorites.add(id);saveRadio();redraw();}
     else if(action==='volume'&&Number.isFinite(Number(value))){radioState.volume=Math.min(100,Math.max(0,Number(value)))/100;if(radioPlayer)radioPlayer.volume=radioState.volume;saveRadio();}
+    else if(action==='remove')removeRadioStation();
   }
-  window.addEventListener?.('offline',()=>{if(radioState.wanted)radioStop('Offline · Internetverbindung prüfen und erneut starten');});
+  window.addEventListener?.('offline',()=>{
+    if(radioState.wanted||radioPlayer)radioFail('Offline · Wiederverbindung automatisch',{retry:false,resume:true});
+  });
+  window.addEventListener?.('online',()=>{
+    if(radioState.wanted&&radioState.resume&&!radioPlayer){radioState.retries=0;radioState.status='Verbindung wieder da · Stream wird neu geladen';radioStart();}
+  });
   function radioHTML(compact){
-    const station=RADIO_STATIONS[radioState.index];
-    const rows=RADIO_STATIONS.map((item,index)=>({item,index})).filter(({item})=>!radioState.filter||radioState.favorites.has(item.id)).map(({item,index})=>
-      '<button type="button" class="mm-demo-item '+(radioState.index===index?'selected':'')+'" aria-label="'+esc(item.name)+' abspielen" aria-pressed="'+(radioState.index===index)+'" onclick="meviRadioAction(\'select\','+index+')"><span class="mm-demo-item-icon">'+icon('music')+'</span><span class="mm-demo-item-text"><strong>'+esc(item.name)+'</strong><small>'+esc(item.description)+'</small></span>'+icon(radioState.favorites.has(item.id)?'heart':'play')+'</button>').join('');
-    return '<section class="mm-shell mm-demo mm-radio '+(compact?'is-compact':'')+'" data-source="radio" data-pane="'+radioState.pane+'" aria-label="Internetradio"><div class="mm-top"><div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">RADIO</span></div><div class="mm-top-actions">'+sourceButtons('radio')+'</div></div>'+
-      '<div class="mm-demo-notice">Internetradio · benötigt WLAN oder mobile Daten</div>'+
+    const station=radioStation();
+    const isCustom=!!station.custom;
+    const playing=radioState.wanted&&!!radioPlayer;
+    const addForm=radioState.adding?'<form class="mm-radio-add" onsubmit="event.preventDefault();meviRadioAddFromForm()"><label><span>Name (optional)</span><input id="mm-radio-name" type="text" maxlength="60" autocomplete="off" placeholder="z. B. Mein Lieblingssender"></label><label><span>HTTPS-Stream-URL</span><input id="mm-radio-url" type="url" inputmode="url" autocomplete="off" required placeholder="https://example.com/live.mp3"></label><div class="mm-radio-add-actions"><button type="submit" class="primary">'+icon('plus')+' Hinzufügen</button><button type="button" onclick="meviRadioAction(\'addform\')">Abbrechen</button></div><div class="mm-radio-notice" id="mm-radio-notice" role="status">'+esc(radioState.status)+'</div></form>':'';
+    return '<section class="mm-shell mm-demo mm-radio '+(compact?'is-compact':'')+(radioState.adding?' is-adding':'')+'" data-source="radio" data-pane="'+radioState.pane+'" aria-label="Internetradio"><div class="mm-top"><div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">RADIO</span></div><div class="mm-top-actions">'+sourceButtons('radio')+'</div></div>'+
+      '<div class="mm-demo-notice">Internetradio · benötigt WLAN oder mobile Daten · HTTPS</div>'+
       (compact?'<div class="mm-compact-toggle"><button type="button" aria-pressed="'+(radioState.pane==='library')+'" onclick="meviRadioAction(\'pane\',\'library\')">'+icon('list')+' Sender</button><button type="button" aria-pressed="'+(radioState.pane==='player')+'" onclick="meviRadioAction(\'pane\',\'player\')">'+icon('music')+' Player</button></div>':'')+
-      '<div class="mm-content"><div class="mm-library"><div class="mm-demo-library-head"><strong>'+RADIO_STATIONS.length+' Radiosender</strong><button type="button" class="mm-tab '+(radioState.filter?'selected':'')+'" aria-pressed="'+radioState.filter+'" onclick="meviRadioAction(\'filter\')">'+icon('heart')+' Favoriten</button></div><div class="mm-list">'+(rows||'<div class="mm-demo-empty">Noch keine Favoriten.<br>Markiere einen Sender mit dem Herz im Player.</div>')+'</div></div>'+
-      '<div class="mm-now"><div class="mm-now-top"><div class="mm-artwork mm-demo-art" aria-hidden="true">'+icon('music')+'<span>RADIO</span></div><div class="mm-track-details"><div class="mm-now-eyebrow">INTERNETRADIO</div><div class="mm-now-title">'+esc(station.name)+'</div><div class="mm-now-sub">'+esc(station.description)+'</div><button type="button" class="mm-icon-button" aria-label="Favorit umschalten" aria-pressed="'+radioState.favorites.has(station.id)+'" onclick="meviRadioAction(\'favorite\')">'+icon('heart')+'</button></div></div>'+
+      '<div class="mm-content"><div class="mm-library"><div class="mm-radio-tools"><label class="mm-search mm-radio-search">'+icon('search')+'<input id="mm-radio-search" type="search" spellcheck="false" autocomplete="off" placeholder="Sender suchen …" aria-label="Radiosender suchen" value="'+esc(radioState.query)+'" oninput="meviRadioAction(\'query\',this.value)"></label><div class="mm-radio-tools-row"><strong id="mm-radio-count">'+radioCountLabel()+'</strong><span class="mm-radio-actions"><button type="button" id="mm-radio-filter" class="mm-tab '+(radioState.filter?'selected':'')+'" aria-pressed="'+radioState.filter+'" onclick="meviRadioAction(\'filter\')">'+icon('heart')+' Favoriten</button><button type="button" id="mm-radio-add" class="mm-tab '+(radioState.adding?'selected':'')+'" aria-expanded="'+radioState.adding+'" onclick="meviRadioAction(\'addform\')">'+icon('plus')+' Sender</button></span></div>'+addForm+'</div><div class="mm-list" id="mm-radio-list">'+radioRowsHTML()+'</div></div>'+
+      '<div class="mm-now"><div class="mm-now-top"><div class="mm-artwork mm-demo-art" aria-hidden="true">'+icon('music')+'<span>RADIO</span></div><div class="mm-track-details"><div class="mm-now-eyebrow">INTERNETRADIO</div><div class="mm-now-title">'+esc(station.name)+'</div><div class="mm-now-sub">'+esc(station.description)+'</div>'+(isCustom?'<div class="mm-now-album">Eigener Sender · lokal gespeichert</div>':'')+'<div class="mm-now-buttons"><button type="button" class="mm-icon-button" aria-label="Favorit umschalten" aria-pressed="'+radioState.favorites.has(station.id)+'" onclick="meviRadioAction(\'favorite\')">'+icon('heart')+'</button>'+(isCustom?'<button type="button" id="mm-radio-remove" class="mm-icon-button mm-radio-remove '+(radioState.pendingRemove===station.id?'selected':'')+'" aria-label="Eigenen Sender entfernen" aria-pressed="'+(radioState.pendingRemove===station.id)+'" onclick="meviRadioRemoveStation()">'+icon('trash')+'</button>':'')+'</div></div></div>'+
       '<div class="mm-radio-status" id="mm-radio-status" role="status">'+esc(radioState.status)+'</div>'+
-      '<div class="mm-radio-controls"><div class="mm-transport"><button type="button" aria-label="Vorheriger Sender" onclick="meviRadioAction(\'previous\')">'+icon('prev')+'</button><button type="button" id="mm-radio-play" class="mm-primary" aria-label="'+(radioState.wanted?'Radio stoppen':'Radio abspielen')+'" onclick="meviRadioAction(\'toggle\')">'+icon(radioState.wanted?'stop':'play')+'</button><button type="button" aria-label="Nächster Sender" onclick="meviRadioAction(\'next\')">'+icon('next')+'</button></div><label class="mm-radio-volume">'+icon('volume')+'<input id="mm-radio-volume" type="range" min="0" max="100" value="'+Math.round(radioState.volume*100)+'" aria-label="Radio-Lautstärke" oninput="meviRadioAction(\'volume\',this.value)"></label></div></div></div></section>';
+      '<div class="mm-radio-controls"><div class="mm-transport"><button type="button" aria-label="Vorheriger Sender" onclick="meviRadioAction(\'previous\')">'+icon('prev')+'</button><button type="button" id="mm-radio-play" class="mm-primary" aria-label="'+(playing?'Radio stoppen':'Radio abspielen')+'" onclick="meviRadioAction(\'toggle\')">'+icon(playing?'stop':'play')+'</button><button type="button" aria-label="Nächster Sender" onclick="meviRadioAction(\'next\')">'+icon('next')+'</button></div><label class="mm-radio-volume">'+icon('volume')+'<input id="mm-radio-volume" type="range" min="0" max="100" value="'+Math.round(radioState.volume*100)+'" aria-label="Radio-Lautstärke" oninput="meviRadioAction(\'volume\',this.value)"></label></div></div></div></section>';
   }
 
   function html(isCompact){
@@ -461,6 +592,7 @@
   function stop(){if(player){player.pause();closeVideo()}}
   Object.assign(window,{
     meviRadioHTML:radioHTML,meviRadioAction:radioAction,
+    meviRadioAddStation:addRadioStation,meviRadioAddFromForm:addRadioFromForm,meviRadioRemoveStation:removeRadioStation,
     meviAudioDemoHTML:demoHTML,meviAudioDemoAction:demoAction,
     meviMediaHTML:html,meviMediaFolder:chooseFolder,meviMediaFiles:chooseFiles,meviMediaLoadFiles:loadFiles,
     meviMediaSection:setSection,meviMediaGroup:setGroup,meviMediaSearch:search,meviMediaPane:pane,

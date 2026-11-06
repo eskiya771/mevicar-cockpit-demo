@@ -58,7 +58,7 @@ Adresssuche: feste Ortsliste, deduplizierte Recents, Freitext als ausdrücklich 
 | Dock/Launcher | SVGs, Zusatzslot, Layoutwechsel, sourceabhängige Audiobeschriftung | Einige historische Symboldefinitionen werden später überschrieben |
 | Themes | Drei live umschaltbare Themes, lokale Speicherung | Noch kein durchgängiges gemeinsames Tokensystem |
 | MeviMedia | Dateien/Ordner, lokale Audio-/Videowiedergabe, Suche/Gruppen/Favoriten, Queue, Seek, Lautstärke, Shuffle/Repeat, begrenzte ID3-/Cover-Auswertung | Browsercodecs und Dateifreigabe erforderlich; keine dauerhafte Bibliothek oder stille USB-Suche |
-| Radio | Echtes Internetradio mit 13 direkten HTTPS-MP3-Streams aus Classic, Start/Stopp, Senderwechsel, Lautstärke, gespeicherte Sender/Favoriten | Internet erforderlich; keine UKW-/DAB-Hardware, keine Sendungstitel/ICY-Metadaten; Browser-/OS-Grenzen bei Hintergrundbetrieb und Lautstärke |
+| Radio | Echtes Internetradio mit 13 direkten HTTPS-MP3-Streams aus Classic, Suche, Favoritenfilter, bis zu 20 eigene HTTPS-Streams, Start/Stopp, Senderwechsel, Lautstärke, automatische Wiederverbindung, gespeicherte Sender/eigene Streams/Favoriten | Internet erforderlich; keine UKW-/DAB-Hardware, keine Sendungstitel/ICY-Metadaten; eigene Streams nur HTTPS ohne Zugangsdaten; Browser-/OS-Grenzen bei Hintergrundbetrieb und Lautstärke |
 | Spotify | MeviMedia-Oberfläche, Demo-Titelauswahl und Favoriten, Quellenwahl im Split | Kein Streaming oder Login; Demo-Auswahl nur für die Sitzung |
 | Premium-Tacho | 0–220 km/h, 0–8000 U/min, GPS-Trip, Sensor-/GPS-Kompass, klarer Demo-Modus | RPM/Gesamt-km nur über API; kein physischer OBD-Transport |
 | OBD-App | Feste Anzeige 82 km/h / 2150 U/min | Nicht mit Tacho-Ingest verbunden; keine Hardwaredaten |
@@ -83,11 +83,13 @@ Ordner: `showDirectoryPicker` im sicheren Kontext, sonst Dateiinput mit `webkitd
 
 ### Internetradio
 
-Radio ist im vorhandenen mevimedia.js integriert und nutzt dessen Icons, Quellenwahl und Layout. Der feste Katalog entspricht [Classic RadioStations.kt](https://github.com/eskiya771/mevicar/blob/main/app/src/main/java/de/mevicar/app/RadioStations.kt). Ein audio-Element hängt während einer Wiedergabe direkt an document.body, außerhalb von #screen. App-, Theme- und Layoutwechsel zerstören es nicht. Start erfolgt ausschließlich durch Senderwahl oder Abspielen. Stopp, Quellenwechsel, Offline-Ereignis und Fehler entfernen Quelle und Element; erneuter Start verbindet live neu. Kein Stream-Proxy und keine neue Laufzeitbibliothek.
+Radio ist im vorhandenen mevimedia.js integriert und nutzt dessen Icons, Quellenwahl und Layout. Der feste Katalog entspricht [Classic RadioStations.kt](https://github.com/eskiya771/mevicar/blob/main/app/src/main/java/de/mevicar/app/RadioStations.kt). Die sichtbare Senderliste ist eine dynamische Kombination aus Katalog und eigenen HTTPS-Streams. Suche prüft Name und Beschreibung; der Favoritenfilter ist sitzungsbezogen. Ein audio-Element hängt während einer Wiedergabe direkt an document.body, außerhalb von #screen. App-, Theme- und Layoutwechsel zerstören es nicht. Start erfolgt ausschließlich durch Senderwahl oder Abspielen. Stopp, Quellenwechsel, Offline-Ereignis und Fehler entfernen Quelle und Element; erneuter Start verbindet live neu. Kein Stream-Proxy und keine neue Laufzeitbibliothek.
 
-Medien und Radio teilen sich die Media-Session-Steuerung nach aktiver Audioquelle. Radio pausiert lokale Medien, deren Start beendet Radio. Verspätete Events/Play-Promises alter Streams werden über eine Generation verworfen; verspätete Cover-Metadaten dürfen die Radioanzeige nicht überschreiben. Medienereignisse ändern nur Status und Schaltflächen, nicht den Screen-DOM. Nach 15 Sekunden ohne gestartete/fortgesetzte Wiedergabe endet der Ladeversuch mit einer erneuten Startmöglichkeit. Ein Download-Stall bei noch abspielbarem Puffer löst keinen unnötigen Stopp aus.
+Eigene Sender werden nur als vollständige HTTPS-URLs ohne Benutzername/Passwort akzeptiert, dedupliziert, auf 60 Zeichen Namen und 20 Einträge begrenzt. Entfernen ist zweistufig (erst vormerken, dann bestätigen), damit kein natives confirm() nötig ist. Fehler unterscheiden nicht erreichbaren Stream, 15-Sekunden-Timeout, unterbrochene/beendete Wiedergabe sowie Browser-Blockade und nicht unterstütztes Format. Automatische Wiederholung erfolgt höchstens dreimal nach 4, 10 und 25 Sekunden; ein manueller Stopp bricht alle Versuche ab. NotAllowedError und NotSupportedError werden nicht automatisch wiederholt, sondern verlangen eine Nutzeraktion. Offline pausiert offene Versuche; das online-Ereignis startet einen weiterhin gewünschten Stream frisch.
 
-LocalStorage-Schlüssel mevicar-radio-v1 speichert Sender-ID, Lautstärke und Favoriten. Wiederherstellung startet niemals automatisch. Sendersuche und frei eingegebene URLs sind nicht Bestandteil dieser Iteration. Nachweis: [Radio-QA](QA_RADIO_2026-11-06.md).
+Medien und Radio teilen sich die Media-Session-Steuerung nach aktiver Audioquelle. Radio pausiert lokale Medien, deren Start beendet Radio. Verspätete Events/Play-Promises alter Streams werden über eine Generation verworfen; verspätete Cover-Metadaten dürfen die Radioanzeige nicht überschreiben. Medienereignisse ändern nur Status und Schaltflächen, nicht den Screen-DOM. Auch Suche und Favoritenfilter aktualisieren nur Liste und Zähler, damit der Suchfokus erhalten bleibt. Ein Download-Stall bei noch abspielbarem Puffer löst keinen unnötigen Stopp aus.
+
+LocalStorage-Schlüssel mevicar-radio-v1 speichert Sender-ID, Lautstärke, Favoriten und eigene Streams. Wiederherstellung startet niemals automatisch; gespeicherte Einträge werden validiert, ungültige URLs und Duplikate verworfen. Nachweis: [Radio-QA](QA_RADIO_2026-11-06.md).
 
 ### Tacho
 
@@ -157,7 +159,7 @@ node tests/display-profiles-smoke.mjs
 node tests/speedometer-smoke.mjs
 ```
 
-- Media: Mockplayer/-DOM; Import, Gruppen, Favoriten, Video, Queue und Quellenwechsel. Importiert zusätzlich radio-smoke.mjs: Streamzustände, Stopp/Retry, Offline, Timeout, veraltete Events, Persistenz, Media-Session und exklusive Audiowiedergabe.
+- Media: Mockplayer/-DOM; Import, Gruppen, Favoriten, Video, Queue und Quellenwechsel. Importiert zusätzlich radio-smoke.mjs: Streamzustände, Suche, eigene HTTPS-Streams samt Grenzen/Entfernen, Retry-Backoff 4/10/25 s, Offline-/Online-Wiederanlauf, Timeout, veraltete Events, Persistenz, Media-Session und exklusive Audiowiedergabe.
 - Lichtshow: Mockrenderer/-DOM; Steuerung, Timer, Visibility, Unmount. Testet nicht die Darstellung aller echten Effekte.
 - UI: VM mit Mock-DOM; Navigation/Appwege, Suchtexte, Demo-Kennzeichnung und SVG-Markup. Konsolenmeldung ist breiter als tatsächliche Browserabdeckung.
 - Displayprofile: statische CSS-/Dokument-/Workflow-Assertions. Keine echten Viewports oder Touchmessungen.

@@ -263,6 +263,30 @@ html,body{min-height:0;overscroll-behavior:none}
  .mm-demo.is-compact .mm-demo-unavailable{min-height:25px;font-size:11px}
 }
 
+/* Radio library tools: search, favorites filter and custom HTTPS streams. */
+.mm-radio-tools{display:flex;flex-direction:column;gap:6px;flex:none;min-width:0}
+.mm-radio.is-adding .mm-radio-tools{flex:1;min-height:0;overflow-y:auto}
+.mm-radio.is-adding .mm-radio-search,
+.mm-radio.is-adding .mm-radio-tools-row,
+.mm-radio.is-adding .mm-list{display:none}
+.mm-radio-search{flex:none;width:100%;min-height:44px}
+.mm-radio-tools-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;flex-wrap:wrap}
+.mm-radio-tools-row>strong{font-size:clamp(12px,1.7vh,18px);min-width:0}
+.mm-radio-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
+.mm-radio-add{display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid #7199b355;border-radius:12px;background:#10223570}
+.mm-radio-add label{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:12px;color:#cfe2f0}
+.mm-radio-add input{width:100%;min-width:0;min-height:44px;border-radius:9px;border:1px solid #7abde65b;background:#1a2c44;color:#eefaff;padding:0 10px;font-size:16px}
+.mm-radio-add input::placeholder{color:#8fa9ba}
+.mm-radio-add input:focus-visible{outline:2px solid var(--demo-accent);outline-offset:1px}
+.mm-radio-add-actions{display:flex;gap:6px;flex-wrap:wrap}
+.mm-radio-add-actions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid #557c9b58;background:#19294099;color:#e8f6ff;font:inherit;font-size:13px}
+.mm-radio-add-actions button.primary{border-color:var(--demo-accent);background:#3a2f1a;color:#ffe2b0}
+.mm-radio-add-actions .mm-icon{width:18px;height:18px;flex:none}
+.mm-radio-notice{font-size:12px;line-height:1.35;color:var(--demo-accent);overflow-wrap:anywhere}
+.mm-radio-own{display:inline-block;padding:1px 5px;border-radius:5px;border:1px solid #ffc97888;background:#ffc9781f;color:#ffd89d;font-size:9px;font-weight:700;letter-spacing:.06em;vertical-align:middle}
+.mm-radio-remove{color:#ffb2ad;border-color:#ff8c8455}
+.mm-radio-remove.selected{color:#ffe3e0;border-color:#ff7a70;background:#5c221f99}
+
 /* Live radio controls: preserve space for transport and volume on short displays. */
 .mm-radio-status{min-width:0;color:var(--demo-accent);font-size:clamp(12px,1.7vh,17px);line-height:1.35;text-align:center;overflow-wrap:anywhere}
 .mm-radio-controls{display:flex;align-items:center;justify-content:center;gap:clamp(10px,2vw,24px);min-width:0}
@@ -273,14 +297,22 @@ html,body{min-height:0;overscroll-behavior:none}
 .mm-radio-volume input:focus-visible{outline:2px solid var(--demo-accent)}
 @media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
  .mm-radio.mm-shell.is-compact .mm-now-top{grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:6px}
- .mm-radio.is-compact .mm-track-details{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:3px}
- .mm-radio.is-compact .mm-track-details .mm-icon-button{grid-column:2;grid-row:1/4}
+ .mm-radio.is-compact .mm-track-details{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px}
+ .mm-radio.is-compact .mm-track-details .mm-now-buttons{grid-column:2;grid-row:1/4;justify-content:flex-end;align-content:start;gap:3px}
  .mm-radio.is-compact .mm-now-title{font-size:14px;max-height:3.3em}
- .mm-radio.is-compact .mm-now-sub{display:none}
+ .mm-radio.is-compact .mm-now-sub,.mm-radio.is-compact .mm-now-album{display:none}
  .mm-radio.is-compact .mm-now-eyebrow{font-size:8px;letter-spacing:0}
  .mm-radio.is-compact .mm-radio-status{font-size:11px;line-height:1.25}
  .mm-radio.is-compact .mm-radio-controls{gap:8px}
  .mm-radio.is-compact .mm-radio-volume{gap:3px}
  .mm-radio.is-compact .mm-radio-volume .mm-icon{width:16px;height:16px}
  .mm-radio.mm-shell.is-compact .mm-radio-controls .mm-transport{flex:none;width:156px}
+ .mm-radio.is-compact .mm-radio-tools{gap:3px}
+ .mm-radio.is-compact .mm-radio-tools-row>strong{font-size:11px}
+ .mm-radio.is-compact .mm-radio-actions .mm-tab{min-height:44px;padding:4px 8px;font-size:11px}
+ .mm-radio.is-compact .mm-radio-add{padding:5px;gap:4px}
+ .mm-radio.is-compact .mm-radio-add label{font-size:10px;gap:2px}
+ .mm-radio.is-compact .mm-radio-add input{min-height:44px;font-size:14px}
+ .mm-radio.is-compact .mm-radio-add-actions button{min-height:44px;font-size:11px}
+ .mm-radio.is-compact .mm-radio-notice{font-size:10px}
 }
