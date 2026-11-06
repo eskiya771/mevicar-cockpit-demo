@@ -9,7 +9,7 @@ new Function(src);
 assert.ok(css.includes('.lightshow-app')&&css.includes('.lightshow-stage'));
 assert.match(html,/\['lightshow','Lichtshow'/);
 assert.ok(html.includes('window.meviLightshowMount()')&&html.includes('window.meviLightshowUnmount()'));
-assert.ok(html.includes("s.mode=id==='lightshow'?'split'"));
+assert.ok(html.includes("s.mode=id==='settings'?'full':'split'")); // All launcher apps start beside the navigation.
 
 const effects=Array.from({length:35},(_,i)=>['effect-'+i,'Effekt '+i]);
 let constructed=0,draws=[],resizes=0,touches=0,disconnected=0;
