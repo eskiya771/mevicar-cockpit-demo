@@ -139,3 +139,30 @@ html,body{min-height:0;overscroll-behavior:none}
  .mm-shell.is-compact .mm-transport button{min-width:48px;min-height:48px}
  .mm-shell.is-compact .mm-transport .mm-primary{min-width:66px;min-height:66px}
 }
+
+/* UX quality round 3 – touch targets tested on all five landscape profiles. */
+.status{height:clamp(36px,4.5vh,44px);align-items:center;flex:none}
+.status .status-action{display:inline-flex;align-items:center;justify-content:center;min-height:clamp(34px,4.2vh,42px);padding:5px clamp(8px,.8vw,13px)}
+.mm-shell.is-compact .mm-mode-button{min-height:44px;padding:7px clamp(6px,.65vw,11px);font-size:clamp(11px,1.55vh,15px)}
+.mm-shell.is-compact .mm-compact-toggle button{min-height:44px}
+.mm-shell .mm-icon-button{min-height:44px;min-width:44px;width:44px;height:44px}
+.mm-shell .mm-transport button{min-width:44px;min-height:44px}
+.mm-shell .mm-transport .mm-primary{min-width:56px;min-height:56px}
+.mm-shell.is-compact .mm-transport button{min-width:44px;min-height:44px}
+.mm-shell.is-compact .mm-transport .mm-primary{min-width:56px;min-height:56px}
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .map.searchmode .overlay.nav-search{width:37%;max-width:none}
+ .map.searchmode .keyboard{width:60%;max-width:60%;padding:6px;gap:3px}
+ .map.searchmode .keyboard .keyrow{gap:2px}
+ .map.searchmode .keyboard .keyrow button{min-height:44px;padding:3px 0}
+ .mm-shell.is-compact .mm-top-actions{gap:3px}
+ .mm-shell.is-compact .mm-mode-button{min-height:44px;padding:6px 5px;font-size:clamp(10px,2.6vh,12px)}
+ .mm-shell.is-compact .mm-now-top{padding:5px;gap:6px}
+ .mm-shell.is-compact .mm-transport button{min-width:44px;max-width:48px;min-height:44px;max-height:48px}
+ .mm-shell.is-compact .mm-transport .mm-primary{min-width:56px;max-width:58px;min-height:56px;max-height:58px}
+}
+/* Override older compact sizing rules with the final measured touch widths. */
+.mm-shell .mm-mode-button{min-height:44px}
+.mm-shell.is-compact .mm-mode-button{min-width:44px}
+.mm-shell.is-compact .mm-now .mm-icon-button{width:44px;min-width:44px;height:44px;min-height:44px}
+.nav-search .tool-control{min-height:44px}
