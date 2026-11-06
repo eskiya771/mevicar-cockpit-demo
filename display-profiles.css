@@ -1,0 +1,141 @@
+/* MeviCar Next – five supported landscape CSS-viewport profiles:
+   iPhone 17 874×402; S20 FE 915×412; DeX 1920×1200;
+   FullHD 1920×1080; panoramic 1920×720.
+   Ranges cover browser toolbars, zoom, safe-area insets. */
+:root{--car-touch:44px}
+html,body{min-height:0;overscroll-behavior:none}
+.shell,.cockpit,.body,.screen,.map,.side,.full{min-height:0}
+.screen{min-width:0}
+.shell{padding-left:max(3px,env(safe-area-inset-left,0px));padding-right:max(3px,env(safe-area-inset-right,0px))}
+.dock button .dock-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+/* DeX, FullHD, panoramic: desktop-sized touch keyboard beside the search results. */
+@media(orientation:landscape) and (min-width:1150px){
+ .map.searchmode .overlay.nav-search{
+   top:clamp(12px,2vh,24px);bottom:auto;left:clamp(12px,1.4vw,22px);right:auto;
+   width:min(36%,535px);height:auto;max-height:min(700px,calc(100% - 36px));
+   border-radius:clamp(16px,1.4vw,25px);
+ }
+ .map.searchmode .overlay.nav-search .inner{
+   height:auto;max-height:min(700px,calc(100dvh - 72px));min-height:0;overflow:hidden;
+   gap:clamp(9px,1.2vh,17px);padding:clamp(12px,1.45vh,20px);
+ }
+ .map.searchmode .nav-suggestions{min-height:0;overflow-y:auto;flex:1}
+ .map.searchmode .keyboard{
+   left:auto;right:clamp(20px,3vw,58px);top:50%;bottom:auto;transform:translateY(-50%);
+   width:min(50%,840px);max-height:calc(100% - 40px);padding:clamp(12px,1.3vw,19px);
+   gap:clamp(7px,1.05vh,12px);border:1px solid #7fdaef59;
+   border-radius:clamp(14px,1.6vw,24px);box-shadow:0 15px 48px #030919a8;
+ }
+ .map.searchmode .keyboard .keyrow{gap:clamp(6px,.65vw,10px)}
+ .map.searchmode .keyboard .keyrow button{
+   min-height:clamp(48px,5.1vh,67px);padding:6px 2px;
+   font-size:clamp(15px,1.02vw,19px);border-radius:clamp(8px,.65vw,12px);
+ }
+ .map.searchmode .keyboard .keyrow .special,
+ .map.searchmode .keyboard .keyrow .go{font-size:clamp(12px,.95vw,18px)}
+}
+/* iPhone 17 and S20 FE in landscape: protect nav width and touch controls. */
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .dock.left{width:clamp(64px,7.4vw,70px)}
+ .dock.left button{min-height:clamp(44px,9vh,57px);padding:3px 1px}
+ .dock.left .dock-label{font-size:clamp(10px,2.15vh,12px)}
+ .screen{gap:clamp(4px,.55vw,7px)}
+ .side.mm-host{width:42%;min-width:0}
+ .map.searchmode .overlay.nav-search{
+   width:41.5%;left:8px;right:auto;top:8px;bottom:8px;height:auto;max-height:none;
+ }
+ .map.searchmode .keyboard{
+   left:auto;right:8px;top:auto;bottom:8px;transform:none;
+   width:54%;max-width:54%;padding:7px;
+ }
+ .map.searchmode .keyboard .keyrow button{
+   min-height:clamp(39px,9.8vh,44px);font-size:clamp(12px,2.8vh,14px);
+ }
+ .map.searchmode .nav-suggestions .suggestion{
+   min-height:clamp(42px,10.5vh,50px);padding:5px 7px;
+ }
+ .map.searchmode .overlay.nav-search .inner{gap:clamp(5px,1vh,8px)}
+ .map.searchmode .nav-search-heading{margin:0}
+ .mm-shell.is-compact .mm-top-actions{gap:clamp(3px,.5vw,6px)}
+ .mm-shell.is-compact .mm-mode-button{
+   min-height:var(--car-touch);min-width:0;padding:4px 7px;
+   font-size:clamp(10px,2.35vh,12px);
+ }
+ .mm-shell.is-compact .mm-compact-toggle button{
+   min-height:clamp(38px,10vh,44px);font-size:clamp(11px,2.4vh,13px);
+ }
+ .mm-shell.is-compact .mm-now{gap:clamp(4px,1vh,6px)}
+ .mm-shell.is-compact .mm-track-details{gap:clamp(3px,1vh,7px)}
+ .mm-shell.is-compact .mm-now-title{font-size:clamp(12px,3.2vh,17px)}
+ .mm-shell.is-compact .mm-transport button{max-width:44px;max-height:44px}
+ .mm-shell.is-compact .mm-transport .mm-primary{max-width:54px;max-height:54px}
+}
+/* DeX 1920x1200 and FullHD 1920x1080: visible library and player simultaneously. */
+@media(orientation:landscape) and (min-width:1500px) and (min-height:880px){
+ .mm-shell.is-compact .mm-compact-toggle{display:none}
+ .mm-shell.is-compact .mm-content{
+   display:grid;grid-template-columns:minmax(0,1fr);
+   grid-template-rows:minmax(0,47%) minmax(0,53%);min-height:0;overflow:hidden;
+ }
+ .mm-shell.is-compact[data-pane="player"] .mm-library,
+ .mm-shell.is-compact[data-pane="library"] .mm-library{
+   display:flex;flex-direction:column;min-height:0;overflow:hidden;
+   padding:clamp(11px,1.05vw,19px);border-right:0;
+   border-bottom:1px solid #7ce7f640;
+ }
+ .mm-shell.is-compact[data-pane="player"] .mm-now,
+ .mm-shell.is-compact[data-pane="library"] .mm-now{
+   display:grid;min-height:0;grid-template-columns:minmax(0,1fr);
+   grid-template-rows:minmax(0,1fr) auto auto;gap:clamp(8px,1.1vh,13px);
+   padding:clamp(11px,1.1vw,19px) clamp(16px,1.5vw,23px)
+     max(18px,env(safe-area-inset-bottom,0px));
+ }
+ .mm-shell.is-compact .mm-library-header{gap:8px}
+ .mm-shell.is-compact .mm-search{height:clamp(43px,4.2vh,52px)}
+ .mm-shell.is-compact .mm-tab{
+   font-size:clamp(12px,1.2vh,15px);min-height:clamp(39px,4vh,47px);padding:7px 12px;
+ }
+ .mm-shell.is-compact .mm-tabs{overflow-x:auto}
+ .mm-shell.is-compact .mm-track,.mm-shell.is-compact .mm-group{
+   min-height:clamp(58px,6vh,75px);padding:7px 9px;
+ }
+ .mm-shell.is-compact .mm-track-icon{
+   width:clamp(42px,5vh,56px);height:clamp(42px,5vh,56px);
+ }
+ .mm-shell.is-compact .mm-track-fav{width:44px;min-width:44px;height:44px}
+ .mm-shell.is-compact .mm-now-top{
+   grid-template-columns:minmax(0,39%) minmax(0,61%);gap:clamp(12px,1vw,20px);
+   padding:clamp(8px,1vw,15px);
+ }
+ .mm-shell.is-compact .mm-artwork{width:min(100%,28vh);height:auto;max-height:100%}
+ .mm-shell.is-compact .mm-now-title{font-size:clamp(20px,2.5vh,30px)}
+ .mm-shell.is-compact .mm-now-sub{font-size:clamp(13px,1.5vh,17px)}
+ .mm-shell.is-compact .mm-now-album{display:block}
+ .mm-shell.is-compact .mm-icon-button{min-width:44px;width:44px;height:44px}
+ .mm-shell.is-compact .mm-transport{max-width:440px;gap:clamp(8px,.9vw,14px)}
+ .mm-shell.is-compact .mm-transport button{
+   width:clamp(46px,4.8vh,60px);height:clamp(46px,4.8vh,60px);
+   max-width:60px;max-height:60px;
+ }
+ .mm-shell.is-compact .mm-transport .mm-primary{
+   width:clamp(61px,6vh,77px);height:clamp(61px,6vh,77px);
+   max-width:77px;max-height:77px;
+ }
+}
+/* Panoramic 1920x720: nav prioritized, 2-pane search, compact media. */
+@media(orientation:landscape) and (min-width:1500px) and (max-height:820px){
+ .mm-shell.is-compact .mm-top{
+   padding:clamp(6px,1.2vh,11px) clamp(9px,.9vw,16px);
+ }
+ .mm-shell.is-compact .mm-compact-toggle button{
+   min-height:clamp(40px,6vh,51px);font-size:clamp(12px,1.9vh,15px);
+ }
+ .mm-shell.is-compact .mm-now-top{
+   grid-template-columns:minmax(0,39%) minmax(0,61%);
+ }
+ .mm-shell.is-compact .mm-artwork{width:min(100%,29vh)}
+ .mm-shell.is-compact .mm-track-details{gap:clamp(6px,1.2vh,10px)}
+ .mm-shell.is-compact .mm-now-title{font-size:clamp(19px,3.1vh,28px)}
+ .mm-shell.is-compact .mm-transport button{min-width:48px;min-height:48px}
+ .mm-shell.is-compact .mm-transport .mm-primary{min-width:66px;min-height:66px}
+}
