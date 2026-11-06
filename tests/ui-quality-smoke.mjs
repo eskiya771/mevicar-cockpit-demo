@@ -51,6 +51,7 @@ assert.equal(app.state.mode,'map');
 assert.deepEqual(Array.from(new Set(['default','cyberpunk','liquidglass'])),['default','cyberpunk','liquidglass']);
 
 let browse=app.browseOverlay();
+assert.match(browse,/overlay glass nav-browse/,'Responsive browse styles must be bound to the real markup');
 assert.equal((browse.match(/Wohin soll es gehen\?/g)||[]).length,1);
 assert.equal((browse.match(/Zuletzt verwendet · Demo/g)||[]).length,3);
 assert.doesNotMatch(browse,/🎙|Apple-Karten-Stil · Suchen|Orte ›/);
@@ -58,6 +59,7 @@ assert.match(browse,/Favoriten/);
 assert.match(browse,/app-illustration/);
 
 let search=app.searchOverlay();
+assert.match(search,/overlay glass nav-search/,'Landscape keyboard layout must apply to search');
 assert.match(search,/Zieladresse eingeben/);
 assert.match(search,/navClearQuery/);
 assert.match(search,/Vorschläge und letzte Ziele/);
@@ -68,6 +70,7 @@ assert.doesNotMatch(app.mapHTML(),/IN 850 M|↱ Rechts abbiegen|Zusatzscreen|map
 assert.match(app.mapHTML(),/KARTE · DEMO/);
 assert.doesNotMatch(app.previewHTML(),/24 Min|29 Min|Alternative Route/);
 assert.match(app.previewHTML(),/keine Wegberechnung/);
+assert.match(app.previewHTML(),/preview glass nav-preview/);
 assert.match(app.previewHTML(),/Demo starten/);
 
 // Re-run the user's paths in one persistent JS VM using a small mock DOM.
