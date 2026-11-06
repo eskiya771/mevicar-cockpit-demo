@@ -25,6 +25,7 @@ Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix f
 - Farbdesigns **Original**, **Cyberpunk Neon City** und **Liquid Glass** werden in allen fünf Profilen begutachtet (15 Theme/Viewport-Kombinationen).
 - Bestehende Medienwiedergabe, Lichtshow, PWA-Update und Touch-Eingaben bleiben erhalten.
 - Premium-Tacho 0.5.0: in jedem Profil Vollbild und Split-Screen, beide analogen Instrumente, Trip/Gesamt-km, Kompass und die Themen Original, Neon City und Liquid Glass. Der Split-Tacho bleibt in der rechten Fläche, die Karte links. Keine Tacho-Scrollleiste.
+- Premium-Tacho Vollbild auf DeX, Full HD und Panorama: beide Instrumente füllen die verfügbare Höhe (Chromium-Messung: 1013/731 px, 896/731 px, 565/565 px), Skalenziffern ohne Überlappung, Instrumente nicht abgeschnitten. Messwerte und Prüfkriterien siehe `TACHO_ARCHITECTURE.md`, Abschnitt 5.
 
 ## Quellen und Umsetzung
 
@@ -34,5 +35,6 @@ Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix f
 - `sw.js`: neuer Service-Worker-Cache und Offline-Precache
 - `tests/display-profiles-smoke.mjs`: CI-Prüfung der fünf Profile und Verknüpfung
 - Screenshots in der ChatGPT-Sandbox: 5 Geräteprofile mit Navigation, Adresssuche und Medien in allen drei Designs
+- Tacho-Screenshots lokal mit Playwright/Chromium headless: 5 Profile × Vollbild/Split × 3 Designs (30 Aufnahmen, nicht im Repository)
 
 **Noch offen:** Reale Touch-/Safe-Area-Tests auf iPhone 17, S20 FE und im tatsächlichen DeX-Fenstermodus. Browser-Screenshots prüfen das Layout, ersetzen keinen Gerätetest.

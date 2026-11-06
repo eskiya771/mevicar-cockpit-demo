@@ -25,9 +25,18 @@ html[data-theme="liquidglass"] .tacho-app{--tacho-face:#102033;--tacho-face-hi:#
 .tacho-badge{flex:0 0 auto;border:1px solid color-mix(in srgb,var(--tacho-accent) 65%,transparent);color:var(--tacho-accent);border-radius:999px;padding:2px 7px;font-size:10px;font-weight:750;letter-spacing:.12em}
 .tacho-app.is-demo .tacho-badge{color:#ffd56a;border-color:#ffd56a;background:#ffd56a1a}
 .tacho-cluster{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr);grid-template-areas:"speed rpm";align-items:center;justify-items:center}
+/* Full layout: the cluster is a size container, so each dial grows to the smaller of its column width and the cluster height. */
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-cluster{container-type:size;container-name:tacho-cluster}
 .tacho-dial{grid-area:speed;width:auto;height:auto;max-width:100%;max-height:100%;aspect-ratio:1;min-width:0;min-height:0;position:relative;display:grid;place-items:center;align-self:center;justify-self:center}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-dial{container-type:size;container-name:tacho-dial;width:min(100%,100cqh);height:auto;max-height:none;aspect-ratio:1}
 .tacho-dial-rpm{grid-area:rpm}
 .tacho-dial svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 8px 16px #000a)}
+/* SVG scale numerals stay in viewBox units (they scale with the dial automatically); only HTML overlays use container units. */
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero b{font-size:clamp(44px,13cqmin,124px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero span{font-size:clamp(11px,2.4cqmin,20px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero small{font-size:clamp(10px,1.6cqmin,14px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-rpm-readout b{font-size:clamp(18px,7cqmin,56px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-rpm-readout small{font-size:clamp(8px,2cqmin,14px)}
 .tacho-stop-hi{stop-color:var(--tacho-face-hi)}.tacho-stop-mid{stop-color:var(--tacho-face)}
 .tacho-bezel{fill:none;stroke:var(--tacho-metal);stroke-width:3;opacity:.8}
 .tacho-track{fill:none;stroke:color-mix(in srgb,var(--tacho-accent) 55%,transparent);stroke-width:4;stroke-linecap:round}
@@ -94,12 +103,12 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
 /* Panorama / Infotainment 1920×720 */
 @media(orientation:landscape) and (min-width:1500px) and (max-height:820px){
   .side.tacho-host{width:min(38%,680px)}
-  .tacho-app:not(.is-compact) .tacho-hero b{font-size:clamp(42px,8vh,64px)}
+  .tacho-app.is-tight .tacho-hero b{font-size:clamp(42px,8vh,64px)}
 }
 /* DeX 1920×1200 and Full HD 1920×1080 */
 @media(orientation:landscape) and (min-width:1500px) and (min-height:880px){
   .side.tacho-host{width:min(36%,760px)}
-  .tacho-app:not(.is-compact) .tacho-hero b{font-size:clamp(42px,4.8vh,68px)}
+  .tacho-app.is-tight .tacho-hero b{font-size:clamp(44px,8vh,68px)}
   .tacho-num{font-size:13px}
 }
 @media(prefers-reduced-motion:reduce){

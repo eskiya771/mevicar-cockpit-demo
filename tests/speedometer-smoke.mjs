@@ -19,6 +19,12 @@ assert.match(css, /@media\(orientation:landscape\) and \(max-width:1024px\) and 
 assert.match(css, /@media\(orientation:landscape\) and \(min-width:1500px\) and \(max-height:820px\)/);
 assert.match(css, /@media\(orientation:landscape\) and \(min-width:1500px\) and \(min-height:880px\)/);
 assert.match(css, /prefers-reduced-motion:reduce/);
+// Full layout 2.0: dials are square size containers that grow to the cluster height; scale numerals stay in SVG viewBox units.
+assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-cluster{container-type:size'), 'cluster must be a size container in full layout');
+assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-dial{container-type:size;container-name:tacho-dial;width:min(100%,100cqh)'), 'dials must grow to the cluster height');
+assert.ok(!/.tacho-num[^{]*{[^}]*cq(min|h|w)/.test(css), 'SVG numerals must not use container units (they overlap on large dials)');
+assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero b{font-size:clamp(44px,13cqmin,124px)}'), 'hero speed scales with the dial');
+assert.ok(src.includes('y="206" class="tacho-scale-note"'), 'RPM ×1000 note must sit below the digital readout');
 assert.ok(html.includes('href="./speedometer.css"') && html.includes('src="./speedometer.js"'));
 assert.ok(html.includes('meviSpeedMount()') && html.includes('meviSpeedUnmount()'));
 assert.ok(html.includes("s.app==='speed'&&s.mode==='full'") && html.includes('tacho-host'));
@@ -26,7 +32,7 @@ assert.ok(html.includes('mapHTML()'), 'Split screen must keep the navigation map
 assert.ok(workflow.includes('mevicar-speedometer-styles') && workflow.includes('speedometer.js speedometer.css'));
 assert.ok(workflow.includes('tests/speedometer-smoke.mjs'));
 assert.ok(sw.includes("'./speedometer.js'") && sw.includes("'./speedometer.css'"));
-assert.ok(sw.includes('mevicar-next-shell-v19'));
+assert.ok(sw.includes('mevicar-next-shell-v20'));
 
 const elements = new Map();
 function makeNode(id) {

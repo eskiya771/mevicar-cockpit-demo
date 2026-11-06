@@ -134,7 +134,7 @@
       '<circle cx="120" cy="120" r="116" class="tacho-bezel"/><circle cx="120" cy="120" r="106" fill="url(#' + opts.face + ')"/>' +
       '<path class="tacho-track" d="' + arc(0, opts.max, opts.max, 102) + '"/>' + red + ticks +
       '<ellipse class="tacho-glint" cx="92" cy="68" rx="46" ry="18"/>' +
-      (opts.unitNote ? '<text x="120" y="168" class="tacho-scale-note">' + opts.unitNote + '</text>' : '') +
+      (opts.unitNote ? '<text x="120" y="206" class="tacho-scale-note">' + opts.unitNote + '</text>' : '') +
       '<g id="' + opts.needleId + '" class="tacho-needle" transform="rotate(-120 120 120)"><polygon points="120,28 115.5,124 120,132 124.5,124"/><circle cx="120" cy="120" r="7"/></g>' +
       '</svg>';
   }

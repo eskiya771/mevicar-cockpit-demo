@@ -17,6 +17,11 @@
 - Drehzahl und Gesamtkilometer können später über `meviSpeedIngest()` aus OBD kommen, ohne die Anzeige zu ersetzen.
 - Animation läuft nur, solange der Tacho sichtbar ist, und wird beim App-Wechsel beendet.
 
+## Nachtrag Tacho 2.0 (Folge-Build, Produktversion bleibt 0.5.0)
+- Vollbild auf großen Displays (DeX, Full HD, Panorama): beide Instrumente skalieren per CSS-Container-Query auf die verfügbare Höhe statt auf eine feste Maximalgröße.
+- Digitale Geschwindigkeit und Drehzahl-Readout wachsen mit dem Instrument; die Anmerkung „×1000“ liegt nicht mehr unter dem Drehzahlwert.
+- Service-Worker-Cache `mevicar-next-shell-v20`, damit installierte PWAs die neue Darstellung geschlossen übernehmen.
+
 ## Hinweise
 - **v0.5.0 bleibt ein Web-/PWA-Prototyp, keine Android-APK.**
 - Ohne OBD-Adapter gibt es keine echten Drehzahl- oder Gesamtkilometerwerte.

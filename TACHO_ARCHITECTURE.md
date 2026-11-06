@@ -69,15 +69,29 @@ meviSpeedIngest({
 
 - **Vollbild:** zwei analoge Instrumente nebeneinander, Geschwindigkeit größer als Drehzahl, Digitalwert im Tacho, Infozeile mit Gesamt-km, Trip, Kompass und Aktionen. Keine zusätzliche App-Überschrift.
 - **Split:** andere Anordnung, nicht nur verkleinert. Große Digitalgeschwindigkeit über der Fläche, darunter beide Nadeln, darunter die Infozeile. Die Karte bleibt links.
-- **Enge Fläche:** `ResizeObserver` setzt `is-tight`, wenn der Host schmaler als 460 px oder flacher als 430 px ist. Das gilt auch im Vollbild, zum Beispiel bei 1920×720.
+- **Enge Fläche:** `ResizeObserver` setzt `is-tight`, wenn der Host schmaler als 460 px oder flacher als 430 px ist. Das betrifft die Mobilprofile iPhone 17 und Galaxy S20 FE in Vollbild und Split.
+- **Vollbild-Skalierung (Tacho 2.0, Build nach v0.5.0):** Im Vollbild ist `.tacho-cluster` ein CSS-Size-Container und jedes `.tacho-dial` ein quadratischer Container mit `width:min(100%,100cqh)`. Die Instrumente wachsen so bis zur Clusterhöhe oder Spaltenbreite, je nachdem was zuerst begrenzt, ohne Überlauf. Die Skalenziffern bleiben in SVG-viewBox-Einheiten und skalieren automatisch mit; nur die HTML-Overlays (digitale Geschwindigkeit, Drehzahl-Readout) nutzen `cqmin`. Container-Einheiten auf den SVG-Ziffern führten zu überlappenden Zahlen und sind per Test ausgeschlossen. Die Anmerkung „×1000“ sitzt unterhalb des Drehzahl-Readouts (y=206), damit sich beide nicht überlagern. Split- und Tight-Layouts bleiben unverändert.
 
 Profile: iPhone 17 874×402, Galaxy S20 FE 915×412, DeX 1920×1200, Full HD 1920×1080, Panorama 1920×720. Safe Area bleibt am Shell-Rand.
+
+### Browser-Messung (Chromium headless, Demo-Modus, drei Themes)
+
+| Profil | Vollbild Tacho/Drehzahl (px) | Split Tacho/Drehzahl (px) | Layout |
+| --- | ---: | ---: | --- |
+| iPhone 17 874×402 | 167 / 167 | 151 / 151 | is-tight |
+| Galaxy S20 FE 915×412 | 174 / 174 | 158 / 158 | is-tight |
+| DeX 1920×1200 | 1013 / 731 | 300 / 300 | Vollbild frei, Split is-compact |
+| Full HD 1920×1080 | 896 / 731 | 300 / 300 | Vollbild frei, Split is-compact |
+| Panorama 1920×720 | 565 / 565 | 300 / 300 | Vollbild frei, Split is-compact |
+
+In allen 30 Kombinationen (5 Profile × Vollbild/Split × 3 Themes): keine Scrollleiste an Host, App oder Dokument, beide SVG-Instrumente vollständig im Host, keine überlappenden Skalenziffern, Karte im Split sichtbar, DEMO-Badge sichtbar, alle Aktionsflächen mindestens 44 px hoch.
 
 ## 6. Risiken
 
 - `render()` zerstört den DOM. Mount muss Watch, Kompass, Observer und `requestAnimationFrame` neu binden, Unmount muss sie vorher lösen.
 - Pages-Inlining und Cache-Name müssen dieselbe Version tragen. Nur die neue CSS-Datei zu cachen, während HTML alt ist, oder umgekehrt, zerlegt den Tacho.
 - `.side` scrollt standardmäßig. Nur `.side.tacho-host` darf das für diese App abschalten.
+- Container-Queries (`container-type:size`, `cqh`, `cqmin`) brauchen Chromium 105+, Safari 16+ oder Firefox 110+. Ältere WebViews fallen auf die Basisregel `max-width:100%;max-height:100%` zurück, die Instrumente bleiben kleiner, aber vollständig sichtbar.
 - Ein Gesamtkilometerstand aus GPS wäre sachlich falsch und wird nicht angezeigt.
 
 ## 7. Geplante Dateien
