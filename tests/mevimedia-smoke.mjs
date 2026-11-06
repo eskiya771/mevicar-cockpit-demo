@@ -52,9 +52,10 @@ let html=getHTML();
 assert.match(html,/Deine Musik\. Dein Cockpit\./);
 assert.doesNotMatch(html,/Midnight Drive/);
 assert.match(html,/Ordner auswählen/);
-for(const id of ['Titel','Favoriten','Interpreten','Alben','Ordner','Videos']){
-  assert.ok(html.includes(id),'Missing Classic library tab '+id);
-}
+assert.doesNotMatch(html,/class="mm-search"/,'Empty library must not show a useless search box');
+assert.doesNotMatch(html,/class="mm-tabs"/,'Empty library must not show empty category tabs');
+assert.equal((html.match(/onclick="meviMediaFolder\(\)"/g)||[]).length,1,'Single folder-import action when empty');
+assert.equal((html.match(/onclick="meviMediaFiles\(\)"/g)||[]).length,1,'Single file-import action when empty');
 assert.ok(html.includes('class="mm-transport"'));
 function file(name,folder,type){
   return {name,size:10000,lastModified:123,type,webkitRelativePath:folder+'/'+name,
@@ -67,6 +68,9 @@ await win.meviMediaLoadFiles([
 ],'Test');
 assert.equal(win.meviMediaDebug().count,3);
 html=getHTML();
+for(const id of ['Titel','Favoriten','Interpreten','Alben','Ordner','Videos']){
+  assert.ok(html.includes(id),'Missing Classic library tab '+id+' after import');
+}
 assert.match(html,/Night Drive/);
 assert.match(html,/Morning Air/);
 assert.doesNotMatch(html,/Midnight Drive/);
