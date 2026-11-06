@@ -371,3 +371,40 @@ html[data-theme="liquidglass"] .suggestion .circle{background:#b2e2ff2e;border-c
   .suggestion{min-height:48px;padding:7px}
   .searchmode .overlay.nav-search{bottom:43%}
 }
+
+/* UX polish 02: in short landscape viewports, show results and keyboard together.
+   Previously the full-width keyboard covered the complete results list. */
+@media (orientation:landscape) and (max-height:520px) and (min-width:700px){
+  .map.searchmode .overlay.nav-search{
+    left:clamp(8px,1.3vw,14px);right:auto;
+    top:clamp(8px,1.3vh,13px);bottom:clamp(8px,1.3vh,13px);
+    width:40.5%;height:auto;max-height:none;
+    border-radius:clamp(12px,2vw,20px);
+  }
+  .map.searchmode .overlay.nav-search .inner{
+    height:100%;min-height:0;overflow:hidden;
+    gap:clamp(4px,1.2vh,8px);
+    padding:clamp(7px,1.2vh,11px);
+  }
+  .map.searchmode .nav-overlay-title{font-size:clamp(12px,2.9vh,16px)}
+  .map.searchmode .nav-search .searchbox{min-height:clamp(36px,9vh,45px)}
+  .map.searchmode .nav-search .row{flex:none}
+  .map.searchmode .nav-suggestions{min-height:0;flex:1;overflow-y:auto;scrollbar-width:thin}
+  .map.searchmode .nav-suggestions .suggestion{min-height:clamp(42px,12vh,56px);padding:5px 7px}
+  .map.searchmode .keyboard{
+    left:auto;right:clamp(8px,1.3vw,14px);
+    bottom:clamp(8px,1.3vh,13px);
+    width:55%;max-width:58%;padding:clamp(7px,1.2vh,11px);
+    gap:clamp(3px,.9vh,6px);
+    border:1px solid #75d9f85a;
+    border-radius:clamp(11px,1.6vw,19px);
+  }
+  .map.searchmode .keyboard .keyrow{gap:clamp(3px,.5vw,6px)}
+  .map.searchmode .keyboard .keyrow button{
+    min-height:clamp(37px,10vh,48px);
+    padding:3px 0;
+    border-radius:8px;
+    font-size:clamp(11px,2.7vh,16px);
+  }
+  .map.searchmode .keyboard .keyrow .special,.map.searchmode .keyboard .keyrow .go{font-size:clamp(10px,2.4vh,14px)}
+}
