@@ -315,3 +315,23 @@ html[data-theme="liquidglass"] .sp-art{border-color:#ffffff66}
   .sp-shell.is-compact .sp-title{font-size:14px}
   .sp-shell.is-compact .sp-art{width:50px;height:50px}
 }
+
+/* Spotify voice search: one clear optional touch action beside existing search. */
+.sp-search-entry{display:flex;align-items:stretch;gap:8px;min-width:0}
+.sp-search-entry .sp-search-box{flex:1;min-width:0}
+.sp-voice-button{display:grid;place-items:center;flex:0 0 auto;width:48px;min-width:48px;min-height:48px;padding:10px;border:1px solid var(--sp-border,#447389);border-radius:14px;background:var(--sp-surface,#193b4b);color:var(--sp-cyan,#53ddec)}
+.sp-voice-button .sp-icon{width:21px;height:21px}
+.sp-voice-button.is-listening{color:#fff;border-color:var(--sp-cyan,#55dcf1);background:#157b88;box-shadow:0 0 0 3px #45e4ff2c;animation:sp-voice-pulse 1.7s ease-in-out infinite}
+.sp-voice-button:disabled{opacity:.45;cursor:not-allowed;animation:none}
+.sp-voice-feedback{margin:0;padding:5px 8px;border-radius:10px;background:#123341b8;color:#b8f4ff;font-size:clamp(11px,1.5vh,14px);line-height:1.3}
+.sp-voice-feedback[hidden]{display:none}
+@keyframes sp-voice-pulse{50%{box-shadow:0 0 0 7px #45e4ff0d}}
+@media(prefers-reduced-motion:reduce){.sp-voice-button.is-listening{animation:none}}
+@media(max-height:480px){
+  .sp-search-entry{gap:5px}
+  .sp-search-entry .sp-search-box{min-height:44px}
+  .sp-voice-button{width:44px;min-width:44px;min-height:44px;padding:8px;border-radius:11px}
+  .sp-voice-feedback{padding:3px 6px;font-size:11px}
+}
+html[data-theme="cyberpunk"] .sp-voice-button.is-listening{background:#8d2886;border-color:#f39df2}
+html[data-theme="liquidglass"] .sp-voice-button{background:#c2eeff26;border-color:#ddf6ff93}
