@@ -33,6 +33,19 @@ Geltungsbereich: **eskiya771/mevicar-cockpit-demo**, nicht die Android-App `eski
 - **Fahrhinweise:** Feste „in 850 m rechts abbiegen“-Behauptung entfernt, da die Karte keine Wegberechnung besitzt.
 - **Regression:** Automatisierter Navigation-/UX-Test im GitHub-Pages-Workflow neben bestehenden Media-/Lichtshow-Tests.
 
+## Qualitätsrunde 3 – Touchflächen und kleine Querformate (Build nach Bereitstellung)
+
+- Die fünf verbindlichen CSS-Viewports (iPhone 17, S20 FE, DeX, Full HD, 1920×720) mit Chromium geometrisch geprüft.
+- Auf DeX und 1920×720 vorher zu kleine Audio-Quellentasten (teils nur 32 px Höhe) auf mindestens 44 px vergrößert.
+- In der kompakt dargestellten Medienansicht Play/Pause, Skip, Shuffle, Repeat und Favoriten auf größere, verlässlich erreichbare Touchflächen gebracht.
+- Auf iPhone 17 und S20 FE die QWERTZ-Tastatur im Splitscreen von 54 % auf 60 % Kartenbreite vergrößert; Trefferliste angepasst, ohne das Nebeneinander zu verlieren.
+- Die Statusaktionen sichtbarer gemacht (bis zu 42 px, in sehr flachen Formaten bewusst kompakter).
+- Playwright-/Chromium-Messungen für Navi, Suche, Medien-Split, Medien-Vollbild, Bibliothek und App-Launcher: keine überstehenden Player- oder Audio-Tasten; Suchvorschläge dürfen *innerhalb ihrer scrollbaren Liste* über die Sichtfläche hinausragen.
+- Bestehende Funktionen unverändert; nur Touch- und Layoutfeinschliff.
+- CI-Erweiterung: `tests/display-profiles-smoke.mjs` überwacht die Mindestgrößen und Tastaturbreite.
+
+**Noch offen:** Statusbuttons mit 34–42 CSS-Pixeln bleiben aus Platzgründen etwas kleiner als das 44-Pixel-Ziel; echte Safari- und DeX-Touchtests bleiben erforderlich.
+
 ## Offene Prüfungen in Prioritätsreihenfolge
 
 ### P0 – Funktion/Korrektheit
