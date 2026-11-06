@@ -6,7 +6,7 @@ Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix f
 
 | Profil | Test-Viewport (CSS-Pixel) | Verhalten |
 | --- | ---: | --- |
-| iPhone 17, Querformat | **874 × 402** | Großes Dock, Navigation zentral, kompakte Medien-Tabs Bibliothek/Player, separate Suche mit Tastatur und Ergebnissen |
+| iPhone 17, Querformat | **874 × 402** | Großes Dock außerhalb der Suche; während der Adresseingabe breite QWERTZ-Tastatur und sichtbare Trefferliste nebeneinander, kompakte Medien-Tabs Bibliothek/Player |
 | Samsung Galaxy S20 FE, Querformat | **915 × 412** | Wie iPhone, Touchflächen mindestens etwa 44 px und kompaktes Split-Screen |
 | Samsung DeX / externes Display | **1920 × 1200** | Große Kartenansicht, rechts Medienbibliothek und Player **gleichzeitig**, separate große Tastatur |
 | Full HD | **1920 × 1080** | Große Kartenansicht, rechts Medienbibliothek und Player **gleichzeitig**, große Bedienelemente |
@@ -19,6 +19,7 @@ Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix f
 - Navigation bleibt im Split-Screen sichtbar, sofern eine reguläre Zusatz-App geöffnet ist.
 - Alle Navigations- und Medienbuttons sind ohne Überlappung sichtbar, insbesondere unterhalb von 430 CSS-Pixel Höhe.
 - Adresseingabe: Suchfeld, Treffer und QWERTZ-Tastatur gleichzeitig sichtbar; Treffer scrollbar, keine horizontale Seiten-Scrollleiste.
+- iPhone/S20 FE: Während der geöffneten Such-Tastatur wird das Dock ausgeblendet; das vergrößert die Breite der Buchstabentasten (statt nur die Tastenhöhe). Nach Schließen der Tastatur erscheint das Dock wieder. Ergebnisse bleiben links sichtbar, Schaltflächen berücksichtigen die iOS-/Android-Safe-Area. Die mobile QWERTZ-Tastatur nutzt 72 % der Kartenbreite und 51–58 CSS-Pixel Tastenhöhe.
 - Für 1920×1080 und 1920×1200 gleichzeitig Bibliothek und Player sichtbar; auf den Mobilformaten und 1920×720 wird eine einfache Bibliothek/Player-Umschaltung gezeigt.
 - Medien-Transporttasten bei aktiver Player-Ansicht nicht abgeschnitten und für Fingerbedienung groß genug.
 - Farbdesigns **Original**, **Cyberpunk Neon City** und **Liquid Glass** werden in allen fünf Profilen begutachtet (15 Theme/Viewport-Kombinationen).
