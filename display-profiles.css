@@ -201,9 +201,9 @@ html,body{min-height:0;overscroll-behavior:none}
  }
  .map.searchmode .nav-suggestions .suggestion small,
  .map.searchmode .nav-suggestions .suggestion-chevron{display:none}
- .map.searchmode .keyboard{
+ .map.searchmode .keyboard{width:72%;max-width:72%;
    left:auto;right:4px;top:auto;bottom:4px;transform:none;
-   width:72%;max-width:72%;padding:6px;gap:5px;border-radius:15px;
+   padding:6px;gap:5px;border-radius:15px;
  }
  .map.searchmode .keyboard .keyrow{gap:3px}
  .map.searchmode .keyboard .keyrow button{

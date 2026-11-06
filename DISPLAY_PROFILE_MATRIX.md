@@ -1,6 +1,6 @@
 # MeviCar Next – unterstützte Displayprofile
 
-Stand: 6. November 2026 · Produktversion 0.4.0 · GUI-Qualitätsphase.
+Stand: 6. November 2026 · Produktversion 0.5.0 · Premium-Tacho und bestehende GUI-Profile.
 
 Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix für den bestehenden Cockpit-Funktionsumfang. Alle gelten im **Querformat** und werden über responsive CSS-Bereiche abgedeckt, nicht über starre User-Agent-Abfragen. Dadurch funktionieren sie auch bei Browserleisten, Zoom, DeX-Fensterrahmen und Safe-Area-Inset-Abweichungen.
 
@@ -24,7 +24,7 @@ Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix f
 - Medien-Transporttasten bei aktiver Player-Ansicht nicht abgeschnitten und für Fingerbedienung groß genug.
 - Farbdesigns **Original**, **Cyberpunk Neon City** und **Liquid Glass** werden in allen fünf Profilen begutachtet (15 Theme/Viewport-Kombinationen).
 - Bestehende Medienwiedergabe, Lichtshow, PWA-Update und Touch-Eingaben bleiben erhalten.
-- Keine neuen Feature-Baustellen: Es handelt sich um die Qualitätssicherung des bestehenden Prototyps.
+- Premium-Tacho 0.5.0: in jedem Profil Vollbild und Split-Screen, beide analogen Instrumente, Trip/Gesamt-km, Kompass und die Themen Original, Neon City und Liquid Glass. Der Split-Tacho bleibt in der rechten Fläche, die Karte links. Keine Tacho-Scrollleiste.
 
 ## Quellen und Umsetzung
 

@@ -1,0 +1,107 @@
+/* Premium dual-gauge cockpit. Full layout and split layout are different compositions. */
+.tacho-host{overflow:hidden!important;min-width:0;min-height:0;padding:clamp(4px,.7vh,8px)!important;gap:0!important}
+.full.tacho-host,.side.tacho-host{display:flex;flex-direction:column}
+.side.tacho-host{overflow:hidden;width:min(46%,640px);scrollbar-width:none}
+.side.tacho-host::-webkit-scrollbar{display:none}
+.tacho-app{
+  --tacho-face:#07141e;
+  --tacho-face-hi:#1a4158;
+  --tacho-ink:#e7f7ff;
+  --tacho-dim:#8eb4c6;
+  --tacho-accent:#3ee7ff;
+  --tacho-accent-2:#6d7cff;
+  --tacho-red:#ff4b63;
+  --tacho-metal:#9fd4e4;
+  flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;gap:clamp(3px,.6vh,8px);overflow:hidden;
+  color:var(--tacho-ink);background:
+    radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--tacho-accent) 16%,transparent),transparent 46%),
+    linear-gradient(180deg,#071018,#05090f);
+  border-radius:16px;padding:clamp(4px,.7vh,8px) clamp(6px,.8vw,10px);
+}
+html[data-theme="cyberpunk"] .tacho-app{--tacho-face:#140816;--tacho-face-hi:#4a1848;--tacho-ink:#ffe8fb;--tacho-dim:#e7a6d8;--tacho-accent:#ff3adf;--tacho-accent-2:#7d5cff;--tacho-red:#ff2d55;--tacho-metal:#ffc4ef}
+html[data-theme="liquidglass"] .tacho-app{--tacho-face:#102033;--tacho-face-hi:#3d6284;--tacho-ink:#f4f8ff;--tacho-dim:#d5e6f4;--tacho-accent:#d8f4ff;--tacho-accent-2:#9fd0ff;--tacho-red:#ff6d88;--tacho-metal:#f7fbff;background:linear-gradient(160deg,#d7ecff2e,#081321ea 42%,#102033);border:1px solid #ffffff55;box-shadow:inset 0 1px #ffffff66}
+.tacho-status{display:flex;align-items:center;gap:8px;min-height:22px;font-size:clamp(10px,1.7vh,12px);color:var(--tacho-dim);letter-spacing:.04em}
+.tacho-status #tachoStatus{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tacho-badge{flex:0 0 auto;border:1px solid color-mix(in srgb,var(--tacho-accent) 65%,transparent);color:var(--tacho-accent);border-radius:999px;padding:2px 7px;font-size:10px;font-weight:750;letter-spacing:.12em}
+.tacho-app.is-demo .tacho-badge{color:#ffd56a;border-color:#ffd56a;background:#ffd56a1a}
+.tacho-cluster{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr);grid-template-areas:"speed rpm";align-items:center;justify-items:center}
+.tacho-dial{grid-area:speed;width:auto;height:auto;max-width:100%;max-height:100%;aspect-ratio:1;min-width:0;min-height:0;position:relative;display:grid;place-items:center;align-self:center;justify-self:center}
+.tacho-dial-rpm{grid-area:rpm}
+.tacho-dial svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 8px 16px #000a)}
+.tacho-stop-hi{stop-color:var(--tacho-face-hi)}.tacho-stop-mid{stop-color:var(--tacho-face)}
+.tacho-bezel{fill:none;stroke:var(--tacho-metal);stroke-width:3;opacity:.8}
+.tacho-track{fill:none;stroke:color-mix(in srgb,var(--tacho-accent) 55%,transparent);stroke-width:4;stroke-linecap:round}
+.tacho-redzone{fill:none;stroke:var(--tacho-red);stroke-width:6;stroke-linecap:round;opacity:.95}
+.tacho-tick{stroke:var(--tacho-ink);stroke-width:1.6}
+.tacho-tick.is-red,.tacho-num.is-red{stroke:var(--tacho-red);fill:var(--tacho-red)}
+.tacho-num{fill:var(--tacho-ink);font-size:11px;font-weight:650;text-anchor:middle;dominant-baseline:middle;font-family:system-ui,sans-serif}
+.tacho-scale-note{fill:var(--tacho-dim);font-size:9px;text-anchor:middle;font-family:system-ui,sans-serif;letter-spacing:.08em}
+.tacho-glint{fill:#ffffff;opacity:.08}
+.tacho-needle{fill:var(--tacho-accent);filter:drop-shadow(0 0 4px color-mix(in srgb,var(--tacho-accent) 70%,transparent))}
+.tacho-dial.is-unavailable .tacho-needle{opacity:.28}
+.tacho-hero{position:absolute;left:0;right:0;bottom:20%;z-index:2;text-align:center;pointer-events:none;line-height:.9}
+.tacho-hero b{display:block;font-size:clamp(34px,7.2vh,78px);font-weight:760;font-variant-numeric:tabular-nums;letter-spacing:-.04em;text-shadow:0 0 18px color-mix(in srgb,var(--tacho-accent) 45%,transparent)}
+.tacho-hero span{display:block;margin-top:2px;font-size:clamp(11px,1.8vh,16px);letter-spacing:.14em;color:var(--tacho-dim)}
+.tacho-hero small{display:block;margin-top:3px;font-size:10px;letter-spacing:.08em;color:var(--tacho-accent)}
+.tacho-rpm-readout{position:absolute;left:0;right:0;top:64%;text-align:center;pointer-events:none;z-index:2}
+.tacho-rpm-readout b{display:block;font-size:clamp(16px,3.1vh,32px);font-variant-numeric:tabular-nums;font-weight:740}
+.tacho-rpm-readout small{display:block;color:var(--tacho-dim);font-size:clamp(8px,1.4vh,11px);letter-spacing:.06em}
+.tacho-info{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,.9fr) auto minmax(0,1.3fr);gap:clamp(4px,.6vw,10px);align-items:center;min-height:0}
+.tacho-stat{min-width:0}
+.tacho-stat span,.tacho-compass small,.tacho-stat small{display:block;color:var(--tacho-dim);font-size:9px;letter-spacing:.12em}
+.tacho-stat strong,.tacho-compass b{font-variant-numeric:tabular-nums;font-size:clamp(14px,2.4vh,22px);font-weight:730}
+.tacho-stat small{letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tacho-compass{display:flex;align-items:center;gap:6px;min-width:0}
+.tacho-compass svg{width:clamp(28px,5vh,42px);height:clamp(28px,5vh,42px);flex:0 0 auto}
+.tacho-compass-ring{fill:none;stroke:var(--tacho-metal);stroke-width:2;opacity:.7}
+.tacho-north{fill:var(--tacho-red)}
+.tacho-south{fill:var(--tacho-dim)}
+.tacho-lubber{fill:var(--tacho-accent)}
+.tacho-compass-n{fill:var(--tacho-red);font-size:11px;text-anchor:middle;font-family:system-ui,sans-serif;font-weight:750}
+.tacho-actions{display:flex;gap:4px;justify-content:flex-end;min-width:0}
+.tacho-actions button{min-width:44px;min-height:44px;padding:0 8px;border-radius:12px;background:#102433;border:1px solid color-mix(in srgb,var(--tacho-accent) 45%,#39566c);color:var(--tacho-ink);font-size:12px}
+.tacho-actions button[aria-pressed="true"]{background:color-mix(in srgb,var(--tacho-accent) 24%,#0c2433);border-color:var(--tacho-accent)}
+html[data-theme="cyberpunk"] .tacho-actions button{background:#2a1038;border-color:#ff4adf88}
+html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border-color:#ffffff77}
+
+/* Split and tight containers: digital speed leads, both dials sit underneath. */
+.tacho-app.is-compact .tacho-cluster,.tacho-app.is-tight .tacho-cluster{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr);
+  grid-template-areas:"hero hero" "speed rpm";
+}
+.tacho-app.is-compact .tacho-dial-speed,.tacho-app.is-tight .tacho-dial-speed{display:contents}
+.tacho-app.is-compact .tacho-dial-speed svg,.tacho-app.is-tight .tacho-dial-speed svg{grid-area:speed;width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:1;justify-self:center;align-self:center}
+.tacho-app.is-compact .tacho-hero,.tacho-app.is-tight .tacho-hero{position:static;grid-area:hero;margin:0}
+.tacho-app.is-compact .tacho-hero b,.tacho-app.is-tight .tacho-hero b{font-size:clamp(40px,9vh,68px)}
+.tacho-app.is-compact .tacho-info,.tacho-app.is-tight .tacho-info{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;grid-template-areas:"odo trip compass" "actions actions actions"}
+.tacho-app.is-compact .tacho-stat:first-child,.tacho-app.is-tight .tacho-stat:first-child{grid-area:odo}
+.tacho-app.is-compact .tacho-stat:nth-child(2),.tacho-app.is-tight .tacho-stat:nth-child(2){grid-area:trip}
+.tacho-app.is-compact .tacho-compass,.tacho-app.is-tight .tacho-compass{grid-area:compass}
+.tacho-app.is-compact .tacho-actions,.tacho-app.is-tight .tacho-actions{grid-area:actions;justify-content:stretch}
+.tacho-app.is-compact .tacho-actions button,.tacho-app.is-tight .tacho-actions button{flex:1}
+
+/* iPhone 17 874×402 and Galaxy S20 FE 915×412 */
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+  .side.tacho-host{width:min(48%,420px);padding:3px!important}
+  .tacho-app{padding:3px 4px;gap:2px;border-radius:12px}
+  .tacho-status{min-height:16px;font-size:10px}
+  .tacho-hero b{font-size:clamp(32px,8vh,46px)}
+  .tacho-num{font-size:10px}
+  .tacho-actions button{min-height:44px;padding:0 4px;font-size:11px}
+  .tacho-stat strong,.tacho-compass b{font-size:14px}
+}
+/* Panorama / Infotainment 1920×720 */
+@media(orientation:landscape) and (min-width:1500px) and (max-height:820px){
+  .side.tacho-host{width:min(38%,680px)}
+  .tacho-app:not(.is-compact) .tacho-hero b{font-size:clamp(42px,8vh,64px)}
+}
+/* DeX 1920×1200 and Full HD 1920×1080 */
+@media(orientation:landscape) and (min-width:1500px) and (min-height:880px){
+  .side.tacho-host{width:min(36%,760px)}
+  .tacho-app:not(.is-compact) .tacho-hero b{font-size:clamp(42px,4.8vh,68px)}
+  .tacho-num{font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){
+  .tacho-needle{filter:none}
+}
