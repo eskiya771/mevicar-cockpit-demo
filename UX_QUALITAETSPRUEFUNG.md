@@ -3,7 +3,11 @@
 Stand: 6. November 2026 · Ausgangspunkt **Prototype v0.4.0**  
 Geltungsbereich: **eskiya771/mevicar-cockpit-demo**, nicht die Android-App `eskiya771/mevicar`.
 
-## Ziel der aktuellen Phase
+## Einordnung zum aktuellen Stand
+
+Dieses Dokument hält Qualitätsrunden ab v0.4.0 fest. Inzwischen ist v0.5.0 einschließlich Premium-Tacho implementiert. Die aktuelle Phase bleibt Quality First für den gesamten vorhandenen Umfang; neue Funktionsbereiche nur auf ausdrücklichen Auftrag. Das aktuelle Funktionsinventar und die priorisierten Codebefunde stehen in [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md). Historische Messwerte und Checklisten unten sind keine erneute Freigabe des aktuellen Builds.
+
+## Ziel der ursprünglichen Qualitätsphase
 
 **Kein Ausbau des Funktionsumfangs.** Wir prüfen und verfeinern ausschließlich Navigation, Adresseingabe, App-Dock und SVGs, Original/Neon City/Liquid Glass, MeviMedia, Split-Screen, Bildschirmschoner und Lichtshow. Jede Änderung soll eine konkrete Bedienungs- oder Darstellungsverbesserung nachweisen. Ein neuer Release folgt erst, wenn die Kriterien erfüllt und auf den Zielgeräten geprüft sind.
 

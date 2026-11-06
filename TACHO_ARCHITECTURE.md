@@ -8,7 +8,7 @@ Die Tacho-App ist das Dock-Element `speed`. `openApp('speed')` startet im Split-
 
 Die alte Darstellung stand inline in `index.html`: `gpsDashboard()` zeichnete einen SVG-Tacho 0–220 km/h und einen Kompass. `gpsSpeedOnly()` wurde nicht mehr eingebunden. `gpsStart()`, `gpsStop()`, `compassStart()` und `gpsRefresh()` schrieben bei jedem Fix direkt in feste DOM-IDs. Es gab keinen Drehzahlmesser, keinen Trip-Filter, keinen Demo-Modus und keine OBD-Schnittstelle. `s.tripKm` gehört zur separaten Fahrtenbuch-Demo und wird vom Tacho nicht als Fahrzeugkilometerstand verwendet.
 
-Lichtshow und MeviMedia zeigen das passende Muster: eigenes Modul, `*HTML(compact)`, Mount nach `innerHTML`, Unmount davor, Styles und Skripte werden von GitHub Pages in dieselbe HTML-Datei eingebettet. Der Service Worker `mevicar-next-shell-v18` cachte die Hülle; ein Versionswechsel muss den Cache-Namen erhöhen, damit HTML, CSS und JS nicht gemischt laden.
+Die Lichtshow zeigt das passende Lifecycle-Muster: eigenes Modul, `*HTML(compact)`, Mount nach `innerHTML`, Unmount davor. MeviMedia hat ebenfalls ein eigenes HTML-Modul, hält seinen Player aber außerhalb des Screen-DOM ohne diesen Mount-/Unmount-Zyklus. Styles und Skripte werden von GitHub Pages in dieselbe HTML-Datei eingebettet. Der Service Worker `mevicar-next-shell-v18` cachte die Hülle; ein Versionswechsel muss den Cache-Namen erhöhen, damit HTML, CSS und JS nicht gemischt laden.
 
 ## 2. Schwachstellen
 
@@ -21,7 +21,7 @@ Lichtshow und MeviMedia zeigen das passende Muster: eigenes Modul, `*HTML(compac
 
 ## 3. Komponenten
 
-Alles bleibt Vanilla-JS, ohne Build und ohne Framework.
+Alles bleibt Vanilla-JS, ohne Framework oder Transpiler. Der Pages-Workflow erzeugt eine gebündelte HTML-Ausgabe mit Buildmetadaten.
 
 | Baustein | Ort |
 | --- | --- |
@@ -93,12 +93,16 @@ In allen 30 Kombinationen (5 Profile × Vollbild/Split × 3 Themes): keine Scrol
 ## 6. Risiken
 
 - `render()` zerstört den DOM. Mount muss Watch, Kompass, Observer und `requestAnimationFrame` neu binden, Unmount muss sie vorher lösen.
-- Pages-Inlining und Cache-Name müssen dieselbe Version tragen. Nur die neue CSS-Datei zu cachen, während HTML alt ist, oder umgekehrt, zerlegt den Tacho.
+- Pages-Inlining hält HTML, CSS und JavaScript der ausgelieferten Seite zusammen. Produktversion, Buildnummer und Service-Worker-Cache-Version sind getrennte Größen; Cache-Änderungen müssen bewusst mit den betroffenen Assets abgestimmt werden. Nur die neue CSS-Datei zu cachen, während HTML alt ist, oder umgekehrt, zerlegt den Tacho.
 - `.side` scrollt standardmäßig. Nur `.side.tacho-host` darf das für diese App abschalten.
 - Container-Queries (`container-type:size`, `cqh`, `cqmin`) brauchen Chromium 105+, Safari 16+ oder Firefox 110+. Ältere WebViews fallen auf die Basisregel `max-width:100%;max-height:100%` zurück, die Instrumente bleiben kleiner, aber vollständig sichtbar.
 - Ein Gesamtkilometerstand aus GPS wäre sachlich falsch und wird nicht angezeigt.
 
-## 7. Geplante Dateien
+## 7. Umgesetzte Dateien
 
 - neu: `speedometer.js`, `speedometer.css`, `tests/speedometer-smoke.mjs`, `RELEASE_NOTES_v0.5.0.md`
 - angepasst: `index.html`, `sw.js`, `.github/workflows/pages.yml`, `VERSION`, `DISPLAY_PROFILE_MATRIX.md`, `README.md`
+
+## Einordnung der Projektübernahme
+
+Gesamtarchitektur und bekannte Integrationslücken: [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md). Die Browser-Messungen oben sind historische Prüfergebnisse; Skripte und Screenshots liegen nicht im Repository und wurden bei der Übernahme nicht erneut erzeugt. Die Ingest-API besitzt aktuell keine Quellenpriorität, Ablaufzeit oder Rücksetzung durch null. GPS kann eine eingespeiste OBD-Geschwindigkeit überschreiben.
