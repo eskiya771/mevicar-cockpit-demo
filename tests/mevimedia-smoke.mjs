@@ -110,4 +110,26 @@ assert.ok(redrawCount>4);
 
 win.meviMediaStopForSource('spotify');
 assert.equal(player.paused,true);
+// Radio and Spotify are interactive previews; they must not fake playback.
+for(const source of ['radio','spotify']){
+  let html=win.meviAudioDemoHTML(source,true);
+  assert.match(html,/data-pane="library"/);
+  assert.equal((html.match(/class="mm-mode-button /g)||[]).length,3);
+  assert.match(html,/Demo/);
+  assert.match(html,/Wiedergabe nicht verfügbar/);
+  assert.doesNotMatch(html,/mm-seek|mm-transport|1:24|3:48/);
+  win.meviAudioDemoAction(source,'select',1);
+  assert.match(win.meviAudioDemoHTML(source,true),/data-pane="player"/);
+  win.meviAudioDemoAction(source,'favorite');
+  win.meviAudioDemoAction(source,'filter');
+  html=win.meviAudioDemoHTML(source,true);
+  assert.equal((html.match(/class="mm-demo-item /g)||[]).length,1);
+  win.meviAudioDemoAction(source,'favorite');
+  assert.match(win.meviAudioDemoHTML(source,true),/Noch keine Favoriten/);
+  win.meviAudioDemoAction(source,'filter');
+  win.meviAudioDemoAction(source,'select',999);
+  assert.match(win.meviAudioDemoHTML(source,false),source==='radio'?/Neon Radio/:/Electric Roads/);
+}
+assert.equal(player.paused,true,'Demo selection must not start the local player');
+assert.equal(win.meviMediaDebug().count,3,'Demo selection must preserve the local library');
 console.log('MeviMedia smoke checks passed: import, library, group, search, play, queue, favorites, video, volume, source switch.');

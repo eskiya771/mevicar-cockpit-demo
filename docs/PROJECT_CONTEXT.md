@@ -58,7 +58,7 @@ Adresssuche: feste Ortsliste, deduplizierte Recents, Freitext als ausdrücklich 
 | Dock/Launcher | SVGs, Zusatzslot, Layoutwechsel, sourceabhängige Audiobeschriftung | Einige historische Symboldefinitionen werden später überschrieben |
 | Themes | Drei live umschaltbare Themes, lokale Speicherung | Noch kein durchgängiges gemeinsames Tokensystem |
 | MeviMedia | Dateien/Ordner, lokale Audio-/Videowiedergabe, Suche/Gruppen/Favoriten, Queue, Seek, Lautstärke, Shuffle/Repeat, begrenzte ID3-/Cover-Auswertung | Browsercodecs und Dateifreigabe erforderlich; keine dauerhafte Bibliothek oder stille USB-Suche |
-| Radio/Spotify | Quelle wechseln, Designansicht | Kein Streaming; Transportbuttons ohne Handler |
+| Radio/Spotify | Gemeinsame MeviMedia-Oberfläche, Demo-Sender/Titel auswählen, Favoriten filtern, Bibliothek/Player im Split, Quellenwahl jederzeit sichtbar | Kein Streaming oder Login; Wiedergabe ausdrücklich nicht verfügbar; Demo-Auswahl und Favoriten nur für die Sitzung |
 | Premium-Tacho | 0–220 km/h, 0–8000 U/min, GPS-Trip, Sensor-/GPS-Kompass, klarer Demo-Modus | RPM/Gesamt-km nur über API; kein physischer OBD-Transport |
 | OBD-App | Feste Anzeige 82 km/h / 2150 U/min | Nicht mit Tacho-Ingest verbunden; keine Hardwaredaten |
 | Home Assistant | Lokaler Licht-An/Aus-Schalter | Kein Serveraufruf oder echte Haussteuerung |
@@ -171,7 +171,7 @@ Die folgenden Punkte sind offen, keine in dieser Übernahme vorgenommenen Korrek
 | P1 | Codebefund: iOS-Kompass wird nach Remount mit requestPermission-API nicht automatisch wieder gebunden | Erteilte Berechtigung/Lifecycle gezielt testen |
 | P1 | Codebefund: Such-Taste „123“ fügt nur „1“ ein; `scrollResults()` entfernt Tastatur und Searchmode beim Scrollen | Erwartetes Suchverhalten und Dock-Rückkehr prüfen, kleine Bedienkorrektur |
 | P1 | Codebefund: `placeButton` setzt encodeURIComponent-Ergebnis in ein einfach gequotetes Inline-JS-Argument; Apostroph bleibt unkodiert | Zielnamen mit Apostroph als Regression testen, Argumentescaping konsistent machen |
-| P1 | Codebefund: Radio/Spotify-Transport ohne Wirkung; Quellenwahl in `.media-extras` im Split ausgeblendet; mehrere Dienstplatzhalter nicht ausdrücklich Demo | Ehrliche Zustände und erreichbare Quellenwahl ohne neue Dienste |
+| P1 | Mehrere Dienstplatzhalter außerhalb von Audio noch nicht ausdrücklich Demo. Radio/Spotify verwenden inzwischen die MeviMedia-Oberfläche mit sichtbarem Demo-/Verbindungsstatus und Quellenwahl im Split; wirkungslose Transporttasten entfernt | Verbleibende Dienstplatzhalter kennzeichnen, ohne neue Dienste anzubinden |
 | P1 | Codebefund: Lichtshow reduziert Canvasbewegung bei reduced motion nicht; kompakte Buttons 32 px, Intervallknöpfe 29 px hoch | Bewegungsvorgabe und Touchflächen profilübergreifend prüfen |
 | P1 | Prüflücke: keine reproduzierbaren Browser-/Start-/PWA-Tests im Repository | Kleinen Browserprüfweg ergänzen, vorhandene 30 Layoutbehauptungen erneut belegen |
 | P2 | Codebefund: Buildanzeige kann Serverversion statt geladenem Code zeigen; SW entfernt fremde Cache-Namen | Versionsdarstellung und Cache-Eigentümerschaft isoliert absichern |

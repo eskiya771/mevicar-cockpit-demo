@@ -246,9 +246,42 @@
       '<button id="mm-repeat" type="button" class="'+(st.repeat?'mm-mode-on':'')+'" title="'+(st.repeat===2?'Einzeltitel wiederholen':st.repeat===1?'Alle wiederholen':'Wiederholen aus')+'" aria-label="Wiederholmodus wechseln" onclick="meviMediaRepeat()" '+(!enabled?'disabled':'')+'>'+icon('repeat')+(st.repeat===2?'<span class="mm-repeat-one">1</span>':'')+'</button></div>'+
       '<div class="mm-now-foot"><span class="mm-note">'+(t?esc(t.name)+' · '+esc(t.folder||'Lokale Datei'):'Audio und Video aus deinem Speicher · Offline nutzbar')+'</span><label class="mm-volume" aria-label="Lautstärke">'+icon('volume')+'<input id="mm-volume" type="range" min="0" max="100" value="'+(player?Math.round(player.volume*100):85)+'" aria-label="Lautstärke" oninput="meviMediaVolume(this.value)"></label></div></div>';
   }
+
+  // Shared source navigation; demo sources never create or control an audio stream.
+  function sourceButtons(source){
+    return [['radio','Radio','music'],['spotify','Spotify','disc'],['media','Medien','folder']].map(([id,label,ic])=>'<button type="button" data-source="'+id+'" class="mm-mode-button '+(id===source?'active':'')+'" aria-pressed="'+(id===source)+'" onclick="selectAudioSource(\''+id+'\')">'+icon(ic)+label+'</button>').join('');
+  }
+  const demoCatalog={
+    radio:[['Mevi FM','Pop · Dein Mix für unterwegs'],['Neon Radio','Electronic · Night Drive'],['Roadtrip FM','Rock · Unterwegs zuhause'],['Lounge FM','Chillout · Entspannt ankommen']],
+    spotify:[['Midnight Drive','Neon Horizon · Night Routes'],['Electric Roads','Skyline · City Lights'],['Afterglow','Lunar Echo · Slow Motion'],['Ocean Avenue','Daybreak · Weekend Escape']]
+  };
+  const demoState={radio:{index:0,pane:'library',favorites:new Set(),filter:false},spotify:{index:0,pane:'library',favorites:new Set(),filter:false}};
+  function demoAction(source,action,value){
+    const state=demoState[source];if(!state)return;
+    if(action==='select'&&Number.isInteger(value)&&demoCatalog[source][value]){state.index=value;state.pane='player';}
+    else if(action==='pane'&&['library','player'].includes(value))state.pane=value;
+    else if(action==='filter')state.filter=!state.filter;
+    else if(action==='favorite'){if(state.favorites.has(state.index))state.favorites.delete(state.index);else state.favorites.add(state.index);}
+    else return;
+    redraw();
+  }
+  function demoHTML(source,compact){
+    if(!demoState[source])return '';
+    const state=demoState[source],radio=source==='radio',label=radio?'Radio':'Spotify',catalog=demoCatalog[source],current=catalog[state.index];
+    const action=(name,value)=>"meviAudioDemoAction('"+source+"','"+name+"'"+(value===undefined?'':','+JSON.stringify(value).replace(/"/g,"'"))+")";
+    const rows=catalog.map((item,i)=>({item,i})).filter(({i})=>!state.filter||state.favorites.has(i)).map(({item,i})=>
+      '<button type="button" class="mm-demo-item '+(state.index===i?'selected':'')+'" aria-pressed="'+(state.index===i)+'" onclick="'+action('select',i)+'"><span class="mm-demo-item-icon">'+icon(radio?'music':'disc')+'</span><span class="mm-demo-item-text"><strong>'+esc(item[0])+'</strong><small>'+esc(item[1])+'</small></span>'+icon(state.favorites.has(i)?'heart':'arrow')+'</button>').join('');
+    return '<section class="mm-shell mm-demo '+(compact?'is-compact':'')+'" data-source="'+source+'" data-pane="'+state.pane+'" aria-label="'+label+' Demo"><div class="mm-top"><div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">'+label.toUpperCase()+'</span></div><div class="mm-top-actions">'+sourceButtons(source)+'</div></div>'+
+      '<div class="mm-demo-notice">Demo · '+(radio?'Kein Radioempfang oder Stream':'Spotify nicht verbunden')+'</div>'+
+      (compact?'<div class="mm-compact-toggle"><button type="button" aria-pressed="'+(state.pane==='library')+'" onclick="'+action('pane','library')+'">'+icon('list')+(radio?' Sender':' Titel')+'</button><button type="button" aria-pressed="'+(state.pane==='player')+'" onclick="'+action('pane','player')+'">'+icon('disc')+' Player</button></div>':'')+
+      '<div class="mm-content"><div class="mm-library"><div class="mm-demo-library-head"><strong>'+(radio?'Demo-Sender':'Demo-Playlist')+'</strong><button type="button" class="mm-tab '+(state.filter?'selected':'')+'" aria-pressed="'+state.filter+'" onclick="'+action('filter')+'">'+icon('heart')+' Favoriten</button></div><div class="mm-list">'+(rows||'<div class="mm-demo-empty">Noch keine Favoriten.<br>Wähle einen Eintrag und markiere das Herz im Player.</div>')+'</div></div>'+
+      '<div class="mm-now"><div class="mm-now-top"><div class="mm-artwork mm-demo-art" aria-hidden="true">'+icon(radio?'music':'disc')+'<span>'+label.toUpperCase()+'</span></div><div class="mm-track-details"><div class="mm-now-eyebrow">DEMO-AUSWAHL</div><div class="mm-now-title">'+esc(current[0])+'</div><div class="mm-now-sub">'+esc(current[1])+'</div><div class="mm-now-buttons"><button type="button" class="mm-icon-button" aria-label="Favorit umschalten" aria-pressed="'+state.favorites.has(state.index)+'" onclick="'+action('favorite')+'">'+icon('heart')+'</button></div></div></div>'+
+      '<div class="mm-demo-unavailable">'+icon('play')+'<span>Wiedergabe nicht verfügbar</span></div><div class="mm-demo-help">'+(radio?'Senderauswahl als Vorschau.':'Beispieltitel · Keine Spotify-Anmeldung.')+' Musik abspielen über „Medien“.</div></div></div></section>';
+  }
+
   function html(isCompact){
     const compact=!!isCompact;
-    const sources=[['radio','Radio','music'],['spotify','Spotify','disc'],['media','Medien','folder']].map(([id,label,ic])=>'<button type="button" data-source="'+id+'" class="mm-mode-button '+(id==='media'?'active':'')+'" aria-pressed="'+(id==='media')+'" onclick="selectAudioSource(\''+id+'\')">'+icon(ic)+label+'</button>').join('');
+    const sources=sourceButtons('media');
     return '<section class="mm-shell '+(compact?'is-compact':'')+'" data-pane="'+st.compactPane+'" aria-label="MeviMedia 3.0"><div class="mm-top"><div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">MEVI<em>MEDIA</em> 3.0</span></div><div class="mm-top-actions">'+sources+'</div></div>'+
        (compact?'<div class="mm-compact-toggle"><button type="button" aria-pressed="'+(st.compactPane==='library')+'" onclick="meviMediaPane(\'library\')">☷ Bibliothek</button><button type="button" aria-pressed="'+(st.compactPane==='player')+'" onclick="meviMediaPane(\'player\')">▶ Player</button></div>':'')+
        '<div class="mm-content">'+library()+now()+'</div></section>';
@@ -336,6 +369,7 @@
   function repeat(){st.repeat=(st.repeat+1)%3;persist();redraw()}
   function stop(){if(player){player.pause();closeVideo()}}
   Object.assign(window,{
+    meviAudioDemoHTML:demoHTML,meviAudioDemoAction:demoAction,
     meviMediaHTML:html,meviMediaFolder:chooseFolder,meviMediaFiles:chooseFiles,meviMediaLoadFiles:loadFiles,
     meviMediaSection:setSection,meviMediaGroup:setGroup,meviMediaSearch:search,meviMediaPane:pane,
     meviMediaPlay:play,meviMediaToggle:toggle,meviMediaNext:()=>advance(false),meviMediaPrev:previous,
