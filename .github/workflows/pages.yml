@@ -26,6 +26,8 @@ jobs:
         run: node tests/lightshow-smoke.mjs
       - name: Test navigation and UX quality
         run: node tests/ui-quality-smoke.mjs
+      - name: Test five supported display profiles
+        run: node tests/display-profiles-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
