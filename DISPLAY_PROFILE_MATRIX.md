@@ -4,15 +4,21 @@ Stand: 6. November 2026 · Produktversion 0.5.0 · Premium-Tacho und bestehende 
 
 Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix für den bestehenden Cockpit-Funktionsumfang. Alle gelten im **Querformat** und werden über responsive CSS-Bereiche abgedeckt, nicht über starre User-Agent-Abfragen. Dadurch funktionieren sie auch bei Browserleisten, Zoom, DeX-Fensterrahmen und Safe-Area-Inset-Abweichungen.
 
-| Profil | Test-Viewport (CSS-Pixel) | Verhalten |
-| --- | ---: | --- |
-| iPhone 17, Querformat | **874 × 402** | Großes Dock außerhalb der Suche; während der Adresseingabe breite QWERTZ-Tastatur und sichtbare Trefferliste nebeneinander, kompakte Medien-Tabs Bibliothek/Player |
-| Samsung Galaxy S20 FE, Querformat | **915 × 412** | Wie iPhone, Touchflächen mindestens etwa 44 px und kompaktes Split-Screen |
-| Samsung DeX / externes Display | **1920 × 1200** | Große Kartenansicht, rechts Medienbibliothek und Player **gleichzeitig**, separate große Tastatur |
-| Full HD | **1920 × 1080** | Große Kartenansicht, rechts Medienbibliothek und Player **gleichzeitig**, große Bedienelemente |
-| Panorama / Infotainment | **1920 × 720** | Flaches Layout, Navigation zentral, kompakte Medien-Tabs, Adresssuche und Touch-Tastatur nebeneinander |
+| Verbindliches Profil | Physische Displayauflösung (Querformat) | CSS-Referenzviewport für Layouttests | Hinweise |
+| --- | ---: | ---: | --- |
+| **iPhone 17** | **2622 × 1206** | **874 × 402** | 3×-Skalierung; Dynamic Island, Safe Areas und beide Querformatausrichtungen berücksichtigen; große Zieleingabe-Tastatur |
+| **Samsung Galaxy S20 FE** | **2400 × 1080** | **915 × 412** | Physische FHD+-Auflösung; CSS-Viewport ist ein Referenztest und variiert nach Anzeigeskalierung, Browser und Systemleisten |
+| **Full HD** | **1920 × 1080** | **1920 × 1080** | Vollbildreferenz; geteilte Navigation und Medienplayer gleichzeitig |
+| **Panorama-Infotainment** | **1920 × 720** | **1920 × 720** | Besonders flaches Querformat; Navigation im Fokus |
+| **Samsung DeX – externer Monitor** | **1920 × 1200** | **1920 × 1200** | Externe Monitorauflösung und Vollbild-Referenz; im DeX-Fenster realen kleineren Viewport zusätzlich testen |
 
-**Hinweis zu Geräte-Pixeln:** iPhone-17- und S20-FE-Panels besitzen deutlich mehr physische Pixel als der CSS-Viewport, den Web-Apps bei standardmäßiger Skalierung sehen. Die Werte 874 × 402 und 915 × 412 sind Referenzgrößen im Chromium-Test; Safari/WebView/Android-Displayzoom können leicht abweichen. DeX 1920 × 1200 ist die gewünschte **externe Monitorauflösung**, der reale Browser-Viewport kann aufgrund von Taskleiste/Fensterleisten kleiner ausfallen.
+**Diese Tabelle ist die verbindliche Single Source of Truth für alle fünf unterstützten MeviCar-Next-Displays.** Andere Dokumente und Agentenanweisungen sollen hierauf verweisen, statt eigene abweichende Auflösungslisten zu pflegen.
+
+**Physische Pixel sind keine CSS-Pixel:** Beim iPhone 17 (Device Pixel Ratio 3) entsprechen 2622 × 1206 physischen Pixeln ungefähr 874 × 402 CSS-Pixeln im Querformat. Auf dem S20 FE ist die CSS-Größe vom Gerät und Browser abhängig; 915 × 412 ist der festgelegte Chromium-Referenztest, nicht die garantierte tatsächliche Größe.
+
+**DeX und Desktop:** 1920 × 1200, 1920 × 1080 und 1920 × 720 sind die Sollauflösungen bei bildschirmfüllender Anzeige. Fenstermodus, Browserleisten und Betriebssystemskalierung können den nutzbaren CSS-Viewport verändern.
+
+**Herstellerquellen:** [iPhone 17 – Apple technische Daten](https://support.apple.com/de-de/125089) · [Galaxy S20 FE 5G – Samsung Datenblatt](https://image-us.samsung.com/SamsungUS/samsungbusiness/pdfs/Galaxy-S20-FE-5G-Datasheet-Unlocked.pdf).
 
 ## Verbindliche Prüfungen
 
