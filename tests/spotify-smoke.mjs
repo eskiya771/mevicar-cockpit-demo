@@ -24,6 +24,7 @@ assert.doesNotMatch(source,/client_secret|clientSecret/,'SPA must never send a c
 assert.doesNotMatch(source,/accounts\.spotify\.com\/api\/token[\s\S]{0,200}secret/i);
 assert.match(source,/mevicar-spotify-client-v1/);
 assert.match(source,/mevicar-spotify-token-v1/);
+assert.match(source,/mevicar-spotify-device-v1/);
 assert.match(source,/localStorage/);
 assert.match(source,/sessionStorage/);
 
@@ -178,6 +179,53 @@ premium.win.meviSpotifyMount();
 await new Promise(resolve=>setTimeout(resolve,15));
 assert.match(premium.win.meviSpotifyDebug().error,/Premium/);
 premium.win.meviSpotifyUnmount();
+
+/* No active device: a requested item waits for an explicit device choice, then plays there. */
+const calls=[];
+const devices=[
+  {id:'devA',name:'R1000PC',type:'Computer',is_active:false,volume_percent:80},
+  {id:'devB',name:'Web Player',type:'Computer',is_active:false,volume_percent:100}
+];
+const idle=createEnv({connected:true,shell:{},fetchImpl:(url,options)=>{
+  const method=options?.method||'GET';
+  const text=String(url);
+  calls.push({url:text,method,body:options?.body});
+  if(text.endsWith('/me/player')&&method==='GET')return json(null,204);
+  if(text.endsWith('/me/player/devices'))return json({devices});
+  return json(null,204);
+}});
+idle.doc.getElementById('sp-link').value='https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT';
+idle.win.meviSpotifyPlayLink(false);
+await new Promise(resolve=>setTimeout(resolve,30));
+assert.equal(idle.win.meviSpotifyDebug().pendingPlay,true,'Play without an active device must ask for a device');
+assert.equal(calls.some(call=>call.url.includes('/me/player/play')),false,'No playback may start before a device is chosen');
+await idle.win.meviSpotifyTransfer('devA');
+assert.equal(idle.saved['mevicar-spotify-device-v1'],'devA','The chosen device must be remembered');
+const transfer=calls.find(call=>call.method==='PUT'&&/\/me\/player$/.test(call.url));
+assert.ok(transfer,'Choosing a device must transfer playback');
+assert.equal(JSON.parse(transfer.body).play,true,'Transfer must start playback when nothing runs');
+const started=calls.filter(call=>call.url.includes('/me/player/play?device_id=devA'));
+assert.equal(started.length,1,'The waiting item must start on the chosen device');
+assert.deepEqual(JSON.parse(started[0].body),{uris:['spotify:track:4cOdK2wGLETKBW3PvgPWqT']});
+idle.win.meviSpotifyUnmount();
+
+/* With a single available device the cockpit targets it directly. */
+const singleCalls=[];
+const single=createEnv({connected:true,shell:{},fetchImpl:(url,options)=>{
+  const method=options?.method||'GET';
+  const text=String(url);
+  singleCalls.push({url:text,method,body:options?.body});
+  if(text.endsWith('/me/player')&&method==='GET')return json(null,204);
+  if(text.endsWith('/me/player/devices'))return json({devices:[devices[0]]});
+  return json(null,204);
+}});
+single.doc.getElementById('sp-link').value='spotify:album:4cOdK2wGLETKBW3PvgPWqT';
+single.win.meviSpotifyPlayLink(false);
+await new Promise(resolve=>setTimeout(resolve,30));
+const direct=singleCalls.find(call=>call.method==='PUT'&&call.url.includes('/me/player/play?device_id=devA'));
+assert.ok(direct,'A single device must be used without an extra prompt');
+assert.deepEqual(JSON.parse(direct.body),{context_uri:'spotify:album:4cOdK2wGLETKBW3PvgPWqT'});
+assert.equal(single.win.meviSpotifyDebug().pendingPlay,false);
 
 /* Rate limits are respected through Retry-After. */
 assert.match(source,/error\.retryAfter\s*=\s*retry/);

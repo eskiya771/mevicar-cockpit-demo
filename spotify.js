@@ -20,6 +20,7 @@
     client: 'mevicar-spotify-client-v1',
     token: 'mevicar-spotify-token-v1',
     history: 'mevicar-spotify-history-v1',
+    device: 'mevicar-spotify-device-v1',
     auth: 'mevicar-spotify-auth-v1'
   };
   const KINDS = new Set(['track', 'album', 'playlist', 'artist', 'show', 'episode']);
@@ -108,6 +109,14 @@
     try { return String(localStorage.getItem(KEYS.client) || '').trim(); } catch { return ''; }
   }
   function validClientId(value) { return /^[A-Za-z0-9]{8,64}$/.test(value); }
+  function readDeviceId() {
+    try { return String(localStorage.getItem(KEYS.device) || '').trim(); } catch { return ''; }
+  }
+  function rememberDevice(id) {
+    const value = String(id || '').trim();
+    if (!value) return;
+    try { localStorage.setItem(KEYS.device, value); } catch { /* storage can be blocked */ }
+  }
   function readToken() {
     const token = readJson(localStorage, KEYS.token, null);
     if (!token || typeof token.access_token !== 'string' || !token.access_token) return null;
@@ -245,6 +254,7 @@
     devicesOpen: false,
     devicesLoading: false,
     devicesError: '',
+    pendingPlay: null,
     queue: null,
     queueOpen: false,
     queueLoading: false,
@@ -935,10 +945,22 @@
 
   async function playItem(item) {
     if (!item?.uri) return;
+    const body = item.kind === 'track' || item.kind === 'episode' ? { uris: [item.uri] } : { context_uri: item.uri };
     try {
       window.meviMediaStopForSource?.('spotify');
-      const body = item.kind === 'track' || item.kind === 'episode' ? { uris: [item.uri] } : { context_uri: item.uri };
-      await api('/me/player/play', { method: 'PUT', body: JSON.stringify(body) });
+      const target = await playbackDevice();
+      if (!target.id) {
+        st.pendingPlay = { body, title: item.title, at: Date.now() };
+        st.error = '';
+        await loadDevices();
+        setNotice(target.devices.length
+          ? 'Mehrere Geräte gefunden. „Hierher“ startet die Wiedergabe.'
+          : 'Kein Spotify-Gerät gefunden. Öffne Spotify und starte einen Titel.');
+        return;
+      }
+      await api('/me/player/play?device_id=' + encodeURIComponent(target.id), { method: 'PUT', body: JSON.stringify(body) });
+      rememberDevice(target.id);
+      st.pendingPlay = null;
       st.error = '';
       setNotice('Wiedergabe: ' + item.title);
       st.playerLoaded = true;
@@ -1087,32 +1109,66 @@
     if (st.queueOpen) loadQueue();
     else paintNow();
   }
+  async function fetchDevices() {
+    const data = await api('/me/player/devices');
+    st.devices = Array.isArray(data?.devices) ? data.devices : [];
+    return st.devices;
+  }
   async function loadDevices() {
-    if (!st.token) return;
+    if (!st.token) return st.devices;
     st.devicesOpen = true;
     st.devicesLoading = true;
     st.devicesError = '';
     paintNow();
     try {
-      const data = await api('/me/player/devices');
-      st.devices = Array.isArray(data?.devices) ? data.devices : [];
+      await fetchDevices();
     } catch (error) { st.devicesError = errorText(error); }
     finally { st.devicesLoading = false; paintNow(); }
+    return st.devices;
   }
   function toggleDevices() {
     st.devicesOpen = !st.devicesOpen;
     if (st.devicesOpen) loadDevices();
     else paintNow();
   }
+  // Spotify only marks a device active while it plays. Prefer the last device the
+  // cockpit used, then an already active one, then a single available device.
+  // With several idle devices the user must pick one explicitly.
+  function pickDevice(devices) {
+    const remembered = readDeviceId();
+    return devices.find(device => device?.id && device.id === remembered)
+      || devices.find(device => device?.is_active)
+      || (devices.length === 1 ? devices[0] : null);
+  }
+  async function playbackDevice() {
+    if (st.player?.device?.id) return { id: st.player.device.id, devices: st.devices };
+    if (!st.devices.length) { try { await fetchDevices(); } catch { /* keep empty */ } }
+    return { id: pickDevice(st.devices)?.id || '', devices: st.devices };
+  }
+  function pendingPlayback() {
+    const pending = st.pendingPlay;
+    if (!pending) return null;
+    if (Date.now() - pending.at > 120000) { st.pendingPlay = null; return null; }
+    return pending;
+  }
   async function transferDevice(encoded) {
     const id = decodeArg(encoded);
+    const pending = pendingPlayback();
     try {
-      await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [id], play: !!st.player?.is_playing }) });
+      await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [id], play: pending ? true : (st.player ? !!st.player.is_playing : true) }) });
+      rememberDevice(id);
       st.devicesOpen = false;
-      setNotice('Wiedergabe auf das Gerät umgestellt.');
+      if (pending) {
+        st.pendingPlay = null;
+        await api('/me/player/play?device_id=' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify(pending.body) });
+        setNotice('Wiedergabe: ' + pending.title);
+      } else {
+        setNotice('Wiedergabe auf das Gerät umgestellt.');
+      }
       await sleep(350);
       await poll(true);
-      paintNow();
+      if (!st.player) { await sleep(600); await poll(true); }
+      rerender();
     } catch (error) { handleApiError(error); }
   }
   async function setVolume(value) {
@@ -1172,6 +1228,7 @@
     try {
       const data = await api('/me/player');
       st.player = data || null;
+      if (data?.device?.id) rememberDevice(data.device.id);
       st.playerLoaded = true;
       st.playerAt = Date.now();
       st.progressBase = Number(data?.progress_ms) || 0;
@@ -1271,7 +1328,9 @@
     st.searchLoading = false;
     st.searchError = '';
     st.query = '';
+    st.pendingPlay = null;
     st.confirmReset = false;
+    try { localStorage.removeItem(KEYS.device); } catch { /* ignore */ }
   }
   function disconnect() {
     clearAuthState();
@@ -1377,6 +1436,7 @@
         progress: Number(st.player.progress_ms) || 0
       } : null,
       devices: st.devices.length,
+      pendingPlay: !!st.pendingPlay,
       queue: Array.isArray(st.queue?.queue) ? st.queue.queue.length : 0,
       liked: st.liked,
       results: st.results ? Object.fromEntries(Object.entries(st.results).map(([key, value]) => [key, value.length])) : null,
