@@ -176,7 +176,7 @@ class MockRecognition {
   start(){this.started++}
   abort(){this.aborted++}
 }
-const spoken=createEnv({connected:true,shell:{},speechCtor:MockRecognition});
+const spoken=createEnv({connected:true,shell:{dataset:{}},speechCtor:MockRecognition});
 let voiceMarkup=spoken.win.meviSpotifyHTML(true);
 assert.match(voiceMarkup,/Sprachsuche starten/);
 assert.doesNotMatch(voiceMarkup,/Sprachsuche im Browser nicht verfügbar/);
