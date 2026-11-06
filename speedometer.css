@@ -57,11 +57,11 @@ html[data-theme="liquidglass"] .tacho-app{--tacho-face:#102033;--tacho-face-hi:#
 .tacho-rpm-readout small{display:block;color:var(--tacho-dim);font-size:clamp(8px,1.4vh,11px);letter-spacing:.06em}
 .tacho-info{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,.9fr) auto minmax(0,1.3fr);gap:clamp(4px,.6vw,10px);align-items:center;min-height:0}
 .tacho-stat{min-width:0}
-.tacho-stat span,.tacho-compass small,.tacho-stat small{display:block;color:var(--tacho-dim);font-size:9px;letter-spacing:.12em}
-.tacho-stat strong,.tacho-compass b{font-variant-numeric:tabular-nums;font-size:clamp(14px,2.4vh,22px);font-weight:730}
+.tacho-stat span,.tacho-compass small,.tacho-stat small{display:block;color:var(--tacho-dim);font-size:10px;letter-spacing:.12em}
+.tacho-stat strong,.tacho-compass b{font-variant-numeric:tabular-nums;font-size:clamp(17px,4.4vh,26px);font-weight:730;line-height:1.05}
 .tacho-stat small{letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tacho-compass{display:flex;align-items:center;gap:6px;min-width:0}
-.tacho-compass svg{width:clamp(28px,5vh,42px);height:clamp(28px,5vh,42px);flex:0 0 auto}
+.tacho-compass{display:flex;align-items:center;gap:7px;min-width:0}
+.tacho-compass svg{width:clamp(40px,10vh,56px);height:clamp(40px,10vh,56px);flex:0 0 auto}
 .tacho-compass-ring{fill:none;stroke:var(--tacho-metal);stroke-width:2;opacity:.7}
 .tacho-north{fill:var(--tacho-red)}
 .tacho-south{fill:var(--tacho-dim)}
@@ -72,13 +72,13 @@ html[data-theme="liquidglass"] .tacho-app{--tacho-face:#102033;--tacho-face-hi:#
 /* Full layout: odometer, trip and compass scale with the viewport height instead of staying at phone size. */
 .tacho-app:not(.is-compact):not(.is-tight) .tacho-info{gap:clamp(8px,1.2vw,24px);padding-top:clamp(2px,.6vh,8px)}
 .tacho-app:not(.is-compact):not(.is-tight) .tacho-stat span,.tacho-app:not(.is-compact):not(.is-tight) .tacho-stat small,.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass small{font-size:clamp(10px,1.4vh,15px)}
-.tacho-app:not(.is-compact):not(.is-tight) .tacho-stat strong,.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass b{font-size:clamp(20px,4.2vh,46px);line-height:1.05}
-.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass{gap:clamp(6px,.8vw,14px)}
-.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass svg{width:clamp(40px,9.5vh,104px);height:clamp(40px,9.5vh,104px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-stat strong,.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass b{font-size:clamp(24px,5.2vh,56px);line-height:1.05}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass{gap:clamp(8px,.9vw,16px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass svg{width:clamp(56px,12vh,140px);height:clamp(56px,12vh,140px)}
 /* Large split hosts (DeX, Full HD, Panorama): same idea with a smaller ceiling. */
-.tacho-app.is-compact:not(.is-tight) .tacho-stat span,.tacho-app.is-compact:not(.is-tight) .tacho-stat small,.tacho-app.is-compact:not(.is-tight) .tacho-compass small{font-size:clamp(10px,1.3vh,14px)}
-.tacho-app.is-compact:not(.is-tight) .tacho-stat strong,.tacho-app.is-compact:not(.is-tight) .tacho-compass b{font-size:clamp(18px,3.2vh,36px);line-height:1.05}
-.tacho-app.is-compact:not(.is-tight) .tacho-compass svg{width:clamp(36px,7.5vh,84px);height:clamp(36px,7.5vh,84px)}
+.tacho-app.is-compact:not(.is-tight) .tacho-stat span,.tacho-app.is-compact:not(.is-tight) .tacho-stat small,.tacho-app.is-compact:not(.is-tight) .tacho-compass small{font-size:clamp(10px,1.35vh,15px)}
+.tacho-app.is-compact:not(.is-tight) .tacho-stat strong,.tacho-app.is-compact:not(.is-tight) .tacho-compass b{font-size:clamp(20px,3.8vh,42px);line-height:1.05}
+.tacho-app.is-compact:not(.is-tight) .tacho-compass svg{width:clamp(44px,8.5vh,100px);height:clamp(44px,8.5vh,100px)}
 .tacho-actions{display:flex;gap:4px;justify-content:flex-end;min-width:0}
 .tacho-actions button{min-width:44px;min-height:44px;padding:0 8px;border-radius:12px;background:#102433;border:1px solid color-mix(in srgb,var(--tacho-accent) 45%,#39566c);color:var(--tacho-ink);font-size:12px}
 .tacho-actions button[aria-pressed="true"]{background:color-mix(in srgb,var(--tacho-accent) 24%,#0c2433);border-color:var(--tacho-accent)}
@@ -121,9 +121,28 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
   .tacho-app{padding:3px 4px;gap:2px;border-radius:12px}
   .tacho-status{min-height:16px;font-size:10px}
   .tacho-hero b{font-size:clamp(32px,8vh,46px)}
+  .tacho-hero span{font-size:12px;letter-spacing:.12em}
+  .tacho-hero small{font-size:11px}
   .tacho-num{font-size:10px}
   .tacho-actions button{min-height:44px;padding:0 4px;font-size:11px}
-  .tacho-stat strong,.tacho-compass b{font-size:14px}
+  .tacho-stat span,.tacho-compass small,.tacho-stat small{font-size:10px;letter-spacing:.08em}
+  .tacho-stat strong,.tacho-compass b{font-size:clamp(17px,4.4vh,20px)}
+  .tacho-compass{gap:6px}
+  .tacho-compass svg{width:clamp(44px,11.5vh,52px);height:clamp(44px,11.5vh,52px)}
+}
+/* Full-width short viewports (phones in landscape): keep the footer on one row so the
+   dials gain height, and let the readouts grow with the free width. Below 760 px the
+   two-row footer stays because compass and actions would collide. */
+@media(min-width:760px){
+  .tacho-app.is-tight:not(.is-compact) .tacho-info{
+    grid-template-columns:minmax(0,.85fr) minmax(0,.85fr) auto minmax(0,1.55fr);
+    grid-template-areas:"odo trip compass actions";
+    gap:clamp(6px,.8vw,12px);
+  }
+  .tacho-app.is-tight:not(.is-compact) .tacho-stat strong,.tacho-app.is-tight:not(.is-compact) .tacho-compass b{font-size:clamp(20px,5vh,26px)}
+  .tacho-app.is-tight:not(.is-compact) .tacho-compass svg{width:clamp(46px,12vh,56px);height:clamp(46px,12vh,56px)}
+  .tacho-app.is-tight:not(.is-compact) .tacho-actions{justify-content:flex-end}
+  .tacho-app.is-tight:not(.is-compact) .tacho-actions button{flex:0 0 auto}
 }
 /* Panorama / Infotainment 1920×720 */
 @media(orientation:landscape) and (min-width:1500px) and (max-height:820px){

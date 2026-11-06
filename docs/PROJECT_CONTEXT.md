@@ -97,6 +97,8 @@ Live- und Demo-Modell getrennt in der Closure. `meviSpeedHTML(compact)`, `meviSp
 
 `requestAnimationFrame` interpoliert Nadeln; reduced motion wird abgefragt. Demo erzeugt Geschwindigkeit, RPM, Heading und separaten Trip, niemals Gesamt-km. GPS kann während der Demo weiter ins Live-Modell schreiben.
 
+Kompass und km-Anzeigen skalieren mit der Viewport-Höhe und bleiben in allen Layouts mindestens 44 px (Kompass) beziehungsweise 17 px (Werte) groß. Auf kurzen, breiten Viewports ab 760 px Breite teilen sich Gesamt-km, Trip, Kompass und Aktionen eine Footer-Zeile, damit die Instrumente die gewonnene Höhe nutzen; darunter bleibt die zweizeilige Anordnung, damit Kompass und Schaltflächen nicht kollidieren.
+
 GPS-Trip: Haversine, Koordinatenprüfung, Genauigkeit bis 80 m, maximal 230 km/h zwischen Punkten, unter 3 m kein Zuwachs. Fehlende Genauigkeit wird akzeptiert. `lastPoint` überlebt Stop/Unmount; dadurch sind Lücken und Wiederaufnahme besonders zu prüfen. GPS-Geschwindigkeit wird separat vom Tripfilter übernommen; bei fehlender Speed und akzeptiertem Fix setzt der Code 0 statt unbekannt.
 
 `meviSpeedIngest({rpm, odometerKm, speedKmh, sourceSpeed})` akzeptiert endliche nichtnegative Zahlen. RPM wird auf 8400 begrenzt, Geschwindigkeit auf 400; die Nadeln begrenzen separat auf ihre Skalenenden. RPM/Gesamt-km erhalten Quelle `obd`. Für Speed muss `sourceSpeed` truthy sein; kein Enum wird erzwungen. `null` löscht keine Werte, Zeitstempel/TTL und Quellenpriorität fehlen; GPS kann OBD-Speed überschreiben. Die API ist ein Einspeisepunkt, keine vorhandene Fahrzeugverbindung.

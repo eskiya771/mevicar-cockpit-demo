@@ -24,8 +24,14 @@ assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-cluste
 assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-dial{container-type:size;container-name:tacho-dial;width:min(100%,100cqh)'), 'dials must grow to the cluster height');
 assert.ok(!/.tacho-num[^{]*{[^}]*cq(min|h|w)/.test(css), 'SVG numerals must not use container units (they overlap on large dials)');
 assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero b{font-size:clamp(44px,13cqmin,124px)}'), 'hero speed scales with the dial');
-assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass svg{width:clamp(40px,9.5vh,104px)'), 'full-layout compass must scale with viewport height');
-assert.ok(css.includes('.tacho-app.is-compact:not(.is-tight) .tacho-stat strong,.tacho-app.is-compact:not(.is-tight) .tacho-compass b{font-size:clamp(18px,3.2vh,36px)'), 'large split odometer must scale, tight stays at 14px');
+assert.ok(css.includes('.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass svg{width:clamp(56px,12vh,140px)'), 'full-layout compass must scale with viewport height');
+assert.ok(css.includes('.tacho-app.is-compact:not(.is-tight) .tacho-stat strong,.tacho-app.is-compact:not(.is-tight) .tacho-compass b{font-size:clamp(20px,3.8vh,42px)'), 'large split odometer must scale');
+assert.ok(css.includes('.tacho-app.is-compact:not(.is-tight) .tacho-compass svg{width:clamp(44px,8.5vh,100px)'), 'large split compass must stay proportionate');
+assert.ok(css.includes('.tacho-compass svg{width:clamp(44px,11.5vh,52px)'), 'phone compass must be at least 44 px');
+assert.ok(css.includes('.tacho-stat strong,.tacho-compass b{font-size:clamp(17px,4.4vh,20px)}'), 'phone readouts must not fall back to 14 px');
+assert.ok(css.includes('@media(min-width:760px)') && css.includes('grid-template-areas:"odo trip compass actions"'), 'wide short viewports put odometer, trip, compass and actions on one row');
+assert.ok(css.includes('.tacho-app.is-tight:not(.is-compact) .tacho-compass svg{width:clamp(46px,12vh,56px)'), 'full-width phone compass must grow with the free width');
+assert.ok(!/\.tacho-stat strong,\.tacho-compass b\{font-size:14px\}/.test(css), 'compass and km readouts must not regress to 14 px');
 assert.ok(css.includes('.tacho-app.is-compact.is-tall .tacho-cluster{grid-template-columns:minmax(0,1fr)'), 'tall split hosts must stack both dials');
 assert.ok(css.includes('.tacho-app.is-compact .tacho-dial-rpm,.tacho-app.is-tight .tacho-dial-rpm{width:100%;height:100%'), 'split RPM dial must fill its grid cell');
 assert.ok(src.includes('class="tacho-compass-c">O<') && src.includes('class="tacho-compass-c">W<'), 'compass rose must show cardinal letters');
