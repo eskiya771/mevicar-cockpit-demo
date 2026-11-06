@@ -270,6 +270,8 @@
     results: null,
     searchLoading: false,
     searchError: '',
+    voiceListening: false,
+    voiceError: '',
     history: readJson(localStorage, KEYS.history, []),
     accountOpen: false,
     confirmReset: false,
@@ -289,6 +291,8 @@
   let refreshing = null;
   let searchTimer = null;
   let searchSerial = 0;
+  let voiceRecognition = null;
+  let voiceSerial = 0;
   let noticeTimer = null;
   let globalsBound = false;
 
@@ -754,8 +758,12 @@
       '</div>';
   }
   function searchMarkup() {
+    const voiceSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    const voiceLabel = st.voiceListening ? 'Sprachsuche beenden' : (voiceSupported ? 'Sprachsuche starten' : 'Sprachsuche im Browser nicht verfügbar');
     return '<div class="sp-search">' +
-      '<label class="sp-search-box">' + icon('search') + '<input id="sp-search-input" type="search" spellcheck="false" autocomplete="off" placeholder="Titel, Alben, Podcasts suchen …" aria-label="Spotify durchsuchen" value="' + esc(st.query) + '" oninput="meviSpotifySearchInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();meviSpotifySearchNow(this.value)}"></label>' +
+      '<div class="sp-search-entry"><label class="sp-search-box">' + icon('search') + '<input id="sp-search-input" type="search" spellcheck="false" autocomplete="off" placeholder="Titel, Alben, Podcasts suchen …" aria-label="Spotify durchsuchen" value="' + esc(st.query) + '" oninput="meviSpotifySearchInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();meviSpotifySearchNow(this.value)}"></label>' +
+      '<button type="button" class="sp-voice-button' + (st.voiceListening ? ' is-listening' : '') + '" aria-label="' + voiceLabel + '" title="' + voiceLabel + '" aria-pressed="' + st.voiceListening + '" onclick="meviSpotifyVoice()" ' + (voiceSupported ? '' : 'disabled') + '>' + icon('mic') + '</button></div>' +
+      '<p class="sp-voice-feedback" id="sp-voice-feedback" role="status" ' + (st.voiceListening || st.voiceError ? '' : 'hidden') + '>' + esc(st.voiceError || 'Ich höre zu …') + '</p>' +
       '<div class="sp-history" id="sp-search-history">' + historyMarkup() + '</div>' +
       '<div class="sp-linkrow"><label class="sp-linkbox">' + icon('link') + '<input id="sp-link" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Spotify-Link oder spotify:track:…" aria-label="Spotify-Link einfügen" onkeydown="if(event.key===\'Enter\'){event.preventDefault();meviSpotifyPlayLink(false)}"></label><button type="button" class="sp-link-play" onclick="meviSpotifyPlayLink(false)" title="Link abspielen">' + icon('play') + '<span>Abspielen</span></button><button type="button" class="sp-link-queue" onclick="meviSpotifyPlayLink(true)" aria-label="Link zur Warteschlange" title="Zur Warteschlange">' + icon('plus') + '</button></div>' +
       '<div class="sp-results" id="sp-search-results">' + resultsMarkup() + '</div></div>';
@@ -818,6 +826,7 @@
 
   function setTab(tab) {
     if (!['now', 'browse', 'search'].includes(tab)) return;
+    if (tab !== 'search' && st.voiceListening) stopVoice();
     st.tab = tab;
     paintTabs();
     if (tab === 'browse') {
@@ -874,6 +883,102 @@
     queueItem(item);
   }
 
+  // Browser speech recognition is optional and starts only after a direct tap.
+  // Safari or installed PWAs may not expose this API; manual search remains available.
+  function paintVoice() {
+    const button = document.querySelector('.sp-voice-button');
+    if (button) {
+      const label = st.voiceListening ? 'Sprachsuche beenden' : 'Sprachsuche starten';
+      button.classList.toggle('is-listening', st.voiceListening);
+      button.setAttribute('aria-pressed', String(st.voiceListening));
+      button.setAttribute('aria-label', label);
+      button.title = label;
+    }
+    const feedback = $('sp-voice-feedback');
+    if (feedback) {
+      feedback.hidden = !st.voiceListening && !st.voiceError;
+      feedback.textContent = st.voiceError || (st.voiceListening ? 'Ich höre zu …' : '');
+    }
+  }
+  function stopVoice(silent = true) {
+    voiceSerial++;
+    const recognition = voiceRecognition;
+    voiceRecognition = null;
+    st.voiceListening = false;
+    if (recognition) {
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      try { recognition.abort(); } catch { /* browser already stopped */ }
+    }
+    if (silent) st.voiceError = '';
+    paintVoice();
+  }
+  function voice() {
+    if (st.voiceListening) { stopVoice(); return; }
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      st.voiceError = 'Spracherkennung in diesem Browser nicht verfügbar. Bitte tippen.';
+      paintVoice();
+      return;
+    }
+    stopVoice();
+    const serial = ++voiceSerial;
+    let recognition;
+    try {
+      recognition = new Recognition();
+      recognition.lang = 'de-DE';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+      voiceRecognition = recognition;
+      st.voiceError = '';
+      st.voiceListening = true;
+      recognition.onresult = event => {
+        if (serial !== voiceSerial) return;
+        const transcript = String(event.results?.[0]?.[0]?.transcript || '').trim();
+        if (!transcript) {
+          st.voiceError = 'Nichts verstanden. Bitte erneut versuchen.';
+          st.voiceListening = false;
+          paintVoice();
+          return;
+        }
+        stopVoice();
+        setTab('search');
+        searchNow(transcript); // existing Spotify search API and search history
+        paintVoice();
+      };
+      recognition.onerror = event => {
+        if (serial !== voiceSerial) return;
+        const messages = {
+          'not-allowed': 'Mikrofonzugriff verweigert. Bitte Berechtigung prüfen.',
+          'service-not-allowed': 'Spracherkennung ist auf diesem Gerät gesperrt.',
+          'no-speech': 'Keine Sprache erkannt. Bitte erneut versuchen.',
+          'audio-capture': 'Kein Mikrofon verfügbar.',
+          'network': 'Spracherkennung benötigt eine Netzwerkverbindung.',
+          'language-not-supported': 'Deutsche Spracherkennung nicht verfügbar.'
+        };
+        st.voiceError = messages[event.error] || 'Spracherkennung fehlgeschlagen. Bitte tippen.';
+        st.voiceListening = false;
+        voiceRecognition = null;
+        paintVoice();
+      };
+      recognition.onend = () => {
+        if (serial !== voiceSerial) return;
+        voiceRecognition = null;
+        if (st.voiceListening) st.voiceError = 'Keine Sprache erkannt. Bitte erneut versuchen.';
+        st.voiceListening = false;
+        paintVoice();
+      };
+      recognition.start();
+      paintVoice();
+    } catch {
+      voiceRecognition = null;
+      st.voiceListening = false;
+      st.voiceError = 'Spracherkennung konnte nicht gestartet werden.';
+      paintVoice();
+    }
+  }
   function searchInput(value) {
     st.query = String(value || '').slice(0, 120);
     clearTimeout(searchTimer);
@@ -1416,6 +1521,7 @@
     if (!cache) loadBrowse(false);
   }
   function unmount() {
+    if (st.voiceListening || voiceRecognition) stopVoice();
     if (pollTimer) clearInterval(pollTimer);
     if (tickTimer) clearInterval(tickTimer);
     pollTimer = null;
@@ -1462,6 +1568,7 @@
     meviSpotifyReloadBrowse: refreshBrowse,
     meviSpotifySearchInput: searchInput,
     meviSpotifySearchNow: searchNow,
+    meviSpotifyVoice: voice,
     meviSpotifyUseHistory: useHistory,
     meviSpotifyClearHistory: clearHistory,
     meviSpotifyPlayStored: playStored,
