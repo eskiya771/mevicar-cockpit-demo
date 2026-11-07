@@ -669,3 +669,26 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    padding-top:6px!important;
  }
 }
+
+
+/* Match the RPM dial's rendered diameter to the speed dial: both use
+   the same height-limited square SVG, not different container sizing. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm{
+   display:grid!important;
+   place-items:center!important;
+   min-height:0!important;
+   min-width:0!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > svg,
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   width:auto!important;
+   height:100%!important;
+   max-width:100%!important;
+   max-height:100%!important;
+   aspect-ratio:1!important;
+   justify-self:center!important;
+   align-self:center!important;
+   transform:translateY(-12px) scale(1.24)!important;
+ }
+}
