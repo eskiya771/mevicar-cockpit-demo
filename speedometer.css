@@ -500,3 +500,12 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
     transform-origin:center center;
   }
 }
+
+
+/* Align RPM face with the already lifted speedometer face in phone fullscreen. */
+@media (orientation:landscape) and (max-height:480px){
+  .full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-rpm svg{
+    transform:translateY(-14px) scale(1.38);
+    transform-origin:center center;
+  }
+}
