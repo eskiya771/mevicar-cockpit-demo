@@ -6,6 +6,7 @@ on:
       - 'index.html'
       - 'display-profiles.css'
       - 'themes.css'
+      - 'tests/visual-layout.mjs'
       - '.github/workflows/visual-layout.yml'
 permissions:
   contents: read
