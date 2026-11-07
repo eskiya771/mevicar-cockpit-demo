@@ -533,3 +533,26 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit:has(.nav-search) .nav-search .inner{min-width:0;}
  .cockpit:has(.nav-search) .nav-search .nav-suggestions{min-width:0;overflow-x:hidden;}
 }
+
+/* Search input: visible software caret without triggering the native iOS keyboard. */
+.cockpit .nav-search-field{position:relative;gap:8px;border:1px solid #8edffb80;box-shadow:inset 0 0 0 1px #69c7ef25;}
+.cockpit .nav-search-field:focus-within{border-color:#64e5ff;box-shadow:0 0 0 2px #37c8f444,inset 0 0 16px #1dbdf016;}
+.cockpit .nav-search-field #searchInput{position:absolute;inset:0;width:100%;height:100%;opacity:0;z-index:2;cursor:text;}
+.cockpit .nav-search-field .nav-search-symbol{pointer-events:none;}
+.cockpit .nav-entry-visual,.cockpit .nav-entry-placeholder{font:inherit;font-size:clamp(14px,1.7vw,19px);white-space:nowrap;overflow:hidden;min-width:0;pointer-events:none;}
+.cockpit .nav-entry-visual{display:flex;align-items:center;flex:1;color:#f5fbff;}
+.cockpit .nav-entry-placeholder{position:absolute;left:calc(16px + 30px);color:#c0d4d7;}
+.cockpit .nav-entry-placeholder[hidden]{display:none;}
+.cockpit .nav-entry-caret{height:1.15em;min-width:2px;flex:none;background:#60edff;box-shadow:0 0 7px #2cdeff;animation:mevi-nav-caret-blink 1s steps(1,end) infinite;}
+.cockpit .nav-entry-before,.cockpit .nav-entry-after{white-space:pre;flex:none;}
+.cockpit .nav-search-field .nav-clear{position:relative;z-index:3;flex:none;min-width:32px;min-height:44px;color:#e9faff;}
+@keyframes mevi-nav-caret-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@media (orientation:landscape) and (max-height:480px){
+ .cockpit .nav-search .nav-suggestions{gap:5px;}
+ .cockpit .nav-search .suggestion{min-height:53px;padding:6px 9px;gap:9px;border-radius:13px;}
+ .cockpit .nav-search .suggestion .circle{width:35px;height:35px;flex:none;}
+ .cockpit .nav-search .suggestion strong{font-size:clamp(12px,1.5vw,16px);}
+ .cockpit .nav-search .suggestion small{font-size:11px;line-height:1.2;margin-top:2px;}
+ .cockpit .keyboard .keyrow button.special{background:#35485e;border:1px solid #a2c7e052;}
+ .cockpit .keyboard .keyrow button.go{background:#087eae;border:1px solid #74d8ff8c;}
+}
