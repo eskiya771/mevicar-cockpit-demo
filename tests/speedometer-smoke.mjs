@@ -164,14 +164,14 @@ assert.match(full, /Tachometer 0 bis 220 km\/h/);
 assert.match(full, /Drehzahlmesser 0 bis 8000 U\/min/);
 for (const mark of api.speedMarks()) assert.ok(full.includes('>' + mark + '<'), 'missing speed mark ' + mark);
 for (const mark of [0, 1, 2, 3, 4, 5, 6, 7, 8]) assert.ok(full.includes('>' + mark + '<'), 'missing rpm mark ' + mark);
-assert.ok(full.includes('tacho-redzone') && full.includes('keine Fahrzeugdaten') && full.includes('keine OBD'));
+assert.ok(full.includes('tacho-redzone') && full.includes('245.377 km') && full.includes('keine OBD'));
 assert.equal((full.match(/id="tachoSpeedNeedle"/g) || []).length, 1);
 assert.equal((full.match(/id="tachoRpmNeedle"/g) || []).length, 1);
 
 app = makeApp();
 window.meviSpeedMount();
 assert.equal(window.meviSpeedDebug().mounted, true);
-assert.equal(elements.get('tachoOdo').textContent, '—');
+assert.equal(elements.get('tachoOdo').textContent, '245.377 km');
 assert.equal(elements.get('tachoRpmUnit').textContent, 'keine OBD');
 window.meviSpeedGps(true);
 assert.equal(watches.size, 1);
