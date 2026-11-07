@@ -359,3 +359,24 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    padding-bottom:4px!important;
  }
 }
+
+
+/* Fullscreen landscape dial enlargement: free vertical space from the
+   oversized hero row and center the two dials higher. Split view untouched. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+   grid-template-rows:minmax(34px,auto) minmax(0,1fr)!important;
+   align-items:start;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-hero{
+   margin:0!important;
+   padding:0!important;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-speed svg,
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-rpm svg{
+   align-self:start;
+ }
+ .full.tacho-host .tacho-info{
+   row-gap:2px!important;
+ }
+}
