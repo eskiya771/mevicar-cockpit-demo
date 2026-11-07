@@ -315,3 +315,18 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
  .full.tacho-host .tacho-info > .tacho-compass svg{width:40px;height:40px;}
  .full.tacho-host .tacho-info > .tacho-actions button{min-height:34px;}
 }
+
+
+/* Fullscreen landscape: protect the upper header from the rounded display edge.
+   Keep the split-screen header and the two gauges unchanged. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host > .tacho-app{
+   padding-top:max(12px,env(safe-area-inset-top,0px))!important;
+ }
+ .full.tacho-host .tacho-status{
+   min-height:26px;
+   padding-left:max(8px,env(safe-area-inset-left,0px));
+   padding-right:max(8px,env(safe-area-inset-right,0px));
+   box-sizing:border-box;
+ }
+}
