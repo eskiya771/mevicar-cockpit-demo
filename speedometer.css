@@ -330,3 +330,32 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    box-sizing:border-box;
  }
 }
+
+
+/* Larger fullscreen landscape gauges: reclaim unused space between the
+   digital speed readout and dial faces, without changing split-screen. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+   grid-template-rows:minmax(48px,auto) minmax(0,1fr);
+   row-gap:0;
+   align-content:stretch;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-hero{
+   line-height:1;
+   align-self:start;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-hero b{
+   line-height:.9;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-speed svg{
+   height:100%;
+   max-height:100%;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-rpm{
+   height:100%;
+ }
+ .full.tacho-host .tacho-info{
+   padding-top:0!important;
+   padding-bottom:4px!important;
+ }
+}
