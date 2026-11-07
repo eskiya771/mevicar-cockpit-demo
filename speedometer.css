@@ -559,35 +559,3 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    top:88%!important;
  }
 }
-
-
-/* Phone fullscreen: move digital GPS speed into the empty lower section
-   of the left dial; leave split-screen speed readout untouched. */
-@media (orientation:landscape) and (max-height:480px){
- .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-cluster{
-   position:relative;
- }
- .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-hero{
-   position:absolute!important;
-   left:25%!important;
-   right:auto!important;
-   top:75%!important;
-   bottom:auto!important;
-   width:clamp(110px,14vw,190px);
-   transform:translate(-50%,-50%);
-   z-index:5;
-   text-align:center;
-   margin:0!important;
-   pointer-events:none;
- }
- .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-hero b{
-   font-size:clamp(36px,7vh,60px)!important;
-   line-height:1;
- }
- .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-hero span{
-   font-size:clamp(12px,2.4vh,17px);
- }
- .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-hero small{
-   display:none!important;
- }
-}
