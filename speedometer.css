@@ -380,3 +380,54 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    row-gap:2px!important;
  }
 }
+
+
+/* Fullscreen cockpit composition: central compass, odometer beneath speed,
+   trip beneath RPM. Split screen retains its own three-column footer. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster{
+  position:relative;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+  position:absolute;
+  left:50%;
+  top:56%;
+  transform:translate(-50%,-50%);
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  width:clamp(54px,7vw,92px);
+  pointer-events:none;
+  text-align:center;
+}
+.full.tacho-host .tacho-cluster > .tacho-compass svg{
+  width:clamp(42px,5vw,62px);
+  height:clamp(42px,5vw,62px);
+  flex:none;
+}
+.full.tacho-host .tacho-cluster > .tacho-compass b{font-size:clamp(13px,2.3vh,18px);}
+.full.tacho-host .tacho-cluster > .tacho-compass small{
+  font-size:10px;letter-spacing:0;white-space:normal;line-height:1.1;
+}
+.full.tacho-host .tacho-info{
+  grid-template-areas:"odo trip" "actions actions"!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  column-gap:clamp(12px,2vw,32px)!important;
+}
+.full.tacho-host .tacho-info > .tacho-stat:first-child{
+  grid-area:odo;justify-self:start;
+}
+.full.tacho-host .tacho-info > .tacho-stat:nth-child(2){
+  grid-area:trip;justify-self:end;text-align:right;
+}
+.full.tacho-host .tacho-info > .tacho-actions{grid-area:actions!important;}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-info{
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   column-gap:12px!important;
+ }
+ .full.tacho-host .tacho-cluster > .tacho-compass{top:58%;}
+}
