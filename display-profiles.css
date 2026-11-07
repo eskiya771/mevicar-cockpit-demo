@@ -315,3 +315,30 @@ html,body{min-height:0;overscroll-behavior:none}
  .mm-radio.is-compact .mm-radio-add-actions button{min-height:44px;font-size:11px}
  .mm-radio.is-compact .mm-radio-notice{font-size:10px}
 }
+
+/* iPhone 17 compact cockpit: reclaim decorative margins and float status over map.
+   Safe-area padding remains on the outer shell; no changes to larger displays. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .shell{padding-top:max(2px,env(safe-area-inset-top,0px));padding-bottom:max(2px,env(safe-area-inset-bottom,0px));}
+ .cockpit{padding:3px;gap:3px;border-radius:12px;}
+ .cockpit .body{gap:3px;}
+ .cockpit .workspace{position:relative;gap:0;min-width:0;}
+ .cockpit .screen{gap:3px;}
+ .cockpit .map{border-radius:10px;}
+ .cockpit .status{
+   position:absolute;top:4px;right:5px;left:auto;z-index:12;
+   width:auto;height:36px;min-height:36px;max-width:calc(100% - 12px);
+   padding:2px 5px;border-radius:12px;
+   background:linear-gradient(90deg,#10253bd9,#10253bf2);
+   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+   border:1px solid #9ad5ec45;pointer-events:auto;
+ }
+ .cockpit .status>span:first-child{display:none;}
+ .cockpit .status-right{gap:4px;}
+ .cockpit .status .status-action{min-height:30px;height:30px;padding:3px 7px;font-size:11px;}
+ .cockpit .status-chip{font-size:10px;}
+ .cockpit .dock.left{width:62px;padding:3px;gap:3px;border-radius:10px;}
+ .cockpit .dock.left button{min-height:44px;}
+ .cockpit .overlay.nav-browse{top:5px;left:5px;bottom:5px;}
+ .cockpit .overlay.nav-search{top:5px;bottom:5px;}
+}
