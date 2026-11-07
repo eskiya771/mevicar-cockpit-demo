@@ -559,3 +559,44 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    top:88%!important;
  }
 }
+
+
+/* Fullscreen gauge correction: avoid cropped/overlapping rims and put
+   the compass inside the lower face of the speedometer. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed svg:not(.tacho-compass svg),
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-rpm > svg{
+  transform:translateY(-5px) scale(1.08)!important;
+  transform-origin:center center!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed{
+  position:relative!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+  position:absolute!important;
+  left:50%!important;
+  top:79%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:5;
+  width:clamp(55px,6.8vw,90px)!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed > .tacho-compass > svg{
+  width:clamp(52px,6vw,76px)!important;
+  height:clamp(52px,6vw,76px)!important;
+  transform:none!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed > .tacho-compass .tacho-compass-readout{
+  display:none!important;
+}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed svg:not(.tacho-compass svg),
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   transform:translateY(-5px) scale(1.08)!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   top:79%!important;
+ }
+}
