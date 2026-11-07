@@ -538,3 +538,24 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    top:78%!important;
  }
 }
+
+
+/* Fullscreen compass: center in lower gap, no redundant unavailable-data label.
+   The smaller rose stays clear of both dial rims at phone landscape sizes. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+  top:88%!important;
+  width:clamp(78px,8vw,108px)!important;
+  gap:0!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass svg{
+  width:clamp(60px,6.6vw,86px)!important;
+  height:clamp(60px,6.6vw,86px)!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-compass-readout{
+  display:none!important;
+}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+   top:88%!important;
+ }
+}
