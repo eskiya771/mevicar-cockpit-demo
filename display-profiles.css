@@ -643,19 +643,7 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 
 
-/* Fullscreen tachometer: keep the build/GPS/LTE overlay visible in the
-   open center of the header, between the tachometer's left and right labels.
-   Do not change the split-screen placement above the map. */
-@media (orientation:landscape){
- .cockpit:has(.screen > .full.tacho-host) .workspace > .status{
-   display:flex!important;
-   position:fixed!important;
-   top:max(5px,env(safe-area-inset-top,0px))!important;
-   left:50%!important;
-   right:auto!important;
-   transform:translateX(-50%)!important;
-   width:max-content!important;
-   max-width:min(38vw,420px)!important;
-   z-index:20;
- }
-}
+/* Global build/update/GPS/LTE/clock overlay belongs to standalone navigation only.
+   App-owned telemetry headers remain visible in full and split layouts. */
+.cockpit .workspace > .status{display:none!important;}
+.cockpit.nav-status-only .workspace > .status{display:flex!important;}
