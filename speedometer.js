@@ -198,8 +198,8 @@
         '<div><b id="tachoHeading">—</b><small id="tachoCardinal">keine Daten</small></div></div>') : '') +
       '</div>' +
       '<footer class="tacho-info">' +
-        '<div class="tacho-stat"><span>GESAMT</span><strong id="tachoOdo">245.377 km</strong><small id="tachoOdoSource">Beispielwert</small></div>' +
-        '<div class="tacho-stat"><span>TRIP</span><strong id="tachoTrip">0,0</strong><small id="tachoTripSource">—</small></div>' +
+        '<div class="tacho-stat"><span>GESAMT</span><strong id="tachoOdo">245.377 km</strong><small id="tachoOdoSource"></small></div>' +
+        '<div class="tacho-stat"><span>TRIP</span><strong id="tachoTrip">0,0 km</strong><small id="tachoTripSource">—</small></div>' +
         (compact ? ('<div class="tacho-compass"><svg viewBox="0 0 80 80" role="img" aria-label="Kompass"><circle cx="40" cy="40" r="27" class="tacho-compass-ring"/><polygon points="40,1 43.5,7 36.5,7" class="tacho-lubber"/><g id="tachoCompassRot"><line x1="59" y1="21" x2="56" y2="24" class="tacho-compass-tick"/><line x1="59" y1="59" x2="56" y2="56" class="tacho-compass-tick"/><line x1="21" y1="59" x2="24" y2="56" class="tacho-compass-tick"/><line x1="21" y1="21" x2="24" y2="24" class="tacho-compass-tick"/><polygon points="40,16 45,40 40,35 35,40" class="tacho-north"/><polygon points="40,64 35,40 40,45 45,40" class="tacho-south"/><text x="40" y="10" class="tacho-compass-n">N</text><text x="70" y="40" class="tacho-compass-c">O</text><text x="40" y="70" class="tacho-compass-c">S</text><text x="10" y="40" class="tacho-compass-c">W</text></g></svg>' +
         '<div><b id="tachoHeading">—</b><small id="tachoCardinal">keine Daten</small></div></div>') : '') +
         '<div class="tacho-actions">' +
@@ -246,9 +246,9 @@
     text('tachoRpmValue', rpmKnown ? formatInt(shownRpm) : '—');
     text('tachoRpmUnit', rpmKnown ? (mode === 'demo' ? 'DEMO · U/min' : 'U/min · ' + sourceLabel(model.source.rpm)) : 'keine OBD');
     text('tachoOdo', '245.377 km');
-    text('tachoOdoSource', 'Beispielwert');
-    text('tachoTrip', formatFixed(model.tripKm, 1));
-    text('tachoTripSource', model.source.trip === 'unavailable' ? (model.tripKm > 0 ? 'gespeichert' : '—') : sourceLabel(model.source.trip) + ' · km');
+    text('tachoOdoSource', '');
+    text('tachoTrip', formatFixed(model.tripKm, 1) + ' km');
+    text('tachoTripSource', '');
     text('tachoHeading', headingKnown ? Math.round(((shownHeading % 360) + 360) % 360) + '°' : '—');
     text('tachoCardinal', headingKnown ? (cardinal(shownHeading) + ' · ' + sourceLabel(model.source.heading)) : 'keine Daten');
     text('tachoMode', mode === 'demo' ? 'DEMO' : 'LIVE');
