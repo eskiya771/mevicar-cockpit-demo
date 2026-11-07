@@ -226,3 +226,65 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    margin:0!important;
  }
 }
+
+
+/* Fullscreen tachometer polish: one surface, unclipped telemetry, separate actions.
+   Split-screen composition is intentionally unaffected. */
+.full.tacho-host{
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  padding:0!important;
+  border-radius:0!important;
+}
+.full.tacho-host > .tacho-app{
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  border-radius:0!important;
+  padding:clamp(7px,1.1vh,12px) clamp(10px,1.2vw,20px)!important;
+}
+.full.tacho-host .tacho-info{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,1.1fr)!important;
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:6px 16px!important;
+  padding:4px 8px max(7px,env(safe-area-inset-bottom,0px))!important;
+}
+.full.tacho-host .tacho-info > .tacho-stat,
+.full.tacho-host .tacho-info > .tacho-compass{
+  min-width:0;
+  align-self:center;
+}
+.full.tacho-host .tacho-info > .tacho-stat small,
+.full.tacho-host .tacho-info > .tacho-compass small{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:break-word;
+  letter-spacing:0!important;
+  line-height:1.15;
+}
+.full.tacho-host .tacho-info > .tacho-actions{
+  grid-column:1 / -1;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:clamp(5px,.8vw,12px)!important;
+  width:100%;
+  min-width:0;
+}
+.full.tacho-host .tacho-actions button{
+  width:100%;
+  min-width:0!important;
+  min-height:clamp(38px,9vh,46px);
+  border-radius:12px;
+  padding:3px 5px;
+}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-info{
+   grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,1.1fr)!important;
+   gap:3px 10px!important;
+ }
+ .full.tacho-host .tacho-actions button{min-height:36px;}
+}
