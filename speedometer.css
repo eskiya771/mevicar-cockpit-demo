@@ -158,3 +158,32 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
 @media(prefers-reduced-motion:reduce){
   .tacho-needle{filter:none}
 }
+
+
+/* Narrow iPhone split: use the available panel width rather than clipping
+   a desktop-sized footer. Keep all five actions in a single fitted row. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .side.tacho-host .tacho-app{padding:4px;gap:3px;min-width:0;}
+ .side.tacho-host .tacho-cluster{min-width:0;column-gap:2px;}
+ .side.tacho-host .tacho-info{
+   min-width:0;
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.15fr);
+   column-gap:5px;row-gap:4px;
+ }
+ .side.tacho-host .tacho-stat,.side.tacho-host .tacho-compass{min-width:0;overflow:hidden;}
+ .side.tacho-host .tacho-stat span,.side.tacho-host .tacho-stat small{
+   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ }
+ .side.tacho-host .tacho-compass{gap:2px;}
+ .side.tacho-host .tacho-compass svg{width:36px;height:36px;flex-shrink:0;}
+ .side.tacho-host .tacho-actions{
+   display:grid!important;
+   grid-template-columns:repeat(5,minmax(0,1fr));
+   width:100%;gap:3px;min-width:0;
+ }
+ .side.tacho-host .tacho-actions button{
+   width:100%;min-width:0!important;min-height:40px;
+   padding:2px 1px!important;font-size:clamp(9px,1.15vw,11px);
+   letter-spacing:-.02em;white-space:nowrap;
+ }
+}
