@@ -417,3 +417,22 @@ html[data-theme] .cockpit .dock.left{
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
 }
+
+
+/* Active dock page: stronger app-colored focus while keeping inactive tabs quiet. */
+html .cockpit .dock button.active{
+  border:2px solid var(--dock-accent,#64dfff)!important;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--dock-accent,#64dfff) 26%,#173149),#142b43 78%)!important;
+  box-shadow:inset 0 0 18px color-mix(in srgb,var(--dock-accent,#64dfff) 16%,transparent),0 0 13px color-mix(in srgb,var(--dock-accent,#64dfff) 35%,transparent)!important;
+}
+html .cockpit .dock button.active .dock-label{
+  color:#fff!important;
+  font-weight:750!important;
+}
+html .cockpit .dock button.active .ico{
+  color:var(--dock-accent,#64dfff)!important;
+  filter:drop-shadow(0 0 5px color-mix(in srgb,var(--dock-accent,#64dfff) 60%,transparent));
+}
+html .cockpit .dock button:not(.active){
+  border-color:transparent;
+}
