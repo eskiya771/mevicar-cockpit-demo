@@ -235,3 +235,11 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    box-sizing:border-box;
  }
 }
+
+
+/* Keep the RPM status clear of the upper-right rounded iPhone corner. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .side.tacho-host .tacho-status{
+   padding-right:18px!important;
+ }
+}
