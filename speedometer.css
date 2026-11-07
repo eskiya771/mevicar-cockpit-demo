@@ -634,3 +634,38 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    transform:none!important;
  }
 }
+
+
+/* Reference composition (phone landscape): symmetrical large dials, compass
+   inside left dial, and a reserved bottom strip for mileage + controls.
+   Bounded dial dimensions prevent the previous uncontrolled 138% overflow. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-cluster{
+   position:relative!important;
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   grid-template-rows:minmax(28px,auto) minmax(0,1fr)!important;
+   column-gap:clamp(18px,3vw,48px)!important;
+   overflow:visible;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > svg,
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   transform:translateY(-12px) scale(1.24)!important;
+   transform-origin:center center!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   left:25%!important;
+   top:77%!important;
+   width:clamp(80px,9vw,116px)!important;
+   z-index:6!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass > svg{
+   width:clamp(76px,8vw,106px)!important;
+   height:clamp(76px,8vw,106px)!important;
+   transform:none!important;
+ }
+ .full.tacho-host .tacho-info{
+   position:relative;
+   z-index:7;
+   padding-top:6px!important;
+ }
+}
