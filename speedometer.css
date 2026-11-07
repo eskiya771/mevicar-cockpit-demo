@@ -509,3 +509,20 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
     transform-origin:center center;
   }
 }
+
+
+/* Fullscreen: remove redundant LIVE/GPS/RPM header and give its height
+   back to the gauges. Split-screen retains its telemetry header. */
+.full.tacho-host .tacho-status{display:none!important;}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster{
+  flex:1 1 auto;
+  min-height:0;
+}
+@media (orientation:landscape) and (max-height:480px){
+  .full.tacho-host > .tacho-app{
+    padding-top:max(4px,env(safe-area-inset-top,0px))!important;
+  }
+  .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+    grid-template-rows:minmax(30px,auto) minmax(0,1fr)!important;
+  }
+}
