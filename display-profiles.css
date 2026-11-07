@@ -574,3 +574,15 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit .keyboard .keyrow button.special{background:#35485e;border:1px solid #a2c7e052;}
  .cockpit .keyboard .keyrow button.go{background:#087eae;border:1px solid #74d8ff8c;}
 }
+
+
+/* Keep the app dock hidden through destination preview, until close or route start. */
+.cockpit:has(.nav-preview) .dock{display:none!important;}
+.cockpit:has(.nav-preview) .body{gap:0!important;}
+.cockpit:has(.nav-preview) .workspace{min-width:0;width:100%;}
+@media (orientation:landscape) and (max-height:480px){
+ .cockpit:has(.nav-preview) .preview.nav-preview{
+   left:max(8px,env(safe-area-inset-left,0px))!important;
+   max-width:calc(100% - 16px)!important;
+ }
+}
