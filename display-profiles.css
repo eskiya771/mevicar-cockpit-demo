@@ -588,8 +588,8 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 
 
-/* iPhone landscape: the map remains full-bleed even with an app open.
-   The right-side app is an overlay, not a flex column that shrinks the map. */
+/* iPhone landscape split: full-height map on the left, edge-aligned app on the right.
+   The map retains its full-screen treatment only when no app panel is open. */
 @media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
  .cockpit .screen:has(> .side){
    position:static!important;
@@ -599,41 +599,29 @@ html,body{min-height:0;overscroll-behavior:none}
  }
  .cockpit .screen:has(> .side) > .map{
    position:fixed!important;
-   inset:0!important;
-   width:100vw!important;
+   top:0!important;bottom:0!important;left:0!important;right:auto!important;
+   width:calc(100vw - 34vw - env(safe-area-inset-right,0px))!important;
    height:100dvh!important;
    max-width:none!important;
    flex:none!important;
-   border:0!important;
-   border-radius:0!important;
+   border:0!important;border-radius:0!important;
    z-index:0;
  }
  .cockpit .screen:has(> .side) > .side{
    position:fixed!important;
-   top:max(0px,env(safe-area-inset-top,0px))!important;
-   right:max(0px,env(safe-area-inset-right,0px))!important;
-   bottom:max(0px,env(safe-area-inset-bottom,0px))!important;
-   left:auto!important;
-   width:36vw!important;
-   min-width:0!important;
-   max-width:36vw!important;
-   height:auto!important;
-   max-height:none!important;
-   flex:none!important;
-   overflow:auto;
-   z-index:16;
+   top:0!important;right:env(safe-area-inset-right,0px)!important;
+   bottom:0!important;left:auto!important;
+   width:34vw!important;min-width:0!important;max-width:34vw!important;
+   height:100dvh!important;max-height:100dvh!important;
+   flex:none!important;overflow:auto;z-index:16;
+   border-radius:12px;
  }
-}
-
-
-/* Split view: reserve the right-hand app panel; status belongs above the map. */
-@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
  .cockpit:has(.screen > .side) .status{
    position:fixed!important;
    top:max(6px,env(safe-area-inset-top,0px))!important;
-   right:calc(max(0px,env(safe-area-inset-right,0px)) + 36vw + 10px)!important;
+   right:calc(34vw + env(safe-area-inset-right,0px) + 10px)!important;
    left:auto!important;
-   max-width:calc(64vw - max(0px,env(safe-area-inset-left,0px)) - 24px)!important;
+   max-width:calc(66vw - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px) - 24px)!important;
    z-index:20;
  }
 }
