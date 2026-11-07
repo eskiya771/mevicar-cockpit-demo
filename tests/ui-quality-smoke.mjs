@@ -62,6 +62,8 @@ let search=app.searchOverlay();
 assert.match(search,/overlay glass nav-search/,'Landscape keyboard layout must apply to search');
 assert.match(search,/Zieladresse eingeben/);
 assert.match(search,/navClearQuery/);
+assert.match(search,/nav-entry-caret/);
+assert.match(search,/navEntryPlaceholder/);
 assert.match(search,/Vorschläge und letzte Ziele/);
 assert.match(search,/app-illustration/);
 assert.doesNotMatch(search,/Zum Scrollen wischen/);
