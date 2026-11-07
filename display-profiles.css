@@ -503,3 +503,16 @@ html,body{min-height:0;overscroll-behavior:none}
    z-index:16;
  }
 }
+
+/* iPhone landscape search: reserve disjoint horizontal lanes for suggestions
+   and the keyboard, including the right-hand notch/safe-area inset. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit:has(.nav-search) .overlay.nav-search,
+ .cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
+   width:calc(100vw - max(7px,env(safe-area-inset-left,0px)) - max(7px,env(safe-area-inset-right,0px)) - 56vw - 16px) !important;
+   max-width:calc(100vw - max(7px,env(safe-area-inset-left,0px)) - max(7px,env(safe-area-inset-right,0px)) - 56vw - 16px) !important;
+   box-sizing:border-box;
+ }
+ .cockpit:has(.nav-search) .nav-search .inner{min-width:0;}
+ .cockpit:has(.nav-search) .nav-search .nav-suggestions{min-width:0;overflow-x:hidden;}
+}
