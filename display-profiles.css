@@ -643,8 +643,19 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 
 
-/* Fullscreen tachometer owns its top status row. Suppress the global
-   floating build/GPS overlay only here; preserve it in split navigation. */
-.cockpit:has(.screen > .full.tacho-host) .workspace > .status{
-  display:none!important;
+/* Fullscreen tachometer: keep the build/GPS/LTE overlay visible in the
+   open center of the header, between the tachometer's left and right labels.
+   Do not change the split-screen placement above the map. */
+@media (orientation:landscape){
+ .cockpit:has(.screen > .full.tacho-host) .workspace > .status{
+   display:flex!important;
+   position:fixed!important;
+   top:max(5px,env(safe-area-inset-top,0px))!important;
+   left:50%!important;
+   right:auto!important;
+   transform:translateX(-50%)!important;
+   width:max-content!important;
+   max-width:min(38vw,420px)!important;
+   z-index:20;
+ }
 }
