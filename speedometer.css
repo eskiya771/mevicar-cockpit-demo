@@ -455,3 +455,12 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    height:clamp(96px,11vw,126px);
  }
 }
+
+
+/* Fullscreen only: enlarge both circular gauges by 10%, keeping the
+   central compass, digital readout, footer and split view untouched. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed svg,
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-rpm svg{
+  transform:scale(1.10);
+  transform-origin:center center;
+}
