@@ -1,0 +1,34 @@
+name: Visual layout screenshots
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - 'display-profiles.css'
+      - 'themes.css'
+      - '.github/workflows/visual-layout.yml'
+permissions:
+  contents: read
+jobs:
+  screenshots:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium and Playwright
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install --with-deps chromium
+      - name: Capture screenshots and check layout
+        run: node tests/visual-layout.mjs
+      - name: Upload screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mevicar-visual-layout
+          path: visual-results/
+          if-no-files-found: warn
+          retention-days: 14
