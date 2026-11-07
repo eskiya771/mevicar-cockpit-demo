@@ -408,3 +408,12 @@ html[data-theme="liquidglass"] .suggestion .circle{background:#b2e2ff2e;border-c
   }
   .map.searchmode .keyboard .keyrow .special,.map.searchmode .keyboard .keyrow .go{font-size:clamp(10px,2.4vh,14px)}
 }
+
+/* Individual sidebar buttons provide their own surfaces and active outline. */
+html[data-theme] .cockpit .dock.left{
+  background:transparent;
+  border-color:transparent;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
