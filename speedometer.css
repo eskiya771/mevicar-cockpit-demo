@@ -613,3 +613,24 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    top:76%!important;
  }
 }
+
+
+/* Balanced phone fullscreen dials: modest increase, retain safe clearance
+   above odometer/trip and keep the compass within the left dial. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > svg,
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   transform:translateY(-10px) scale(1.17)!important;
+   transform-origin:center center!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   left:25%!important;
+   top:77%!important;
+   width:clamp(76px,8vw,108px)!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass > svg{
+   width:clamp(70px,7.5vw,96px)!important;
+   height:clamp(70px,7.5vw,96px)!important;
+   transform:none!important;
+ }
+}
