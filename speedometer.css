@@ -457,10 +457,22 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
 }
 
 
-/* Fullscreen only: enlarge both circular gauges by 10%, keeping the
-   central compass, digital readout, footer and split view untouched. */
+/* Fullscreen only: second 10% increase, cumulative 1.10 x 1.10.
+   Make the instrument cluster use available space without changing split view. */
 .full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed svg,
 .full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-rpm svg{
-  transform:scale(1.10);
+  transform:scale(1.21);
   transform-origin:center center;
+}
+@media (orientation:landscape) and (max-height:480px){
+  .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+    row-gap:0!important;
+    column-gap:0!important;
+    grid-template-rows:minmax(30px,auto) minmax(0,1fr)!important;
+  }
+  .full.tacho-host .tacho-info{
+    row-gap:2px!important;
+    padding-top:0!important;
+    padding-bottom:2px!important;
+  }
 }
