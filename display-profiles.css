@@ -534,20 +534,22 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit:has(.nav-search) .nav-search .nav-suggestions{min-width:0;overflow-x:hidden;}
 }
 
-/* Keep destination input dimensions stable when the clear button appears. */
+/* Compact, stable search field with an unframed clear glyph. */
 .cockpit .nav-search-field{
- height:64px;min-height:64px;max-height:64px;
- padding:6px 12px;align-items:center;flex-shrink:0;
+ height:46px;min-height:46px;max-height:46px;
+ padding:4px 10px;align-items:center;flex-shrink:0;
 }
-.cockpit .nav-search-field .nav-clear{
- width:40px;height:40px;min-width:40px;min-height:40px;
+.cockpit .nav-search-field .nav-clear,
+.cockpit .nav-search-field .nav-clear.iconbtn{
+ width:32px;height:32px;min-width:32px;min-height:32px;
  padding:0;display:grid;place-items:center;line-height:1;
+ border:0!important;border-radius:0!important;background:transparent!important;
+ box-shadow:none!important;outline:0;font-size:23px;font-weight:400;
 }
 .cockpit .nav-search-field .nav-clear[hidden]{display:none!important;}
 @media (orientation:landscape) and (max-height:480px){
  .cockpit .map.searchmode .nav-search-field,
- .cockpit .nav-search-field{height:46px;min-height:46px;max-height:46px;padding:3px 7px;}
- .cockpit .nav-search-field .nav-clear{width:36px;height:36px;min-width:36px;min-height:36px;}
+ .cockpit .nav-search-field{height:46px;min-height:46px;max-height:46px;padding:3px 8px;}
 }
 
 /* Search input: visible software caret without triggering the native iOS keyboard. */
