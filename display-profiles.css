@@ -342,3 +342,44 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit .overlay.nav-browse{top:5px;left:5px;bottom:5px;}
  .cockpit .overlay.nav-search{top:5px;bottom:5px;}
 }
+
+/* iPhone landscape edge-to-edge: paint the cockpit into the unsafe regions,
+   but keep touch controls clear of the cutout and rounded corners.
+   The dock remains in the safe left zone; the map extends to the right edge. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .shell{
+   padding:0 !important;
+   width:100vw;
+   height:100dvh;
+   max-width:none;
+   background:#081823;
+ }
+ .cockpit{
+   border:0;
+   border-radius:0;
+   padding:0;
+   margin:0;
+   background:#081823;
+ }
+ .cockpit .body{
+   padding-left:env(safe-area-inset-left,0px);
+   padding-right:0;
+   padding-top:env(safe-area-inset-top,0px);
+   padding-bottom:env(safe-area-inset-bottom,0px);
+ }
+ .cockpit .map{border-radius:0;}
+ .cockpit .screen{border-radius:0;}
+ .cockpit .status{
+   right:max(6px,env(safe-area-inset-right,0px));
+   top:max(5px,env(safe-area-inset-top,0px));
+ }
+ .cockpit .map .map-tools{
+   right:max(8px,env(safe-area-inset-right,0px));
+ }
+ .cockpit .dock.left{margin-left:2px;}
+}
+/* When the phone rotates 180 degrees, the notch-safe left inset swaps sides.
+   Respect both sides for interactive controls without clipping the map artwork. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit .body{padding-right:env(safe-area-inset-right,0px);}
+}
