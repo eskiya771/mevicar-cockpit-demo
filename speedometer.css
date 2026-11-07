@@ -447,11 +447,11 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
 }
 @media (orientation:landscape) and (max-height:480px){
  .full.tacho-host .tacho-cluster > .tacho-compass{
-   width:clamp(76px,8.2vw,110px);
-   top:56%;
+   width:clamp(112px,13vw,150px);
+   top:53%;
  }
  .full.tacho-host .tacho-cluster > .tacho-compass svg{
-   width:clamp(62px,6.4vw,86px);
-   height:clamp(62px,6.4vw,86px);
+   width:clamp(96px,11vw,126px);
+   height:clamp(96px,11vw,126px);
  }
 }
