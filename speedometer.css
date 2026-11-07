@@ -191,9 +191,21 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
  .side.tacho-host .tacho-dial-rpm{min-width:0;max-width:100%;}
  /* Telemetry uses the straight edge; only action buttons need corner protection. */
  .side.tacho-host .tacho-info{
-   min-width:0;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.1fr);
+   min-width:0;grid-template-columns:minmax(0,1.05fr) minmax(0,.82fr) minmax(0,1.28fr);
    column-gap:6px;row-gap:4px;padding:0 3px 3px 2px!important;
+   align-items:center;
  }
+ .side.tacho-host .tacho-info > .tacho-actions{grid-column:1 / -1;}
+ .side.tacho-host .tacho-info > .tacho-stat{
+   display:flex;flex-direction:column;justify-content:center;gap:2px;
+ }
+ .side.tacho-host .tacho-info > .tacho-compass{
+   display:flex;justify-content:flex-end;align-items:center;gap:4px;
+ }
+ .side.tacho-host .tacho-compass > div{min-width:0;}
+ .side.tacho-host .tacho-compass b{font-size:18px;}
+ .side.tacho-host .tacho-stat small{font-size:9px;letter-spacing:0;}
+
  .side.tacho-host .tacho-stat,.side.tacho-host .tacho-compass{min-width:0;}
  .side.tacho-host .tacho-stat span,.side.tacho-host .tacho-stat small,
  .side.tacho-host .tacho-compass small{
