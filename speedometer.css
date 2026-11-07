@@ -218,18 +218,20 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
 }
 
 
-/* iPhone landscape curved corners: inset only the top status and bottom controls.
-   Keep the center gauges full width. */
+/* iPhone split: use the straight right edge for status and telemetry.
+   Only the bottommost action row needs a small rounded-corner inset. */
 @media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
  .side.tacho-host .tacho-status{
-   padding-right:max(20px,env(safe-area-inset-right,0px))!important;
+   padding-right:5px!important;
    padding-top:3px;
  }
  .side.tacho-host .tacho-info{
-   padding-right:max(20px,env(safe-area-inset-right,0px))!important;
+   padding-right:3px!important;
    padding-bottom:3px;
  }
- .side.tacho-host .tacho-cluster{
-   padding-right:0!important;
+ .side.tacho-host .tacho-cluster{padding-right:0!important;}
+ .side.tacho-host .tacho-actions{
+   padding-right:10px!important;
+   box-sizing:border-box;
  }
 }
