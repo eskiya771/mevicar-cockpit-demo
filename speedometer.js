@@ -245,8 +245,10 @@
     text('tachoSpeedSource', sourceLabel(model.source.speed));
     text('tachoRpmValue', rpmKnown ? formatInt(shownRpm) : '—');
     text('tachoRpmUnit', rpmKnown ? (mode === 'demo' ? 'DEMO · U/min' : 'U/min · ' + sourceLabel(model.source.rpm)) : 'keine OBD');
-    text('tachoOdo', formatFixed(model.odometerKm, model.odometerKm != null && model.odometerKm < 1000 ? 1 : 0));
-    text('tachoOdoSource', model.odometerKm == null ? 'keine Fahrzeugdaten' : sourceLabel(model.source.odometer));
+    // Show a clearly marked sample odometer until real vehicle telemetry is available.
+    const hasRealOdometer = Number.isFinite(model.odometerKm);
+    text('tachoOdo', hasRealOdometer ? formatFixed(model.odometerKm, model.odometerKm < 1000 ? 1 : 0) + ' km' : '245.377 km');
+    text('tachoOdoSource', hasRealOdometer ? sourceLabel(model.source.odometer) : 'Beispielwert');
     text('tachoTrip', formatFixed(model.tripKm, 1));
     text('tachoTripSource', model.source.trip === 'unavailable' ? (model.tripKm > 0 ? 'gespeichert' : '—') : sourceLabel(model.source.trip) + ' · km');
     text('tachoHeading', headingKnown ? Math.round(((shownHeading % 360) + 360) % 360) + '°' : '—');
