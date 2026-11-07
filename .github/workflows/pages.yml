@@ -1,5 +1,6 @@
 name: Deploy Cockpit Demo
 # Trigger new deployment to test in-app update detection
+# Manual redeploy requested after active dock highlight (2026-11-07)
 on:
   push:
     branches: [main]
