@@ -426,7 +426,7 @@ html,body{min-height:0;overscroll-behavior:none}
    max-width:40vw;
  }
  .cockpit .overlay.nav-browse{
-   width:min(44vw,390px) !important;
+   width:var(--nav-browse-width) !important;
    right:auto !important;
    height:auto;
    border-radius:18px;
@@ -463,6 +463,23 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit .map.searchmode .keyboard .keyrow .special,
  .cockpit .map.searchmode .keyboard .keyrow .go{font-size:12px !important;}
  .cockpit .map.searchmode .nav-suggestions{overflow-y:auto;min-height:0;}
+}
+
+/* Size the browse panel to three full favorites and a quarter of the next.
+   Shared dimensions keep the scroll hint consistent across themes. */
+.cockpit .overlay.nav-browse{
+ --nav-favorite-width:90px;
+ --nav-favorite-gap:11px;
+ --nav-browse-padding:16px;
+ --nav-browse-width:calc(3.25 * var(--nav-favorite-width) + 3 * var(--nav-favorite-gap) + 2 * var(--nav-browse-padding) + 2px);
+ width:var(--nav-browse-width);
+ max-width:calc(100% - 32px);
+}
+.cockpit .overlay.nav-browse .inner{padding-inline:var(--nav-browse-padding) !important;min-width:0}
+.cockpit .nav-browse .favs{gap:var(--nav-favorite-gap);flex-shrink:0}
+.cockpit .nav-browse .favs .fav{flex:0 0 var(--nav-favorite-width);min-width:var(--nav-favorite-width)}
+@media(max-height:500px){
+ .cockpit .overlay.nav-browse{--nav-browse-padding:8px}
 }
 
 /* Search is a stable mode: removing the keyboard must never move the
