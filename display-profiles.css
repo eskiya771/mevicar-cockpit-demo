@@ -464,3 +464,29 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit .map.searchmode .keyboard .keyrow .go{font-size:12px !important;}
  .cockpit .map.searchmode .nav-suggestions{overflow-y:auto;min-height:0;}
 }
+
+/* Search is a stable mode: removing the keyboard must never move the
+   result panel or bring back the app dock. Use the vacated dock width. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit:has(.nav-search) .dock.left{display:none !important;}
+ .cockpit:has(.nav-search) .body{gap:0 !important;}
+ .cockpit .overlay.nav-search,
+ .cockpit .map.searchmode .overlay.nav-search{
+   position:absolute;
+   left:max(7px,env(safe-area-inset-left,0px)) !important;
+   top:max(7px,env(safe-area-inset-top,0px)) !important;
+   bottom:max(7px,env(safe-area-inset-bottom,0px)) !important;
+   width:38vw !important;
+   max-width:38vw !important;
+   right:auto !important;
+   z-index:16;
+ }
+ .cockpit .map.searchmode .keyboard{
+   right:max(7px,env(safe-area-inset-right,0px)) !important;
+   width:56vw !important;
+   max-width:56vw !important;
+   z-index:17;
+ }
+ .cockpit .nav-search .inner{min-height:0;overflow:hidden;}
+ .cockpit .nav-search .nav-suggestions{min-height:0;overflow-y:auto;}
+}
