@@ -600,3 +600,16 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    top:79%!important;
  }
 }
+
+
+/* In tight landscape the speed dial is display:contents, so anchor the
+   embedded compass against the cluster's left gauge cell instead. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-cluster{
+   position:relative!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   left:25%!important;
+   top:76%!important;
+ }
+}
