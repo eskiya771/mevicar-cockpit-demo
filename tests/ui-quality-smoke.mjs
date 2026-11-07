@@ -90,7 +90,7 @@ assert.equal(get('s.mode'),'full');
 get('openApp("nav")');
 assert.equal(get('s.mode'),'map');
 get('openApp("nav")');
-assert.equal(get('s.mode'),'split');
+assert.equal(get('s.mode'),'map'); // Navigation must never toggle to split on repeated tap.
 get('openApp("nav")');
 assert.equal(get('s.mode'),'map');
 get('openApp("audio")');
