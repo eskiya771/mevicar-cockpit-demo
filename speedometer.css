@@ -461,7 +461,7 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    Make the instrument cluster use available space without changing split view. */
 .full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed svg,
 .full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-rpm svg{
-  transform:scale(1.21);
+  transform:scale(1.38);
   transform-origin:center center;
 }
 @media (orientation:landscape) and (max-height:480px){
@@ -475,4 +475,18 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
     padding-top:0!important;
     padding-bottom:2px!important;
   }
+}
+
+/* Use the open horizontal/vertical space around the fullscreen dials.
+   The compass stays in the center and footer telemetry stays at the edges. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+   column-gap:clamp(12px,2vw,32px)!important;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-speed svg,
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-rpm svg{
+   transform:scale(1.38);
+   transform-origin:center center;
+ }
 }
