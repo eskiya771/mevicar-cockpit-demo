@@ -67,7 +67,7 @@ assert.match(search,/app-illustration/);
 assert.doesNotMatch(search,/Zum Scrollen wischen/);
 
 assert.doesNotMatch(app.mapHTML(),/IN 850 M|↱ Rechts abbiegen|Zusatzscreen|map-tools/);
-assert.match(app.mapHTML(),/KARTE · DEMO/);
+assert.doesNotMatch(app.mapHTML(),/KARTE · DEMO/);
 assert.doesNotMatch(app.previewHTML(),/24 Min|29 Min|Alternative Route/);
 assert.match(app.previewHTML(),/keine Wegberechnung/);
 assert.match(app.previewHTML(),/preview glass nav-preview/);
