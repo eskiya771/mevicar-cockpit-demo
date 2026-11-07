@@ -641,3 +641,10 @@ html,body{min-height:0;overscroll-behavior:none}
    min-width:0;
  }
 }
+
+
+/* Fullscreen tachometer owns its top status row. Suppress the global
+   floating build/GPS overlay only here; preserve it in split navigation. */
+.cockpit:has(.screen > .full.tacho-host) .workspace > .status{
+  display:none!important;
+}
