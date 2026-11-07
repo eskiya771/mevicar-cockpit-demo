@@ -95,6 +95,9 @@ assert.equal(get('resultsHTML().split("<strong>Erlangen-Nord</strong>").length-1
 get('s.query="XYZ Testadresse 17"');
 assert.match(get('resultsHTML()'),/Eigene Zieleingabe · Demo/);
 get('selectPlace("Erlangen Arcaden")');
+assert.equal(get('s.nav'),'search');
+assert.equal(get('s.keyboard'),false);
+get('selectPlace("Erlangen Arcaden")');
 assert.equal(get('s.nav'),'preview');
 get('startRoute()');
 assert.equal(get('s.nav'),'driving');
