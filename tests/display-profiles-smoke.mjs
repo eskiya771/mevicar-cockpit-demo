@@ -61,7 +61,8 @@ for (const rule of touchChecks){
 }
 assert.ok(html.includes('<link rel="stylesheet" href="./display-profiles.css">'));
 assert.ok(workflow.includes('mevicar-display-profiles'),'Display profiles must be bundled into the deployed HTML');
-assert.ok(workflow.includes('display-profiles.css dist/'),'Display profiles must be copied into Pages assets');
+assert.match(workflow,/cp [^\n]*display-profiles\.css(?: [^\n]*)? dist\//,'Display profiles must be copied into Pages assets');
+assert.match(workflow,/cp [^\n]*tacho-next\.html(?: [^\n]*)? dist\//,'Tacho Next must be copied into Pages assets');
 assert.ok(sw.includes("'./display-profiles.css'"),'Display profiles must be pre-cached');
 assert.match(html,/name="viewport" content="[^"]*viewport-fit=cover/);
 console.log('Five landscape profiles: iPhone 17, Galaxy S20 FE, DeX, Full HD, panorama – static integration checks passed.');
