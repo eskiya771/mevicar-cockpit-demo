@@ -800,6 +800,11 @@
   </style>
 <style>
 /* Embedded MeviCar Next app: cockpit owns navigation and status chrome. */
+/* Tacho Next uses only instrument and simulator rows; retain hidden controls for existing JS handlers. */
+.header-bar,.control-bar{display:none!important;}
+.main-content{display:flex;flex-direction:column;min-height:0;}
+.instruments-grid{flex:1;min-height:0;}
+
 body{height:100dvh;overflow:hidden}.app-container{height:100dvh}.sidebar{display:none}.main-content{padding:clamp(6px,1.1vw,12px);overflow:hidden;min-width:0}.header-bar{margin-bottom:5px;padding-bottom:5px}.header-title{font-size:clamp(12px,1.6vw,18px)}.ux-explainer-trigger{display:none}.instruments-grid{min-height:0;gap:clamp(6px,1.5vw,16px);height:100%;overflow:hidden}.gauge-card{height:100%;max-height:none;min-height:0;max-width:none;border-radius:16px}.gauge-svg{width:100%;height:100%;object-fit:contain}.hud-value-large{font-size:clamp(30px,6vw,70px)}.gauge-hud{transform:translateY(8%)}.bottom-info-panel{margin:5px 0;padding:5px 12px}.info-value{font-size:clamp(13px,2vw,21px)}.info-label{font-size:9px}.simulator-controls{padding:5px 10px;margin-bottom:6px;gap:10px}.simulator-title{font-size:10px}.slider-group{gap:6px}.slider-group label{width:auto;font-size:10px}.control-bar{gap:6px}.control-btn{min-height:36px;padding:5px;font-size:clamp(9px,1vw,12px)}.widget-selector-tab{top:6px;right:6px}.widget-tab-opt{padding:4px 8px}.compass-hud{margin-top:5px;font-size:13px}.hud-unit{font-size:11px}.hud-info-box{margin-top:6px}.hud-info-text{font-size:10px}
 @media(max-height:480px){.header-bar{display:none}.simulator-controls{padding:3px 8px;margin-bottom:3px}.simulator-title{display:none}.instruments-grid{flex:1;min-height:0}.bottom-info-panel{margin:3px 0;padding:3px 10px}.control-bar{gap:4px}.control-btn{min-height:30px;padding:3px}.widget-overlay-screen{padding:28px 8px 5px}.album-art-container{width:52px;height:52px}.media-widget{gap:3px}.hud-value-large{font-size:clamp(24px,5vw,45px)}.gauge-hud{transform:translateY(10%)}}
 </style></head>
@@ -1381,6 +1386,10 @@ body{height:100dvh;overflow:hidden}.app-container{height:100dvh}.sidebar{display
         demoInterval = null;
       }
     }
+
+    // Start simulation as soon as Tacho Next is opened.
+    btnDemo.classList.add('active-demo');
+    startDemo();
 
     btnDemo.addEventListener('click', () => {
       if (btnDemo.classList.contains('active-demo')) {
