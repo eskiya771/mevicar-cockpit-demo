@@ -668,7 +668,7 @@ html,body{min-height:0;overscroll-behavior:none}
 .cockpit:has(.nav-search) .map .overlay.nav-search,
 .cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
  left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
- top:8px!important;bottom:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot) + 8px)!important;
+ top:8px!important;bottom:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot) + 20px)!important;
  width:auto!important;max-width:none!important;max-height:none!important;
  transform:none!important;
 }
