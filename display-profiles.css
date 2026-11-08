@@ -668,7 +668,7 @@ html,body{min-height:0;overscroll-behavior:none}
 .cockpit:has(.nav-search) .map .overlay.nav-search,
 .cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
  left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
- top:8px!important;bottom:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot) + 20px)!important;
+ top:8px!important;bottom:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot) + 8px)!important;
  width:auto!important;max-width:none!important;max-height:none!important;
  transform:none!important;
 }
@@ -704,3 +704,25 @@ html,body{min-height:0;overscroll-behavior:none}
  bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
 }
 .cockpit .map .nav-search .suggestion{flex-shrink:0}
+
+/* Keyboard frame only: draw its lower edge 12px higher, without moving or
+   resizing the keyboard itself, its keys, search field or search results. */
+.cockpit .map.searchmode .keyboard{
+ background:transparent!important;
+ box-shadow:none!important;
+ -webkit-backdrop-filter:none!important;
+ backdrop-filter:none!important;
+}
+.cockpit .map.searchmode .keyboard::before{
+ content:"";
+ position:absolute;
+ inset:0 0 12px;
+ border-radius:21px;
+ background:#24364bef;
+ box-shadow:0 10px 45px #06111d9c;
+ -webkit-backdrop-filter:blur(14px);
+ backdrop-filter:blur(14px);
+ pointer-events:none;
+ z-index:0;
+}
+.cockpit .map.searchmode .keyboard .keyrow{position:relative;z-index:1}
