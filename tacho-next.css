@@ -21,3 +21,15 @@
 .tn-stats{display:flex;justify-content:space-between;gap:10px;flex:none;padding:clamp(4px,.7vw,10px) clamp(10px,1.4vw,20px);margin-top:5px;border-radius:15px;border:1px solid #25374f;background:#101825}
 .tn-stat{display:flex;flex-direction:column;gap:3px}.tn-stat:last-child{text-align:right}.tn-stat-label{font-size:clamp(9px,.95vw,12px);letter-spacing:2px;color:#9caabb}.tn-stat-value{font-size:clamp(14px,1.7vw,23px);font-weight:700}
 @media(max-height:450px){.tn-stats{padding:3px 10px}.tn-readout{padding:6px 10px}.tn-compass,.tn-demo{margin-top:3px}}
+
+/* Horizontal aircraft-style compass tape inside the speedometer readout. */
+.tn-compass-band{position:relative;width:clamp(100px,13.5vw,205px);height:clamp(28px,3vw,40px);margin-top:6px;overflow:hidden;border:1px solid #2e5366;border-radius:9px;background:linear-gradient(90deg,#0a1525,#142b3b 50%,#0a1525);box-shadow:inset 0 2px 8px #0007;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.tn-compass-track{position:absolute;inset:0;overflow:hidden}
+.tn-compass-mark{position:absolute;top:3px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;color:#a4c2cf;font-size:clamp(9px,1vw,12px);font-weight:600;line-height:1;white-space:nowrap}
+.tn-compass-mark i{width:1px;height:6px;background:#638da3;display:block}
+.tn-compass-mark b{font:inherit}
+.tn-compass-mark.tn-cardinal{color:#43eaf4;font-weight:800}
+.tn-compass-mark.tn-cardinal i{height:9px;background:#43eaf4}
+.tn-compass-pointer{position:absolute;left:50%;top:0;transform:translateX(-50%);width:2px;height:100%;background:#2ef2ff;box-shadow:0 0 6px #00ddff;pointer-events:none}
+.tn-compass-pointer:before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #2ef2ff}
+@media(max-height:450px){.tn-compass-band{height:27px;margin-top:3px}.tn-compass-mark{top:2px}}
