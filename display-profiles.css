@@ -719,7 +719,7 @@ html,body{min-height:0;overscroll-behavior:none}
  inset:0 0 12px;
  border-radius:21px;
  background:#24364bef;
- box-shadow:0 10px 45px #06111d9c;
+ box-shadow:0 10px 45px #06111d9c, inset 0 -2px 0 #9bc2d8;
  -webkit-backdrop-filter:blur(14px);
  backdrop-filter:blur(14px);
  pointer-events:none;
