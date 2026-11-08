@@ -800,6 +800,13 @@
   </style>
 <style>
 /* Embedded MeviCar Next app: cockpit owns navigation and status chrome. */
+/* Permanent twin-gauge view: digital readings sit above, and fully mask,
+   the moving needle underneath. Keep the dial scale visible around them. */
+.gauge-card>.gauge-svg{position:relative;z-index:1;}
+.gauge-card>.gauge-hud{z-index:3;isolation:isolate;padding:13px 19px;border-radius:26px;background:radial-gradient(ellipse at center,#101b2a 0%,#0c1421 77%,#0a111e 100%);box-shadow:0 0 22px 8px #0a111e8c,inset 0 0 0 1px #8dc5e512;}
+.gauge-card>.gauge-hud .hud-value-large{position:relative;z-index:1;}
+.widget-selector-tab{display:none!important;}
+
 /* Tacho Next uses only instrument and simulator rows; retain hidden controls for existing JS handlers. */
 .header-bar,.control-bar,.simulator-controls{display:none!important;}
 .main-content{display:flex;flex-direction:column;min-height:0;}
@@ -939,13 +946,6 @@ body{height:100dvh;overflow:hidden}.app-container{height:100dvh}.sidebar{display
 
         <!-- RIGHT: Re-designed Tachometer with Smart Multi-Widget fallback -->
         <div class="gauge-card">
-          <!-- Widget Mode Tabs -->
-          <div class="widget-selector-tab" id="widgetTabs">
-            <button class="widget-tab-opt active" data-widget="rpm">Drehzahl</button>
-            <button class="widget-tab-opt" data-widget="media">Media</button>
-            <button class="widget-tab-opt" data-widget="navigation">Navi</button>
-          </div>
-
           <!-- Screen A: Modern RPM Gauge -->
           <svg class="gauge-svg" id="rpmScreen" viewBox="0 0 300 300">
             <circle cx="150" cy="150" r="140" fill="url(#grad-gauge)" />
