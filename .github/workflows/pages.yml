@@ -112,12 +112,21 @@ jobs:
               source = pathlib.Path(name + '.js').read_text()
               assert len(source) > 2000, 'MeviDarts source incomplete: ' + name
               html = html.replace(script_tag, '<script id="' + name + '">' + source + '</script>')
+          # Native Tacho Next is bundled into the versioned shell like the other apps.
+          tn_css_link = '<link rel="stylesheet" href="./tacho-next.css">'
+          tn_js_tag = '<script src="./tacho-next.js"></script>'
+          assert tn_css_link in html and tn_js_tag in html, 'Native Tacho Next assets missing'
+          tn_css = pathlib.Path('tacho-next.css').read_text()
+          tn_js = pathlib.Path('tacho-next.js').read_text()
+          assert '.tn-gauges' in tn_css and 'meviTachoNextMount' in tn_js
+          html = html.replace(tn_css_link, '<style id="mevicar-tacho-next-styles">' + tn_css + '</style>')
+          html = html.replace(tn_js_tag, '<script id="mevicar-tacho-next-script">' + tn_js + '</script>')
           pathlib.Path('dist/index.html').write_text(html)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
           PY
       - name: Generate PWA icons and copy assets
         run: |
-          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css lightshow.js lightshow.css speedometer.js speedometer.css display-profiles.css tacho-next.html dist/
+          cp manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css lightshow.js lightshow.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
