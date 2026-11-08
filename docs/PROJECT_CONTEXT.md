@@ -214,3 +214,9 @@ Die folgenden Punkte sind offen, keine in dieser Übernahme vorgenommenen Korrek
 Vor jeder Änderung Status/Fetch prüfen, fremde Arbeit erhalten, gezielte Dateien stagen, Tests und Diff prüfen. Vor Push erneut fetchen. Bei parallelen Änderungen kein Force-Push; Integration/Feature-Branch mit passenden Wiederholungsprüfungen. Nach Push Run für die konkrete SHA prüfen und Live-Metadaten abgleichen. Produktversion unverändert, solange kein Release beauftragt ist.
 
 Abschlussbericht unterscheidet Codeanalyse, automatisierte Mock-/Statiktests, Browserprüfung und reale Gerätetests. Ein bestandener Build ist keine visuelle Freigabe. Nach dieser Projektübernahme auf den nächsten konkreten Entwicklungsauftrag warten.
+
+## Navi-Qualitätskorrektur – 8. November 2026
+
+Zielauswahl übernimmt einen Treffer direkt bei geöffneter Tastatur. Enter und Suchen wählen denselben ersten passenden Treffer. Suchfeld und Treffer bleiben in einem stabilen oberen Panel; die QWERTZ-Tastatur liegt unten. Beim Ausblenden bleibt ihr Bereich reserviert. Das Dock ist im gesamten Suchmodus auf allen Profilen ausgeblendet. Favoriten bleiben horizontal scrollbar, ohne sichtbare Scrollleiste. Einstieg: „Ort oder Adresse“. Die Zielvorschau zeigt vorhandene Adressdaten oder einen expliziten Hinweis auf fehlende vollständige Adressen; keine erfundenen Hausnummern.
+
+Validierung: sechs Node-Smoke-Tests bestanden, inklusive Regression für Ein-Tipp-Zielauswahl und Adress-Fallback. Lokaler Browserzugriff aus dem separaten Sandbox-Browser scheitert mit ERR_CONNECTION_REFUSED; vollständige 15-Kombinationen-Sichtprüfung und echte Safe-Area-/Touch-Abnahme bleiben offen.

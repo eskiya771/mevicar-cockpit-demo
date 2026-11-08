@@ -652,3 +652,47 @@ html,body{min-height:0;overscroll-behavior:none}
 .tacho-next-host{padding:0!important;overflow:hidden!important;min-height:0!important;display:flex!important;flex-direction:column!important;}
 .tacho-next-frame{display:block;width:100%;height:100%;min-height:0;flex:1;border:0;background:#070b11;border-radius:inherit;}
 .side.tacho-next-host{padding:0!important;}
+
+/* Navigation review: one stable search surface, keyboard anchored below it.
+   Reserve its lane even when dismissed so results never jump under a finger. */
+.cockpit:has(.nav-search) .dock{display:none!important}
+.cockpit:has(.nav-search) .body{gap:0!important}
+.cockpit .map:has(.nav-search){
+ --nav-keyboard-height:clamp(212px,32vh,300px);
+ --nav-search-inset: max(8px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));
+}
+.cockpit .map .overlay.nav-search,
+.cockpit .map.searchmode .overlay.nav-search,
+.cockpit:has(.nav-search) .map .overlay.nav-search,
+.cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
+ left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
+ top:8px!important;bottom:calc(var(--nav-keyboard-height) + 24px + env(safe-area-inset-bottom,0px))!important;
+ width:auto!important;max-width:none!important;max-height:none!important;
+ transform:none!important;
+}
+.cockpit .map .nav-search .inner{height:100%;min-height:0;padding:12px;gap:8px;overflow:hidden}
+.cockpit .map .nav-search .inner>.row:first-child{position:absolute;right:12px;top:12px;height:46px;z-index:4}
+.cockpit .nav-search .nav-overlay-title{display:none}
+.cockpit .map .nav-search-field{margin-right:112px;flex-shrink:0}
+.cockpit .map .nav-search-heading{flex-shrink:0;margin:0}
+.cockpit .map .nav-suggestions{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+.cockpit .map.searchmode .keyboard{
+ left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
+ top:auto!important;bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;
+ width:auto!important;max-width:none!important;height:var(--nav-keyboard-height)!important;max-height:none!important;
+ transform:none!important;padding:8px!important;gap:5px!important;
+}
+.cockpit .map.searchmode .keyboard .keyrow{flex:1;min-height:0;gap:5px!important}
+.cockpit .map.searchmode .keyboard .keyrow button{height:auto!important;min-height:44px!important;padding:4px 0!important;font-size:clamp(15px,1.3vw,22px)}
+.cockpit .nav-browse .favs{scrollbar-width:none;-ms-overflow-style:none}
+.cockpit .nav-browse .favs::-webkit-scrollbar{display:none;width:0;height:0}
+.cockpit .nav-search-trigger .nav-search-text{white-space:nowrap;font-size:clamp(15px,1.5vw,20px)}
+.cockpit .nav-preview-address{line-height:1.4;overflow-wrap:anywhere}
+@media(orientation:landscape) and (max-height:500px){
+ .cockpit .map:has(.nav-search){--nav-keyboard-height:212px}
+ .cockpit .map .nav-search .inner{padding:6px;gap:4px}
+ .cockpit .map .nav-search .inner>.row:first-child{right:6px;top:6px}
+ .cockpit .map .nav-search-heading{display:none}
+ .cockpit .map .nav-search .suggestion{min-height:44px;padding:4px 8px}
+ .cockpit .map .nav-search .suggestion .circle{width:30px;height:30px}
+}

@@ -25,7 +25,7 @@ Die folgenden **fünf Zielprofile** sind jetzt eine verbindliche Abnahmematrix f
 - Navigation bleibt im Split-Screen sichtbar, sofern eine reguläre Zusatz-App geöffnet ist.
 - Alle Navigations- und Medienbuttons sind ohne Überlappung sichtbar, insbesondere unterhalb von 430 CSS-Pixel Höhe.
 - Adresseingabe: Suchfeld, Treffer und QWERTZ-Tastatur gleichzeitig sichtbar; Treffer scrollbar, keine horizontale Seiten-Scrollleiste.
-- iPhone/S20 FE: Während der geöffneten Such-Tastatur wird das Dock ausgeblendet; das vergrößert die Breite der Buchstabentasten (statt nur die Tastenhöhe). Nach Schließen der Tastatur erscheint das Dock wieder. Ergebnisse bleiben links sichtbar, Schaltflächen berücksichtigen die iOS-/Android-Safe-Area. Die mobile QWERTZ-Tastatur nutzt 72 % der Kartenbreite und 51–58 CSS-Pixel Tastenhöhe.
+- iPhone/S20 FE: Während der geöffneten Such-Tastatur wird das Dock ausgeblendet; das vergrößert die Breite der Buchstabentasten (statt nur die Tastenhöhe). Das Dock bleibt während des gesamten Suchmodus verborgen. Suchfeld und scrollbare Ergebnisse liegen oberhalb der unten verankerten Tastatur. Deren Platz bleibt beim Ausblenden reserviert, damit die Treffer nicht springen. Tasten sind mindestens 44 CSS-Pixel hoch; Schaltflächen berücksichtigen die iOS-/Android-Safe-Area.
 - Für 1920×1080 und 1920×1200 gleichzeitig Bibliothek und Player sichtbar; auf den Mobilformaten und 1920×720 wird eine einfache Bibliothek/Player-Umschaltung gezeigt.
 - Medien-Transporttasten bei aktiver Player-Ansicht nicht abgeschnitten und für Fingerbedienung groß genug.
 - Farbdesigns **Original**, **Cyberpunk Neon City** und **Liquid Glass** werden in allen fünf Profilen begutachtet (15 Theme/Viewport-Kombinationen).

@@ -52,7 +52,7 @@ assert.deepEqual(Array.from(new Set(['default','cyberpunk','liquidglass'])),['de
 
 let browse=app.browseOverlay();
 assert.match(browse,/overlay glass nav-browse/,'Responsive browse styles must be bound to the real markup');
-assert.equal((browse.match(/Wohin soll es gehen\?/g)||[]).length,1);
+assert.equal((browse.match(/Ort oder Adresse/g)||[]).length,1);
 assert.equal((browse.match(/Zuletzt verwendet · Demo/g)||[]).length,3);
 assert.doesNotMatch(browse,/🎙|Apple-Karten-Stil · Suchen|Orte ›/);
 assert.match(browse,/Favoriten/);
@@ -107,10 +107,11 @@ assert.equal(get('resultsHTML().split("<strong>Erlangen-Nord</strong>").length-1
 get('s.query="XYZ Testadresse 17"');
 assert.match(get('resultsHTML()'),/Eigene Zieleingabe · Demo/);
 get('selectPlace("Erlangen Arcaden")');
-assert.equal(get('s.nav'),'search');
+assert.equal(get('s.nav'),'preview','A single selection must accept the destination with the keyboard open');
 assert.equal(get('s.keyboard'),false);
-get('selectPlace("Erlangen Arcaden")');
-assert.equal(get('s.nav'),'preview');
+assert.match(get('previewHTML()'),/Nürnberger Straße, Erlangen/);
+get('selectPlace("Unknown test destination")');
+assert.match(get('previewHTML()'),/Keine vollständige Adresse hinterlegt/);
 get('startRoute()');
 assert.equal(get('s.nav'),'driving');
 assert.doesNotMatch(node('screen').innerHTML,/IN 850 M|Zusatzscreen/);
