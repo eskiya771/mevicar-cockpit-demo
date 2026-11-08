@@ -1,0 +1,23 @@
+/* Native Tacho Next module, scoped to MeviCar Next app host. */
+.tacho-next-host{padding:0!important;overflow:hidden!important;display:flex!important;min-height:0!important}
+.tn-root{--tn-accent:#00e8ef;--tn-text:#f0f4f8;--tn-muted:#9aa8bc;display:flex;flex-direction:column;flex:1;min-height:0;width:100%;height:100%;background:#090f19;color:var(--tn-text);font-family:inherit;padding:clamp(4px,.6vw,10px);box-sizing:border-box}
+.tn-gauges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(5px,1vw,16px);flex:1;min-height:0}
+.tn-gauge{position:relative;display:flex;align-items:center;justify-content:center;min-height:0;min-width:0;overflow:hidden;background:radial-gradient(circle at 50% 40%,#121d2b,#0b101b 76%);border:1px solid #263a52;border-radius:clamp(12px,2vw,23px)}
+.tn-gauge svg{display:block;width:100%;height:100%;max-width:100%;max-height:100%;overflow:visible}
+.tn-gauge .gauge-track{stroke:#303b4d;stroke-width:10}
+.tn-gauge .gauge-fill{stroke:var(--tn-accent);stroke-width:11;stroke-linecap:round;filter:drop-shadow(0 0 4px #00e8ef88)}
+.tn-gauge .gauge-needle{stroke:#eef5ff;stroke-width:3;stroke-linecap:round;transition:transform .15s linear}
+.tn-gauge .gauge-center-cap{fill:#151d2a;stroke:#33475d;stroke-width:2}
+.tn-gauge .gauge-tick-major{stroke:#8895a5;stroke-width:3}
+.tn-gauge .gauge-tick-minor{stroke:#536072;stroke-width:1.5}
+.tn-gauge .gauge-tick-redline,.tn-gauge .gauge-text-redline{stroke:#fa4949;fill:#fa4949}
+.tn-gauge .gauge-text{fill:#9ba9bc;font-size:13px;font-weight:600;text-anchor:middle;dominant-baseline:middle}
+.tn-readout{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;justify-content:center;white-space:nowrap;min-width:clamp(95px,14vw,190px);padding:clamp(8px,1.1vw,17px) clamp(8px,1.4vw,20px);border-radius:28px;background:radial-gradient(ellipse,#101b2a 0%,#0c1421 80%,#0a111e 100%);box-shadow:0 0 23px 9px #0a111eb0,inset 0 0 0 1px #8dc5e514;pointer-events:none}
+.tn-number{font-weight:800;font-size:clamp(27px,5.1vw,70px);font-variant-numeric:tabular-nums;line-height:1.05}
+.tn-rpm-number{font-size:clamp(26px,4vw,53px)}
+.tn-unit{font-size:clamp(9px,1.15vw,14px);letter-spacing:2px;color:var(--tn-muted);font-weight:700}
+.tn-compass{margin-top:8px;color:var(--tn-accent);font-weight:700;font-size:clamp(10px,1.4vw,18px);letter-spacing:1px}
+.tn-demo{margin-top:8px;font-size:clamp(9px,1vw,13px);color:var(--tn-muted)}
+.tn-stats{display:flex;justify-content:space-between;gap:10px;flex:none;padding:clamp(4px,.7vw,10px) clamp(10px,1.4vw,20px);margin-top:5px;border-radius:15px;border:1px solid #25374f;background:#101825}
+.tn-stat{display:flex;flex-direction:column;gap:3px}.tn-stat:last-child{text-align:right}.tn-stat-label{font-size:clamp(9px,.95vw,12px);letter-spacing:2px;color:#9caabb}.tn-stat-value{font-size:clamp(14px,1.7vw,23px);font-weight:700}
+@media(max-height:450px){.tn-stats{padding:3px 10px}.tn-readout{padding:6px 10px}.tn-compass,.tn-demo{margin-top:3px}}
