@@ -1,0 +1,1397 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeviCar Next - Cockpit Redesign</title>
+  <!-- Lucide Icons for high-quality dashboard icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg-dark: #070b11;
+      --sidebar-bg: #0b1017;
+      --card-bg: rgba(14, 22, 33, 0.85);
+      --card-border: rgba(43, 62, 87, 0.5);
+      --text-main: #f0f4f8;
+      --text-muted: #8a9ba8;
+      --cyan-accent: #00f0ff;
+      --cyan-glow: rgba(0, 240, 255, 0.35);
+      --red-accent: #ff3b30;
+      --red-glow: rgba(255, 59, 48, 0.45);
+      --green-accent: #34c759;
+      --green-glow: rgba(52, 199, 89, 0.35);
+      --orange-accent: #ff9500;
+      
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: radial-gradient(circle at 50% 30%, #111e2d 0%, #070b11 75%);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* Layout Structure */
+    .app-container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      width: 100px;
+      background: var(--sidebar-bg);
+      border-right: 1px solid var(--card-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 0;
+      justify-content: space-between;
+      z-index: 10;
+    }
+
+    .brand-logo {
+      color: var(--cyan-accent);
+      font-weight: 800;
+      font-size: 14px;
+      text-align: center;
+      line-height: 1.2;
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+
+    .brand-logo span {
+      display: block;
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .nav-items {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      width: 72px;
+      height: 72px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .nav-btn i {
+      width: 24px;
+      height: 24px;
+      transition: transform 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.04);
+      transform: translateY(-2px);
+    }
+
+    .nav-btn.active {
+      color: var(--cyan-accent);
+      background: rgba(0, 240, 255, 0.08);
+      border: 1px solid rgba(0, 240, 255, 0.25);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+    }
+
+    .nav-btn.active i {
+      filter: drop-shadow(0 0 4px var(--cyan-accent));
+    }
+
+    /* Main Content Area */
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      position: relative;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    /* Header Bar */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .header-title-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-title {
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge {
+      background: rgba(52, 199, 89, 0.15);
+      color: var(--green-accent);
+      border: 1px solid rgba(52, 199, 89, 0.3);
+      padding: 4px 10px;
+      border-radius: 30px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background-color: var(--green-accent);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--green-accent);
+      display: inline-block;
+    }
+
+    .top-controls {
+      display: flex;
+      gap: 12px;
+    }
+
+    .theme-selector {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .theme-opt {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .theme-opt.active {
+      color: #000;
+      font-weight: 700;
+    }
+
+    /* Core Color Variations dynamically applied to active class */
+    .theme-opt[data-theme="cyan"].active { background: var(--cyan-accent); color: #000; }
+    .theme-opt[data-theme="sport"].active { background: var(--red-accent); color: #fff; }
+    .theme-opt[data-theme="eco"].active { background: var(--green-accent); color: #000; }
+
+    /* Instrument Cluster Area */
+    .instruments-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+      align-items: center;
+      justify-items: center;
+      min-height: 420px;
+    }
+
+    /* Gauge Panel Styling */
+    .gauge-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 500px;
+      height: 380px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    /* SVG Gauge Graphics */
+    .gauge-svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Gauge Dial Needle & Circles */
+    .gauge-track {
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 8;
+      stroke-linecap: round;
+    }
+
+    .gauge-fill {
+      stroke: var(--cyan-accent);
+      stroke-width: 10;
+      stroke-linecap: round;
+      filter: drop-shadow(0 0 8px var(--cyan-accent));
+      transition: stroke-dashoffset 0.15s linear, stroke 0.3s ease;
+    }
+
+    .gauge-tick-minor {
+      stroke: rgba(255, 255, 255, 0.2);
+      stroke-width: 1.5;
+    }
+
+    .gauge-tick-major {
+      stroke: rgba(255, 255, 255, 0.5);
+      stroke-width: 3;
+    }
+
+    .gauge-tick-redline {
+      stroke: var(--red-accent) !important;
+      filter: drop-shadow(0 0 2px var(--red-accent));
+    }
+
+    .gauge-text {
+      fill: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .gauge-text-redline {
+      fill: var(--red-accent) !important;
+      font-weight: 800 !important;
+    }
+
+    .gauge-needle {
+      stroke: var(--text-main);
+      stroke-width: 3;
+      stroke-linecap: round;
+      transition: transform 0.15s linear;
+    }
+
+    .gauge-center-cap {
+      fill: #151d2a;
+      stroke: var(--card-border);
+      stroke-width: 2;
+    }
+
+    /* Centered Overlaid HUD Information */
+    .gauge-hud {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .hud-value-large {
+      font-size: 72px;
+      font-weight: 800;
+      line-height: 1;
+      color: var(--text-main);
+      text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hud-unit {
+      font-size: 14px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      font-weight: 700;
+      margin-top: -2px;
+    }
+
+    .hud-info-box {
+      margin-top: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-info-text {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* Compass HUD widget */
+    .compass-hud {
+      margin-top: 14px;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--cyan-accent);
+      letter-spacing: 1px;
+      text-shadow: 0 0 10px var(--cyan-glow);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Multi-Widget Right Side Panel */
+    .widget-selector-tab {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 2px;
+      z-index: 5;
+    }
+
+    .widget-tab-opt {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .widget-tab-opt.active {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+    }
+
+    /* Alternative Widget Screens inside Right gauge */
+    .widget-overlay-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      padding: 40px 24px 24px 24px;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: var(--card-bg);
+      z-index: 2;
+    }
+
+    .widget-overlay-screen.active {
+      display: flex;
+    }
+
+    /* Music Player Widget */
+    .media-widget {
+      text-align: center;
+      gap: 12px;
+    }
+
+    .album-art-container {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 4px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--card-border);
+    }
+
+    .album-art {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .song-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .song-artist {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .media-controls {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .media-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .media-btn:hover {
+      color: var(--text-main);
+    }
+
+    .media-btn-play {
+      background: var(--text-main);
+      color: var(--bg-dark);
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+    }
+
+    /* Navigator Widget */
+    .nav-widget {
+      gap: 8px;
+    }
+
+    .nav-arrow {
+      color: var(--cyan-accent);
+      filter: drop-shadow(0 0 8px var(--cyan-glow));
+      animation: pulse-slow 2s infinite ease-in-out;
+    }
+
+    .nav-distance {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+
+    .nav-street {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /* Odometer / Stats Section at Bottom */
+    .bottom-info-panel {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(18, 26, 38, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin-bottom: 16px;
+    }
+
+    .info-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .info-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text-main);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .info-value span {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-left: 4px;
+    }
+
+    /* Bottom Control Bar with Active highlights */
+    .control-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 12px;
+    }
+
+    .control-btn {
+      background: rgba(18, 26, 38, 0.6);
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .control-btn i {
+      width: 16px;
+      height: 16px;
+    }
+
+    .control-btn:hover {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .control-btn.active {
+      color: var(--text-main);
+      background: rgba(0, 240, 255, 0.1);
+      border-color: var(--cyan-accent);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.15);
+    }
+
+    /* Dynamic Theme Switch styling overrides */
+    body.theme-sport {
+      --cyan-accent: var(--red-accent);
+      --cyan-glow: var(--red-glow);
+    }
+    body.theme-sport .gauge-fill {
+      filter: drop-shadow(0 0 6px var(--red-accent));
+    }
+
+    body.theme-eco {
+      --cyan-accent: var(--green-accent);
+      --cyan-glow: var(--green-glow);
+    }
+    body.theme-eco .gauge-fill {
+      filter: drop-shadow(0 0 6px var(--green-accent));
+    }
+
+    /* Animations */
+    @keyframes pulse-slow {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.05); opacity: 0.85; }
+    }
+
+    /* Redesign Explainer Info overlay */
+    .ux-explainer-trigger {
+      background: rgba(0, 240, 255, 0.15);
+      color: var(--cyan-accent);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .ux-explainer-trigger:hover {
+      background: rgba(0, 240, 255, 0.25);
+      box-shadow: 0 0 12px var(--cyan-glow);
+    }
+
+    .explainer-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 7, 10, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .explainer-overlay.visible {
+      display: flex;
+    }
+
+    .explainer-card {
+      background: #111823;
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      max-width: 640px;
+      width: 100%;
+      padding: 32px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+
+    .explainer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 16px;
+    }
+
+    .explainer-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--cyan-accent);
+    }
+
+    .explainer-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .explainer-list {
+      list-style-type: none;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .explainer-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .explainer-bullet {
+      background: rgba(0, 240, 255, 0.1);
+      color: var(--cyan-accent);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .explainer-text-heading {
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 4px;
+      font-size: 15px;
+    }
+
+    .explainer-text-desc {
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .btn-got-it {
+      background: var(--cyan-accent);
+      color: #000;
+      border: none;
+      font-weight: 700;
+      padding: 12px 24px;
+      border-radius: 10px;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s ease;
+    }
+
+    .btn-got-it:hover {
+      background: #00d4e0;
+    }
+
+    /* Demo Range Controls for real interactive experience */
+    .simulator-controls {
+      background: rgba(18, 26, 38, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 16px 24px;
+      margin-bottom: 16px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .simulator-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--cyan-accent);
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .slider-group {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .slider-group label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+      width: 110px;
+    }
+
+    .sim-slider {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    .sim-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--cyan-accent);
+      cursor: pointer;
+      box-shadow: 0 0 8px var(--cyan-glow);
+    }
+  </style>
+<style>
+/* Embedded MeviCar Next app: cockpit owns navigation and status chrome. */
+body{height:100dvh;overflow:hidden}.app-container{height:100dvh}.sidebar{display:none}.main-content{padding:clamp(6px,1.1vw,12px);overflow:hidden;min-width:0}.header-bar{margin-bottom:5px;padding-bottom:5px}.header-title{font-size:clamp(12px,1.6vw,18px)}.ux-explainer-trigger{display:none}.instruments-grid{min-height:0;gap:clamp(6px,1.5vw,16px);height:100%;overflow:hidden}.gauge-card{height:100%;max-height:none;min-height:0;max-width:none;border-radius:16px}.gauge-svg{width:100%;height:100%;object-fit:contain}.hud-value-large{font-size:clamp(30px,6vw,70px)}.gauge-hud{transform:translateY(8%)}.bottom-info-panel{margin:5px 0;padding:5px 12px}.info-value{font-size:clamp(13px,2vw,21px)}.info-label{font-size:9px}.simulator-controls{padding:5px 10px;margin-bottom:6px;gap:10px}.simulator-title{font-size:10px}.slider-group{gap:6px}.slider-group label{width:auto;font-size:10px}.control-bar{gap:6px}.control-btn{min-height:36px;padding:5px;font-size:clamp(9px,1vw,12px)}.widget-selector-tab{top:6px;right:6px}.widget-tab-opt{padding:4px 8px}.compass-hud{margin-top:5px;font-size:13px}.hud-unit{font-size:11px}.hud-info-box{margin-top:6px}.hud-info-text{font-size:10px}
+@media(max-height:480px){.header-bar{display:none}.simulator-controls{padding:3px 8px;margin-bottom:3px}.simulator-title{display:none}.instruments-grid{flex:1;min-height:0}.bottom-info-panel{margin:3px 0;padding:3px 10px}.control-bar{gap:4px}.control-btn{min-height:30px;padding:3px}.widget-overlay-screen{padding:28px 8px 5px}.album-art-container{width:52px;height:52px}.media-widget{gap:3px}.hud-value-large{font-size:clamp(24px,5vw,45px)}.gauge-hud{transform:translateY(10%)}}
+</style></head>
+<body class="theme-cyan">
+
+  <div class="app-container">
+    
+    <!-- Sidebar / Navigation Left -->
+    <aside class="sidebar">
+      <div class="brand-logo">
+        MeviCar
+        <span>NEXT Gen</span>
+      </div>
+      
+      <nav class="nav-items">
+        <button class="nav-btn">
+          <i data-lucide="map-pin"></i>
+          <span>Navi</span>
+        </button>
+        <button class="nav-btn">
+          <i data-lucide="radio"></i>
+          <span>Radio</span>
+        </button>
+        <button class="nav-btn">
+          <i data-lucide="phone"></i>
+          <span>Telefon</span>
+        </button>
+        <button class="nav-btn active">
+          <i data-lucide="gauge"></i>
+          <span>Tacho</span>
+        </button>
+        <button class="nav-btn">
+          <i data-lucide="cloud-rain"></i>
+          <span>Wetter</span>
+        </button>
+      </nav>
+
+      <button class="nav-btn">
+        <i data-lucide="layout-grid"></i>
+        <span>Apps</span>
+      </button>
+    </aside>
+
+    <!-- Main Live Mockup & Cockpit Area -->
+    <main class="main-content">
+      
+      <!-- Top header bar with Ambient Theme selector -->
+      <header class="header-bar">
+        <div class="header-title-section">
+          <h1 class="header-title">MeviCar Cockpit Redesign</h1>
+          <div class="status-badge">
+            <span class="status-dot"></span>
+            Demo · keine OBD-Daten
+          </div>
+        </div>
+
+        <div class="top-controls">
+          <!-- Ambient lighting mode selector -->
+          <div class="theme-selector">
+            <button class="theme-opt active" data-theme="cyan">Standard</button>
+            <button class="theme-opt" data-theme="eco">Eco Mode</button>
+            <button class="theme-opt" data-theme="sport">Sport</button>
+          </div>
+
+          <!-- Highlight Improvements triggers -->
+          <button class="ux-explainer-trigger" id="explainerBtn">
+            <i data-lucide="sparkles" style="width: 16px; height: 16px;"></i>
+            Redesign Erklärt
+          </button>
+        </div>
+      </header>
+
+      <!-- Active Interactive Simulator Panel -->
+      <section class="simulator-controls">
+        <div class="simulator-title">
+          <i data-lucide="sliders"></i>
+          Cockpit-Regler
+        </div>
+        
+        <div class="slider-group">
+          <label for="speedSlider">Tempo (km/h)</label>
+          <input type="range" id="speedSlider" min="0" max="220" value="170" class="sim-slider">
+        </div>
+
+        <div class="slider-group">
+          <label for="rpmSlider">Drehzahl (RPM)</label>
+          <input type="range" id="rpmSlider" min="0" max="8000" value="1900" class="sim-slider">
+        </div>
+      </section>
+
+      <!-- Instrument Cluster Grid -->
+      <section class="instruments-grid">
+        
+        <!-- LEFT: Re-designed Speedometer -->
+        <div class="gauge-card">
+          <svg class="gauge-svg" id="speedScreen" viewBox="0 0 300 300">
+            <!-- Background Arc Gradient -->
+            <defs>
+              <radialGradient id="grad-gauge" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#15202e" stop-opacity="0.2"/>
+                <stop offset="100%" stop-color="#0a0f18" stop-opacity="0.9"/>
+              </radialGradient>
+            </defs>
+            <circle cx="150" cy="150" r="140" fill="url(#grad-gauge)" />
+            
+            <!-- Scale Arc (from ~135 degrees to ~405 degrees) -->
+            <path class="gauge-track" d="M 65.15 234.85 A 120 120 0 1 1 234.85 234.85" fill="none" />
+            
+            <!-- Live Active Arc Ring (Fills dynamically) -->
+            <path class="gauge-fill" id="speedFill" d="M 65.15 234.85 A 120 120 0 1 1 234.85 234.85" fill="none" 
+                  stroke-dasharray="565.49" stroke-dashoffset="565.49" />
+
+            <!-- Dynamic Gauge Ticks appended by JavaScript -->
+
+            <!-- Interactive Needle -->
+            <line x1="150" y1="150" x2="150" y2="30" class="gauge-needle" id="speedNeedle" />
+            <circle cx="150" cy="150" r="12" class="gauge-center-cap" />
+          </svg>
+
+          <!-- Core HUD Overlaid Text (Optimal speed perception) -->
+          <div class="gauge-hud">
+            <span class="hud-value-large" id="digitalSpeed">170</span>
+            <span class="hud-unit">km/h</span>
+            
+            <!-- Sleek integrated Compass Info Box -->
+            <div class="compass-hud">
+              <i data-lucide="compass" style="width: 18px; height: 18px;"></i>
+              <span id="compassDir">SW 272°</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Re-designed Tachometer with Smart Multi-Widget fallback -->
+        <div class="gauge-card">
+          <!-- Widget Mode Tabs -->
+          <div class="widget-selector-tab" id="widgetTabs">
+            <button class="widget-tab-opt active" data-widget="rpm">Drehzahl</button>
+            <button class="widget-tab-opt" data-widget="media">Media</button>
+            <button class="widget-tab-opt" data-widget="navigation">Navi</button>
+          </div>
+
+          <!-- Screen A: Modern RPM Gauge -->
+          <svg class="gauge-svg" id="rpmScreen" viewBox="0 0 300 300">
+            <circle cx="150" cy="150" r="140" fill="url(#grad-gauge)" />
+            <path class="gauge-track" d="M 65.15 234.85 A 120 120 0 1 1 234.85 234.85" fill="none" />
+            
+            <!-- Live Active RPM fill -->
+            <path class="gauge-fill" id="rpmFill" d="M 65.15 234.85 A 120 120 0 1 1 234.85 234.85" fill="none" 
+                  stroke-dasharray="565.49" stroke-dashoffset="565.49" />
+
+            <!-- Dynamic Ticks appended by JavaScript -->
+
+            <!-- RPM Needle -->
+            <line x1="150" y1="150" x2="150" y2="30" class="gauge-needle" id="rpmNeedle" />
+            <circle cx="150" cy="150" r="12" class="gauge-center-cap" />
+          </svg>
+          
+          <!-- Screen A Overlay Info -->
+          <div class="gauge-hud" id="rpmHud">
+            <span class="hud-value-large" id="digitalRpm" style="font-size: 42px;">1.9</span>
+            <span class="hud-unit">U/min x1000</span>
+            
+            <div class="hud-info-box">
+              <span class="status-dot" style="background-color: var(--green-accent); box-shadow: 0 0 8px var(--green-accent);"></span>
+              <span class="hud-info-text">OBD nicht verbunden · Demo</span>
+            </div>
+          </div>
+
+          <!-- Screen B: Media Widget -->
+          <div class="widget-overlay-screen media-widget" id="mediaScreen">
+            <div class="album-art-container">
+              <div class="album-art">
+                <i data-lucide="music" style="width: 48px; height: 48px;"></i>
+              </div>
+            </div>
+            <div class="song-title">Electro Cruise</div>
+            <div class="song-artist">Neon Drive Studio</div>
+            <div class="media-controls">
+              <button class="media-btn"><i data-lucide="skip-back"></i></button>
+              <button class="media-btn media-btn-play"><i data-lucide="play" id="playIcon"></i></button>
+              <button class="media-btn"><i data-lucide="skip-forward"></i></button>
+            </div>
+          </div>
+
+          <!-- Screen C: Navigation Widget -->
+          <div class="widget-overlay-screen nav-widget" id="navScreen">
+            <i data-lucide="navigation" class="nav-arrow" style="width: 64px; height: 64px; transform: rotate(45deg);"></i>
+            <div class="nav-distance">350 m</div>
+            <div class="nav-street">In 200m rechts abbiegen auf: Hauptstraße</div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- Bottom consolidated Odometer & Stats Banner -->
+      <section class="bottom-info-panel">
+        <div class="info-group">
+          <span class="info-label">Gesamtlaufleistung</span>
+          <span class="info-value">—<span>km</span></span>
+        </div>
+        <div class="info-group" style="text-align: right;">
+          <span class="info-label">Trip Tageskilometer</span>
+          <span class="info-value" id="tripValue">0,0<span>km</span></span>
+        </div>
+      </section>
+
+      <!-- Re-organized Control Bar with Active highlights -->
+      <footer class="control-bar">
+        <button class="control-btn active" id="btnGps">
+          <i data-lucide="satellite"></i>
+          <span>GPS</span>
+        </button>
+        <button class="control-btn" id="btnStop">
+          <i data-lucide="octagon"></i>
+          <span>Stop</span>
+        </button>
+        <button class="control-btn" id="btnCompass">
+          <i data-lucide="compass"></i>
+          <span>Kompass</span>
+        </button>
+        <button class="control-btn" id="btnTrip">
+          <i data-lucide="milestone"></i>
+          <span>Trip</span>
+        </button>
+        <button class="control-btn" id="btnDemo">
+          <i data-lucide="play-circle"></i>
+          <span>Demo Modus</span>
+        </button>
+      </footer>
+
+    </main>
+
+  </div>
+
+  <!-- Redesign Explainer Dialog -->
+  <div class="explainer-overlay" id="explainerModal">
+    <div class="explainer-card">
+      <div class="explainer-header">
+        <h2 class="explainer-title">Dashboard Redesign-Vorteile</h2>
+        <button class="explainer-close" id="explainerCloseBtn">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+
+      <ul class="explainer-list">
+        <li class="explainer-item">
+          <div class="explainer-bullet">1</div>
+          <div>
+            <div class="explainer-text-heading">Zentrale Digitale Geschwindigkeitsanzeige</div>
+            <div class="explainer-text-desc">Anstatt während der Fahrt auf eine analoge Nadel schielen zu müssen, ist das aktuelle Tempo blitzschnell im Zentrum erfassbar.</div>
+          </div>
+        </li>
+        <li class="explainer-item">
+          <div class="explainer-bullet">2</div>
+          <div>
+            <div class="explainer-text-heading">Bessere Kontraste & Klare Typografie</div>
+            <div class="explainer-text-desc">Dünne und schlecht lesbare Texte wurden durch fette, kontrastreiche Schriftarten ersetzt, damit sie auch bei direkter Sonneneinstrahlung perfekt lesbar sind.</div>
+          </div>
+        </li>
+        <li class="explainer-item">
+          <div class="explainer-bullet">3</div>
+          <div>
+            <div class="explainer-text-heading">Smartes Multi-Widget Instrument (Rechts)</div>
+            <div class="explainer-text-desc">Wenn kein OBD-Signal vorhanden ist (z.B. in Elektroautos oder bei Standbetrieb), verwandelt sich der nutzlose Drehzahlmesser in ein nützliches Media- oder Navigations-Widget.</div>
+          </div>
+        </li>
+        <li class="explainer-item">
+          <div class="explainer-bullet">4</div>
+          <div>
+            <div class="explainer-text-heading">Ambient-Color-Lichtleiste & Feedback</div>
+            <div class="explainer-text-desc">Farbeinstellungen wie "Eco Mode" oder "Sport" passen die gesamte Cockpit-Beleuchtung an, um sportliches oder sparsames Fahren atmosphärisch zu unterstützen.</div>
+          </div>
+        </li>
+      </ul>
+
+      <button class="btn-got-it" id="explainerCloseBtn2">Verstanden</button>
+    </div>
+  </div>
+
+  <!-- Dynamic Dashboard Interaction Script -->
+  <script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    // DOM Elements
+    const speedSlider = document.getElementById('speedSlider');
+    const rpmSlider = document.getElementById('rpmSlider');
+    const digitalSpeed = document.getElementById('digitalSpeed');
+    const digitalRpm = document.getElementById('digitalRpm');
+    const speedFill = document.getElementById('speedFill');
+    const rpmFill = document.getElementById('rpmFill');
+    const speedNeedle = document.getElementById('speedNeedle');
+    const rpmNeedle = document.getElementById('rpmNeedle');
+    const compassDir = document.getElementById('compassDir');
+    const tripValue = document.getElementById('tripValue');
+    
+    // Theme options
+    const themeOpts = document.querySelectorAll('.theme-opt');
+    const bodyEl = document.body;
+
+    // Radius of the gauges for dynamic ticks
+    const GAUGE_RADIUS = 120;
+    const GAUGE_PERIMETER_270 = 565.49; // 2 * Math.PI * 120 * 0.75
+
+    // Mathematical Ticks Generator for 100% perfect visual alignment
+    function drawTicks(svgId, minVal, maxVal, step, labelStep, radius) {
+      const svg = document.getElementById(svgId);
+      // Remove any existing ticks group
+      const existingTicks = svg.querySelector('.gauge-ticks-dynamic');
+      if (existingTicks) {
+        existingTicks.remove();
+      }
+
+      const ticksGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      ticksGroup.setAttribute("class", "gauge-ticks-dynamic");
+
+      const startAngle = 135; // Start angle in degrees (bottom-left)
+      const sweepAngle = 270; // Active sweep in degrees
+
+      for (let val = minVal; val <= maxVal; val += step) {
+        const percentage = (val - minVal) / (maxVal - minVal);
+        const angleDeg = startAngle + (percentage * sweepAngle);
+        const angleRad = (angleDeg * Math.PI) / 180;
+
+        // Tick length determination
+        const isLabel = (val % labelStep === 0);
+        const tickLength = isLabel ? 12 : 6;
+
+        const x1 = 150 + radius * Math.cos(angleRad);
+        const y1 = 150 + radius * Math.sin(angleRad);
+        const x2 = 150 + (radius - tickLength) * Math.cos(angleRad);
+        const y2 = 150 + (radius - tickLength) * Math.sin(angleRad);
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+
+        // Styling classes
+        if (isLabel) {
+          if (svgId === 'rpmScreen' && val >= 6.5) {
+            line.setAttribute("class", "gauge-tick-major gauge-tick-redline");
+          } else {
+            line.setAttribute("class", "gauge-tick-major");
+          }
+
+          // Generate Text Label
+          const textRadius = radius - 24;
+          const tx = 150 + textRadius * Math.cos(angleRad);
+          const ty = 150 + textRadius * Math.sin(angleRad);
+
+          const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          text.setAttribute("x", tx);
+          text.setAttribute("y", ty + 4); // small adjustment to vertically center font
+          
+          if (svgId === 'rpmScreen' && val >= 7) {
+            text.setAttribute("class", "gauge-text gauge-text-redline");
+          } else {
+            text.setAttribute("class", "gauge-text");
+          }
+          
+          text.textContent = val;
+          ticksGroup.appendChild(text);
+        } else {
+          if (svgId === 'rpmScreen' && val >= 6.5) {
+            line.setAttribute("class", "gauge-tick-minor gauge-tick-redline");
+          } else {
+            line.setAttribute("class", "gauge-tick-minor");
+          }
+        }
+
+        ticksGroup.appendChild(line);
+      }
+
+      // Add to SVG before center cap and needle so ticks render below needle
+      const centerCap = svg.querySelector('.gauge-center-cap');
+      if (centerCap) {
+        svg.insertBefore(ticksGroup, centerCap);
+      } else {
+        svg.appendChild(ticksGroup);
+      }
+    }
+
+    // Initialize mathematically perfect ticks
+    // Left: Speed dial (0 to 220, major ticks every 20, minor every 10)
+    drawTicks('speedScreen', 0, 220, 10, 20, GAUGE_RADIUS);
+    // Right: RPM dial (0 to 8, major ticks every 1, minor every 0.5)
+    drawTicks('rpmScreen', 0, 8, 0.5, 1, GAUGE_RADIUS);
+
+    // Interactive sliders behavior
+    function updateSpeed(speed) {
+      digitalSpeed.textContent = speed;
+      
+      const maxSpeed = 220;
+      const percentage = speed / maxSpeed;
+      
+      // Match active cyan arc fill perfectly to speed value
+      const dashOffset = GAUGE_PERIMETER_270 - (percentage * GAUGE_PERIMETER_270);
+      speedFill.style.strokeDashoffset = dashOffset;
+      
+      // Rotate Needle precisely (Range -135deg to +135deg)
+      const deg = -135 + (percentage * 270);
+      speedNeedle.style.transform = `rotate(${deg}deg)`;
+      speedNeedle.style.transformOrigin = '150px 150px';
+
+      // Dynamic Compass Simulation
+      const directions = ['N', 'NNO', 'NO', 'O', 'SO', 'S', 'SW', 'W', 'NW'];
+      const index = Math.floor((speed / 25) % directions.length);
+      compassDir.textContent = `${directions[index]} ${Math.floor(speed * 1.6) % 360}°`;
+    }
+
+    function updateRpm(rpm) {
+      const displayRpm = (rpm / 1000).toFixed(1);
+      digitalRpm.textContent = displayRpm;
+
+      const maxRpm = 8000;
+      const percentage = rpm / maxRpm;
+      
+      // Match active RPM progress fill perfectly
+      const dashOffset = GAUGE_PERIMETER_270 - (percentage * GAUGE_PERIMETER_270);
+      rpmFill.style.strokeDashoffset = dashOffset;
+
+      // Rotate Needle
+      const deg = -135 + (percentage * 270);
+      rpmNeedle.style.transform = `rotate(${deg}deg)`;
+      rpmNeedle.style.transformOrigin = '150px 150px';
+    }
+
+    speedSlider.addEventListener('input', (e) => updateSpeed(parseInt(e.target.value)));
+    rpmSlider.addEventListener('input', (e) => updateRpm(parseInt(e.target.value)));
+
+    // Init values (matched with user's uploaded image values!)
+    updateSpeed(170);
+    updateRpm(1900);
+    
+    // Set slider values to match initial values
+    speedSlider.value = 170;
+    rpmSlider.value = 1900;
+
+    // Dynamic Theme Swapping (Cyan, Eco, Sport)
+    themeOpts.forEach(btn => {
+      btn.addEventListener('click', () => {
+        themeOpts.forEach(o => o.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const theme = btn.getAttribute('data-theme');
+        bodyEl.className = ''; // Reset
+        if (theme === 'sport') {
+          bodyEl.classList.add('theme-sport');
+        } else if (theme === 'eco') {
+          bodyEl.classList.add('theme-eco');
+        } else {
+          bodyEl.classList.add('theme-cyan');
+        }
+      });
+    });
+
+    // Multi-Widget Navigation Tabs on the Right Side
+    const widgetTabs = document.querySelectorAll('[data-widget]');
+    const rpmScreen = document.getElementById('rpmScreen');
+    const rpmHud = document.getElementById('rpmHud');
+    const mediaScreen = document.getElementById('mediaScreen');
+    const navScreen = document.getElementById('navScreen');
+
+    widgetTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        widgetTabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+
+        const widgetType = tab.getAttribute('data-widget');
+        
+        // Hide all screens
+        rpmScreen.style.display = 'none';
+        rpmHud.style.display = 'none';
+        mediaScreen.classList.remove('active');
+        navScreen.classList.remove('active');
+
+        // Show active screen
+        if (widgetType === 'rpm') {
+          rpmScreen.style.display = 'block';
+          rpmHud.style.display = 'flex';
+        } else if (widgetType === 'media') {
+          mediaScreen.classList.add('active');
+        } else if (widgetType === 'navigation') {
+          navScreen.classList.add('active');
+        }
+      });
+    });
+
+    // Bottom Controls Active Toggle simulation
+    const controlBtns = document.querySelectorAll('.control-btn');
+    controlBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        controlBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Simulating "Stop" behavior
+        if (btn.id === 'btnStop') {
+          speedSlider.value = 0;
+          rpmSlider.value = 0;
+          updateSpeed(0);
+          updateRpm(0);
+        }
+      });
+    });
+
+    // Media Play Simulation
+    const playBtn = document.querySelector('.media-btn-play');
+    const playIcon = document.getElementById('playIcon');
+    let isPlaying = false;
+    if (playBtn) {
+      playBtn.addEventListener('click', () => {
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+          playIcon.setAttribute('data-lucide', 'pause');
+        } else {
+          playIcon.setAttribute('data-lucide', 'play');
+        }
+        lucide.createIcons();
+      });
+    }
+
+    // Explainer Modal behavior
+    const explainerModal = document.getElementById('explainerModal');
+    const explainerBtn = document.getElementById('explainerBtn');
+    const closeBtn1 = document.getElementById('explainerCloseBtn');
+    const closeBtn2 = document.getElementById('explainerCloseBtn2');
+
+    explainerBtn.addEventListener('click', () => {
+      explainerModal.classList.add('visible');
+    });
+
+    [closeBtn1, closeBtn2].forEach(btn => {
+      btn.addEventListener('click', () => {
+        explainerModal.classList.remove('visible');
+      });
+    });
+
+    // Demo Mode Auto-Simulation
+    let demoInterval = null;
+    const btnDemo = document.getElementById('btnDemo');
+    
+    function startDemo() {
+      let speedDirection = 1;
+      let rpmDirection = 1;
+      
+      demoInterval = setInterval(() => {
+        let currentSpeed = parseInt(speedSlider.value);
+        let currentRpm = parseInt(rpmSlider.value);
+
+        // Speed fluctuation
+        currentSpeed += speedDirection * 2;
+        if (currentSpeed >= 180) speedDirection = -1;
+        if (currentSpeed <= 30) speedDirection = 1;
+
+        // RPM fluctuation
+        currentRpm += rpmDirection * 150;
+        if (currentRpm >= 6500) rpmDirection = -1;
+        if (currentRpm <= 1200) rpmDirection = 1;
+
+        speedSlider.value = currentSpeed;
+        rpmSlider.value = currentRpm;
+        
+        updateSpeed(currentSpeed);
+        updateRpm(currentRpm);
+        
+        // Trip meter simulation
+        const currentTrip = parseFloat(tripValue.textContent.replace(',', '.'));
+        tripValue.innerHTML = `${(currentTrip + 0.05).toFixed(1).replace('.', ',')}<span>km</span>`;
+
+      }, 100);
+    }
+
+    function stopDemo() {
+      if (demoInterval) {
+        clearInterval(demoInterval);
+        demoInterval = null;
+      }
+    }
+
+    btnDemo.addEventListener('click', () => {
+      if (btnDemo.classList.contains('active-demo')) {
+        btnDemo.classList.remove('active-demo');
+        stopDemo();
+      } else {
+        btnDemo.classList.add('active-demo');
+        startDemo();
+      }
+    });
+
+  </script>
+</body>
+</html>
