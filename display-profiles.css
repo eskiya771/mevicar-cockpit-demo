@@ -653,11 +653,14 @@ html,body{min-height:0;overscroll-behavior:none}
 .tacho-next-frame{display:block;width:100%;height:100%;min-height:0;flex:1;border:0;background:#070b11;border-radius:inherit;}
 .side.tacho-next-host{padding:0!important;}
 
-/* Search stays anchored at the top; dismissed keyboard space becomes list space. */
+/* Search stays anchored at the top; dismissed keyboard space becomes list space.
+   Paint keyboard to the map bottom. A small internal gesture margin replaces
+   the external bottom safe-area gap; lateral cutout insets remain unchanged. */
 .cockpit:has(.nav-search) .dock{display:none!important}
 .cockpit:has(.nav-search) .body{gap:0!important}
 .cockpit .map:has(.nav-search){
  --nav-keyboard-height:clamp(198px,28vh,270px);
+ --nav-keyboard-foot: min(8px,env(safe-area-inset-bottom,0px));
  --nav-search-inset: max(8px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));
 }
 .cockpit .map .overlay.nav-search,
@@ -665,7 +668,7 @@ html,body{min-height:0;overscroll-behavior:none}
 .cockpit:has(.nav-search) .map .overlay.nav-search,
 .cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
  left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
- top:8px!important;bottom:calc(var(--nav-keyboard-height) + 10px + env(safe-area-inset-bottom,0px))!important;
+ top:8px!important;bottom:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot) + 8px)!important;
  width:auto!important;max-width:none!important;max-height:none!important;
  transform:none!important;
 }
@@ -677,9 +680,9 @@ html,body{min-height:0;overscroll-behavior:none}
 .cockpit .map .nav-suggestions{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
 .cockpit .map.searchmode .keyboard{
  left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
- top:auto!important;bottom:max(2px,env(safe-area-inset-bottom,0px))!important;
- width:auto!important;max-width:none!important;height:var(--nav-keyboard-height)!important;max-height:none!important;
- transform:none!important;padding:5px!important;gap:3px!important;
+ top:auto!important;bottom:0!important;
+ width:auto!important;max-width:none!important;height:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot))!important;max-height:none!important;
+ transform:none!important;padding:5px 5px calc(5px + var(--nav-keyboard-foot))!important;gap:3px!important;
 }
 .cockpit .map.searchmode .keyboard .keyrow{flex:1;min-height:0;gap:5px!important}
 .cockpit .map.searchmode .keyboard .keyrow button{height:auto!important;min-height:44px!important;padding:4px 0!important;font-size:clamp(15px,1.3vw,22px)}

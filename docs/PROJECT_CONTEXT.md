@@ -224,3 +224,7 @@ Validierung: sechs Node-Smoke-Tests bestanden, inklusive Regression für Ein-Tip
 ### Suchansicht: Platznutzung – 8. November 2026
 
 Tastatur auf Mobilprofilen von 212 auf 198 CSS-Pixel reduziert, unterer Abstand verkleinert; Tasten bleiben mindestens 44 CSS-Pixel hoch. Beim Scrollen wird das Eingabefeld defokussiert und die Liste nach unten erweitert, ohne DOM-Neuaufbau. Statusoverlay im Suchmodus ausgeblendet, nach Verlassen wieder sichtbar. Alle sieben vorhandenen Smoke-Tests bestanden; Pages-Ausgabe lokal erzeugt. Browser-Sichtprüfung blockiert: kein installiertes Chromium, Browserdownload fehlgeschlagen. Echte iOS-Safe-Area- und Touchprüfung weiterhin offen.
+
+### Tastatur bis zum unteren Rand
+
+Der Tastaturhintergrund endet am unteren Kartenrand. Statt eines externen Safe-Area-Abstands erhält die letzte Tastenreihe einen internen Zusatzabstand von höchstens 8 CSS-Pixeln. Die Tastaturhöhe wächst um diesen Abstand, sodass die Tasten mindestens 44 CSS-Pixel hoch bleiben. Die Trefferliste erhält den eingesparten Platz. Seitliche Notch-Abstände bleiben erhalten. Sieben Smoke-Tests bestanden; echte iOS-Gesten-/Touchprüfung und Browser-Sichtprüfung bleiben offen.
