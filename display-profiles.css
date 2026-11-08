@@ -670,7 +670,7 @@ html,body{min-height:0;overscroll-behavior:none}
  width:auto!important;max-width:none!important;max-height:none!important;
  transform:none!important;
 }
-.cockpit .map .nav-search .inner{height:100%;min-height:0;padding:12px;gap:8px;overflow:hidden}
+.cockpit .map .overlay.nav-search .inner{height:100%;min-height:0;padding:12px;gap:8px;overflow:hidden}
 .cockpit .map .nav-search .inner>.row:first-child{position:absolute;right:12px;top:12px;height:46px;z-index:4}
 .cockpit .nav-search .nav-overlay-title{display:none}
 .cockpit .map .nav-search-field{margin-right:112px;flex-shrink:0}
@@ -690,7 +690,7 @@ html,body{min-height:0;overscroll-behavior:none}
 .cockpit .nav-preview-address{line-height:1.4;overflow-wrap:anywhere}
 @media(orientation:landscape) and (max-height:500px){
  .cockpit .map:has(.nav-search){--nav-keyboard-height:212px}
- .cockpit .map .nav-search .inner{padding:6px;gap:4px}
+ .cockpit .map .overlay.nav-search .inner{padding:6px;gap:4px}
  .cockpit .map .nav-search .inner>.row:first-child{right:6px;top:6px}
  .cockpit .map .nav-search-heading{display:none}
  .cockpit .map .nav-search .suggestion{min-height:44px;padding:4px 8px}
