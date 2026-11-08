@@ -647,3 +647,8 @@ html,body{min-height:0;overscroll-behavior:none}
    App-owned telemetry headers remain visible in full and split layouts. */
 .cockpit .workspace > .status{display:none!important;}
 .cockpit.nav-status-only .workspace > .status{display:flex!important;}
+
+/* Standalone Tacho Next embedded as an app, never inherits card scrolling. */
+.tacho-next-host{padding:0!important;overflow:hidden!important;min-height:0!important;display:flex!important;flex-direction:column!important;}
+.tacho-next-frame{display:block;width:100%;height:100%;min-height:0;flex:1;border:0;background:#070b11;border-radius:inherit;}
+.side.tacho-next-host{padding:0!important;}
