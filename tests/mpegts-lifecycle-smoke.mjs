@@ -114,6 +114,12 @@ video.paused=true;now+=24000;
 for(const fn of [...intervals.values()])fn();
 await flush();
 assert.equal(jobs.filter(x=>x.active).length,1,'paused player is not considered stalled');
+// Cleanup must release the decoder even if one library method throws.
+const broken=jobs.find(x=>x.active);
+broken.unload=()=>{throw Error('simulated player unload exception');};
+choose(78);await flush();
+assert.equal(broken.destroyed,true,'destroy still runs after unload exception');
+assert.equal(jobs.filter(x=>x.active).length,1);
 window.meviTVUnmount();
 assert.equal(jobs.filter(x=>x.active).length,0,'unmount releases player');
 assert.equal(intervals.size,0,'unmount clears watchdog');
