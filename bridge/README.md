@@ -1,5 +1,31 @@
 # MeviTV auf Synology DSM 7.2.2 installieren
 
+## HLS-Relay (Phase 1) und Synology-Update
+
+Der Bridge-Dienst kann nun HLS-Master-/Variant-Playlists sowie deren Segmente, alternative Audio-/Untertitel-Playlists und Schlüssel-URIs umschreiben und unter signierten, zeitlich begrenzten `/hls/...`-Adressen über denselben HTTPS-Reverse-Proxy bereitstellen. Die URLs enthalten **keine Klartext-Anbieter-Zugangsdaten**. Die Ressourcen müssen aus Sicherheitsgründen vom konfigurierten Anbieter-Origin stammen (gleicher Host, gleiches Schema und Port). Redirects auf denselben Origin sind bis maximal vier Sprünge zulässig; andere CDN-Hosts werden explizit abgelehnt. DRM, DASH und nicht kompatible Codecs bleiben außerhalb dieser Phase. Der Live-Stream muss beim Anbieter tatsächlich als HLS verfügbar sein; eine fehlende `.m3u8`-Quelle wird nicht automatisch von TS nach HLS konvertiert.
+
+Zur Aktualisierung **ohne Verlust der Synology-Zugangsdaten** auf deinem Windows-PC in PowerShell:
+
+```powershell
+$folder = "\\192.168.178.86\docker\mevitv-bridge"
+$raw = "https://raw.githubusercontent.com/eskiya771/mevicar-cockpit-demo/main/bridge"
+Invoke-WebRequest "$raw/server.cjs" -OutFile "$folder\server.cjs"
+Invoke-WebRequest "$raw/hls.cjs" -OutFile "$folder\hls.cjs"
+Invoke-WebRequest "$raw/Dockerfile" -OutFile "$folder\Dockerfile"
+```
+
+Danach per SSH auf der Synology:
+
+```bash
+cd /volume1/docker/mevitv-bridge
+sudo docker compose up -d --build
+sudo docker compose ps
+curl -fsS http://127.0.0.1:8787/health
+```
+
+Die Datei `.env` **nicht herunterladen oder überschreiben**; sie enthält lokale Geheimnisse. Erst nach erfolgreichem GitHub-Actions-Deployment die MeviCar-Web-App aktualisieren und einen Sender mit echtem HLS-Angebot testen. Falls der Anbieter nur TS ausliefert, ist der nächste Schritt ein gezielter FFmpeg-Remux-Fallback auf der NAS.
+
+
 ## 1. Dateien bereitstellen
 
 Im GitHub-Repository `eskiya771/mevicar-cockpit-demo` über **Code → Download ZIP** das Projekt laden, ZIP entpacken und den **Inhalt des Ordners `bridge/`** nach `/volume1/docker/mevitv-bridge/` auf der Synology kopieren (bei abweichendem Volume den Pfad anpassen). Der Ordner enthält `server.cjs`, `Dockerfile`, `compose.yaml` und `.env.example`.
@@ -65,7 +91,7 @@ Live-TV-, Film- und Serienkategorien sollten bei erreichbarer und kompatibler Xt
 
 ## 5. Wichtige technische Grenzen
 
-Die Bridge schützt die Anbieter-Zugangsdaten vor dem Browser und transportiert Katalogdaten per HTTPS. Medien werden nur bei unterstützten Formaten durchgereicht; signierte Stream-URLs sind temporär. **MPEG-TS ist auf iOS/Safari und anderen Browsern nicht zuverlässig abspielbar. HLS-Playlists und ihre Segmente werden derzeit nicht über die Bridge umgeschrieben; Live-Wiedergabe ist also noch nicht vollständig funktionsfähig.** Das wird ein späterer Entwicklungsschritt, oder wir nutzen einen nativen Android-Media3-Player.
+Die Bridge schützt die Anbieter-Zugangsdaten vor dem Browser und transportiert Katalogdaten per HTTPS. Medien werden nur bei unterstützten Formaten durchgereicht; signierte Stream-URLs sind temporär. **MPEG-TS ist in Browsern nicht zuverlässig abspielbar. HLS wird jetzt bei unterstützten, gleich-originigen Playlist-/Segment-URLs ohne Transcodierung weitergereicht; ob ein Anbieter überhaupt HLS liefert, muss am konkreten Sender getestet werden.** Das wird ein späterer Entwicklungsschritt, oder wir nutzen einen nativen Android-Media3-Player.
 
 Das Bridge-Token bleibt in der Web-App nur bis zum Neuladen im Arbeitsspeicher. Diese Bridge ist ein privater Dienst: sichere Zugangskontrolle und aktuell gehaltene DSM-/Container-Software bleiben nötig. Keine unverschlüsselte externe Verbindung.
 
