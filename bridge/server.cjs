@@ -37,7 +37,7 @@ function validateSession(value){
  try{const data=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));const now=Math.floor(Date.now()/1000);return Number.isSafeInteger(data.exp)&&data.exp>now&&data.exp<=now+SESSION_SECONDS;}catch{return false;}
 }
 function authorize(req){const bearer=(req.headers.authorization||'').replace(/^Bearer /i,'');return validToken(bearer)||validateSession(bearer);}
-function validPin(value){if(typeof value!=='string'||!/^\\d{4}$/.test(value)||!/^\\d{4}$/.test(accessPin))return false;const a=Buffer.from(value),b=Buffer.from(accessPin);return a.length===b.length&&crypto.timingSafeEqual(a,b);}
+function validPin(value){if(typeof value!=='string'||!/^\d{4}$/.test(value)||!/^\d{4}$/.test(accessPin))return false;const a=Buffer.from(value),b=Buffer.from(accessPin);return a.length===b.length&&crypto.timingSafeEqual(a,b);}
 function pinAllowed(){const since=Date.now()-LOGIN_WINDOW;while(loginFailures.length&&loginFailures[0]<since)loginFailures.shift();return loginFailures.length<LOGIN_MAX_FAILURES;}
 async function hlsResponse(req,res,target){
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
@@ -82,7 +82,7 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   // Require browser Origin, no PIN embedded in public PWA. Single global limiter
   // prevents trivial per-IP bypass even if behind a reverse proxy.
   if(req.headers.origin!==origin)return reply(res,403,{error:'Origin denied'});
-  if(!/^\\d{4}$/.test(accessPin))return reply(res,503,{error:'PIN login not configured on NAS'});
+  if(!/^\d{4}$/.test(accessPin))return reply(res,503,{error:'PIN login not configured on NAS'});
   if(!pinAllowed()){res.setHeader('Retry-After','900');return reply(res,429,{error:'Too many PIN attempts. Retry later.'});}
   const data=await body(req);
   if(!validPin(data.pin)){loginFailures.push(Date.now());return reply(res,401,{error:'PIN incorrect'});}
