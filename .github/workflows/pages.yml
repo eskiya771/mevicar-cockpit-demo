@@ -37,6 +37,8 @@ jobs:
         run: node tests/tetris-smoke.mjs
       - name: Test TV catalog and playlists
         run: node tests/tv-smoke.mjs
+      - name: Test Xtream API catalog adapter
+        run: node tests/xtream-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
