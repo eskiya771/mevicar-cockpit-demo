@@ -17,7 +17,7 @@ globalThis.fetch=async (url,options={})=>{
     assert.equal(u.searchParams.get('password'),'test-pass');
     return new Response(JSON.stringify([{category_id:1,category_name:'News'}]),{headers:{'Content-Type':'application/json'}});
   }
-  if(u.pathname.startsWith('/live/'))return new Response('mock transport stream',{headers:{'Content-Type':'video/mp2t'}});
+  if(u.pathname.startsWith('/movie/'))return new Response('mock transport stream',{headers:{'Content-Type':'video/mp2t'}});
   throw Error('Unexpected upstream path');
 };
 const {server}=require('../bridge/server.cjs');
@@ -52,11 +52,17 @@ try{
  assert.equal(response.status,200);
  response=await originalFetch(base+'/api',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action:'delete_everything'})});
  assert.equal(response.status,400);
- response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'live',id:'42',ext:'ts'})});
+ response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'movie',id:'42',ext:'mp4'})});
  assert.equal(response.status,200);
  const ticket=await response.json();
- assert(ticket.url.startsWith('/stream/live/42.ts?'));
+ assert(ticket.url.startsWith('/stream/movie/42.mp4?'));
  response=await originalFetch(base+ticket.url);assert.equal(response.status,200);assert.equal(await response.text(),'mock transport stream');
- response=await originalFetch(base+'/stream/live/42.ts?exp=123&sig='+'0'.repeat(64));assert.equal(response.status,401);
+ response=await originalFetch(base+'/stream/movie/42.mp4?exp=123&sig='+'0'.repeat(64));assert.equal(response.status,401);
+ response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'live',id:'42',ext:'ts'})});
+ assert.equal(response.status,200);
+ const tsTicket=(await response.json()).url;
+ assert.match(tsTicket,/^\/remux\/live\/42\/index\.m3u8\?exp=/);
+ response=await originalFetch(base+'/remux/live/42/index.m3u8?exp=123&sig='+'0'.repeat(64));
+ assert.equal(response.status,401);
  console.log('Xtream bridge OK: auth, CORS, allowlists, catalog response, signed media tickets.');
 }finally{await new Promise(resolve=>server.close(resolve));globalThis.fetch=originalFetch;}
