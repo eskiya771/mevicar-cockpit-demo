@@ -8,7 +8,7 @@ const bridge=readFileSync(new URL('../bridge/server.cjs',import.meta.url),'utf8'
 const workflow=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');
 new Function(tv);
 assert.match(tv,/engine\.createPlayer\(\{type:'mpegts',isLive:true,url/);
-assert.match(tv,/mpegtsPlayer\.unload\(\)/);
+assert.match(tv,/previous\.unload\(\)/);
 assert.match(tv,/mpegtsFallback=null/);
 assert.match(tv,/Wechsle zu HLS\/FFmpeg/);
 assert.match(tv,/enableStashBuffer:true/);
