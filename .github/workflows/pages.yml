@@ -37,6 +37,8 @@ jobs:
         run: node tests/tetris-smoke.mjs
       - name: Test TV catalog and playlists
         run: node tests/tv-smoke.mjs
+      - name: Test MeviTV iPhone landscape sender scrolling
+        run: node tests/tv-iphone-landscape-smoke.mjs
       - name: Test Xtream API catalog adapter
         run: node tests/xtream-smoke.mjs
       - name: Test direct MPEG-TS browser routing
