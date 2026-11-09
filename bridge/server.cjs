@@ -9,6 +9,7 @@ const upstream=process.env.XTREAM_UPSTREAM||'';
 const username=process.env.XTREAM_USER||'';
 const password=process.env.XTREAM_PASSWORD||'';
 const token=process.env.MEVITV_BRIDGE_TOKEN||'';
+const accessPin=process.env.MEVITV_PIN||'';
 const origin=process.env.MEVITV_ORIGIN||'';
 const port=Number(process.env.PORT||8787);
 const host=process.env.HOST||'127.0.0.1';
@@ -19,13 +20,25 @@ const safeExt=ext=>/^(m3u8|ts|mp4|mkv|avi|mov)$/.test(String(ext));
 function provider(){const u=new URL(upstream);if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.search||u.hash)throw Error('Invalid upstream');if(!username||!password||token.length<32||!origin.startsWith('https://'))throw Error('Missing secure environment');return u;}
 const base=provider(),secret=crypto.createHmac('sha256',token).update('mevitv-playback-v1').digest();
 const relay=createRelay(secret,base.origin);
+const loginFailures=[];
+const LOGIN_WINDOW=15*60*1000,LOGIN_MAX_FAILURES=5,SESSION_SECONDS=2*60*60;
 function mac(value){return crypto.createHmac('sha256',secret).update(value).digest('hex');}
 function validToken(value){const a=Buffer.from(value||''),b=Buffer.from(token);return a.length===b.length&&crypto.timingSafeEqual(a,b);}
 function cors(req,res){if(req.headers.origin===origin){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');}}
 function reply(res,code,data){res.statusCode=code;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(data));}
 async function body(req){let total=0,chunks=[];for await(const p of req){total+=p.length;if(total>4096)throw Error('Request too large');chunks.push(p);}return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
 function upstreamURL(path,params={}){const u=new URL(path,base.origin);for(const[k,v]of Object.entries(params))u.searchParams.set(k,String(v));return u;}
-function authorize(req){return validToken((req.headers.authorization||'').replace(/^Bearer /i,''));}
+function sessionSignature(payload){return crypto.createHmac('sha256',secret).update('mevitv-session-v1|'+payload).digest('base64url');}
+function issueSession(){const payload=Buffer.from(JSON.stringify({exp:Math.floor(Date.now()/1000)+SESSION_SECONDS,nonce:crypto.randomBytes(16).toString('hex')})).toString('base64url');return payload+'.'+sessionSignature(payload);}
+function validateSession(value){
+ if(typeof value!=='string'||value.length>1024)return false;
+ const parts=value.split('.');if(parts.length!==2||!/^[a-zA-Z0-9_-]+$/.test(parts[0])||!/^[a-zA-Z0-9_-]+$/.test(parts[1]))return false;
+ const expected=Buffer.from(sessionSignature(parts[0]));const actual=Buffer.from(parts[1]);if(expected.length!==actual.length||!crypto.timingSafeEqual(expected,actual))return false;
+ try{const data=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));const now=Math.floor(Date.now()/1000);return Number.isSafeInteger(data.exp)&&data.exp>now&&data.exp<=now+SESSION_SECONDS;}catch{return false;}
+}
+function authorize(req){const bearer=(req.headers.authorization||'').replace(/^Bearer /i,'');return validToken(bearer)||validateSession(bearer);}
+function validPin(value){if(typeof value!=='string'||!/^\\d{4}$/.test(value)||!/^\\d{4}$/.test(accessPin))return false;const a=Buffer.from(value),b=Buffer.from(accessPin);return a.length===b.length&&crypto.timingSafeEqual(a,b);}
+function pinAllowed(){const since=Date.now()-LOGIN_WINDOW;while(loginFailures.length&&loginFailures[0]<since)loginFailures.shift();return loginFailures.length<LOGIN_MAX_FAILURES;}
 async function hlsResponse(req,res,target){
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
  res.once('close',()=>controller.abort());
@@ -65,6 +78,17 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
  if(req.method==='OPTIONS'){if(req.headers.origin!==origin)return reply(res,403,{error:'Origin denied'});res.statusCode=204;return res.end();}
  const url=new URL(req.url,'http://localhost');
  if(req.method==='GET'&&url.pathname==='/health')return reply(res,200,{status:'ready'});
+ if(req.method==='POST'&&url.pathname==='/session'){
+  // Require browser Origin, no PIN embedded in public PWA. Single global limiter
+  // prevents trivial per-IP bypass even if behind a reverse proxy.
+  if(req.headers.origin!==origin)return reply(res,403,{error:'Origin denied'});
+  if(!/^\\d{4}$/.test(accessPin))return reply(res,503,{error:'PIN login not configured on NAS'});
+  if(!pinAllowed()){res.setHeader('Retry-After','900');return reply(res,429,{error:'Too many PIN attempts. Retry later.'});}
+  const data=await body(req);
+  if(!validPin(data.pin)){loginFailures.push(Date.now());return reply(res,401,{error:'PIN incorrect'});}
+  loginFailures.length=0;
+  return reply(res,200,{session:issueSession(),expires_in:SESSION_SECONDS});
+ }
  if(req.method==='POST'&&url.pathname==='/api'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});const data=await body(req);if(!allowedActions.has(data.action))return reply(res,400,{error:'Unsupported action'});const params={username,password,action:data.action};if(data.series_id!==undefined){if(!safeId(data.series_id))return reply(res,400,{error:'Invalid id'});params.series_id=data.series_id;}if(data.vod_id!==undefined){if(!safeId(data.vod_id))return reply(res,400,{error:'Invalid id'});params.vod_id=data.vod_id;}if(data.stream_id!==undefined){if(!safeId(data.stream_id))return reply(res,400,{error:'Invalid id'});params.stream_id=data.stream_id;}
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),90000);
  try{const remote=await fetch(upstreamURL('/player_api.php',params),{redirect:'error',signal:controller.signal});if(!remote.ok)return reply(res,502,{error:'Upstream HTTP '+remote.status});const length=Number(remote.headers.get('content-length')||0);if(length>MAX_CATALOG_BYTES)return reply(res,413,{error:'Catalog too large'});const reader=remote.body.getReader();let total=0,chunks=[];for(;;){const {done,value}=await reader.read();if(done)break;total+=value.length;if(total>MAX_CATALOG_BYTES){await reader.cancel();return reply(res,413,{error:'Catalog too large'});}chunks.push(Buffer.from(value));}res.statusCode=200;res.setHeader('Content-Type','application/json; charset=utf-8');res.end(Buffer.concat(chunks));}finally{clearTimeout(timeout);}return;}
