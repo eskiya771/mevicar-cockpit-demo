@@ -20,7 +20,7 @@ function start(id,input){
  if(item){item.used=Date.now();return item;}
  if(sessions.size>=MAX_ACTIVE)throw Error('Max active streams reached');
  fs.mkdirSync(ROOT,{recursive:true,mode:0o700});
- const dir=path.join(ROOT,String(id));fs.mkdirSync(dir,{recursive:true,mode:0o700});
+ const dir=path.join(ROOT,String(id));fs.rmSync(dir,{recursive:true,force:true});fs.mkdirSync(dir,{recursive:true,mode:0o700});
  const args=[
   '-hide_banner','-nostdin','-loglevel','error','-y',
   '-rw_timeout','10000000','-i',input,
