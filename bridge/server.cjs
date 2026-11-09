@@ -31,8 +31,17 @@ async function hlsResponse(req,res,target){
  res.once('close',()=>controller.abort());
  try{
   const headers={};if(req.headers.range)headers.Range=req.headers.range;
-  const remote=await fetch(target,{headers,signal:controller.signal,redirect:'manual'});
-  if(remote.status>=300&&remote.status<400)return reply(res,502,{error:'Provider HLS redirect requires an explicitly trusted CDN origin'});
+  let current=target,remote;
+  for(let i=0;i<4;i++){
+   remote=await fetch(current,{headers,signal:controller.signal,redirect:'manual'});
+   if(remote.status<300||remote.status>=400)break;
+   if(![301,302,303,307,308].includes(remote.status))return reply(res,502,{error:'Unsupported HLS redirect'});
+   const location=remote.headers.get('location');
+   if(!location)return reply(res,502,{error:'Missing HLS redirect location'});
+   try{current=relay.check(location,current);}catch{return reply(res,502,{error:'HLS CDN host not allowlisted'});}
+   await remote.body?.cancel?.();
+   if(i===3)return reply(res,502,{error:'Too many HLS redirects'});
+  }
   if(!remote.ok&&remote.status!==206)return reply(res,502,{error:'Provider HLS HTTP '+remote.status});
   const contentType=remote.headers.get('content-type')||'';
   const manifest=/\\.m3u8(?:$|[?#])/i.test(target.href)||/mpegurl/i.test(contentType);
@@ -41,7 +50,7 @@ async function hlsResponse(req,res,target){
    if(len>MAX_MANIFEST)return reply(res,413,{error:'HLS manifest too large'});
    const reader=remote.body.getReader();let total=0,chunks=[];
    for(;;){const {done,value}=await reader.read();if(done)break;total+=value.byteLength;if(total>MAX_MANIFEST){await reader.cancel();return reply(res,413,{error:'HLS manifest too large'});}chunks.push(Buffer.from(value));}
-   const rewritten=relay.rewrite(Buffer.concat(chunks).toString('utf8'),target,new URL('http://localhost').origin);
+   const rewritten=relay.rewrite(Buffer.concat(chunks).toString('utf8'),current,new URL('http://localhost').origin);
    // Rewrite to relative URLs so the reverse proxy keeps its external HTTPS host.
    const output=rewritten.replaceAll('http://localhost/hls/','/hls/');
    res.setHeader('Content-Type','application/vnd.apple.mpegurl; charset=utf-8');res.statusCode=200;res.end(output);return;
