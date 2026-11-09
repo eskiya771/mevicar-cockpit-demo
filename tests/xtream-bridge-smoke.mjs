@@ -7,6 +7,7 @@ process.env.XTREAM_USER='test-user';
 process.env.XTREAM_PASSWORD='test-pass';
 process.env.MEVITV_BRIDGE_TOKEN='test-token-which-is-at-least-32-characters-long';
 process.env.MEVITV_ORIGIN='https://example.github.io';
+process.env.MEVITV_PIN='7392';
 const originalFetch=globalThis.fetch;
 globalThis.fetch=async (url,options={})=>{
   const u=new URL(url);
@@ -39,6 +40,16 @@ try{
  assert.equal(response.status,200);
  assert.equal(response.headers.get('access-control-allow-origin'),'https://example.github.io');
  assert.equal((await response.json())[0].category_name,'News');
+ response=await originalFetch(base+'/session',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://wrong.example'},body:JSON.stringify({pin:'7392'})});
+ assert.equal(response.status,403);
+ response=await originalFetch(base+'/session',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://example.github.io'},body:JSON.stringify({pin:'7391'})});
+ assert.equal(response.status,401);
+ response=await originalFetch(base+'/session',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://example.github.io'},body:JSON.stringify({pin:'7392'})});
+ assert.equal(response.status,200);
+ const session=(await response.json()).session;
+ assert(session.includes('.'));
+ response=await originalFetch(base+'/api',{method:'POST',headers:{Authorization:'Bearer '+session,'Content-Type':'application/json',Origin:'https://example.github.io'},body:JSON.stringify({action:'get_live_categories'})});
+ assert.equal(response.status,200);
  response=await originalFetch(base+'/api',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action:'delete_everything'})});
  assert.equal(response.status,400);
  response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'live',id:'42',ext:'ts'})});
