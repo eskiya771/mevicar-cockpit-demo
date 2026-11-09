@@ -51,7 +51,7 @@ const account={credentials:{bridge:true,host:'https://mevitv.mtankurt.synology.m
 },categories:{live:[],movie:[],series:[]}};
 const api={
  state:{kind:'live',group:'ALL',query:'',accounts:[],active:'test'},
- active:()=>account,
+ active:()=>null,
  view:()=>[],
  async playbackURL(_credentials,type,id,ext,transport='default'){
   requests.push({id,type,ext,transport});
@@ -77,6 +77,7 @@ runInNewContext(source,{
  clearInterval(id){intervals.delete(id);}
 });
 window.meviTVMount();
+api.active=()=>account;
 const choose=id=>events['root:click']({target:{closest:()=>({dataset:{xtItem:String(id)}})}});
 for(let i=1;i<=40;i++)choose(i);
 await flush();
