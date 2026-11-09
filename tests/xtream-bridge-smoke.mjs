@@ -20,6 +20,10 @@ globalThis.fetch=async (url,options={})=>{
   if(u.pathname.startsWith('/movie/'))return new Response('mock transport stream',{headers:{'Content-Type':'video/mp2t'}});
   throw Error('Unexpected upstream path');
 };
+const remux=require('../bridge/remux.cjs');
+assert.equal(remux.safeSegment('seg00001.ts'),true);
+assert.equal(remux.safeSegment('../seg00001.ts'),false);
+assert.equal(remux.safeSegment('index.m3u8'),false);
 const {server}=require('../bridge/server.cjs');
 const {readFileSync}=require('node:fs');
 const bridgeSource=readFileSync(new URL('../bridge/server.cjs',import.meta.url),'utf8');
