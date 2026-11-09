@@ -158,10 +158,10 @@ jobs:
       - name: Generate PWA icons and copy assets
         run: |
           mkdir -p dist/vendor
-          # Pin the exact npm package. npm validates the package against registry integrity metadata.
-          npm install --prefix /tmp/mevicar-mpegts mpegts.js@1.8.2 --ignore-scripts --no-audit --no-fund --no-save
-          cp /tmp/mevicar-mpegts/node_modules/mpegts.js/dist/mpegts.min.js dist/vendor/mpegts-1.8.2.min.js
-          test -s dist/vendor/mpegts-1.8.2.min.js
+          # Download the pinned browser bundle directly; the npm package
+          # installation does not reliably expose this artifact at the expected path.
+          curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/mpegts.js@1.8.2/dist/mpegts.min.js -o dist/vendor/mpegts-1.8.2.min.js
+          test "$(wc -c < dist/vendor/mpegts-1.8.2.min.js)" -gt 100000
           curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js -o dist/vendor/hls-1.6.15.min.js
           (cd dist && sha256sum -c ../vendor/hls.sha256)
           cp vendor/hls-LICENSE.txt dist/vendor/
