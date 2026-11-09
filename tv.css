@@ -48,3 +48,52 @@
  .tv-root .tv-row>button:first-child{min-height:48px}
  .tv-root .tv-row .tv-logo{width:34px;height:32px}
 }
+
+/* Full-height station picker on small landscape phones. While choosing a
+   station, it temporarily covers the cockpit/dock, not just the tiny app pane.
+   The player itself keeps the original cockpit layout. */
+@media (orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .cockpit .tv-root:not(.tv-watching){
+   position:fixed;inset:0;z-index:1100;
+   width:100vw;width:100dvw;height:100vh;height:100dvh;
+   max-width:none;max-height:none;box-sizing:border-box;
+   padding:max(5px,env(safe-area-inset-top,0px))
+     max(8px,env(safe-area-inset-right,0px))
+     max(5px,env(safe-area-inset-bottom,0px))
+     max(8px,env(safe-area-inset-left,0px));
+   background:#081823;
+   border:0;border-radius:0;
+   overflow:hidden;display:flex;
+ }
+ .cockpit .tv-root:not(.tv-watching) .tv-library{
+   display:flex;width:100%;height:100%;max-height:100%;min-width:0;
+   gap:4px;overflow:hidden;
+ }
+ .cockpit .tv-root:not(.tv-watching) .tv-player{display:none}
+ .cockpit .tv-root:not(.tv-watching) .tv-library>header{height:36px;min-height:36px}
+ .cockpit .tv-root:not(.tv-watching) .tv-library .tv-xtream-catalog{
+   display:flex;flex:1 1 auto;min-height:0;gap:4px;
+ }
+ .cockpit .tv-root:not(.tv-watching) .tv-xtream-catalog[hidden]{display:none}
+ .cockpit .tv-root:not(.tv-watching) .tv-xtream-tools{
+   display:grid;grid-template-columns:minmax(105px,38%) minmax(0,1fr);
+   gap:5px;min-height:0;flex:none;
+ }
+ .cockpit .tv-root:not(.tv-watching) .tv-xtream-tools>*{
+   width:100%;min-width:0;height:42px;min-height:42px;
+ }
+ .cockpit .tv-root:not(.tv-watching) .tv-xtream-list{
+   flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+   touch-action:pan-y;-webkit-overflow-scrolling:touch;
+ }
+ .cockpit .tv-root:not(.tv-watching) .tv-xtream-item{
+   flex:0 0 46px;height:46px;min-height:46px;
+ }
+ .cockpit .tv-root:not(.tv-watching) [data-act="xtream-back"]{
+   flex:none;height:34px;min-height:34px;
+ }
+ /* Safe-area protected exit to the playing video, visible only in picker. */
+ .cockpit .tv-root:not(.tv-watching) [data-act="tv-player-back"]{
+   display:inline-flex;align-items:center;justify-content:center;
+ }
+}
