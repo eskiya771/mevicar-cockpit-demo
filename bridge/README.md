@@ -1,5 +1,31 @@
 # MeviTV auf Synology DSM 7.2.2 installieren
 
+## MPEG-TS mit FFmpeg nach HLS umverpacken (Phase 2)
+
+Ein realer Sender lieferte `.m3u8` HTTP 403 und `.ts` HTTP 200. MeviTV versucht zunächst HLS und wechselt bei einem Provider-403/404 automatisch auf FFmpeg-Remux. Die Synology verwendet `-c copy` statt vollständiger Neucodierung. Inkompatible Codecs können weiterhin Probleme verursachen. Maximal zwei aktive FFmpeg-Prozesse; unbenutzte Streams werden nach 90 Sekunden beendet. HLS-Ausgabedateien liegen auf dem Container-tmpfs in `/tmp`.
+
+Auf Windows in PowerShell die neuen Dateien kopieren, ohne `.env` zu überschreiben:
+
+```powershell
+$dir = "\\\\192.168.178.86\\docker\\mevitv-bridge"
+$base = "https://raw.githubusercontent.com/eskiya771/mevicar-cockpit-demo/main/bridge"
+"server.cjs","hls.cjs","remux.cjs","Dockerfile" | ForEach-Object {
+  Invoke-WebRequest -Uri "$base/$_" -OutFile "$dir\\$_"
+}
+```
+
+Auf der Synology via SSH:
+
+```sh
+cd /volume1/docker/mevitv-bridge
+sudo docker compose up -d --build
+sudo docker compose ps
+curl -fsS http://127.0.0.1:8787/health
+```
+
+Erst nach erfolgreichem GitHub-Pages-Deployment einen realen Sender auf Brave und iPhone testen. Der bestehende HTTPS-Reverse-Proxy bleibt unverändert. Falls die 256-MB-Containergrenze oder die Codecs Probleme machen, muss die Konfiguration gezielt angepasst werden. Echte Wiedergabe ist noch nicht bestätigt.
+
+
 ## Feste MeviTV-Bridge und vereinfachte PIN-Anmeldung
 
 MeviCar Next verwendet fest `https://mevitv.mtankurt.synology.me` als Proxy. Der Benutzer sieht nur **Bezeichnung** und **vierstelligen Zugangscode**. Die Bridge prüft den Code serverseitig und stellt danach ein signiertes, zweistündiges Sitzungstoken aus. Der geheime Bridge-Master-Token und die Zugangsdaten des IPTV-Anbieters bleiben in der lokalen Synology-`.env`.
