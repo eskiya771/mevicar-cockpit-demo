@@ -79,7 +79,7 @@ async function playXtMedia(url,name){
  if(isHls){
   // The bridge currently returns HTTP 415 for HLS: diagnose it before handing
   // a JSON error response to native HLS or hls.js.
-  try{const response=await fetch(url,{cache:'no-store',credentials:'omit'});if(!valid()){await response.body?.cancel?.();return;}if(!response.ok){await response.body?.cancel?.();status(response.status===415?'Die Synology-Bridge unterstützt HLS-Playlists noch nicht (HTTP 415). HLS-Relay wird benötigt.':'HLS-Abruf fehlgeschlagen (HTTP '+response.status+').');return;}await response.body?.cancel?.();}catch(e){if(valid())status('Streamabruf fehlgeschlagen: '+(e.message||'Netzwerkfehler'));return;}
+  try{const response=await fetch(url,{cache:'no-store',credentials:'omit'});if(!valid()){await response.body?.cancel?.();return;}if(!response.ok){let detail='';try{const data=await response.json();detail=typeof data.error==='string'?data.error.slice(0,120):'';}catch{}status(response.status===415?'HLS-Relay auf der Synology noch nicht aktiv (HTTP 415).':'HLS-Abruf fehlgeschlagen (HTTP '+response.status+')'+(detail?': '+detail:'')+'.');return;}await response.body?.cancel?.();}catch(e){if(valid())status('Streamabruf fehlgeschlagen: '+(e.message||'Netzwerkfehler'));return;}
   if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=url;start();return;}
   try{const Hls=await loadHls();if(!valid())return;if(!Hls.isSupported())throw Error('HLS im Browser nicht verfügbar');hls=new Hls();hls.on(Hls.Events.MANIFEST_PARSED,start);hls.on(Hls.Events.ERROR,(_,data)=>{if(valid()&&data.fatal){cleanup();status('HLS-Fehler: '+(data.details||'Manifest oder Segment nicht erreichbar'));}});hls.loadSource(url);hls.attachMedia(v);}catch(e){if(valid())status(e.message);}
   return;
