@@ -18,6 +18,16 @@ assert.match(css,/\.tv-root \.tv-xtream-tabs button\{min-height:36px/);
 assert.match(css,/\.tv-root \.tv-xtream-group,\.tv-root \.tv-xtream-search\{min-height:36px/);
 assert.match(css,/\.tv-root \[data-act="xtream-back"\]\{flex:none;min-height:30px/);
 assert.match(tv,/data-xt-item/);
+assert.match(css,/\.cockpit \.tv-root:not\(\.tv-watching\)\{[\s\S]*?position:fixed;inset:0;z-index:1100/);
+assert.match(css,/width:100vw;width:100dvw;height:100vh;height:100dvh/);
+assert.match(css,/\.cockpit \.tv-root:not\(\.tv-watching\) \.tv-xtream-tools\{[\s\S]*?display:grid;grid-template-columns/);
+assert.match(css,/\.cockpit \.tv-root:not\(\.tv-watching\) \.tv-xtream-list\{[\s\S]*?overflow-y:auto/);
+assert.match(css,/\.cockpit \.tv-root:not\(\.tv-watching\) \[data-act="tv-player-back"\]\{/);
+assert.match(css,/\.tv-root \[data-act="tv-player-back"\]\{display:none\}/);
+assert.match(tv,/class="tv-xtream-tools"/);
+assert.match(tv,/data-act="tv-player-back"/);
+assert.match(tv,/case'tv-player-back':root\.classList\.add\('tv-watching'\)/);
+
 assert.match(html,/<link rel="stylesheet" href="\.\/tv\.css">/);
 assert.match(workflow,/pathlib\.Path\('tv\.css'\)\.read_text\(\)/);
 assert.match(workflow,/cp [^\n]*tv\.css [^\n]*dist\//);
