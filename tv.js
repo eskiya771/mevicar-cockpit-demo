@@ -72,6 +72,11 @@ async function startXtMedia(api,a,type,id,extension,name){
   });
  };
  try{
+  if(type!=='live'||!a.credentials.bridge){
+   const url=await api.playbackURL(a.credentials,type,id,extension);
+   if(stillCurrent())await playXtMedia(url,name);
+   return;
+  }
   if(type==='live'&&a.credentials.bridge){
    let engine=null;
    try{engine=await loadMpegts();}catch(e){if(!stillCurrent())return;return fallback(e.message);}
