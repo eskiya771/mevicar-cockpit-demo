@@ -4,6 +4,15 @@
 const MAX_CATALOG_BYTES=64*1024*1024;
 function origin(value){try{const u=new URL(String(value).trim());if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash)return null;return u.origin;}catch{return null;}}
 function credentials(base,user,password){const host=origin(base),u=String(user||'').trim(),p=String(password||'');if(!host||!u||!p||u.length>180||p.length>180||/[\/\\?#&]/.test(u)||/[\/\\?#&]/.test(p))throw Error('HTTPS-Server und gültige Zugangsdaten erforderlich.');return {host,user:u,password:p};}
+const FIXED_BRIDGE='https://mevitv.mtankurt.synology.me';
+async function pinCredentials(pin){
+ if(!/^\d{4}$/.test(String(pin||'')))throw Error('Bitte einen vierstelligen Zugangscode eingeben.');
+ const response=await fetch(FIXED_BRIDGE+'/session',{method:'POST',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:String(pin)})});
+ if(!response.ok){let error='HTTP '+response.status;try{const data=await response.json();if(data.error)error=String(data.error);}catch{}throw Error(error);}
+ const data=await response.json();
+ if(typeof data.session!=='string'||!data.session.includes('.'))throw Error('Ungültige Bridge-Sitzung.');
+ return {host:FIXED_BRIDGE,token:data.session,bridge:true};
+}
 function bridgeCredentials(base,accessToken){const host=origin(base),token=String(accessToken||'').trim();if(!host||token.length<32)throw Error('HTTPS-Bridge und Zugangs-Token (mindestens 32 Zeichen) erforderlich.');return {host,token,bridge:true};}
 function apiURL(c,action,extra={}){if(c.bridge){const url=new URL('/api',c.host);url.searchParams.set('action',action);for(const [k,v] of Object.entries(extra))url.searchParams.set(k,String(v));return url.href;}const url=new URL('/player_api.php',c.host);url.searchParams.set('username',c.user);url.searchParams.set('password',c.password);if(action)url.searchParams.set('action',action);for(const [k,v] of Object.entries(extra))url.searchParams.set(k,String(v));return url.href;}
 function mediaURL(c,type,id,ext){if(!['live','movie','series'].includes(type)||!/^\d+$/.test(String(id)))throw Error('Ungültige Medien-ID');const e=String(ext|| (type==='live'?'m3u8':'mp4')).replace(/^\./,'').toLowerCase();if(!/^[a-z0-9]{2,5}$/.test(e))throw Error('Ungültiges Medienformat');return c.host+'/'+type+'/'+encodeURIComponent(c.user)+'/'+encodeURIComponent(c.password)+'/'+id+'.'+e;}
@@ -12,7 +21,7 @@ function normalizeItems(raw,type){return (Array.isArray(raw)?raw:[]).slice(0,150
 async function readJSON(url,c){const controller=new AbortController(),t=setTimeout(()=>controller.abort(),90000);try{const bridge=!!c?.bridge;const dest=bridge?new URL(url):null;const params=bridge?Object.fromEntries(dest.searchParams.entries()):null;const res=await fetch(bridge?c.host+'/api':url,{method:bridge?'POST':'GET',headers:bridge?{'Authorization':'Bearer '+c.token,'Content-Type':'application/json'}:{},body:bridge?JSON.stringify(params):undefined,signal:controller.signal,credentials:'omit',cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const len=Number(res.headers.get('content-length')||0);if(len>MAX_CATALOG_BYTES)throw Error('Katalog größer als 64 MiB');const reader=res.body?.getReader();if(!reader){const content=await res.text();if(content.length>MAX_CATALOG_BYTES)throw Error('Katalog größer als 64 MiB');return JSON.parse(content);}let size=0,parts=[];while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>MAX_CATALOG_BYTES){await reader.cancel();throw Error('Katalog größer als 64 MiB');}parts.push(value);}const all=new Uint8Array(size);let offset=0;for(const p of parts){all.set(p,offset);offset+=p.length;}return JSON.parse(new TextDecoder().decode(all));}finally{clearTimeout(t);}}
 const state={accounts:[],active:null,kind:'live',group:'ALL',query:'',busy:false};
 const kindActions={live:['get_live_categories','get_live_streams'],movie:['get_vod_categories','get_vod_streams'],series:['get_series_categories','get_series']};
-const api={origin,credentials,bridgeCredentials,apiURL,mediaURL,normalizeCategories,normalizeItems,state};
+const api={origin,credentials,bridgeCredentials,pinCredentials,FIXED_BRIDGE,apiURL,mediaURL,normalizeCategories,normalizeItems,state};
 async function connect(name,c,onProgress){if(state.busy)throw Error('Import läuft bereits');state.busy=true;const a={id:'xt-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),name:String(name||'Xtream').slice(0,80),credentials:c,categories:{},items:{},episodes:{}};try{
  for(const kind of ['live','movie','series']){const [catAct,itemAct]=kindActions[kind];onProgress?.('Lade '+kind+' Kategorien …');a.categories[kind]=normalizeCategories(await readJSON(apiURL(c,catAct),c));onProgress?.('Lade '+kind+' Katalog …');a.items[kind]=normalizeItems(await readJSON(apiURL(c,itemAct),c),kind);onProgress?.(kind+': '+a.items[kind].length+' Einträge');}
  state.accounts.push(a);state.active=a.id;return a;
