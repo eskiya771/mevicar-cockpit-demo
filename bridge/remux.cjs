@@ -26,7 +26,7 @@ function start(id,input){
   '-rw_timeout','10000000','-i',input,
   '-map','0:v:0?','-map','0:a:0?',
   '-c','copy','-f','hls','-hls_time','4','-hls_list_size','5',
-  '-hls_flags','delete_segments+omit_endlist+independent_segments',
+  '-hls_flags','delete_segments+omit_endlist',
   '-hls_segment_filename',path.join(dir,'seg%05d.ts'),
   path.join(dir,'index.m3u8')
  ];
@@ -43,7 +43,7 @@ async function ready(item){
  const end=Date.now()+START_TIMEOUT_MS;
  while(Date.now()<end){
   try{const value=fs.readFileSync(target,'utf8');if(value.includes('#EXTM3U')&&/seg\d+\.ts/.test(value))return value;}catch{}
-  if(item.exited)throw Error('FFmpeg ended before playlist: '+item.error.slice(-160));
+  if(item.exited)throw Error('FFmpeg ended before playlist');
   await new Promise(resolve=>setTimeout(resolve,350));
  }
  throw Error('FFmpeg HLS startup timed out');
