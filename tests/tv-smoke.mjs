@@ -12,6 +12,12 @@ assert.match(tvSource,/request===xtRequestSeq/);
 assert.match(tvSource,/data\.type===Hls\.ErrorTypes\.NETWORK_ERROR/);
 assert.match(tvSource,/data\.type===Hls\.ErrorTypes\.MEDIA_ERROR/);
 assert.doesNotMatch(tvSource,/code===4\?'Medienformat wird vom Browser nicht unterstützt/);
+assert.match(tvSource,/if\(Hls\.isSupported\(\)\)/);
+assert.match(tvSource,/if\(playerTransition\|\|/);
+assert.match(tvSource,/if\(xtProbe\)\{xtProbe\.abort\(\)/);
+assert.match(tvSource,/playerFault=detail/);
+assert.doesNotMatch(tvSource,/if\(v\.canPlayType\('application\/vnd\.apple\.mpegurl'\)\)\{v\.src=url;start\(\);return;\}/);
+
 
 assert(CATALOG.filter(x=>x.country==='DE').length>=3);
 assert(CATALOG.filter(x=>x.country==='TR').length>=3);
