@@ -1,5 +1,29 @@
 # MeviTV auf Synology DSM 7.2.2 installieren
 
+## Feste MeviTV-Bridge und vereinfachte PIN-Anmeldung
+
+MeviCar Next verwendet fest `https://mevitv.mtankurt.synology.me` als Proxy. Der Benutzer sieht nur **Bezeichnung** und **vierstelligen Zugangscode**. Die Bridge prüft den Code serverseitig und stellt danach ein signiertes, zweistündiges Sitzungstoken aus. Der geheime Bridge-Master-Token und die Zugangsdaten des IPTV-Anbieters bleiben in der lokalen Synology-`.env`.
+
+Auf **deiner Synology** den gewünschten vierstelligen PIN in `/volume1/docker/mevitv-bridge/.env` unter `MEVITV_PIN=` hinzufügen. Der tatsächliche PIN gehört **nicht** in GitHub, Builds, JavaScript oder Screenshots. Die Anmeldung ist per Origin-Prüfung und globalem Limit von fünf Fehleingaben pro 15 Minuten begrenzt, jedoch ersetzt ein vierstelliger PIN keine starke Zugangssicherung: Für einen öffentlich erreichbaren Dienst zusätzlich VPN/Netzwerkzugriffsbeschränkung nutzen.
+
+Auf dem Windows-PC die aktuelle Serverdatei kopieren (nicht die lokale `.env` überschreiben):
+
+```powershell
+$ordner = "\\\\192.168.178.86\\docker\\mevitv-bridge"
+Invoke-WebRequest "https://raw.githubusercontent.com/eskiya771/mevicar-cockpit-demo/main/bridge/server.cjs" -OutFile "$ordner\\server.cjs"
+```
+
+Falls HLS-Relay noch nicht aktualisiert ist, zusätzlich `hls.cjs` und `Dockerfile` herunterladen. Anschließend auf der Synology:
+
+```sh
+cd /volume1/docker/mevitv-bridge
+sudo docker compose up -d --build
+curl -fsS http://127.0.0.1:8787/health
+```
+
+Nach erfolgreichem GitHub-Pages-Deployment genügt in MeviTV der PIN. Bei Neuladen oder nach zwei Stunden Anmeldung erneut durchführen. Weder die numerische PIN noch das kurzlebige Sitzungstoken werden im Browser dauerhaft gespeichert.
+
+
 ## HLS-Relay (Phase 1) und Synology-Update
 
 Der Bridge-Dienst kann nun HLS-Master-/Variant-Playlists sowie deren Segmente, alternative Audio-/Untertitel-Playlists und Schlüssel-URIs umschreiben und unter signierten, zeitlich begrenzten `/hls/...`-Adressen über denselben HTTPS-Reverse-Proxy bereitstellen. Die URLs enthalten **keine Klartext-Anbieter-Zugangsdaten**. Die Ressourcen müssen aus Sicherheitsgründen vom konfigurierten Anbieter-Origin stammen (gleicher Host, gleiches Schema und Port). Redirects auf denselben Origin sind bis maximal vier Sprünge zulässig; andere CDN-Hosts werden explizit abgelehnt. DRM, DASH und nicht kompatible Codecs bleiben außerhalb dieser Phase. Der Live-Stream muss beim Anbieter tatsächlich als HLS verfügbar sein; eine fehlende `.m3u8`-Quelle wird nicht automatisch von TS nach HLS konvertiert.
