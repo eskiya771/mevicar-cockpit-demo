@@ -82,7 +82,9 @@ async function startXtMedia(api,a,type,id,extension,name){
    try{engine=await loadMpegts();}catch(e){if(!stillCurrent())return;return fallback(e.message);}
    if(!stillCurrent())return;
    if(supportsMpegts(engine)){
-    const direct=await api.playbackURL(a.credentials,'live',id,'ts','raw');
+    let direct;
+    try{direct=await api.playbackURL(a.credentials,'live',id,'ts','raw');}
+    catch(e){if(stillCurrent())await fallback('Direkter TS-Zugriff: '+e.message);return;}
     if(!stillCurrent())return;
     return playMpegts(direct,name,engine,stillCurrent,fallback);
    }
