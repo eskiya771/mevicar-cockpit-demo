@@ -43,6 +43,8 @@ jobs:
         run: node tests/xtream-bridge-smoke.mjs
       - name: Test signed HLS manifests and segment relay
         run: node tests/hls-relay-smoke.mjs
+      - name: Test FFmpeg sender switching and eviction
+        run: node tests/remux-switch-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
