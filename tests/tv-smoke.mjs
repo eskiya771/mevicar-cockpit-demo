@@ -36,7 +36,7 @@ const video={src:'',canPlayType:()=>true,play(){plays++;return Promise.resolve()
 const root={classList:{add(){},toggle(){}},querySelector(s){if(s==='video')return video;if(!nodes.has(s))nodes.set(s,{textContent:'',innerHTML:'',value:'',setAttribute(){},removeAttribute(){}});return nodes.get(s);},addEventListener(t,f){events['root:'+t]=f;},removeEventListener(t){delete events['root:'+t];}};
 const doc={querySelector:()=>root,hidden:false,addEventListener(t,f){events[t]=f;},removeEventListener(t){delete events[t];}};
 const win={document:doc,meviMediaStopForSource:x=>owner=x};
-runInNewContext(readFileSync(new URL('../tv.js',import.meta.url),'utf8'),{window:win,document:doc,URL,localStorage:{getItem:()=>null,setItem(){}},setTimeout:f=>{timers.set(++id,f);return id;},clearTimeout:id=>timers.delete(id)});
+runInNewContext(readFileSync(new URL('../tv.js',import.meta.url),'utf8'),{window:win,document:doc,URL,localStorage:{getItem:()=>null,setItem(){}},setTimeout:f=>{timers.set(++id,f);return id;},clearTimeout:id=>timers.delete(id),setInterval:f=>{timers.set(++id,f);return id;},clearInterval:id=>timers.delete(id)});
 win.meviTVMount();
 events['root:click']({target:{closest:()=>({dataset:{act:'play'}})}});
 assert.equal(owner,'tv');assert.equal(plays,1);assert.equal(timers.size,1);
