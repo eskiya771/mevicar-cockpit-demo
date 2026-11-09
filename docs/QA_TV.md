@@ -114,3 +114,11 @@ Anforderung: Nicht nur den kleinen MeviTV-Bereich, sondern die **gesamte verfüg
 Kategorien und Katalogsuche liegen platzsparend nebeneinander (`.tv-xtream-tools`); die Senderliste nutzt den gesamten verbleibenden Raum zum Scrollen. Über die neue iPhone-spezifische ✕-Schaltfläche kehrt man zum TV-Bild zurück. Das ursprüngliche Layout auf großen Bildschirmen und der mpegts.js-Wiedergabepfad bleiben unverändert.
 
 `tests/tv-iphone-landscape-smoke.mjs` deckt Fullscreen-Anzeige, Safe-Area-Höhe, Scrollbereich und Rückkehraktion ab und läuft im GitHub-Pages-Workflow. Statische Testausführung erfolgreich; reale Sicht-/Touch-Abnahme am iPhone steht noch aus.
+
+## MeviTV – drei Spalten in MeviCar Next (10. November 2026)
+
+Auf Wunsch wurde der zuvor verwendete iPhone-Fullscreen-Senderlisten-Overlay entfernt: die **originale linke MeviCar-App-Symbolleiste wird nicht überdeckt oder verändert**. In der MeviTV-Vollbildapp erhält die IPTV-Katalogliste die zweite Spalte (bei kompakten Querformaten 37 % der verbleibenden App-Fläche), und die TV-Wiedergabe mit Start/Stopp/Vollbild und Status erhält die dritte Spalte. Beide Bereiche bleiben auch nach Auswahl eines IPTV-Senders gleichzeitig sichtbar.
+
+Das Xtream/IPTV-Kataloglayout blendet ausschließlich die alte TV-LIVE-Kopfzeile sowie die konventionellen "Alle Länder"/Favoriten-Filter aus; Live/Filme/Serien, IPTV-Kategorie und Katalogsuche bleiben. Die alte untere Schaltfläche "Zur Senderliste" und der nutzlos gewordene Fullscreen-Overlay-Schließen-Button entfallen. Die kompakten TV- und ⚙-Icons neben den IPTV-Tabs dienen dem Wechsel zur normalen Senderliste bzw. der Xtream-Quellenverwaltung.
+
+Nur `tv.css` und die Katalog-UI in `tv.js` wurden angepasst. Der mpegts.js-Wiedergabeweg, die Synology-Bridge und die GitHub-Pages-Architektur sind unverändert. Die Regression `tests/tv-iphone-landscape-smoke.mjs` erzwingt ausdrücklich das **Fehlen von `position:fixed`-Overlays** und das gleichzeitige Vorhandensein von Katalog und Player bei aktivem IPTV-Kanal. Statische Regression und JS-Syntaxprüfung erfolgreich; Geräte-Sichttest auf iPhone weiterhin ausstehend.
