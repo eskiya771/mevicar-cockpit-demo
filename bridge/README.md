@@ -152,3 +152,24 @@ Das Bridge-Token bleibt in der Web-App nur bis zum Neuladen im Arbeitsspeicher. 
 - HTTPS funktioniert nicht: Reverse Proxy, Zertifikat, DNS und Firewall prüfen.
 - Anmeldung schlägt fehl: Token identisch mit `.env`? Browser-Entwicklerkonsole prüfen, aber keine Secrets posten.
 - Xtream-Katalog leer/fehlerhaft: Provider unterstützt `player_api.php` eventuell nicht oder antwortet mit zu großen Listen.
+
+## Optionaler MPEG-TS-Direktplayer mpegts.js (Phase 3)
+
+In MeviCar Next (GitHub Pages/PWA) kann `mpegts.js` jetzt den MPEG-TS-Stream auf unterstützten Browsern in MediaSource umpacken. Der Bridge-Server liefert dazu ein authentifiziertes signiertes Ticket für die Originaldatei `/stream/live/<ID>.ts`; die tatsächlichen Anbieter-Zugangsdaten bleiben auf der Synology. Der Browser muss CORS, MediaSource und die Video-/Audio-Codecs unterstützen. Bei Fehlern bleibt die alte FFmpeg-HLS-Wiedergabe automatisch verfügbar. **Der Synology-HTTPS-Proxy bleibt erforderlich**, aber eine erfolgreiche mpegts.js-Wiedergabe benötigt keinen aktiven FFmpeg-Stream.
+
+Nur die Backend-Datei `server.cjs` wurde geändert. Aktualisierung am Windows-PC in PowerShell:
+
+```powershell
+Invoke-WebRequest "https://raw.githubusercontent.com/eskiya771/mevicar-cockpit-demo/main/bridge/server.cjs" -OutFile "\\\\192.168.178.86\\docker\\mevitv-bridge\\server.cjs"
+```
+
+Anschließend in Synology SSH:
+
+```sh
+cd /volume1/docker/mevitv-bridge
+sudo docker compose up -d --build
+sudo docker compose ps
+curl -fsS http://127.0.0.1:8787/health
+```
+
+Die private `.env` bleibt unverändert. Erst nach erfolgreichem Pages-Deployment im gleichen Browser einen funktionierenden Sender und mehrere schnelle Senderwechsel testen. Beim nativen mpegts-Modus erscheint der Hinweis `mpegts.js: Verbinde …`. Wenn stattdessen `HLS/FFmpeg` erscheint, den gemeldeten Grund notieren. Reale Wiedergabe ist noch nicht abgenommen.
