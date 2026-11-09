@@ -106,3 +106,11 @@ GitHub Pages Actions installiert die festgelegte npm-Version über integritätsg
 **Änderung nur in `tv.css`:** Xtream-Senderkacheln haben `flex:0 0 auto`, mindestens 48 px Höhe auf großen Bildschirmen und 45 px auf kompakten Querformaten; die Liste selbst erhält `flex:1 1 auto`, `min-height:0`, `overflow-y:auto`, `touch-action:pan-y` und iOS-Momentum-Scrolling. Für Querformate bis 1024×480 werden Header, Tabs, Kategorieauswahl, Suche und Zurück-Button niedriger, während die Kacheln weiterhin gut antippbar bleiben. Untere Safe Area wird in der Liste berücksichtigt. Das Verhalten der Video-Wiedergabe und der Xtream-API bleibt unverändert.
 
 **Tests:** `node tests/tv-iphone-landscape-smoke.mjs` als zusätzlicher GitHub-Pages-Gate; lokaler isolierter Assertionslauf erfolgreich. Reale Sicht- und Touch-Abnahme auf iPhone 17 im Querformat steht noch aus.
+
+## iPhone Querformat: bildschirmfüllende Senderauswahl – 10. November 2026
+
+Anforderung: Nicht nur den kleinen MeviTV-Bereich, sondern die **gesamte verfügbare Bildschirmhöhe** für die Senderwahl verwenden. Auf kompakten Querformat-Displays bis 1024×480 px wird die Senderauswahl nun als `position:fixed` über dem Cockpit einschließlich der unteren App-Leiste angezeigt (iPhone-Safe-Areas berücksichtigt). Der Videoplayer bleibt bei `.tv-watching` in seinem bisherigen Layout und wird nicht verändert.
+
+Kategorien und Katalogsuche liegen platzsparend nebeneinander (`.tv-xtream-tools`); die Senderliste nutzt den gesamten verbleibenden Raum zum Scrollen. Über die neue iPhone-spezifische ✕-Schaltfläche kehrt man zum TV-Bild zurück. Das ursprüngliche Layout auf großen Bildschirmen und der mpegts.js-Wiedergabepfad bleiben unverändert.
+
+`tests/tv-iphone-landscape-smoke.mjs` deckt Fullscreen-Anzeige, Safe-Area-Höhe, Scrollbereich und Rückkehraktion ab und läuft im GitHub-Pages-Workflow. Statische Testausführung erfolgreich; reale Sicht-/Touch-Abnahme am iPhone steht noch aus.
