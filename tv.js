@@ -17,8 +17,8 @@ function filtered(items,q,country,favorites,only){const query=q.toLocaleLowerCas
 if(typeof module!=='undefined'&&module.exports)module.exports={CATALOG,safeURL,parseM3U,filtered};
 if(!global.document)return;
 const KEY='mevicar-tv-v1',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,generation=0,deadline=null;
-let query='',country='ALL',only=false,libraryPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='';
+let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,mpegtsPlayer=null,generation=0,deadline=null;
+let query='',country='ALL',only=false,libraryPromise=null,mpegtsPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='',mpegtsFallback=null;
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 function channels(){return [...CATALOG,...custom];}
 function current(){return channels().find(c=>c.id===selected)||CATALOG[1];}
@@ -27,7 +27,9 @@ function status(text){const el=root?.querySelector('.tv-status');if(el)el.textCo
 function html(){return '<section class="tv-root"><aside class="tv-library"><header><strong>TV <span>LIVE</span></strong><button data-act="xtream" aria-label="Xtream verwalten">Xtream</button><button data-act="sources" aria-label="Quellen verwalten">Quellen</button><button data-act="add" aria-label="Sender hinzufügen">＋</button></header><input class="tv-search" type="search" placeholder="Sender suchen" aria-label="Sender suchen"><div class="tv-filters"><select class="tv-country" aria-label="Land"><option value="ALL">Alle Länder</option><option value="DE">Deutschland</option><option value="TR">Türkiye</option><option value="OTHER">Eigene</option></select><button data-act="favorites" aria-label="Nur Favoriten" aria-pressed="false">☆</button></div><div class="tv-list"></div><div class="tv-xtream-catalog" hidden><div class="tv-xtream-tabs"><button data-kind="live">Live</button><button data-kind="movie">Filme</button><button data-kind="series">Serien</button></div><select class="tv-xtream-group" aria-label="Kategorie"></select><input class="tv-xtream-search" placeholder="Katalog durchsuchen" aria-label="Katalog durchsuchen"><div class="tv-xtream-list"></div><button data-act="xtream-back">Zur Senderliste</button></div></aside><section class="tv-player"><header><strong class="tv-title"></strong><button data-act="list" aria-label="Senderliste umschalten">☷ Sender</button></header><div class="tv-stage"><video controls playsinline preload="none" aria-label="TV-Livestream"></video><div class="tv-empty">Sender auswählen und Wiedergabe starten</div></div><div class="tv-status" role="status" aria-live="polite">Bereit</div><div class="tv-actions"><button data-act="play">▶ Start / Neu laden</button><button data-act="stop">■ Stop</button><button data-act="fullscreen" aria-label="Video im Vollbild">⛶</button><a class="tv-web" target="_blank" rel="noopener noreferrer">Senderseite ↗</a></div></section><dialog class="tv-dialog"><form class="tv-form"><h3>Eigene TV-Sender</h3><label>Name<input name="name" maxlength="80" required placeholder="Sendername"></label><label>HTTPS-Stream<input name="url" type="url" required placeholder="https://…/master.m3u8"></label><button type="submit">Sender speichern</button></form><label class="tv-import">M3U-Senderliste importieren<input class="tv-file" type="file" accept=".m3u,.m3u8,text/plain"></label><p class="tv-import-status" role="status"></p><p>Eigene Sender bleiben auf diesem Gerät. Maximal 100 Sender.</p><div class="tv-custom"></div><button data-act="close">Schließen</button></dialog><dialog class="tv-dialog tv-sources-dialog"><h3>M3U-Quellen</h3><form class="tv-source-form"><label>Name<input name="name" maxlength="80" required placeholder="Meine TV-Liste"></label><label>M3U-URL (HTTPS)<input name="url" type="url" required placeholder="https://…/playlist.m3u"></label><button type="submit">Quelle hinzufügen und laden</button></form><p class="tv-source-status" role="status">M3U-URLs müssen den Browserzugriff (CORS) erlauben. URLs können Zugangsdaten enthalten und werden nur lokal in diesem Browser gespeichert.</p><div class="tv-source-list"></div><button data-act="sources-close">Schließen</button></dialog><dialog class="tv-dialog tv-xtream-dialog"><h3>MeviTV verbinden</h3><form class="tv-xtream-form"><p>Proxy: mevitv.mtankurt.synology.me</p><label>Bezeichnung<input name="name" maxlength="80" required value="MeviTV"></label><label>Zugangscode<input name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" required placeholder="Vierstelliger Code"></label><button type="submit">Katalog verbinden</button></form><p class="tv-xtream-status" role="status">Der Code wird auf der Synology geprüft. Die Anmeldesitzung bleibt im Arbeitsspeicher.</p><div class="tv-xtream-accounts"></div><button data-act="xtream-close">Schließen</button></dialog></section>';}
 function paintList(){if(!root)return;root.querySelector('.tv-list').innerHTML=filtered(channels(),query,country,favorites,only).map(c=>'<div class="tv-row '+(current().id===c.id?'selected':'')+'"><button data-channel="'+esc(c.id)+'"><span class="tv-logo" aria-hidden="true">'+esc(c.name.split(' ').map(x=>x[0]).join('').slice(0,3))+'</span><span>'+esc(c.name)+'<small>'+({DE:'Deutschland',TR:'Türkiye',OTHER:'Eigener Sender'}[c.country])+'</small></span></button><button data-fav="'+esc(c.id)+'" aria-label="'+esc(c.name)+' als Favorit" aria-pressed="'+favorites.includes(c.id)+'">'+(favorites.includes(c.id)?'★':'☆')+'</button></div>').join('')||'<p>Keine Sender gefunden.</p>';root.querySelector('[data-act="favorites"]').setAttribute('aria-pressed',String(only));}
 function paintTitle(){const c=current();root.querySelector('.tv-title').textContent=c.name;const a=root.querySelector('.tv-web');a.hidden=!c.web;if(c.web)a.href=c.web;else a.removeAttribute('href');}
-function cleanup(){generation++;clearTimeout(deadline);deadline=null;if(xtProbe){xtProbe.abort();xtProbe=null;}playerTransition=true;if(hls){hls.destroy();hls=null;}if(video){video.pause();video.removeAttribute('src');video.load();}}
+function cleanup(){generation++;clearTimeout(deadline);deadline=null;if(xtProbe){xtProbe.abort();xtProbe=null;}playerTransition=true;mpegtsFallback=null;if(mpegtsPlayer){const previous=mpegtsPlayer;mpegtsPlayer=null;try{previous.pause();previous.unload();previous.detachMediaElement();previous.destroy();}catch{}}if(hls){hls.destroy();hls=null;}if(video){video.pause();video.removeAttribute('src');video.load();}}
+function loadMpegts(){if(global.mpegts)return Promise.resolve(global.mpegts);if(!mpegtsPromise)mpegtsPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/mpegts-1.8.2.min.js';s.onload=()=>global.mpegts?resolve(global.mpegts):(mpegtsPromise=null,reject(Error('mpegts.js ist nicht verfügbar')));s.onerror=()=>{s.remove();mpegtsPromise=null;reject(Error('mpegts.js konnte nicht geladen werden'));};document.head.appendChild(s);});return mpegtsPromise;}
+function supportsMpegts(engine){return !!(engine?.isSupported?.()&&engine?.getFeatureList?.()?.mseLivePlayback);}
 function loadHls(){if(global.Hls)return Promise.resolve(global.Hls);if(!libraryPromise)libraryPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/hls-1.6.15.min.js';s.onload=()=>global.Hls?resolve(global.Hls):reject(Error('Player fehlt'));s.onerror=()=>{s.remove();libraryPromise=null;reject(Error('Player konnte nicht geladen werden'));};document.head.appendChild(s);});return libraryPromise;}
 async function play(){if(!root)return;xtRequestSeq++;xtPlayback=null;activePlaybackName='';playbackFormat='';cleanup();const token=generation,v=video,c=current();root.classList.add('tv-watching');root.querySelector('.tv-empty').hidden=true;status('Verbinde mit '+c.name+' …');paintTitle();save();
  global.meviMediaStopForSource?.('tv');global.meviSpotifyPauseForSource?.('tv');
@@ -40,7 +42,7 @@ async function play(){if(!root)return;xtRequestSeq++;xtPlayback=null;activePlayb
  }catch(e){if(valid()){cleanup();status(e.message||'Stream konnte nicht gestartet werden.');}}
 }
 function onPlaying(){playerTransition=false;playerFault='';clearTimeout(deadline);status('▶ '+(activePlaybackName||current().name));}
-function onError(){if(playerTransition||!video?.currentSrc&&!video?.src)return;clearTimeout(deadline);const code=video.error?.code||0;if(xtPlayback){if(playerFault){status('HLS-Fehler: '+playerFault);return;}if(playbackFormat==='hls'){status('HLS-Medienfehler '+code+': Decoder/Codec oder beschädigtes Segment.');}else if(playbackFormat==='ts'){status('MPEG-TS kann vom Browser nicht direkt decodiert werden.');}else{status('Xtream-Wiedergabefehler '+code+': Streamformat und Codec prüfen.');}return;}status('Stream nicht verfügbar. Möglich sind Netz-, Länder- oder Senderbeschränkungen.');}
+function onError(){if(playerTransition||!video?.currentSrc&&!video?.src)return;if(playbackFormat==='mpegts'&&typeof mpegtsFallback==='function'){const fallback=mpegtsFallback;mpegtsFallback=null;fallback('Browserdecoder: '+(video?.error?.code||0));return;}clearTimeout(deadline);const code=video.error?.code||0;if(xtPlayback){if(playerFault){status('HLS-Fehler: '+playerFault);return;}if(playbackFormat==='hls'){status('HLS-Medienfehler '+code+': Decoder/Codec oder beschädigtes Segment.');}else if(playbackFormat==='ts'){status('MPEG-TS kann vom Browser nicht direkt decodiert werden.');}else{status('Xtream-Wiedergabefehler '+code+': Streamformat und Codec prüfen.');}return;}status('Stream nicht verfügbar. Möglich sind Netz-, Länder- oder Senderbeschränkungen.');}
 function onWaiting(){status('Puffere …');}
 function stop(){xtRequestSeq++;xtPlayback=null;activePlaybackName='';playbackFormat='';cleanup();status('Gestoppt');}
 function paintSources(){if(!root)return;const list=root.querySelector('.tv-source-list');if(!list)return;list.innerHTML=sources.map(x=>'<div class="tv-source-row"><span>'+esc(x.name)+' <small>'+custom.filter(c=>c.sourceId===x.id).length+' Sender</small></span><button data-source-refresh="'+esc(x.id)+'">Aktualisieren</button><button data-source-delete="'+esc(x.id)+'">Löschen</button></div>').join('')||'<p>Noch keine M3U-URL hinzugefügt.</p>';}
@@ -58,11 +60,56 @@ async function startXtMedia(api,a,type,id,extension,name){
  activePlaybackName=name;
  const mountRoot=root,request=++xtRequestSeq;
  const stillCurrent=()=>root===mountRoot&&request===xtRequestSeq;
- try{
-  const url=await api.playbackURL(a.credentials,type,id,extension);
+ const fallback=async(reason)=>{
   if(!stillCurrent())return;
-  await playXtMedia(url,name,async()=>{const fallback=await api.playbackURL(a.credentials,'live',id,'ts');if(stillCurrent())await playXtMedia(fallback,name);});
+  status('mpegts.js nicht nutzbar ('+String(reason).slice(0,90)+'). Wechsle zu HLS/FFmpeg …');
+  const hlsUrl=await api.playbackURL(a.credentials,type,id,extension);
+  if(!stillCurrent())return;
+  await playXtMedia(hlsUrl,name,async()=>{
+   const ffmpeg=await api.playbackURL(a.credentials,'live',id,'ts');
+   if(stillCurrent())await playXtMedia(ffmpeg,name);
+  });
+ };
+ try{
+  if(type==='live'&&a.credentials.bridge){
+   let engine=null;
+   try{engine=await loadMpegts();}catch(e){if(!stillCurrent())return;return fallback(e.message);}
+   if(!stillCurrent())return;
+   if(supportsMpegts(engine)){
+    const direct=await api.playbackURL(a.credentials,'live',id,'ts','raw');
+    if(!stillCurrent())return;
+    return playMpegts(direct,name,engine,stillCurrent,fallback);
+   }
+  }
+  if(stillCurrent())await fallback('MPEG-TS im Browser nicht unterstützt');
  }catch(e){if(stillCurrent())status('Wiedergabeadresse nicht verfügbar: '+e.message);}
+}
+async function playMpegts(url,name,engine,stillCurrent,fallback){
+ if(!stillCurrent())return;
+ cleanup();const token=generation,v=video,valid=()=>root&&video===v&&generation===token&&stillCurrent();
+ root.classList.add('tv-watching');root.querySelector('.tv-empty').hidden=true;
+ root.querySelector('.tv-title').textContent=name;
+ playbackFormat='mpegts';playerFault='';
+ const fail=reason=>{
+  if(!valid()||!mpegtsFallback)return;
+  const next=mpegtsFallback;mpegtsFallback=null;
+  status('mpegts.js: '+String(reason).slice(0,90));
+  cleanup();Promise.resolve(next(reason)).catch(e=>{if(stillCurrent())status('HLS-Fallback: '+e.message);});
+ };
+ mpegtsFallback=fallback;
+ try{
+  mpegtsPlayer=engine.createPlayer({type:'mpegts',isLive:true,url,cors:true,withCredentials:false},{
+   enableWorker:false,enableStashBuffer:true,stashInitialSize:384*1024,autoCleanupSourceBuffer:true,
+   liveBufferLatencyChasing:true
+  });
+  mpegtsPlayer.on(engine.Events.ERROR,(kind,detail)=>fail(String(kind)+': '+String(detail)));
+  mpegtsPlayer.attachMediaElement(v);
+  mpegtsPlayer.load();
+  playerTransition=false;
+  status('mpegts.js: Verbinde mit '+name+' …');
+  const started=v.play();started?.catch(e=>{if(valid()&&e.name!=='NotAllowedError')fail(e.message||'Video start failed');else if(valid())status('Bitte ▶ im Videoplayer antippen.');});
+  deadline=setTimeout(()=>{if(valid()&&!v.videoWidth)fail('Kein Videobild nach 20 Sekunden');},20000);
+ }catch(e){fail(e.message||'MPEG-TS-Player konnte nicht starten');}
 }
 async function playXtMedia(url,name,onHlsFailure=null){
  if(!root)return;
