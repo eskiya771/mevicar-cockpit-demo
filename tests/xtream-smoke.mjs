@@ -19,4 +19,22 @@ api.state.active='test';
 assert.equal(api.view('live','2','news').length,1);
 api.remove('test');
 assert.equal(api.active(),null);
+const savedFetch=globalThis.fetch;
+const sig='a'.repeat(64);
+try{
+  globalThis.fetch=async (_url,options)=> {
+    const body=JSON.parse(options.body);
+    const path=body.type==='live'&&body.ext==='ts'
+      ?'/remux/live/'+body.id+'/index.m3u8'
+      :'/stream/'+body.type+'/'+body.id+'.'+body.ext;
+    return new Response(JSON.stringify({url:path+'?exp=1950000000&sig='+sig}),{status:200,headers:{'Content-Type':'application/json'}});
+  };
+  const bridge={bridge:true,host:'https://bridge.example',token:'synthetic-session'};
+  const ts=await api.playbackURL(bridge,'live','42','ts');
+  assert.equal(new URL(ts).pathname,'/remux/live/42/index.m3u8');
+  const movie=await api.playbackURL(bridge,'movie','43','mp4');
+  assert.equal(new URL(movie).pathname,'/stream/movie/43.mp4');
+  globalThis.fetch=async()=>new Response(JSON.stringify({url:'//other.example/stream/movie/43.mp4?exp=1950000000&sig='+sig}),{status:200,headers:{'Content-Type':'application/json'}});
+  await assert.rejects(api.playbackURL(bridge,'movie','43','mp4'),/Ungültige Wiedergabeadresse/);
+}finally{globalThis.fetch=savedFetch;}
 console.log('Xtream OK: HTTPS credential validation, API URLs, catalog normalization, filters and account removal.');
