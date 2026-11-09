@@ -228,3 +228,11 @@ Tastatur auf Mobilprofilen von 212 auf 198 CSS-Pixel reduziert, unterer Abstand 
 ### Tastatur bis zum unteren Rand
 
 Der Tastaturhintergrund endet am unteren Kartenrand. Statt eines externen Safe-Area-Abstands erhält die letzte Tastenreihe einen internen Zusatzabstand von höchstens 8 CSS-Pixeln. Die Tastaturhöhe wächst um diesen Abstand, sodass die Tasten mindestens 44 CSS-Pixel hoch bleiben. Die Trefferliste erhält den eingesparten Platz. Seitliche Notch-Abstände bleiben erhalten. Sieben Smoke-Tests bestanden; echte iOS-Gesten-/Touchprüfung und Browser-Sichtprüfung bleiben offen.
+
+## Tetris-App – 9. November 2026
+
+Neue Zusatz-App im Launcher: Tetris startet wie andere Apps im Vollbild, erneuter Dock-Tipp wechselt in den Split. Eigene Module `tetris.js` und `tetris.css`, ohne Abhängigkeiten. Sieben Steinformen im gemischten Siebenerbeutel, Kollisionen, Drehung mit seitlichen Ausweichversuchen, Fallvorschau, Sofortfall, Reihenabbau, Punkte und steigendes Tempo. Touch-Tasten und physische Pfeiltasten/Leertaste/P. Pause, Neustart und automatisch pausierter Zustand bei Appwechsel oder verborgenem Tab. Spielstand bleibt während der Sitzung erhalten; nur der Rekord wird lokal dauerhaft gespeichert. Kein Spiel-Audio.
+
+Integration: Registry, SVG-Symbol, Dock-Akzent, Mount/Unmount, versioniertes Inline-Bundling im Pages-Workflow und Offline-Cache. Launcher erhält fünf gleich hohe Reihen, damit die zusätzliche Kachel in die bestehende Vier-Spalten-Anordnung passt.
+
+Validierung: acht Node-Smoke-Tests einschließlich Tetris-Regeln und Lifecycle; lokale Pages-Ausgabe erfolgreich erzeugt. Chromium-Download erneut mit ungültigem ZIP gescheitert; keine Browser-Sichtfreigabe. Touch-/Safe-Area-Prüfung auf echten Geräten offen.
