@@ -98,3 +98,11 @@ GitHub Pages Actions installiert die festgelegte npm-Version über integritätsg
 - Bibliotheksfreigabe von `pause`, `unload`, `detachMediaElement` und `destroy` isoliert gegen Einzelfehler, sodass ein fehlgeschlagener Schritt nicht sämtliche übrigen Aufräumschritte verhindert.
 
 **Abnahmetests:** `tests/mpegts-lifecycle-smoke.mjs` simuliert 40 praktisch gleichzeitige Senderanforderungen und weitere 38 nacheinander, überwacht maximal eine aktive Instanz, maximal je einen Timer, einmalige Fehlerumschaltung, Stillstand, Pausieren, Unmount und einen absichtlich fehlerhaften `unload`-Schritt. Der lokale isolierte JS-Mocklauf bestand; auch `tests/mpegts-smoke.mjs` bestand mit gemockten HTTP-Antworten. Beide Tests sind in GitHub Pages Actions hinterlegt. **Eine erfolgreich abgeschlossene Actions-Ausführung und reale Langzeitfahrt sind separat zu bestätigen.**
+
+## iPhone Querformat: Senderliste besser scrollbar – 10. November 2026
+
+**Problem:** Auf dem iPhone im Querformat blieb für die Xtream-Senderliste wenig bedienbare Fläche. Im Flex-Layout konnten Senderkacheln bei umfangreichen Katalogen zusammenschrumpfen statt eine echte Scrollstrecke zu erzeugen.
+
+**Änderung nur in `tv.css`:** Xtream-Senderkacheln haben `flex:0 0 auto`, mindestens 48 px Höhe auf großen Bildschirmen und 45 px auf kompakten Querformaten; die Liste selbst erhält `flex:1 1 auto`, `min-height:0`, `overflow-y:auto`, `touch-action:pan-y` und iOS-Momentum-Scrolling. Für Querformate bis 1024×480 werden Header, Tabs, Kategorieauswahl, Suche und Zurück-Button niedriger, während die Kacheln weiterhin gut antippbar bleiben. Untere Safe Area wird in der Liste berücksichtigt. Das Verhalten der Video-Wiedergabe und der Xtream-API bleibt unverändert.
+
+**Tests:** `node tests/tv-iphone-landscape-smoke.mjs` als zusätzlicher GitHub-Pages-Gate; lokaler isolierter Assertionslauf erfolgreich. Reale Sicht- und Touch-Abnahme auf iPhone 17 im Querformat steht noch aus.
