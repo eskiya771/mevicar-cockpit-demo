@@ -14,3 +14,5 @@
 /* Container queries cannot select their own container: split state also scopes via host. */
 .side .tv-root:not(.tv-watching) .tv-player{display:none}.side .tv-root:not(.tv-watching) .tv-library{width:100%;min-width:0}.side .tv-root.tv-watching .tv-library{display:none}.side .tv-root.tv-watching .tv-player{display:flex}.side .tv-root .tv-player [data-act=list]{display:block}
 @media(max-height:500px){.tv-root{gap:8px}.tv-library{gap:5px}.tv-player{gap:4px}.tv-actions button,.tv-web{padding:4px 7px}.tv-status{font-size:11px}}
+
+.tv-sources-dialog .tv-source-form{display:grid;gap:10px;margin:10px 0}.tv-sources-dialog .tv-source-form label{display:grid;gap:4px}.tv-sources-dialog .tv-source-form input{width:100%}.tv-source-list{display:grid;gap:7px;margin:12px 0}.tv-source-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px;border:1px solid #75d8ff30;border-radius:10px}.tv-source-row span{flex:1;min-width:120px;overflow-wrap:anywhere}.tv-source-row small{display:block;color:#9dbdcb}.tv-source-status{overflow-wrap:anywhere}
