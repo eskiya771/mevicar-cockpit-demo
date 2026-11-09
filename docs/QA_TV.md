@@ -122,3 +122,13 @@ Auf Wunsch wurde der zuvor verwendete iPhone-Fullscreen-Senderlisten-Overlay ent
 Das Xtream/IPTV-Kataloglayout blendet ausschließlich die alte TV-LIVE-Kopfzeile sowie die konventionellen "Alle Länder"/Favoriten-Filter aus; Live/Filme/Serien, IPTV-Kategorie und Katalogsuche bleiben. Die alte untere Schaltfläche "Zur Senderliste" und der nutzlos gewordene Fullscreen-Overlay-Schließen-Button entfallen. Die kompakten TV- und ⚙-Icons neben den IPTV-Tabs dienen dem Wechsel zur normalen Senderliste bzw. der Xtream-Quellenverwaltung.
 
 Nur `tv.css` und die Katalog-UI in `tv.js` wurden angepasst. Der mpegts.js-Wiedergabeweg, die Synology-Bridge und die GitHub-Pages-Architektur sind unverändert. Die Regression `tests/tv-iphone-landscape-smoke.mjs` erzwingt ausdrücklich das **Fehlen von `position:fixed`-Overlays** und das gleichzeitige Vorhandensein von Katalog und Player bei aktivem IPTV-Kanal. Statische Regression und JS-Syntaxprüfung erfolgreich; Geräte-Sichttest auf iPhone weiterhin ausstehend.
+
+## Drei-Spalten-Layout und wiederholbare Browserprüfung (10.11.2026)
+
+- Gemeinsames MeviCar-Dock unverändert; Liste und Player bleiben im Vollbild gleichzeitig sichtbar.
+- Steuerung und IPTV-Einstellungen oberhalb des TV-Bildes. Suche vor Kategorien, scrollende Senderliste; 44-px-Touchflächen und mindestens 48-px-Senderzeilen.
+- Rechte/untere Safe Area am TV-Host, ohne globale Änderungen an Dock/Karte.
+- Ausschließlich HTML-/CSS-Änderungen am Player; JavaScript außerhalb von `html()` unverändert gegenüber `134e837`.
+- Alle 16 vorhandenen Node-Smoke-Tests lokal bestanden, inklusive MPEGTS-Zapping/Timeout/Fallback/Cleanup.
+- Neue Pages-Prüfschranke: `node tests/tv-visual-layout.mjs` nach Erzeugung der versionierten Ausgabe, vor Deploy. Viewports aus `DISPLAY_PROFILE_MATRIX.md`, alle drei Themes, zusätzlich simulierte iPhone-Safe-Areas links/rechts. Screenshots, Geometrie, Decoderfortschritt und Browserfehler im Actions-Artefakt `mevitv-browser-qa`.
+- Testdaten: 120 künstliche Sender und lokal erzeugter MPEG-TS-Testfilm; echte mpegts.js-Bibliothek und Chromium-Decoder, keine Provider- oder Kontodaten. Reale iOS-/Safari-Wiedergabe und eigener Live-IPTV-Zugang bleiben separate Gerätetests.

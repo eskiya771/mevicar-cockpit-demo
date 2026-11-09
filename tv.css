@@ -22,97 +22,70 @@
 /* Explicit hidden styles must override the form's display:grid rule. */
 .tv-xtream-form label[hidden]{display:none!important}
 
-/* Compact landscape phones (iPhone 17 874x402 / S20 FE 915x412).
-   The Xtream catalog is a column flexbox: each channel must have flex-shrink:0,
-   otherwise hundreds of 44px buttons shrink rather than creating a scroll range. */
-.tv-xtream-list,.tv-list{-webkit-overflow-scrolling:touch}
-.tv-xtream-list{overscroll-behavior:contain;touch-action:pan-y}
+/* Full-screen MeviTV shares the existing shell: dock | catalogue | player.
+   The dock belongs to MeviCar; only the TV host receives safe-area spacing. */
+.cockpit .full:has(>.tv-root){
+ min-width:0;
+ padding:clamp(6px,1vw,16px);
+ margin-right:env(safe-area-inset-right,0px);
+ margin-top:env(safe-area-inset-top,0px);
+ margin-bottom:env(safe-area-inset-bottom,0px);
+}
+.cockpit .full>.tv-root{position:static;overflow:hidden}
+.cockpit .full>.tv-root>.tv-library{
+ display:flex;flex:0 0 clamp(230px,32%,420px);width:auto;min-width:0;overflow:hidden;
+}
+.cockpit .full>.tv-root>.tv-player{display:flex;flex:1 1 0;min-width:0}
+.cockpit .full>.tv-root .tv-player [data-act="list"]{display:none}
+.tv-player>header{flex:none;min-height:44px}
+.tv-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tv-root .tv-settings{flex:0 0 44px;width:44px;height:44px;font-size:22px;padding:4px}
+.tv-actions{flex:none;align-items:center;gap:6px}
+.tv-root .tv-actions button,.tv-root .tv-web{min-width:44px;min-height:44px;white-space:nowrap}
+.tv-stage video{position:absolute;inset:0;background:#050a10}
+.tv-status{flex:none;max-height:2.6em;overflow:auto;overflow-wrap:anywhere}
+.tv-empty{inset:12px;display:flex;align-items:center;justify-content:center;padding:12px}
+.tv-root button:focus-visible,.tv-root select:focus-visible,.tv-root input:focus-visible{outline:2px solid #67e9ff;outline-offset:-3px}
+.tv-list,.tv-xtream-list{overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.tv-row>button:first-child>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .tv-xtream-item{flex:0 0 auto;min-height:48px;justify-content:center}
 .tv-xtream-item strong,.tv-xtream-item small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-@media (orientation:landscape) and (max-width:1024px) and (max-height:480px){
- .tv-root{gap:5px}
- .tv-root .tv-library{gap:4px;height:100%;max-height:100%;overflow:hidden}
- .tv-root .tv-library>header{min-height:34px;height:34px;gap:4px}
- .tv-root .tv-library>header strong{font-size:17px;white-space:nowrap}
- .tv-root .tv-library>header button{min-height:34px;height:34px;padding:3px 7px;font-size:12px}
- .tv-root .tv-xtream-catalog{gap:4px;min-height:0;overflow:hidden}
- .tv-root .tv-xtream-tabs{gap:4px;flex:none}
- .tv-root .tv-xtream-tabs button{min-height:36px;height:36px;padding:3px 7px;font-size:12px}
- .tv-root .tv-xtream-group,.tv-root .tv-xtream-search{min-height:36px;height:36px;padding:4px 8px;flex:none;font-size:13px}
- .tv-root .tv-xtream-list{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px;padding-bottom:max(6px,env(safe-area-inset-bottom,0px))}
- .tv-root .tv-xtream-item{flex:0 0 auto;min-height:45px;height:45px;padding:4px 10px;font-size:13px;gap:2px}
- .tv-root .tv-xtream-item small{font-size:11px}
- .tv-root [data-act="xtream-back"]{flex:none;min-height:30px;height:30px;font-size:11px;padding:3px 8px}
- .tv-root .tv-list{overflow-y:auto;min-height:0;flex:1}
- .tv-root .tv-row{margin-bottom:3px}
- .tv-root .tv-row>button:first-child{min-height:48px}
- .tv-root .tv-row .tv-logo{width:34px;height:32px}
-}
-
-
-/* MeviTV: three-column cockpit in compact landscape.
-   Existing MeviCar dock remains the first column, IPTV catalog the second,
-   and the live video + transport controls the third. Never use a fixed overlay. */
+.tv-xtream-item small:empty{display:none}
 .tv-root.tv-xtream-mode>.tv-library>header,
 .tv-root.tv-xtream-mode>.tv-library>.tv-search,
 .tv-root.tv-xtream-mode>.tv-library>.tv-filters,
-.tv-root.tv-xtream-mode>.tv-library>.tv-list{display:none!important}
+.tv-root.tv-xtream-mode>.tv-library>.tv-list,
+.tv-root.tv-xtream-mode .tv-public-action,
+.tv-root.tv-xtream-mode .tv-web{display:none!important}
 .tv-root.tv-xtream-mode .tv-xtream-catalog{display:flex;flex:1 1 auto;min-height:0;overflow:hidden}
 .tv-root.tv-xtream-mode .tv-xtream-catalog[hidden]{display:none}
-.tv-root.tv-xtream-mode .tv-xtream-tabs button{min-width:0}
-.tv-root.tv-xtream-mode .tv-xtream-switch,
-.tv-root.tv-xtream-mode .tv-xtream-manage{flex:0 0 40px;min-width:40px;padding:4px}
-.tv-root.tv-xtream-mode .tv-xtream-tools{display:flex;flex-direction:column;min-height:0;gap:5px;flex:none}
-.tv-root.tv-xtream-mode .tv-xtream-tools>*{width:100%;min-width:0;flex:none}
-.tv-root.tv-xtream-mode .tv-xtream-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch}
-.tv-root.tv-xtream-mode>.tv-player{display:flex;flex:1 1 0;min-width:0;min-height:0}
-.tv-root.tv-xtream-mode .tv-xtream-item{flex:0 0 auto}
-.tv-root.tv-xtream-mode .tv-player [data-act="list"]{display:none}
+.tv-xtream-tabs{flex:none}
+.tv-root .tv-xtream-tabs button{min-width:44px;min-height:44px;padding:6px}
+.tv-root .tv-xtream-switch{flex:0 0 44px}
+.tv-root.tv-xtream-mode .tv-xtream-tools{display:flex;flex-direction:column;min-height:0;gap:7px;flex:none}
+.tv-root .tv-xtream-tools>*{width:100%;min-width:0;min-height:44px;flex:none}
+.tv-root.tv-xtream-mode .tv-xtream-list{flex:1 1 auto;min-height:0;overflow-y:auto}
+
 @media (orientation:landscape) and (max-width:1024px) and (max-height:480px){
- .cockpit .full:has(>.tv-root.tv-xtream-mode){padding:3px;gap:0;min-width:0;min-height:0}
- .cockpit .full>.tv-root.tv-xtream-mode{
-   position:static;inset:auto;z-index:auto;
-   width:100%;height:100%;max-height:100%;max-width:none;
-   padding:0;gap:6px;display:flex;overflow:hidden;
-   background:transparent;border:0;border-radius:0;
- }
- .cockpit .full>.tv-root.tv-xtream-mode>.tv-library,
- .cockpit .full>.tv-root.tv-xtream-mode.tv-watching>.tv-library{
-   display:flex!important;flex:0 0 37%;width:37%;min-width:0;height:100%;
-   max-height:100%;overflow:hidden;gap:4px;
- }
- .cockpit .full>.tv-root.tv-xtream-mode>.tv-player,
- .cockpit .full>.tv-root.tv-xtream-mode.tv-watching>.tv-player{
-   display:flex!important;flex:1 1 0;min-width:0;min-height:0;gap:3px;
- }
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-catalog{gap:4px}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-tabs{gap:3px;flex:none}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-tabs button{
-   min-height:35px;height:35px;padding:3px 4px;font-size:11px;
- }
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-switch,
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-manage{
-   flex:0 0 31px;min-width:31px;
- }
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-tools{gap:4px}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-tools>*{
-   min-height:37px;height:37px;padding:5px 7px;font-size:12px;
- }
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-list{
-   flex:1 1 0;min-height:0;padding-bottom:3px;overflow-y:auto;
- }
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-item{
-   flex:0 0 46px;min-height:46px;height:46px;padding:4px 7px;
-   gap:1px;font-size:12px;
- }
- .cockpit .full>.tv-root.tv-xtream-mode .tv-xtream-item small{font-size:10px}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-player>header{min-height:32px;height:32px}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-title{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-stage{flex:1 1 0;min-height:0}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-status{font-size:10px;min-height:14px}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-actions{flex-wrap:nowrap;overflow:hidden;gap:3px}
- .cockpit .full>.tv-root.tv-xtream-mode .tv-actions button,
- .cockpit .full>.tv-root.tv-xtream-mode .tv-web{
-   min-width:0;min-height:34px;padding:4px 5px;font-size:10px;white-space:nowrap;
- }
+ .cockpit .full:has(>.tv-root){padding:4px}
+ .cockpit .full>.tv-root{gap:8px;width:100%;height:100%}
+ .cockpit .full>.tv-root>.tv-library{flex-basis:35%;min-width:220px;gap:5px}
+ .tv-root .tv-library>header{min-height:44px}
+ .tv-root .tv-library>header strong{font-size:18px}
+ .tv-root .tv-xtream-catalog,.tv-root.tv-xtream-mode .tv-xtream-tools{gap:5px}
+ .tv-root .tv-xtream-tabs{gap:4px}
+ .tv-root .tv-xtream-tabs button{font-size:12px}
+ .tv-root .tv-xtream-search,.tv-root .tv-search{font-size:16px}
+ .tv-root .tv-xtream-group{font-size:13px}
+ .tv-root .tv-xtream-list{gap:4px;padding-bottom:2px}
+ .tv-root .tv-xtream-item{min-height:48px;padding:6px 8px;font-size:13px}
+ .tv-root .tv-row{margin-bottom:4px}
+ .tv-root .tv-row>button:first-child{min-height:48px}
+ .tv-root .tv-row .tv-logo{width:30px;height:30px;font-size:11px}
+ .tv-root .tv-player{gap:5px}
+ .tv-root .tv-title{font-size:16px}
+ .tv-root .tv-actions{gap:4px}
+ .tv-root .tv-actions button,.tv-root .tv-web{padding:6px;font-size:12px}
+ .tv-root .tv-actions [data-act="fullscreen"] span{display:none}
+ .tv-root .tv-status{font-size:11px;min-height:15px}
 }

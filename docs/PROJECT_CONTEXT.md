@@ -240,3 +240,15 @@ Validierung: acht Node-Smoke-Tests einschließlich Tetris-Regeln und Lifecycle; 
 ## TV-App – 9. November 2026
 
 TV im Launcher: acht deutsche/türkische Sender, Länderfilter, Suche, gespeicherte Favoriten, eigener HTTPS-Stream und lokaler M3U-Dateiimport mit Löschfunktion. Native HLS oder lokal ausgeliefertes, im Build hashgeprüftes hls.js. Video stoppt beim App-/Layoutwechsel; lokale Audioquellen gegenseitig exklusiv. Alle neun Smoke-Tests bestanden; Master-Playlists erreichbar. Reale Wiedergabe und visuelle Abnahme offen. Details und Quellen in docs/QA_TV.md.
+
+## MeviTV: Drei Spalten und Browser-Abnahme – 10. November 2026
+
+Übernahme auf `main`: `134e837`, Pages-Build 428 erfolgreich. Die vier vorherigen Pages-Läufe waren fehlgeschlagen; der letzte Commit reparierte den Download des gepinnten mpegts.js-Bundles. Die frühere Beschreibung „Apps starten im Split“ ist historisch: aktuell startet TV im Vollbild, ein weiterer Dock-Tipp wechselt in den Split.
+
+Die vorhandene MeviCar-Symbolleiste bleibt unverändert. Der TV-Vollbildhost enthält dauerhaft Kanalliste und Player nebeneinander, auch im kompakten Querformat. Im IPTV-Modus: Live/Filme/Serien/TV, danach Suche, Kategorien und eine unabhängig scrollende Liste. Player rechts: Titel und IPTV-Einstellungen, darunter Start/Stopp/Vollbild, darunter Video und Status. Öffentliche Quellenaktionen erscheinen nur in der öffentlichen TV-Ansicht. TV-Bedienelemente haben mindestens 44 px Touchflächen; Senderzeilen mindestens 48 px. Der TV-Host berücksichtigt rechte und untere Safe Areas, ohne die globalen Dock- oder Kartenregeln zu ändern.
+
+Änderungen in `tv.js` betreffen ausschließlich die HTML-Vorlage; mpegts.js-Routing, Fallbacks, Player-Lifecycle und Xtream-Adapter bleiben unverändert. Die bisherigen kompakten IPTV-CSS-Overrides sind durch einen gemeinsamen Vollbild-/Split-Aufbau ersetzt.
+
+`tests/tv-visual-layout.mjs` liest alle fünf Referenzviewports aus `DISPLAY_PROFILE_MATRIX.md` und testet die tatsächlich gebaute Pages-Ausgabe in Chromium und drei Themes. Isolierte Testantworten bilden einen Katalog mit 120 Sendern ab. Ein mit FFmpeg erzeugtes Testvideo wird durch das echte gepinnte mpegts.js decodiert. Es werden keine echten Zugangsdaten und keine Providerverbindung verwendet. Prüfungen: Dock-Geometrie, drei Spalten, Touchflächen, Scrollen, Suche/Kategorien, Leerzustand, Split-Wechsel, JavaScript-Fehler und simulierte asymmetrische iPhone-Safe-Areas. Screenshots und JSON mit Build-SHA werden als Actions-Artefakt `mevitv-browser-qa` gespeichert. Ein fehlgeschlagener Browsertest verhindert das Pages-Deployment.
+
+Die Browserprüfung ersetzt keine reale iPhone-/Safari-/DeX-/Touch-Abnahme und keine Liveprüfung des eigenen IPTV-Anbieters. Maßgeblich für den aktuellen Lauf sind Actions-Status und Artefakt, anschließend Live-`build-info.json`.

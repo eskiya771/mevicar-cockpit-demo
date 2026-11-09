@@ -178,6 +178,25 @@ jobs:
               d.ellipse((n*.46,n*.46,n*.54,n*.54),fill='#e8fbff')
               im.save(f'dist/icon-{n}.png')
           PY
+      - name: Install browser regression dependencies
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Test MeviTV in five display profiles and three themes
+        run: |
+          mkdir -p tests/fixtures
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "testsrc2=size=640x360:rate=25" -t 12 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -g 25 -an -f mpegts tests/fixtures/tv-test.ts
+          node tests/tv-visual-layout.mjs
+      - name: Save MeviTV browser screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mevitv-browser-qa
+          path: visual-results/tv/
+          if-no-files-found: warn
+          retention-days: 14
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
