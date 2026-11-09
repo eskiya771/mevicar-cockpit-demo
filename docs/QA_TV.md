@@ -85,3 +85,16 @@ Die Synology bleibt **für HTTPS/CORS, Xtream-Authentifizierung, Tickets und TS-
 GitHub Pages Actions installiert die festgelegte npm-Version über integritätsgeprüften npm-Download, packt `dist/vendor/mpegts-1.8.2.min.js` und aktualisiert den PWA-Cache. Tests prüfen TS-Ticket und CORS, Browser-Routing, unveränderten HLS-Fallback und Lifecycle-Hooks.
 
 **Status:** Änderungen committed, aber echter MPEG-TS-Videotest, Codec-Kompatibilität auf S20 FE/DeX/Brave und erfolgreicher Pages-Deploy noch nicht bestätigt. Für die neue Ticket-Option muss die aktualisierte `bridge/server.cjs` auf Synology übernommen und der Container neu gebaut werden.
+
+## Zapping-/Langzeitstabilität – 9. November 2026
+
+**Ziel:** funktionierenden mpegts.js-Live-Player bewahren und Ressourcen-/Zeitfehler beim Zappen vermeiden; keine neue UI, keine Android-APK, keine Änderung am Synology-Backend.
+
+**Änderungen in `tv.js`:**
+- Ein einziger Fehlerpfad für MPEG-TS-Playerfehler aus Bibliothek und HTMLVideoElement. Sobald ein Fehler die Umschaltung auslöst, wird der Fallback-Handler entkoppelt und die MPEG-TS-Instanz beendet; verspätete Fehler dürfen keinen weiteren Fallback auslösen.
+- Vor einem neuen Sender bleibt die bestehende Anfragegeneration ungültig; veraltete Media-Events während des Übergangs aktualisieren die Statusanzeige nicht.
+- Periodische Live-Fortschrittskontrolle (alle 4 s): keine automatische Umschaltung bei `video.paused` oder verstecktem Dokument; bei mehr als 18 s ohne erkennbaren Wiedergabefortschritt und vorhandenem Videobild einmaliger Rückfall auf den bestehenden HLS/FFmpeg-Pfad.
+- Startüberwachung auf 25 s angepasst; alle Start-/Überwachungs-Timer werden bei Senderwechsel, Stop und Unmount gelöscht.
+- Bibliotheksfreigabe von `pause`, `unload`, `detachMediaElement` und `destroy` isoliert gegen Einzelfehler, sodass ein fehlgeschlagener Schritt nicht sämtliche übrigen Aufräumschritte verhindert.
+
+**Abnahmetests:** `tests/mpegts-lifecycle-smoke.mjs` simuliert 40 praktisch gleichzeitige Senderanforderungen und weitere 38 nacheinander, überwacht maximal eine aktive Instanz, maximal je einen Timer, einmalige Fehlerumschaltung, Stillstand, Pausieren, Unmount und einen absichtlich fehlerhaften `unload`-Schritt. Der lokale isolierte JS-Mocklauf bestand; auch `tests/mpegts-smoke.mjs` bestand mit gemockten HTTP-Antworten. Beide Tests sind in GitHub Pages Actions hinterlegt. **Eine erfolgreich abgeschlossene Actions-Ausführung und reale Langzeitfahrt sind separat zu bestätigen.**
