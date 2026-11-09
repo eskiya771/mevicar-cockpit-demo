@@ -39,6 +39,8 @@ jobs:
         run: node tests/tv-smoke.mjs
       - name: Test Xtream API catalog adapter
         run: node tests/xtream-smoke.mjs
+      - name: Test secure Xtream HTTP bridge
+        run: node tests/xtream-bridge-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
