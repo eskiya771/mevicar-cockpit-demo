@@ -4,6 +4,8 @@
 const http=require('node:http');
 const crypto=require('node:crypto');
 const {Readable}=require('node:stream');
+const fs=require('node:fs');
+const remux=require('./remux.cjs');
 const {createRelay,MAX_MANIFEST}=require('./hls.cjs');
 const upstream=process.env.XTREAM_UPSTREAM||'';
 const username=process.env.XTREAM_USER||'';
@@ -98,7 +100,32 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   let target;try{target=relay.open(match[1]);}catch{return reply(res,401,{error:'Expired or invalid HLS URL'});}
   return hlsResponse(req,res,target);
  }
- if(req.method==='POST'&&url.pathname==='/ticket'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});const d=await body(req);if(!['live','movie','series'].includes(d.type)||!safeId(d.id)||!safeExt(d.ext))return reply(res,400,{error:'Invalid media'});const exp=Math.floor(Date.now()/1000)+14400;const path='/stream/'+d.type+'/'+d.id+'.'+d.ext;const signature=mac(path+'|'+exp);return reply(res,200,{url:path+'?exp='+exp+'&sig='+signature,expires:exp});}
+ if(req.method==='GET'&&url.pathname.startsWith('/remux/')){
+  const m=url.pathname.match(/^\/remux\/live\/(\d{1,15})\/(index\.m3u8|seg\d{5,9}\.ts)$/);
+  if(!m)return reply(res,404,{error:'Remux resource not found'});
+  const [,id,name]=m,exp=Number(url.searchParams.get('exp')),sig=url.searchParams.get('sig')||'';
+  const now=Math.floor(Date.now()/1000);
+  if(!Number.isSafeInteger(exp)||exp<now||exp>now+14400||!/^[a-f0-9]{64}$/.test(sig)||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(mac('/remux/live/'+id+'|'+exp))))return reply(res,401,{error:'Invalid remux ticket'});
+  let item;
+  try{
+   if(name==='index.m3u8'){
+    const src=upstreamURL('/live/'+encodeURIComponent(username)+'/'+encodeURIComponent(password)+'/'+id+'.ts');
+    item=remux.start(id,src.href);
+    await remux.ready(item);
+    const text=remux.playlist(item,exp,sig);
+    res.setHeader('Content-Type','application/vnd.apple.mpegurl; charset=utf-8');
+    res.end(text);return;
+   }
+   // Segment endpoint cannot start FFmpeg by itself.
+   const sessionPath='/tmp/mevitv-remux/'+id+'/'+name;
+   if(!fs.existsSync(sessionPath))return reply(res,404,{error:'HLS segment expired'});
+   const stat=fs.statSync(sessionPath);
+   res.setHeader('Content-Type','video/mp2t');
+   res.setHeader('Content-Length',stat.size);
+   fs.createReadStream(sessionPath).pipe(res);return;
+  }catch(e){return reply(res,503,{error:'Remux unavailable: '+String(e.message).slice(0,100)});}
+ }
+ if(req.method==='POST'&&url.pathname==='/ticket'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});const d=await body(req);if(!['live','movie','series'].includes(d.type)||!safeId(d.id)||!safeExt(d.ext))return reply(res,400,{error:'Invalid media'});const exp=Math.floor(Date.now()/1000)+14400;const path=d.type==='live'&&d.ext==='ts'?'/remux/live/'+d.id+'/index.m3u8':'/stream/'+d.type+'/'+d.id+'.'+d.ext;const signPath=path.startsWith('/remux/')?'/remux/live/'+d.id:path;const signature=mac(signPath+'|'+exp);return reply(res,200,{url:path+'?exp='+exp+'&sig='+signature,expires:exp});}
  if(req.method==='GET'&&url.pathname.startsWith('/stream/')){const match=url.pathname.match(/^\/stream\/(live|movie|series)\/(\d{1,15})\.(m3u8|ts|mp4|mkv|avi|mov)$/);if(!match)return reply(res,400,{error:'Invalid media'});const exp=Number(url.searchParams.get('exp')),sig=url.searchParams.get('sig')||'';if(!Number.isSafeInteger(exp)||exp<Math.floor(Date.now()/1000)||exp>Math.floor(Date.now()/1000)+14400||!(/^[0-9a-f]{64}$/.test(sig))||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(mac(url.pathname+'|'+exp))))return reply(res,401,{error:'Expired media ticket'});
  const [,type,id,ext]=match;const path='/'+type+'/'+encodeURIComponent(username)+'/'+encodeURIComponent(password)+'/'+id+'.'+ext;if(ext==='m3u8')return hlsResponse(req,res,upstreamURL(path));const headers={};if(req.headers.range)headers.Range=req.headers.range;const remote=await fetch(upstreamURL(path),{headers,redirect:'error'});if(!remote.ok&&remote.status!==206)return reply(res,502,{error:'Stream unavailable'});res.statusCode=remote.status;for(const key of ['content-type','content-length','content-range','accept-ranges']){const value=remote.headers.get(key);if(value)res.setHeader(key,value);}Readable.fromWeb(remote.body).pipe(res);return;}
  reply(res,404,{error:'Not found'});
