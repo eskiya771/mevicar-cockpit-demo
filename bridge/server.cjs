@@ -44,7 +44,7 @@ async function hlsResponse(req,res,target){
   }
   if(!remote.ok&&remote.status!==206)return reply(res,502,{error:'Provider HLS HTTP '+remote.status});
   const contentType=remote.headers.get('content-type')||'';
-  const manifest=/\\.m3u8(?:$|[?#])/i.test(target.href)||/mpegurl/i.test(contentType);
+  const manifest=/\.m3u8(?:$|[?#])/i.test(target.href)||/mpegurl/i.test(contentType);
   if(manifest){
    const len=Number(remote.headers.get('content-length')||0);
    if(len>MAX_MANIFEST)return reply(res,413,{error:'HLS manifest too large'});
@@ -69,7 +69,7 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),90000);
  try{const remote=await fetch(upstreamURL('/player_api.php',params),{redirect:'error',signal:controller.signal});if(!remote.ok)return reply(res,502,{error:'Upstream HTTP '+remote.status});const length=Number(remote.headers.get('content-length')||0);if(length>MAX_CATALOG_BYTES)return reply(res,413,{error:'Catalog too large'});const reader=remote.body.getReader();let total=0,chunks=[];for(;;){const {done,value}=await reader.read();if(done)break;total+=value.length;if(total>MAX_CATALOG_BYTES){await reader.cancel();return reply(res,413,{error:'Catalog too large'});}chunks.push(Buffer.from(value));}res.statusCode=200;res.setHeader('Content-Type','application/json; charset=utf-8');res.end(Buffer.concat(chunks));}finally{clearTimeout(timeout);}return;}
  if(req.method==='GET'&&url.pathname.startsWith('/hls/')){
-  const match=url.pathname.match(/^\\/hls\\/([a-zA-Z0-9_-]{32,8192})$/);
+  const match=url.pathname.match(/^\/hls\/([a-zA-Z0-9_-]{32,8192})$/);
   if(!match)return reply(res,400,{error:'Invalid HLS URL'});
   let target;try{target=relay.open(match[1]);}catch{return reply(res,401,{error:'Expired or invalid HLS URL'});}
   return hlsResponse(req,res,target);
