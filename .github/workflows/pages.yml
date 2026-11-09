@@ -41,6 +41,8 @@ jobs:
         run: node tests/xtream-smoke.mjs
       - name: Test direct MPEG-TS browser routing
         run: node tests/mpegts-smoke.mjs
+      - name: Stress-test MPEG-TS zapping and resource cleanup
+        run: node tests/mpegts-lifecycle-smoke.mjs
       - name: Test secure Xtream HTTP bridge
         run: node tests/xtream-bridge-smoke.mjs
       - name: Test signed HLS manifests and segment relay
