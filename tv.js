@@ -60,10 +60,10 @@ async function startXtMedia(api,a,type,id,extension,name){
  try{
   const url=await api.playbackURL(a.credentials,type,id,extension);
   if(root!==mountRoot)return;
-  await playXtMedia(url,name);
+  await playXtMedia(url,name,async()=>{const fallback=await api.playbackURL(a.credentials,'live',id,'ts');if(root===mountRoot)await playXtMedia(fallback,name);});
  }catch(e){if(root===mountRoot)status('Wiedergabeadresse nicht verfügbar: '+e.message);}
 }
-async function playXtMedia(url,name){
+async function playXtMedia(url,name,onHlsFailure=null){
  if(!root)return;
  cleanup();const token=generation,v=video,valid=()=>root&&generation===token&&video===v;
  root.classList.add('tv-watching');root.querySelector('.tv-empty').hidden=true;
@@ -79,7 +79,7 @@ async function playXtMedia(url,name){
  if(isHls){
   // The bridge currently returns HTTP 415 for HLS: diagnose it before handing
   // a JSON error response to native HLS or hls.js.
-  try{const response=await fetch(url,{cache:'no-store',credentials:'omit'});if(!valid()){await response.body?.cancel?.();return;}if(!response.ok){let detail='';try{const data=await response.json();detail=typeof data.error==='string'?data.error.slice(0,120):'';}catch{}status(response.status===415?'HLS-Relay auf der Synology noch nicht aktiv (HTTP 415).':'HLS-Abruf fehlgeschlagen (HTTP '+response.status+')'+(detail?': '+detail:'')+'.');return;}await response.body?.cancel?.();}catch(e){if(valid())status('Streamabruf fehlgeschlagen: '+(e.message||'Netzwerkfehler'));return;}
+  try{const response=await fetch(url,{cache:'no-store',credentials:'omit'});if(!valid()){await response.body?.cancel?.();return;}if(!response.ok){let detail='';try{const data=await response.json();detail=typeof data.error==='string'?data.error.slice(0,120):'';}catch{}if(onHlsFailure&&response.status===502&&/Provider HLS HTTP (403|404)/.test(detail)){status('HLS nicht verfügbar; versuche MPEG-TS über FFmpeg …');try{await onHlsFailure();}catch(e){if(valid())status('TS-Fallback fehlgeschlagen: '+e.message);}return;}status(response.status===415?'HLS-Relay auf der Synology noch nicht aktiv (HTTP 415).':'HLS-Abruf fehlgeschlagen (HTTP '+response.status+')'+(detail?': '+detail:'')+'.');return;}await response.body?.cancel?.();}catch(e){if(valid())status('Streamabruf fehlgeschlagen: '+(e.message||'Netzwerkfehler'));return;}
   if(v.canPlayType('application/vnd.apple.mpegurl')){v.src=url;start();return;}
   try{const Hls=await loadHls();if(!valid())return;if(!Hls.isSupported())throw Error('HLS im Browser nicht verfügbar');hls=new Hls();hls.on(Hls.Events.MANIFEST_PARSED,start);hls.on(Hls.Events.ERROR,(_,data)=>{if(valid()&&data.fatal){cleanup();status('HLS-Fehler: '+(data.details||'Manifest oder Segment nicht erreichbar'));}});hls.loadSource(url);hls.attachMedia(v);}catch(e){if(valid())status(e.message);}
   return;
