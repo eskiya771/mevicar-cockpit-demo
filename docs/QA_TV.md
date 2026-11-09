@@ -19,3 +19,7 @@ Alle acht Master-Playlists antworteten beim direkten HTTPS-Abruf mit HTTP 200 un
 Alle neun Node-Smoke-Tests bestanden. TV-Test: Katalog, HTTPS-Validierung, M3U-Import/Deduplizierung/Grenzen, Suche/Favoriten sowie nativer Player-Lifecycle und Cleanup. Produktions-HTML lokal aus dem Pages-Workflow erzeugt, hls.js-Syntax und SHA-256 erfolgreich geprüft.
 
 Offen: Browser-Sichtprüfung in fünf Profilen/drei Themes, echte Bild-/Tonwiedergabe, HLS.js-Playback unter Android/DeX und iOS-Vollbild. Chromium nicht verfügbar; vorausgehender Installationsversuch mit ungültigem Download-Archiv gescheitert. Keine visuelle Freigabe.
+
+## URL-Quellenverwaltung – 9. November 2026
+
+Quellen-Dialog für mehrere HTTPS-M3U-URLs hinzugefügt. Jede Quelle hat einen Namen, wird nach erfolgreichem Abruf lokal gespeichert und kann aktualisiert oder mit ihren Sendern gelöscht werden. Vor einem Update werden Inhalte außerhalb der betroffenen Quelle beibehalten; bei fehlgeschlagenem Download oder Parser-Fehler bleibt auch der alte Katalog der betroffenen Quelle erhalten. Import ist auf 1 MB, 100 eigene Sender insgesamt und 30 URL-Quellen begrenzt. HTTPS und CORS sind nötig; der Browser kann keine serverseitigen CORS-Sperren umgehen. Browser-Speicherung enthält die eingetragenen Quell-URLs (eventuell mit Zugangstoken), daher keine fremden Geräte verwenden. Live-Wiedergabe, echte Browsertests und ein bestätigter Pages-Run sind weiterhin zu prüfen. Xtream, Film-/Serienkatalog und Downloads sind in diesem Schritt nicht implementiert.
