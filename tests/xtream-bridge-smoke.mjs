@@ -20,6 +20,13 @@ globalThis.fetch=async (url,options={})=>{
   throw Error('Unexpected upstream path');
 };
 const {server}=require('../bridge/server.cjs');
+const {readFileSync}=require('node:fs');
+const bridgeSource=readFileSync(new URL('../bridge/server.cjs',import.meta.url),'utf8');
+const clientSource=readFileSync(new URL('../xtream.js',import.meta.url),'utf8');
+const tvStyles=readFileSync(new URL('../tv.css',import.meta.url),'utf8');
+assert.match(bridgeSource,/MAX_CATALOG_BYTES=64\*1024\*1024/);
+assert.match(clientSource,/MAX_CATALOG_BYTES=64\*1024\*1024/);
+assert.match(tvStyles,/\.tv-xtream-form label\[hidden\]\s*\{display:none!important\}/);
 server.listen(0,'127.0.0.1');await once(server,'listening');
 const base='http://127.0.0.1:'+server.address().port;
 const token=process.env.MEVITV_BRIDGE_TOKEN;
