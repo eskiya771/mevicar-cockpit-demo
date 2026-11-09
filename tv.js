@@ -54,6 +54,22 @@ function paintXtream(){const api=global.meviXtream,area=root?.querySelector('.tv
 async function selectXtItem(id){const api=global.meviXtream,a=api?.active(),item=a?.items[api.state.kind]?.find(x=>x.id===id);if(!item)return;if(api.state.kind==='series'){const box=root.querySelector('.tv-xtream-list');box.textContent='Lade Staffeln und Folgen …';try{const episodes=await api.episodes(a,item);box.innerHTML='<button data-act="xtream-series-back">← Serien</button>'+episodes.map(x=>'<button class="tv-xtream-item" data-xt-episode="'+esc(x.id)+'"><strong>Staffel '+esc(x.season)+' · Folge '+esc(x.number)+'</strong> '+esc(x.name)+'</button>').join('');xtreamSelected={item,episodes};}catch(e){box.textContent='Folgen konnten nicht geladen werden: '+e.message;}return;}startXtMedia(api,a,api.state.kind==='movie'?'movie':'live',item.id,item.extension,item.name);}
 async function startXtMedia(api,a,type,id,extension,name){
  if(!root)return;
+ // Android-only host communication: the origin-restricted WebMessage listener
+ // launches Media3. The browser/PWA continues using HLS/FFmpeg.
+ if(global.MeviNativePlayer&&typeof global.MeviNativePlayer.postMessage==='function'){
+  const currentRoot=root,request=++xtRequestSeq;
+  xtPlayback={api,a,type,id,extension,name};activePlaybackName=name;
+  cleanup();root.querySelector('.tv-title').textContent=name;
+  status('Starte Android ExoPlayer …');
+  try{
+   const nativeExt=type==='live'?'ts':extension;
+   const url=await api.playbackURL(a.credentials,type,id,nativeExt,true);
+   if(root!==currentRoot||request!==xtRequestSeq)return;
+   global.MeviNativePlayer.postMessage(JSON.stringify({action:'play',url,title:name}));
+   status('Wiedergabe in Android ExoPlayer');
+  }catch(e){if(root===currentRoot&&request===xtRequestSeq)status('ExoPlayer: '+e.message);}
+  return;
+ }
  xtPlayback={api,a,type,id,extension,name};
  activePlaybackName=name;
  const mountRoot=root,request=++xtRequestSeq;
