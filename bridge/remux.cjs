@@ -11,14 +11,16 @@ const sessions=new Map();
 const safeId=id=>/^\d{1,15}$/.test(String(id));
 const safeSegment=name=>/^seg\d{5,9}\.ts$/.test(name);
 function countActive(){return sessions.size;}
-function cleanup(id){const item=sessions.get(id);if(!item)return;sessions.delete(id);if(item.proc&&!item.proc.killed)item.proc.kill('SIGTERM');fs.rm(item.dir,{recursive:true,force:true},()=>{});}
+function leastRecentlyUsed(map){let candidate=null;for(const [id,item] of map){if(!candidate||item.used<candidate.used)candidate={id,used:item.used};}return candidate?.id??null;}
+function cleanup(id){const item=sessions.get(id);if(!item)return;sessions.delete(id);if(item.proc&&!item.proc.killed)item.proc.kill('SIGTERM');fs.rmSync(item.dir,{recursive:true,force:true});}
 function sweep(){for(const [id,session] of sessions)if(Date.now()-session.used>IDLE_MS)cleanup(id);}
 const timer=setInterval(sweep,15000);timer.unref();
 function start(id,input){
  if(!safeId(id))throw Error('Invalid stream ID');
  let item=sessions.get(id);
- if(item){item.used=Date.now();return item;}
- if(sessions.size>=MAX_ACTIVE)throw Error('Max active streams reached');
+ if(item&&!item.exited){item.used=Date.now();return item;}
+ if(item)cleanup(id);
+ if(sessions.size>=MAX_ACTIVE){const victim=leastRecentlyUsed(sessions);if(victim!==null)cleanup(victim);}
  fs.mkdirSync(ROOT,{recursive:true,mode:0o700});
  const dir=path.join(ROOT,String(id));fs.rmSync(dir,{recursive:true,force:true});fs.mkdirSync(dir,{recursive:true,mode:0o700});
  const args=[
@@ -54,4 +56,4 @@ function playlist(item,exp,sig){
  return value.split(/\r?\n/).map(line=>safeSegment(line.trim())?line.trim()+'?exp='+exp+'&sig='+sig:line).join('\n');
 }
 function segment(item,name){if(!safeSegment(name))throw Error('Invalid segment');item.used=Date.now();return path.join(item.dir,name);}
-module.exports={start,ready,playlist,segment,cleanup,countActive,safeSegment};
+module.exports={start,ready,playlist,segment,cleanup,countActive,safeSegment,leastRecentlyUsed};
