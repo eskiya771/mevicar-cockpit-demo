@@ -34,7 +34,7 @@ function loadHls(){if(global.Hls)return Promise.resolve(global.Hls);if(!libraryP
 async function play(){if(!root)return;xtRequestSeq++;xtPlayback=null;activePlaybackName='';playbackFormat='';cleanup();const token=generation,v=video,c=current();root.classList.add('tv-watching');root.querySelector('.tv-empty').hidden=true;status('Verbinde mit '+c.name+' …');paintTitle();save();
  global.meviMediaStopForSource?.('tv');global.meviSpotifyPauseForSource?.('tv');
  const valid=()=>root&&video===v&&generation===token;
- const start=()=>{if(!valid())return;const result=v.play();result?.catch(e=>{if(valid())status(e.name==='NotAllowedError'?'Bitte ▶ im Videoplayer antippen.':'Wiedergabe nicht möglich. Erneut laden oder Senderseite öffnen.');});};
+ const start=()=>{if(!valid())return;playerTransition=false;const result=v.play();result?.catch(e=>{if(valid())status(e.name==='NotAllowedError'?'Bitte ▶ im Videoplayer antippen.':'Wiedergabe nicht möglich. Erneut laden oder Senderseite öffnen.');});};
  deadline=setTimeout(()=>{if(valid()){cleanup();status('Keine Verbindung. Erneut laden oder Senderseite öffnen.');}},25000);
  try{
   if(v.canPlayType('application/vnd.apple.mpegurl')||/\.mp4(?:[?#]|$)/i.test(c.url)){v.src=c.url;start();}
