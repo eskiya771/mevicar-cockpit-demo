@@ -17,7 +17,7 @@ globalThis.fetch=async (url,options={})=>{
     assert.equal(u.searchParams.get('password'),'test-pass');
     return new Response(JSON.stringify([{category_id:1,category_name:'News'}]),{headers:{'Content-Type':'application/json'}});
   }
-  if(u.pathname.startsWith('/movie/'))return new Response('mock transport stream',{headers:{'Content-Type':'video/mp2t'}});
+  if(u.pathname.startsWith('/movie/')||u.pathname.startsWith('/live/'))return new Response('mock transport stream',{headers:{'Content-Type':'video/mp2t'}});
   throw Error('Unexpected upstream path');
 };
 const remux=require('../bridge/remux.cjs');
@@ -66,6 +66,14 @@ try{
  assert.equal(response.status,200);
  const tsTicket=(await response.json()).url;
  assert.match(tsTicket,/^\/remux\/live\/42\/index\.m3u8\?exp=/);
+ response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+session,'Content-Type':'application/json'},body:JSON.stringify({type:'live',id:'42',ext:'ts',transport:'raw'})});
+ assert.equal(response.status,200);
+ const rawTicket=(await response.json()).url;
+ assert.match(rawTicket,/^\/stream\/live\/42\.ts\?exp=/);
+ response=await originalFetch(base+rawTicket,{headers:{Origin:'https://example.github.io'}});
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get('access-control-allow-origin'),'https://example.github.io');
+ assert.equal(await response.text(),'mock transport stream');
  response=await originalFetch(base+'/remux/live/42/index.m3u8?exp=123&sig='+'0'.repeat(64));
  assert.equal(response.status,401);
  console.log('Xtream bridge OK: auth, CORS, allowlists, catalog response, signed media tickets.');
