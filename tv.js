@@ -59,6 +59,7 @@ async function startXtMedia(api,a,type,id,extension,name){
  xtPlayback={api,a,type,id,extension,name};
  activePlaybackName=name;
  const mountRoot=root,request=++xtRequestSeq;
+ cleanup();status('Verbinde mit '+name+' …');
  const stillCurrent=()=>root===mountRoot&&request===xtRequestSeq;
  const fallback=async(reason)=>{
   if(!stillCurrent())return;
@@ -107,7 +108,7 @@ async function playMpegts(url,name,engine,stillCurrent,fallback){
   mpegtsPlayer.load();
   playerTransition=false;
   status('mpegts.js: Verbinde mit '+name+' …');
-  const started=v.play();started?.catch(e=>{if(valid()&&e.name!=='NotAllowedError')fail(e.message||'Video start failed');else if(valid())status('Bitte ▶ im Videoplayer antippen.');});
+  const started=mpegtsPlayer.play();started?.catch(e=>{if(valid()&&e.name!=='NotAllowedError')fail(e.message||'Video start failed');else if(valid())status('Bitte ▶ im Videoplayer antippen.');});
   deadline=setTimeout(()=>{if(valid()&&!v.videoWidth)fail('Kein Videobild nach 20 Sekunden');},20000);
  }catch(e){fail(e.message||'MPEG-TS-Player konnte nicht starten');}
 }
