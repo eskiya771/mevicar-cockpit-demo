@@ -7,6 +7,12 @@ const tvSource=readFileSync(new URL('../tv.js',import.meta.url),'utf8');
 assert.match(tvSource,/new URL\(url\)\.pathname\.toLowerCase\(\)/);
 assert.match(tvSource,/response\.status===415/);
 assert.match(tvSource,/case'play':if\(xtPlayback\)/);
+assert.match(tvSource,/const stillCurrent=\(\)=>root===mountRoot&&request===xtRequestSeq/);
+assert.match(tvSource,/request===xtRequestSeq/);
+assert.match(tvSource,/data\.type===Hls\.ErrorTypes\.NETWORK_ERROR/);
+assert.match(tvSource,/data\.type===Hls\.ErrorTypes\.MEDIA_ERROR/);
+assert.doesNotMatch(tvSource,/code===4\?'Medienformat wird vom Browser nicht unterstützt/);
+
 assert(CATALOG.filter(x=>x.country==='DE').length>=3);
 assert(CATALOG.filter(x=>x.country==='TR').length>=3);
 assert.equal(new Set(CATALOG.map(x=>x.id)).size,CATALOG.length);
