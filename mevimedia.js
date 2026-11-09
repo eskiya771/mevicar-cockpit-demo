@@ -68,7 +68,7 @@
   function updateNotice(){const el=$('mm-notice');if(el)el.textContent=st.status}
   function showVideo(){const t=current();if(!t||!t.video)return;ensurePlayer();videoLayer.hidden=false;const title=$('mm-video-title');if(title)title.textContent=t.title||t.name}
   function closeVideo(){if(videoLayer&&!videoLayer.hidden){videoLayer.hidden=true;if(current()?.video)player.pause();syncPlaybackButtons()}}
-  function onSourceChanged(source){audioOwner=source;if(source!=='media'){if(player)player.pause();closeVideo();}if(source!=='radio')radioStop();bindAudioSession();}
+  function onSourceChanged(source){window.meviTVStopForSource?.(source);audioOwner=source;if(source!=='media'){if(player)player.pause();closeVideo();}if(source!=='radio')radioStop();bindAudioSession();}
   function makeTrack(file,folder){
     const name=file.name,video=isVideo(file),path=(folder||'')+name;
     const bare=baseName(name),parts=bare.split(/\s+[-–]\s+/);

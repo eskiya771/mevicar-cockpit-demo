@@ -236,3 +236,7 @@ Neue Zusatz-App im Launcher: Tetris startet wie andere Apps im Vollbild, erneute
 Integration: Registry, SVG-Symbol, Dock-Akzent, Mount/Unmount, versioniertes Inline-Bundling im Pages-Workflow und Offline-Cache. Launcher erhält fünf gleich hohe Reihen, damit die zusätzliche Kachel in die bestehende Vier-Spalten-Anordnung passt.
 
 Validierung: acht Node-Smoke-Tests einschließlich Tetris-Regeln und Lifecycle; lokale Pages-Ausgabe erfolgreich erzeugt. Chromium-Download erneut mit ungültigem ZIP gescheitert; keine Browser-Sichtfreigabe. Touch-/Safe-Area-Prüfung auf echten Geräten offen.
+
+## TV-App – 9. November 2026
+
+TV im Launcher: acht deutsche/türkische Sender, Länderfilter, Suche, gespeicherte Favoriten, eigener HTTPS-Stream und lokaler M3U-Dateiimport mit Löschfunktion. Native HLS oder lokal ausgeliefertes, im Build hashgeprüftes hls.js. Video stoppt beim App-/Layoutwechsel; lokale Audioquellen gegenseitig exklusiv. Alle neun Smoke-Tests bestanden; Master-Playlists erreichbar. Reale Wiedergabe und visuelle Abnahme offen. Details und Quellen in docs/QA_TV.md.
