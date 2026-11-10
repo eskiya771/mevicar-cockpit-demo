@@ -1,7 +1,6 @@
 # MeviTV proxy updates — integrated (one-time bootstrap)
 
-The proxy checks the latest `bridge/` GitHub revision automatically **every 60 seconds**.
-Opening MeviCar Next → TV → Proxy triggers an immediate fresh check.
+The proxy checks GitHub **only when MeviCar Next requests it**. Opening MeviCar Next → TV → Proxy triggers an immediate fresh check; **Status prüfen** requests another. There is no background polling.
 Nothing is downloaded/installed until the user presses **Proxy aktualisieren** and confirms.
 
 ## One-time migration on your Synology
@@ -42,10 +41,14 @@ its first 12 seconds or if its files fail the startup syntax check.
 
 **Limits:** The automatic updater cannot modify its own launcher/updater, Dockerfile,
 Compose, Node version or FFmpeg. Such updates still need a normal manual Docker rebuild.
-The initial installed revision displays as *Unbekannt* until the first managed JS update.
+Releases have independent sequential build numbers in `bridge/release.json` (initially **1.0.0, Build 1**). Increment the build integer for each new proxy release. The installed build can be *Unbekannt* until the first managed JS update. Older installed revisions may display their abbreviated SHA until upgraded. GitHub commits that do not increment the build number do not represent a new proxy release.
 A crash after the first 12 seconds or a failure requiring Docker/image changes may
 still require manual recovery; rollback is best-effort.
 
 Updates are trusted only from the configured GitHub repository. Protect GitHub write access.
 The four-digit PIN grants an authenticated session and therefore grants manual update
 permission. Secure access to the public proxy through network restrictions where possible.
+
+## Migration note for already-running proxy updater
+
+The updater and launcher are **immutable image files**. A proxy running the old 60-second updater cannot install this change into its own updater via the browser button; apply the one-time file copy and `docker compose up -d --build` steps above. Thereafter application-only bridge releases (`server.cjs`, `hls.cjs`, `remux.cjs`) can be installed from the MeviCar dialog. Changes to `self-update.cjs`, `launcher.cjs`, Dockerfile, or Compose always require a manual image rebuild.
