@@ -81,7 +81,7 @@ function vodStart(type,id,input){
  fs.rmSync(dir,{recursive:true,force:true});fs.mkdirSync(dir,{recursive:true,mode:0o700});
  const args=[
   '-hide_banner','-nostdin','-loglevel','error','-y',
-  '-rw_timeout','10000000','-i',input,
+  '-rw_timeout','10000000','-re','-i',input,
   '-map','0:v:0','-map','0:a:0?',
   // H.264/AAC output works in hls.js and in iOS native HLS.
   // Cap resolution and CPU use for resource-constrained Synology NAS hosts.
