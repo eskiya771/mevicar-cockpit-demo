@@ -89,7 +89,7 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
  const url=new URL(req.url,'http://localhost');
  if(req.method==='GET'&&url.pathname==='/update/status'){
   if(!authorize(req))return reply(res,401,{error:'Unauthorized'});
-  return reply(res,200,await proxyUpdater.refresh(url.searchParams.get('force')==='1'));
+  return reply(res,200,{...await proxyUpdater.refresh(url.searchParams.get('force')==='1'),check_interval_seconds:60});
  }
  if(req.method==='POST'&&url.pathname==='/update/apply'){
   // Unlike playback tickets, update commands require a matching browser Origin.
