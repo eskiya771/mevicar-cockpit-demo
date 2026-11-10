@@ -21,7 +21,7 @@ services:
       - ALL
     read_only: true
     volumes:
-      - ./update-control:/update-control:rw
+      - ./runtime:/runtime:rw
     tmpfs:
       - /tmp:size=16m
     pids_limit: 100
