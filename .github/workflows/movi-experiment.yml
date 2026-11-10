@@ -31,6 +31,9 @@ jobs:
         run: |
           cd movi-src
           docker compose run --rm build
+          # Docker builds as root in the bind mount; restore runner ownership
+          # before TypeScript emits declaration files in dist/wasm.
+          sudo chown -R "$(id -u):$(id -g)" dist
           test -s dist/wasm/external/movi.wasm
       - name: Build matching slim browser player
         run: |
