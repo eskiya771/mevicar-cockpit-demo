@@ -12,6 +12,10 @@ assert(tvSource.includes("moviElement.destroy?.()"));
 assert(tvSource.includes("element.addEventListener('trackschange'"));
 assert(tvSource.includes("element.addEventListener('errordisplay'"));
 assert(tvSource.includes("element.addEventListener('linearmode'"));
+assert(tvSource.includes("element.addEventListener('seeking'"));
+assert(tvSource.includes("element.addEventListener('seeked'"));
+assert(tvSource.includes('Spulen abgeschlossen'));
+
 assert(tvSource.includes('async function playMoviVod('));
 assert(tvSource.includes('if(convert)await playMoviVod(url,name,stillCurrent)'));
 assert(!tvSource.includes('useVodFfmpeg'));
