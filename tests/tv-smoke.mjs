@@ -14,7 +14,10 @@ assert(tvSource.includes("element.addEventListener('errordisplay'"));
 assert(tvSource.includes("element.addEventListener('linearmode'"));
 assert(tvSource.includes("element.addEventListener('seeking'"));
 assert(tvSource.includes("element.addEventListener('seeked'"));
-assert(tvSource.includes('Spulen abgeschlossen'));
+assert(tvSource.includes('Spulen bis Wiedergabe'));
+assert(tvSource.includes('onSeekState(state)'));
+assert(tvSource.includes('Spulen dauert länger als 12 Sekunden'));
+
 
 assert(tvSource.includes('async function playMoviVod('));
 assert(tvSource.includes('if(convert)await playMoviVod(url,name,stillCurrent)'));
