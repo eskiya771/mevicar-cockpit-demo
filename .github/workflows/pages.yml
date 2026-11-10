@@ -179,6 +179,7 @@ jobs:
           test -s /tmp/mevi-movi/package/dist/movi.wasm
           cp /tmp/mevi-movi/package/dist/element.slim.global.js dist/vendor/movi-player-0.4.1.slim.global.js
           cp /tmp/mevi-movi/package/dist/movi.wasm dist/vendor/movi.wasm
+          node -e 'const fs=require("fs"),crypto=require("crypto"),p="dist/vendor/movi.wasm"; fs.writeFileSync("dist/vendor/movi-build.json",JSON.stringify({version:process.argv[1],wasm_sha256:crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex"),bundle:"element.slim.global.js",build_sha:process.env.BUILD_SHA||"unknown"},null,2))' "$MOVI_VERSION"
           # GitHub Pages serves .wasm as application/wasm; verify HTTP MIME in browser QA.
           if test -f /tmp/mevi-movi/package/LICENSE; then cp /tmp/mevi-movi/package/LICENSE dist/vendor/movi-player-LICENSE.txt; fi
           # Download the pinned browser bundle directly; the npm package
