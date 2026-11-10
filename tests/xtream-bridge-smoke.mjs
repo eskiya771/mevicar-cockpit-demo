@@ -17,6 +17,9 @@ globalThis.fetch=async (url,options={})=>{
     assert.equal(u.searchParams.get('password'),'test-pass');
     return new Response(JSON.stringify([{category_id:1,category_name:'News'}]),{headers:{'Content-Type':'application/json'}});
   }
+  if(u.pathname.endsWith('/44.mp4'))return new Response(null,{status:302,headers:{Location:'/cdn/44.mp4'}});
+  if(u.pathname.endsWith('/45.mp4'))return new Response(null,{status:302,headers:{Location:'https://unknown-cdn.example/file.mp4?secret=do-not-leak'}});
+  if(u.pathname==='/cdn/44.mp4')return new Response('redirected film bytes',{headers:{'Content-Type':'video/mp4','Accept-Ranges':'bytes'}});
   if(u.pathname.startsWith('/movie/')||u.pathname.startsWith('/live/'))return new Response('mock transport stream',{headers:{'Content-Type':'video/mp2t'}});
   throw Error('Unexpected upstream path');
 };
@@ -68,6 +71,18 @@ try{
  const ticket=await response.json();
  assert(ticket.url.startsWith('/stream/movie/42.mp4?'));
  response=await originalFetch(base+ticket.url);assert.equal(response.status,200);assert.equal(await response.text(),'mock transport stream');
+ response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'movie',id:'44',ext:'mp4'})});
+ const redirectTicket=(await response.json()).url;
+ response=await originalFetch(base+redirectTicket,{headers:{Range:'bytes=0-1'}});
+ assert.equal(response.status,200);
+ assert.equal(await response.text(),'redirected film bytes');
+ response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'movie',id:'45',ext:'mp4'})});
+ const blockedTicket=(await response.json()).url;
+ response=await originalFetch(base+blockedTicket);
+ assert.equal(response.status,502);
+ const blocked=await response.json();
+ assert.match(blocked.error,/unknown-cdn.example/);
+ assert.doesNotMatch(blocked.error,/do-not-leak/);
  response=await originalFetch(base+'/stream/movie/42.mp4?exp=123&sig='+'0'.repeat(64));assert.equal(response.status,401);
  response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'live',id:'42',ext:'ts'})});
  assert.equal(response.status,200);
