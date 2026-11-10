@@ -155,11 +155,25 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   if(ext==='m3u8'&&req.method==='GET')return hlsResponse(req,res,upstreamURL(path));
   const headers={};if(req.headers.range)headers.Range=req.headers.range;
   const controller=new AbortController();res.once('close',()=>controller.abort());
-  const remote=await fetch(upstreamURL(path),{method:req.method,headers,redirect:'error',signal:controller.signal});
+  let remote;
+  try{
+   remote=await fetch(upstreamURL(path),{method:req.method,headers,redirect:'manual',signal:controller.signal});
+  }catch(e){
+   const cause=e?.cause?.code||e?.code||'NETWORK_ERROR';
+   const category=/^[A-Z0-9_]{2,48}$/.test(String(cause))?String(cause):'NETWORK_ERROR';
+   console.warn('[MeviTV VOD] Media upstream connection failed:',category,'type:',type,'extension:',ext);
+   return reply(res,502,{error:'Provider-Verbindung fehlgeschlagen ('+category+')'});
+  }
+  if([301,302,303,307,308].includes(remote.status)){
+   await remote.body?.cancel?.();
+   console.warn('[MeviTV VOD] Provider redirected media request',remote.status,'type:',type,'extension:',ext);
+   return reply(res,502,{error:'Provider leitet Film auf anderen Medienserver um (HTTP '+remote.status+'); Weiterleitung derzeit nicht unterstützt'});
+  }
   if(!remote.ok&&remote.status!==206){
    await remote.body?.cancel?.();
    // Never expose provider URLs, authentication, or raw upstream response.
    const code=remote.status;
+   console.warn('[MeviTV VOD] Provider media HTTP',code,'type:',type,'extension:',ext);
    return reply(res,502,{error:'Provider media HTTP '+code});
   }
   res.statusCode=remote.status;
