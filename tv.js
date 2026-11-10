@@ -263,9 +263,8 @@ async function moviNetworkCheck(url,valid){
  }catch(e){if(valid())moviReport('Range/CORS-Test: '+(e.name==='AbortError'?'Timeout':'Netzwerk oder CORS blockiert'),'error');}
 }
 function moviDesktopBufferMB(){
- // Only Windows desktop; Android TVs, DeX, tablets and phones remain at 50 MB.
- const ua=String(navigator?.userAgent||'');
- return /Windows NT/i.test(ua)&&!/Android|Mobile|Tablet/i.test(ua)?100:50;
+ // 100 MB desktop experiment showed no reliable seek benefit; use 50 MB on all platforms.
+ return 50;
 }
 function moviBeginSeekTrace(){
  moviSeekTrace={start:Date.now(),end:null,requests:new Map()};
