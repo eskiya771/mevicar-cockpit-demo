@@ -7,6 +7,7 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 concurrency:
@@ -221,6 +222,21 @@ jobs:
           path: visual-results/tv/
           if-no-files-found: warn
           retention-days: 14
+      - name: Include optional source-built Movi experiment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Experimental files are never selected unless ?moviExperimental=1.
+          # Keep the stable npm/WASM bundle untouched.
+          RUN_ID=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/movi-experiment.yml/runs?status=success&per_page=1" --jq '.workflow_runs[0].id // empty' || true)
+          if [ -n "$RUN_ID" ]; then
+            mkdir -p dist/vendor/experimental
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name movi-mkv-experimental-source-build --dir dist/vendor/experimental
+            test -s dist/vendor/experimental/movi.wasm
+            test -s dist/vendor/experimental/element.slim.global.js
+          else
+            echo "No successful experimental Movi build yet; stable player remains active."
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
