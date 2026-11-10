@@ -19,6 +19,20 @@ const MAX_CATALOG_BYTES=64*1024*1024;
 const allowedActions=new Set(['get_live_categories','get_live_streams','get_vod_categories','get_vod_streams','get_series_categories','get_series','get_series_info','get_vod_info','get_short_epg','get_simple_data_table']);
 const safeId=id=>/^\d{1,15}$/.test(String(id));
 const safeExt=ext=>/^(m3u8|ts|mp4|mkv|avi|mov)$/.test(String(ext));
+const vodRedirectHosts=new Set((process.env.MEVITV_VOD_REDIRECT_HOSTS||'').split(',').map(s=>s.trim().toLowerCase()).filter(s=>/^[a-z0-9.-]+$/.test(s)));
+function checkedMediaRedirect(location,previous){
+ if(!location)throw Error('MISSING_LOCATION');
+ let next;
+ try{next=new URL(location,previous);}catch{throw Error('BAD_LOCATION');}
+ if(!['http:','https:'].includes(next.protocol)||next.username||next.password||next.hash)throw Error('UNSAFE_URL');
+ // Only the configured provider and explicitly trusted CDN hostnames are permitted.
+ // Never follow redirects to untrusted or private destinations via arbitrary URLs.
+ const sameProvider=next.hostname.toLowerCase()===base.hostname.toLowerCase()&&next.port===base.port;
+ if(!sameProvider&&!vodRedirectHosts.has(next.hostname.toLowerCase()))throw Error('CDN_HOST_NOT_ALLOWED:'+next.hostname.toLowerCase());
+ if(!sameProvider&&next.protocol!=='https:')throw Error('CDN_REQUIRES_HTTPS');
+ return next;
+}
+
 function provider(){const u=new URL(upstream);if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.search||u.hash)throw Error('Invalid upstream');if(!username||!password||token.length<32||!origin.startsWith('https://'))throw Error('Missing secure environment');return u;}
 const base=provider(),secret=crypto.createHmac('sha256',token).update('mevitv-playback-v1').digest();
 const relay=createRelay(secret,base.origin);
@@ -155,19 +169,31 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   if(ext==='m3u8'&&req.method==='GET')return hlsResponse(req,res,upstreamURL(path));
   const headers={};if(req.headers.range)headers.Range=req.headers.range;
   const controller=new AbortController();res.once('close',()=>controller.abort());
-  let remote;
+  let remote,current=upstreamURL(path),redirects=0;
   try{
-   remote=await fetch(upstreamURL(path),{method:req.method,headers,redirect:'manual',signal:controller.signal});
+   for(;;){
+    remote=await fetch(current,{method:req.method,headers,redirect:'manual',signal:controller.signal});
+    if(![301,302,303,307,308].includes(remote.status))break;
+    if(++redirects>5){await remote.body?.cancel?.();return reply(res,502,{error:'Zu viele Medienserver-Weiterleitungen'});}
+    const location=remote.headers.get('location');
+    let next;
+    try{next=checkedMediaRedirect(location,current);}
+    catch(e){
+     await remote.body?.cancel?.();
+     const message=String(e.message);
+     const host=message.startsWith('CDN_HOST_NOT_ALLOWED:')?message.slice('CDN_HOST_NOT_ALLOWED:'.length):null;
+     console.warn('[MeviTV VOD] Blocked redirect',host?'host:'+host:message,'type:',type,'extension:',ext);
+     return reply(res,502,{error:host?'Medienserver '+host+' ist nicht freigegeben. In MEVITV_VOD_REDIRECT_HOSTS eintragen.':'Unsichere Medienserver-Weiterleitung ('+message+')'});
+    }
+    await remote.body?.cancel?.();
+    current=next;
+   }
+   if(redirects)console.info('[MeviTV VOD] Followed',redirects,'approved redirect(s)','type:',type,'extension:',ext);
   }catch(e){
    const cause=e?.cause?.code||e?.code||'NETWORK_ERROR';
    const category=/^[A-Z0-9_]{2,48}$/.test(String(cause))?String(cause):'NETWORK_ERROR';
    console.warn('[MeviTV VOD] Media upstream connection failed:',category,'type:',type,'extension:',ext);
    return reply(res,502,{error:'Provider-Verbindung fehlgeschlagen ('+category+')'});
-  }
-  if([301,302,303,307,308].includes(remote.status)){
-   await remote.body?.cancel?.();
-   console.warn('[MeviTV VOD] Provider redirected media request',remote.status,'type:',type,'extension:',ext);
-   return reply(res,502,{error:'Provider leitet Film auf anderen Medienserver um (HTTP '+remote.status+'); Weiterleitung derzeit nicht unterstützt'});
   }
   if(!remote.ok&&remote.status!==206){
    await remote.body?.cancel?.();
