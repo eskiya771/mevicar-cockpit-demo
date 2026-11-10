@@ -9,7 +9,7 @@ let checking=null,installing=false;
 const base=()=>({installed:null,previous:null,latest:null,installed_build:null,latest_build:null,previous_build:null,installed_version:null,latest_version:null,previous_version:null,checked_at:null,checked_ms:0,state:'ready',message:''});
 function read(){try{return {...base(),...JSON.parse(fs.readFileSync(STATE,'utf8'))};}catch{return base();}}
 function save(s){fs.mkdirSync(RUNTIME,{recursive:true});const tmp=STATE+'.tmp-'+process.pid;fs.writeFileSync(tmp,JSON.stringify(s),{mode:0o600});fs.renameSync(tmp,STATE);}
-function publicStatus(s){return {installed:s.installed,latest:s.latest,installed_build:s.installed_build,latest_build:s.latest_build,installed_version:s.installed_version,latest_version:s.latest_version,available:!!(isSha(s.latest)&&s.latest!==s.installed&&(!Number.isSafeInteger(s.installed_build)||s.latest_build>s.installed_build)),state:s.state,message:s.message};}
+function publicStatus(s){return {installed:s.installed,latest:s.latest,installed_build:s.installed_build,latest_build:s.latest_build,installed_version:s.installed_version,latest_version:s.latest_version,rollback_available:!!(isSha(s.previous)&&s.previous!==s.installed&&FILES.every(file=>fs.existsSync(path.join(RUNTIME,'releases',s.previous,file)))),previous_build:s.previous_build,previous_version:s.previous_version,available:!!(isSha(s.latest)&&s.latest!==s.installed&&(!Number.isSafeInteger(s.installed_build)||s.latest_build>s.installed_build)),state:s.state,message:s.message};}
 async function get(url,cap=400000){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),12000);
  try{const resp=await fetch(url,{headers:{'User-Agent':'MeviTV-bridge-version/1','Accept':'application/vnd.github+json'},signal:controller.signal});
@@ -68,4 +68,25 @@ async function apply(){
  }catch(e){fs.rmSync(stage,{recursive:true,force:true});const state=read();state.state='update_failed';state.message=String(e.message).slice(0,160);save(state);return {code:503,error:state.message};}
  finally{installing=false;}
 }
-module.exports={refresh,apply,readStatus:()=>publicStatus(read())};
+async function rollback(){
+ if(installing)return {code:409,error:'Update or recovery already running'};
+ const s=read();
+ if(!isSha(s.previous)||s.previous===s.installed)return {code:409,error:'No previous version available'};
+ const target=s.previous,release=path.join(RUNTIME,'releases',target);
+ try{
+  for(const file of FILES)execFileSync(process.execPath,['--check',path.join(release,file)],{timeout:5000,stdio:'pipe'});
+ }catch{return {code:409,error:'Previous version files missing or invalid; use Synology recovery'};}
+ installing=true;
+ try{
+  const state=read();
+  // Swap current and previous to allow a later manual return to either revision.
+  const old={sha:state.installed,build:state.installed_build,version:state.installed_version};
+  state.installed=target;state.installed_build=state.previous_build;state.installed_version=state.previous_version;
+  state.previous=old.sha;state.previous_build=old.build;state.previous_version=old.version;
+  state.state='restarting';state.message='Manual rollback requested; container restarting';
+  save(state);
+  setTimeout(()=>process.exit(78),750).unref();
+  return {code:202,state:'restarting'};
+ }finally{installing=false;}
+}
+module.exports={refresh,apply,rollback,readStatus:()=>publicStatus(read())};
