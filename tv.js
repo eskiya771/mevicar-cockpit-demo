@@ -247,8 +247,8 @@ function loadMoviPlayer(){
 function moviTrackReport(tracks){
  const list=Array.isArray(tracks)?tracks:[];
  const group=type=>list.filter(t=>String(t.type||t.kind||t.codec_type||'').toLowerCase()===type).map(t=>[t.codec||t.codecName||t.codec_id||'Codec unbekannt',t.language||t.lang||'',t.width&&t.height?t.width+'x'+t.height:''].filter(Boolean).join(' '));
- moviReport('Video-Tracks: '+(group('video').join(' | ')||'keine Trackdaten'));
- moviReport('Audio-Tracks: '+(group('audio').join(' | ')||'keine Trackdaten'));
+ moviReport('Video-Tracks: '+(group('video').join(' | ')||'nicht gemeldet')+' · insgesamt '+list.length+' Tracks');
+ moviReport('Audio-Tracks: '+(group('audio').join(' | ')||'nicht gemeldet'));
 }
 async function moviNetworkCheck(url,valid){
  try{
@@ -257,7 +257,7 @@ async function moviNetworkCheck(url,valid){
    const response=await fetch(url,{method:'GET',headers:{Range:'bytes=0-1'},cache:'no-store',credentials:'omit',signal:ctrl.signal});
    if(!valid()){await response.body?.cancel?.();return;}
    const range=response.headers.get('content-range');
-   moviReport('Range-Test: HTTP '+response.status+(range?' · Content-Range vorhanden':' · kein Content-Range')+(response.status===206?' (OK)':response.status===200?' (Server ignoriert Range)':' (HTTP-Fehler)'),response.ok?'info':'error');
+   moviReport('Range-Test: HTTP '+response.status+(range?' · Content-Range '+range.slice(0,80):' · Content-Range nicht sichtbar')+(response.status===206?' · Partial Content':response.status===200?' · Range ignoriert':' · HTTP-Fehler'),response.ok?'info':'error');
    await response.body?.cancel?.();
   }finally{clearTimeout(timeout);}
  }catch(e){if(valid())moviReport('Range/CORS-Test: '+(e.name==='AbortError'?'Timeout':'Netzwerk oder CORS blockiert'),'error');}
@@ -287,8 +287,13 @@ async function playMoviVod(url,name,stillCurrent){
   element.addEventListener('playing',()=>{if(valid()){status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
   element.addEventListener('loadedmetadata',()=>{if(valid())moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');});
   element.addEventListener('trackschange',e=>{if(valid())moviTrackReport(e.detail);});
+  element.addEventListener('loadeddata',()=>{if(valid())moviReport('Erstes Videobild decodiert');});
+  element.addEventListener('statechange',e=>{if(valid())moviReport('Player-Zustand: '+String(e.detail?.state||e.detail||'unbekannt').slice(0,80));});
   element.addEventListener('linearmode',()=>{if(valid())moviReport('Range nicht unterstützt: nur lineares Streaming möglich','error');});
-  element.addEventListener('stalled',()=>{if(valid())moviReport('Netzwerk: Stream stockt','error');});
+  element.addEventListener('stalled',()=>{if(valid())moviReport('Pufferung: Daten werden nachgeladen (noch kein nachgewiesener Fehler)');});
+  element.addEventListener('waiting',()=>{if(valid())moviReport('Warten auf Videodaten / Decoder');});
+  element.addEventListener('canplay',()=>{if(valid())moviReport('Wiedergabepuffer bereit');});
+  element.addEventListener('smoothwarning',e=>{if(valid()){const d=e.detail||{};moviReport('Leistungswarnung: '+String(d.message||'Decoder oder Datenrate').slice(0,100)+(d.software?' · Softwaredecoder':'')+(d.link?' · Netzwerkdatenrate':'')+(d.neededBps?' · benötigt '+Math.round(d.neededBps/1000)+' kbit/s':'')+(d.measuredBps?' · gemessen '+Math.round(d.measuredBps/1000)+' kbit/s':''),'error');}});
   element.addEventListener('error',e=>{if(valid()){const message=String(e.detail?.message||e.detail?.error||e.detail||'unbekannter Fehler');moviReport('Player-Fehler: '+message,'error');status('MKV-Fehler: '+message.slice(0,100)+'');}});
   element.addEventListener('errordisplay',e=>{if(valid()){const d=e.detail||{};moviReport('Decoder/Codec: '+String(d.title||'Fehler')+' · '+String(d.message||''),'error');}});
   const stage=root.querySelector('.tv-stage');
