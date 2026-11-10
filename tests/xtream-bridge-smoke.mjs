@@ -69,6 +69,9 @@ try{
  response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'movie',id:'42',ext:'mkv'})});
  assert.equal(response.status,200);
  const directMkv=(await response.json()).url;
+ response=await originalFetch(base+'/diagnostics/mkv-ranges?id=42',{headers:{Authorization:'Bearer '+token}});
+ assert.equal(response.status,200);
+ assert(Array.isArray((await response.json()).requests));
  assert.match(directMkv,/^\/stream\/movie\/42\.mkv\?exp=\d+&sig=[a-f0-9]{64}$/);
  response=await originalFetch(base+'/vodhls/movie/42.mkv/index.m3u8?exp=123&sig='+'0'.repeat(64));
  assert.equal(response.status,404);
