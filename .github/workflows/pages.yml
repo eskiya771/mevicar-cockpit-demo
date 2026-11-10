@@ -170,11 +170,16 @@ jobs:
           mkdir -p dist/vendor
           # Apache-2.0 Movi Player: pinned npm package, served from our own Pages
           # origin. This avoids dynamic CDN requests and cross-origin WASM issues.
-          npm pack movi-player@0.4.1 --pack-destination /tmp --silent
+          MOVI_VERSION=$(npm view movi-player version)
+          node -e 'if (Number(process.argv[1].split(".")[0]) !== 0 || Number(process.argv[1].split(".")[1]) < 4 || (Number(process.argv[1].split(".")[1]) === 4 && Number(process.argv[1].split(".")[2]) < 1)) process.exit(1)' "$MOVI_VERSION"
+          npm pack "movi-player@$MOVI_VERSION" --pack-destination /tmp --silent
           mkdir -p /tmp/mevi-movi
-          tar -xzf /tmp/movi-player-0.4.1.tgz -C /tmp/mevi-movi
-          test -s /tmp/mevi-movi/package/dist/element.global.js
-          cp /tmp/mevi-movi/package/dist/element.global.js dist/vendor/movi-player-0.4.1.global.js
+          tar -xzf "/tmp/movi-player-$MOVI_VERSION.tgz" -C /tmp/mevi-movi
+          test -s /tmp/mevi-movi/package/dist/element.slim.global.js
+          test -s /tmp/mevi-movi/package/dist/movi.wasm
+          cp /tmp/mevi-movi/package/dist/element.slim.global.js dist/vendor/movi-player-0.4.1.slim.global.js
+          cp /tmp/mevi-movi/package/dist/movi.wasm dist/vendor/movi.wasm
+          # GitHub Pages serves .wasm as application/wasm; verify HTTP MIME in browser QA.
           if test -f /tmp/mevi-movi/package/LICENSE; then cp /tmp/mevi-movi/package/LICENSE dist/vendor/movi-player-LICENSE.txt; fi
           # Download the pinned browser bundle directly; the npm package
           # installation does not reliably expose this artifact at the expected path.
