@@ -39,7 +39,7 @@ const loginFailures=[];
 const LOGIN_WINDOW=15*60*1000,LOGIN_MAX_FAILURES=5,SESSION_SECONDS=2*60*60;
 function mac(value){return crypto.createHmac('sha256',secret).update(value).digest('hex');}
 function validToken(value){const a=Buffer.from(value||''),b=Buffer.from(token);return a.length===b.length&&crypto.timingSafeEqual(a,b);}
-function cors(req,res){if(req.headers.origin===origin){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type');res.setHeader('Access-Control-Allow-Methods','GET, POST, OPTIONS');}}
+function cors(req,res){if(req.headers.origin===origin){res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Access-Control-Allow-Headers','Authorization, Content-Type, Range');res.setHeader('Access-Control-Expose-Headers','Content-Range, Accept-Ranges, Content-Length, Content-Type');res.setHeader('Access-Control-Allow-Methods','GET, HEAD, POST, OPTIONS');}}
 function reply(res,code,data){res.statusCode=code;res.setHeader('Content-Type','application/json; charset=utf-8');res.setHeader('Cache-Control','no-store');res.end(JSON.stringify(data));}
 async function body(req){let total=0,chunks=[];for await(const p of req){total+=p.length;if(total>4096)throw Error('Request too large');chunks.push(p);}return JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');}
 function upstreamURL(path,params={}){const u=new URL(path,base.origin);for(const[k,v]of Object.entries(params))u.searchParams.set(k,String(v));return u;}
