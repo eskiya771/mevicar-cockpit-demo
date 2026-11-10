@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {createRequire} from 'node:module';
+const api=createRequire(import.meta.url)('../xtream.js');
+const b64=text=>Buffer.from(text,'utf8').toString('base64');
+const start=Date.UTC(2026,10,10,18),end=start+3600000;
+const row={title:b64('Güncel · Nachrichten'),description:b64('Türkçe & Deutsch <script>\nBeschreibung'),start_timestamp:String(start/1000),stop_timestamp:String(end/1000)};
+assert.deepEqual(api.normalizeEPG({epg_listings:[row,row,null,{title:'bad',start_timestamp:3,stop_timestamp:2}]}),[{title:'Güncel · Nachrichten',description:'Türkçe & Deutsch <script>\nBeschreibung',start,end}]);
+assert.equal(api.normalizeEPG([{...row,start_timestamp:start,stop_timestamp:end}])[0].start,start);
+assert.equal(api.normalizeEPG([{title:'Plain title',start:'2026-11-10T19:00:00+01:00',end:'2026-11-10T20:00:00+01:00'}])[0].start,start);
+assert.deepEqual(api.normalizeEPG([{title:'Ambiguous provider timezone',start:'2026-11-10 19:00:00',end:'2026-11-10 20:00:00'}]),[]);
+assert.deepEqual(api.normalizeEPG({}),[]);
+const savedFetch=globalThis.fetch;
+let requests=0;
+const account={credentials:{host:'https://bridge.example',bridge:true,token:'test-only'}};
+try{
+ globalThis.fetch=async(url,options)=>{requests++;assert.equal(url,'https://bridge.example/api');assert.deepEqual(JSON.parse(options.body),{action:'get_short_epg',stream_id:'123'});assert.equal(options.headers.Authorization,'Bearer test-only');return new Response(JSON.stringify({epg_listings:[row]}));};
+ assert.equal((await api.epg(account,'123'))[0].title,'Güncel · Nachrichten');
+ await api.epg(account,'123');assert.equal(requests,1,'short-lived cache');
+ await api.epg(account,'123',{force:true});assert.equal(requests,2,'manual refresh bypasses cache');
+ await api.epg({credentials:account.credentials},'123');assert.equal(requests,3,'accounts do not share EPG cache');
+ await assert.rejects(api.epg(account,'../123'),/Ungültiger/);
+ globalThis.fetch=async()=>new Response('{}',{status:503});
+ await assert.rejects(api.epg(account,'123',{force:true}),/HTTP 503/);
+ const controller=new AbortController();
+ globalThis.fetch=async(url,{signal})=>new Promise((resolve,reject)=>signal.addEventListener('abort',()=>reject(new DOMException('aborted','AbortError')),{once:true}));
+ const pending=api.epg(account,'124',{signal:controller.signal});controller.abort();
+ await assert.rejects(pending,{name:'AbortError'});
+ await assert.rejects(api.epg(account,'123',{signal:controller.signal}),{name:'AbortError'});
+}finally{globalThis.fetch=savedFetch;}
+console.log('EPG: UTF-8 base64/plain text, timestamps/timezones, invalid data, cache isolation, refresh, HTTP errors and cancellation passed.');

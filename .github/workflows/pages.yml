@@ -41,6 +41,8 @@ jobs:
         run: node tests/tv-iphone-landscape-smoke.mjs
       - name: Test Xtream API catalog adapter
         run: node tests/xtream-smoke.mjs
+      - name: Test IPTV programme guide
+        run: node tests/epg-smoke.mjs
       - name: Test direct MPEG-TS browser routing
         run: node tests/mpegts-smoke.mjs
       - name: Stress-test MPEG-TS zapping and resource cleanup

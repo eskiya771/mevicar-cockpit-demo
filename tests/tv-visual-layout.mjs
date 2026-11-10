@@ -1,7 +1,7 @@
 /* Browser regression against the actual versioned Pages output.
    Isolated fixture responses only: no real PIN/provider/session is used. */
 import assert from 'node:assert/strict';
-import { chromium } from 'playwright';
+import { chromium, expect } from 'playwright/test';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { resolve, extname } from 'node:path';
@@ -36,7 +36,7 @@ try{
  for(const [index,profile] of profiles.entries())for(const theme of ['default','cyberpunk','liquidglass']){
   const context=await browser.newContext({viewport:{width:profile.width,height:profile.height},deviceScaleFactor:1,hasTouch:true,reducedMotion:'reduce',serviceWorkers:'block'});
   const page=await context.newPage();
-  const errors=[],tickets=[];
+  const errors=[],tickets=[];let epgMode="success";
   page.on('pageerror',e=>errors.push(e.message));
   const result={profile:profile.name,theme,viewport:{width:profile.width,height:profile.height},errors};
   const prefix=`${index+1}-${theme}`;
@@ -46,7 +46,17 @@ try{
     const request=route.request(),path=new URL(request.url()).pathname;
     if(path==='/session')return route.fulfill({json:{session:'visual.fixture'}});
     if(path==='/api'){
-     const {action}=request.postDataJSON();
+     const {action,stream_id}=request.postDataJSON();
+     if(action==='get_short_epg'){
+      if(epgMode==='error')return route.fulfill({status:503,json:{error:'EPG fixture unavailable'}});
+      if(epgMode==='empty')return route.fulfill({json:{epg_listings:[]}});
+      if(stream_id==='2')await new Promise(r=>setTimeout(r,350));
+      const now=Math.floor(Date.now()/1000),text=value=>Buffer.from(value).toString('base64');
+      return route.fulfill({json:{epg_listings:[
+       {title:text('Sendung '+stream_id+' · Nachrichten'),description:text('Güncel <script>alert(1)</script> & Kultur.\nBeschreibung des Testprogramms.'),start_timestamp:now-600,stop_timestamp:now+1200},
+       {title:text('Danach: Kultur'),description:text('Die nächste Sendung'),start_timestamp:now+1200,stop_timestamp:now+3000}
+      ]}});
+     }
      return route.fulfill({json:action.endsWith('_categories')?categories:action==='get_live_streams'?items:[]});
     }
     if(path==='/ticket'){
@@ -86,9 +96,32 @@ try{
    assert.equal(tickets.length,1,'one media ticket');
    assert.equal(tickets[0].transport,'raw','healthy mpegts.js must not fall back');
    result.media=await page.locator('video').evaluate(v=>({width:v.videoWidth,height:v.videoHeight,time:v.currentTime}));
+   await expect(page.locator('.tv-epg-now')).toContainText('Jetzt: Sendung 1');
+   assert.equal(await page.locator('.tv-library .tv-xtream-tabs').count(),0,'tabs moved out of catalogue');
+   assert.equal(await page.locator('.tv-player [data-kind]').count(),3,'content tabs in player column');
    result.geometry=await measure(page);
    validate(result.geometry);
    await page.screenshot({path:`${output}/${prefix}.png`});
+   await page.getByRole('button',{name:'TV-Programm öffnen'}).click();
+   await expect(page.locator('.tv-epg-content')).toContainText('Güncel <script>alert(1)</script> & Kultur.');
+   assert.equal(await page.locator('.tv-epg-content script').count(),0,'provider text is escaped');
+   await page.screenshot({path:`${output}/${prefix}-epg.png`});
+   epgMode='empty';
+   await page.locator('.tv-epg-dialog').getByRole('button',{name:'Aktualisieren'}).click();
+   await expect(page.locator('.tv-epg-content')).toContainText('Keine Programmdaten vom Anbieter verfügbar.');
+   epgMode='error';
+   await page.locator('.tv-epg-dialog').getByRole('button',{name:'Aktualisieren'}).click();
+   await expect(page.locator('.tv-epg-content')).toContainText('EPG derzeit nicht verfügbar.');
+   assert.equal(tickets.length,1,'EPG errors do not restart video');
+   epgMode='success';
+   await page.locator('.tv-epg-dialog').getByRole('button',{name:'Aktualisieren'}).click();
+   await expect(page.locator('.tv-epg-now')).toContainText('Jetzt: Sendung 1');
+   await page.locator('.tv-epg-dialog').getByRole('button',{name:'Schließen',exact:true}).click();
+   await page.locator('[data-xt-item="2"]').click();
+   await page.locator('[data-xt-item="3"]').click();
+   await expect(page.locator('.tv-epg-now')).toContainText('Jetzt: Sendung 3');
+   await page.waitForTimeout(400); // delayed response from previous channel must never replace current EPG
+   await expect(page.locator('.tv-epg-now')).toContainText('Jetzt: Sendung 3');
    // Simulated asymmetric safe areas for both iPhone landscape directions.
    // This checks CSS only, not physical iOS/Safari behavior.
    if(profile.name==='iPhone 17'){

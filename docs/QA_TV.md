@@ -132,3 +132,12 @@ Nur `tv.css` und die Katalog-UI in `tv.js` wurden angepasst. Der mpegts.js-Wiede
 - Alle 16 vorhandenen Node-Smoke-Tests lokal bestanden, inklusive MPEGTS-Zapping/Timeout/Fallback/Cleanup.
 - Neue Pages-Prüfschranke: `node tests/tv-visual-layout.mjs` nach Erzeugung der versionierten Ausgabe, vor Deploy. Viewports aus `DISPLAY_PROFILE_MATRIX.md`, alle drei Themes, zusätzlich simulierte iPhone-Safe-Areas links/rechts. Screenshots, Geometrie, Decoderfortschritt und Browserfehler im Actions-Artefakt `mevitv-browser-qa`.
 - Testdaten: 120 künstliche Sender und lokal erzeugter MPEG-TS-Testfilm; echte mpegts.js-Bibliothek und Chromium-Decoder, keine Provider- oder Kontodaten. Reale iOS-/Safari-Wiedergabe und eigener Live-IPTV-Zugang bleiben separate Gerätetests.
+
+### IPTV-EPG und Tabs in der Playerspalte (10.11.2026)
+
+- Live/Filme/Serien/TV im Playerkopf, Einstellungen daneben; Suche/Kategorien bleiben in der Kanalliste.
+- EPG-Kurzvorschau über vorhandenes `get_short_epg`/`stream_id`; Now/Next unter dem Bild, Programmdialog mit Uhrzeit, Titel und Beschreibung, Aktualisieren und Schließen.
+- Nur Anbieter-EPG für Xtream-Live-TV; kein XMLTV-Import, keine erfundenen Programme, keine Kalenderwoche garantiert. Keine Proxyänderung nötig.
+- UTC-Epochen bzw. explizite Offsets in lokale Browserzeit umgerechnet; UTF-8-Base64 dekodiert, Text escaped, fehlerhafte/mehrdeutige Zeiten verworfen.
+- Abort/Generationen gegen verspätete Antworten, 12-Sekunden-Timeout, kontoabhängiger Zwei-Minuten-Cache mit höchstens 30 Sendern, minütliche Aktualisierung des ausgewählten Senders. Keine Kopplung eines EPG-Fehlers an die Wiedergabe.
+- 17 lokale Node-Smoke-Tests bestanden. Browserregression ergänzt um EPG-Dialog, Fehler/Leerzustand/Retry und Senderwechsel; Screenshots und konkretes Ergebnis im jeweiligen `mevitv-browser-qa`-Artefakt. Reale Providerdaten und iPhone-Safari bleiben Gerätetests.

@@ -33,7 +33,7 @@ assert.equal(filtered(CATALOG,'','ALL',['zdf'],true)[0].id,'zdf');
 // Native HLS lifecycle: start, source ownership, timeout cancellation, stop on unmount.
 const events={},nodes=new Map(),timers=new Map();let id=0,paused=0,owner='',plays=0;
 const video={src:'',canPlayType:()=>true,play(){plays++;return Promise.resolve();},pause(){paused++;},load(){},removeAttribute(){},addEventListener(t,f){events[t]=f;},removeEventListener(t){delete events[t];}};
-const root={classList:{add(){},toggle(){}},querySelector(s){if(s==='video')return video;if(!nodes.has(s))nodes.set(s,{textContent:'',innerHTML:'',value:'',setAttribute(){},removeAttribute(){}});return nodes.get(s);},addEventListener(t,f){events['root:'+t]=f;},removeEventListener(t){delete events['root:'+t];}};
+const root={classList:{add(){},toggle(){}},querySelector(s){if(s==='video')return video;if(!nodes.has(s))nodes.set(s,{textContent:'',innerHTML:'',value:'',setAttribute(){},removeAttribute(){},close(){}});return nodes.get(s);},addEventListener(t,f){events['root:'+t]=f;},removeEventListener(t){delete events['root:'+t];}};
 const doc={querySelector:()=>root,hidden:false,addEventListener(t,f){events[t]=f;},removeEventListener(t){delete events[t];}};
 const win={document:doc,meviMediaStopForSource:x=>owner=x};
 runInNewContext(readFileSync(new URL('../tv.js',import.meta.url),'utf8'),{window:win,document:doc,URL,localStorage:{getItem:()=>null,setItem(){}},setTimeout:f=>{timers.set(++id,f);return id;},clearTimeout:id=>timers.delete(id),setInterval:f=>{timers.set(++id,f);return id;},clearInterval:id=>timers.delete(id)});

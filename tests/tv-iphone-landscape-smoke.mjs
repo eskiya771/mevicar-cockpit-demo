@@ -22,6 +22,9 @@ assert(player.indexOf('class="tv-settings"')<player.indexOf('class="tv-stage"'))
 assert.equal((markup.match(/data-act="xtream"/g)||[]).length,1);
 assert(markup.indexOf('class="tv-xtream-search"')<markup.indexOf('class="tv-xtream-group"'));
 assert.match(markup,/aria-label="IPTV-Einstellungen"/);
+assert(!markup.slice(0,markup.indexOf('<section class="tv-player">')).includes('class="tv-xtream-tabs"'));
+assert(player.includes('class="tv-xtream-tabs"'));
+assert(player.includes('aria-label="TV-Programm öffnen"'));
 assert.match(read('index.html'),/<link rel="stylesheet" href="\.\/tv\.css">/);
 assert.match(read('.github/workflows/pages.yml'),/node tests\/tv-visual-layout.mjs/);
 console.log('MeviTV structure: shared dock, simultaneous full-screen panes, controls above video, safe-area spacing.');
