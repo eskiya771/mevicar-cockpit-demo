@@ -134,8 +134,33 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   }catch(e){return reply(res,503,{error:'Remux unavailable: '+String(e.message).slice(0,100)});}
  }
  if(req.method==='POST'&&url.pathname==='/ticket'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});const d=await body(req);if(!['live','movie','series'].includes(d.type)||!safeId(d.id)||!safeExt(d.ext))return reply(res,400,{error:'Invalid media'});const exp=Math.floor(Date.now()/1000)+14400;const path=d.type==='live'&&d.ext==='ts'&&d.transport!=='raw'?'/remux/live/'+d.id+'/index.m3u8':'/stream/'+d.type+'/'+d.id+'.'+d.ext;const signPath=path.startsWith('/remux/')?'/remux/live/'+d.id:path;const signature=mac(signPath+'|'+exp);return reply(res,200,{url:path+'?exp='+exp+'&sig='+signature,expires:exp});}
- if(req.method==='GET'&&url.pathname.startsWith('/stream/')){const match=url.pathname.match(/^\/stream\/(live|movie|series)\/(\d{1,15})\.(m3u8|ts|mp4|mkv|avi|mov)$/);if(!match)return reply(res,400,{error:'Invalid media'});const exp=Number(url.searchParams.get('exp')),sig=url.searchParams.get('sig')||'';if(!Number.isSafeInteger(exp)||exp<Math.floor(Date.now()/1000)||exp>Math.floor(Date.now()/1000)+14400||!(/^[0-9a-f]{64}$/.test(sig))||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(mac(url.pathname+'|'+exp))))return reply(res,401,{error:'Expired media ticket'});
- const [,type,id,ext]=match;const path='/'+type+'/'+encodeURIComponent(username)+'/'+encodeURIComponent(password)+'/'+id+'.'+ext;if(ext==='m3u8')return hlsResponse(req,res,upstreamURL(path));const headers={};if(req.headers.range)headers.Range=req.headers.range;const controller=new AbortController();res.once('close',()=>controller.abort());const remote=await fetch(upstreamURL(path),{headers,redirect:'error',signal:controller.signal});if(!remote.ok&&remote.status!==206){await remote.body?.cancel?.();return reply(res,502,{error:'Stream unavailable'});}res.statusCode=remote.status;for(const key of ['content-type','content-length','content-range','accept-ranges']){const value=remote.headers.get(key);if(value)res.setHeader(key,value);}const source=Readable.fromWeb(remote.body);source.on('error',()=>{if(!res.destroyed)res.destroy();});source.pipe(res);return;}
+ if((req.method==='GET'||req.method==='HEAD')&&url.pathname.startsWith('/stream/')){
+  const match=url.pathname.match(/^\/stream\/(live|movie|series)\/(\d{1,15})\.(m3u8|ts|mp4|mkv|avi|mov)$/);
+  if(!match)return reply(res,400,{error:'Invalid media'});
+  const exp=Number(url.searchParams.get('exp')),sig=url.searchParams.get('sig')||'',now=Math.floor(Date.now()/1000);
+  if(!Number.isSafeInteger(exp)||exp<now||exp>now+14400||!/^[0-9a-f]{64}$/.test(sig)||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(mac(url.pathname+'|'+exp))))return reply(res,401,{error:'Expired media ticket'});
+  const [,type,id,ext]=match,path='/'+type+'/'+encodeURIComponent(username)+'/'+encodeURIComponent(password)+'/'+id+'.'+ext;
+  if(ext==='m3u8'&&req.method==='GET')return hlsResponse(req,res,upstreamURL(path));
+  const headers={};if(req.headers.range)headers.Range=req.headers.range;
+  const controller=new AbortController();res.once('close',()=>controller.abort());
+  const remote=await fetch(upstreamURL(path),{method:req.method,headers,redirect:'error',signal:controller.signal});
+  if(!remote.ok&&remote.status!==206){
+   await remote.body?.cancel?.();
+   // Never expose provider URLs, authentication, or raw upstream response.
+   const code=remote.status;
+   return reply(res,502,{error:'Provider media HTTP '+code});
+  }
+  res.statusCode=remote.status;
+  for(const key of ['content-type','content-length','content-range','accept-ranges']){const value=remote.headers.get(key);if(value)res.setHeader(key,value);}
+  const knownType={mp4:'video/mp4',mov:'video/quicktime',mkv:'video/x-matroska',avi:'video/x-msvideo',ts:'video/mp2t'};
+  const mime=res.getHeader('content-type');
+  if(!mime||/^(?:application\/octet-stream|binary\/octet-stream)(?:\s*;|$)/i.test(String(mime)))res.setHeader('Content-Type',knownType[ext]||'application/octet-stream');
+  if(req.method==='HEAD'){await remote.body?.cancel?.();return res.end();}
+  if(!remote.body)return res.end();
+  const source=Readable.fromWeb(remote.body);
+  source.on('error',()=>{if(!res.destroyed)res.destroy();});
+  source.pipe(res);return;
+ }
  reply(res,404,{error:'Not found'});
 }
 const server=http.createServer((req,res)=>handler(req,res).catch(()=>{if(!res.headersSent)reply(res,502,{error:'Bridge request failed'});else res.destroy();}));
