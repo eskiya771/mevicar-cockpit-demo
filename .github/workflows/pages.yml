@@ -156,6 +156,14 @@ jobs:
           html = html.replace('<script src="./tv.js"></script>', '<script>' + pathlib.Path('tv.js').read_text() + '</script>')
           pathlib.Path('dist/index.html').write_text(html)
           pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
+          # Public proxy release manifest: no anonymous GitHub API requests needed
+          # by Synology clients (which otherwise hit the 60 requests/hour limit).
+          proxy = json.loads(pathlib.Path('bridge/release.json').read_text())
+          assert isinstance(proxy['build'], int) and proxy['build'] > 0
+          assert isinstance(proxy['version'], str)
+          pathlib.Path('dist/proxy-release.json').write_text(json.dumps({
+              'version': proxy['version'], 'build': proxy['build'], 'sha': os.environ['BUILD_SHA']
+          }))
           PY
       - name: Generate PWA icons and copy assets
         run: |
