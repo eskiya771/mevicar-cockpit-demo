@@ -19,7 +19,7 @@ if(!global.document)return;
 const KEY='mevicar-tv-v1',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,mpegtsPlayer=null,mpegtsHealthTimer=null,mpegtsFail=null,generation=0,deadline=null;
 let networkTimer=null,networkBusy=false,networkWaits=0,networkStarted=0,vodDiagnostic='';
-let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekTimer=null,moviRangeTimer=null,moviSeekTrace=null;
+let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekTimer=null,moviRangeTimer=null,moviSeekTrace=null,moviSeekHistory=[],moviSeekSummaryTimers=[];
 let query='',country='ALL',only=false,libraryPromise=null,mpegtsPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='',mpegtsFallback=null;
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 function channels(){return [...CATALOG,...custom];}
@@ -72,7 +72,7 @@ function selectEPG(api,account,type,id,name){
 
 function paintList(){if(!root)return;root.querySelector('.tv-list').innerHTML=filtered(channels(),query,country,favorites,only).map(c=>'<div class="tv-row '+(current().id===c.id?'selected':'')+'"><button data-channel="'+esc(c.id)+'"><span class="tv-logo" aria-hidden="true">'+esc(c.name.split(' ').map(x=>x[0]).join('').slice(0,3))+'</span><span>'+esc(c.name)+'<small>'+({DE:'Deutschland',TR:'Türkiye',OTHER:'Eigener Sender'}[c.country])+'</small></span></button><button data-fav="'+esc(c.id)+'" aria-label="'+esc(c.name)+' als Favorit" aria-pressed="'+favorites.includes(c.id)+'">'+(favorites.includes(c.id)?'★':'☆')+'</button></div>').join('')||'<p>Keine Sender gefunden.</p>';root.querySelector('[data-act="favorites"]').setAttribute('aria-pressed',String(only));}
 function paintTitle(){const c=current();root.querySelector('.tv-title').textContent=c.name;const a=root.querySelector('.tv-web');a.hidden=!c.web;if(c.web)a.href=c.web;else a.removeAttribute('href');}
-function cleanup(){moviSeekTrace=null;clearInterval(moviRangeTimer);moviRangeTimer=null;clearTimeout(moviSeekTimer);moviSeekTimer=null;if(moviElement){try{moviElement.pause?.();moviElement.destroy?.();moviElement.remove();}catch{}moviElement=null;}if(video)video.hidden=false;networkWaits=0;networkStarted=Date.now();generation++;clearTimeout(deadline);deadline=null;clearInterval(mpegtsHealthTimer);mpegtsHealthTimer=null;mpegtsFail=null;if(xtProbe){xtProbe.abort();xtProbe=null;}playerTransition=true;mpegtsFallback=null;if(mpegtsPlayer){const previous=mpegtsPlayer;mpegtsPlayer=null;for(const operation of ['pause','unload','detachMediaElement','destroy']){try{previous[operation]?.();}catch{}}}if(hls){hls.destroy();hls=null;}if(video){video.pause();video.removeAttribute('src');video.load();}}
+function cleanup(){for(const t of moviSeekSummaryTimers)clearTimeout(t);moviSeekSummaryTimers=[];moviSeekHistory=[];moviSeekTrace=null;clearInterval(moviRangeTimer);moviRangeTimer=null;clearTimeout(moviSeekTimer);moviSeekTimer=null;if(moviElement){try{moviElement.pause?.();moviElement.destroy?.();moviElement.remove();}catch{}moviElement=null;}if(video)video.hidden=false;networkWaits=0;networkStarted=Date.now();generation++;clearTimeout(deadline);deadline=null;clearInterval(mpegtsHealthTimer);mpegtsHealthTimer=null;mpegtsFail=null;if(xtProbe){xtProbe.abort();xtProbe=null;}playerTransition=true;mpegtsFallback=null;if(mpegtsPlayer){const previous=mpegtsPlayer;mpegtsPlayer=null;for(const operation of ['pause','unload','detachMediaElement','destroy']){try{previous[operation]?.();}catch{}}}if(hls){hls.destroy();hls=null;}if(video){video.pause();video.removeAttribute('src');video.load();}}
 function loadMpegts(){if(global.mpegts)return Promise.resolve(global.mpegts);if(!mpegtsPromise)mpegtsPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/mpegts-1.8.2.min.js';s.onload=()=>global.mpegts?resolve(global.mpegts):(mpegtsPromise=null,reject(Error('mpegts.js ist nicht verfügbar')));s.onerror=()=>{s.remove();mpegtsPromise=null;reject(Error('mpegts.js konnte nicht geladen werden'));};document.head.appendChild(s);});return mpegtsPromise;}
 function supportsMpegts(engine){return !!(engine?.isSupported?.()&&engine?.getFeatureList?.()?.mseLivePlayback);}
 function loadHls(){if(global.Hls)return Promise.resolve(global.Hls);if(!libraryPromise)libraryPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/hls-1.6.15.min.js';s.onload=()=>global.Hls?resolve(global.Hls):reject(Error('Player fehlt'));s.onerror=()=>{s.remove();libraryPromise=null;reject(Error('Player konnte nicht geladen werden'));};document.head.appendChild(s);});return libraryPromise;}
@@ -269,27 +269,34 @@ function moviDesktopBufferMB(){
 }
 function moviBeginSeekTrace(){
  moviSeekTrace={start:Date.now(),end:null,requests:new Map()};
+ moviSeekHistory.push(moviSeekTrace);
+ if(moviSeekHistory.length>8)moviSeekHistory.shift();
 }
 function moviFinishSeekTrace(){
- const trace=moviSeekTrace;
- if(!trace)return;
+ const trace=moviSeekTrace;if(!trace)return;
  trace.end=Date.now();
- setTimeout(()=>{
-  if(moviSeekTrace!==trace)return;
+ moviSeekTrace=null;
+ const timer=setTimeout(()=>{
+  moviSeekSummaryTimers=moviSeekSummaryTimers.filter(x=>x!==timer);
+  if(!moviSeekHistory.includes(trace))return;
   const rows=[...trace.requests.values()];
   const completed=rows.filter(x=>x.state==='complete');
   const bytes=rows.reduce((sum,x)=>sum+(Number(x.bytes)||0),0);
-  const headerTimes=rows.map(x=>Number(x.header_ms)).filter(x=>Number.isFinite(x)&&x>=0);
-  const maxHeader=headerTimes.length?Math.max(...headerTimes):0;
+  const headerTimes=rows.map(x=>x.header_ms).filter(x=>typeof x==='number'&&Number.isFinite(x)&&x>=0);
+  const maxHeader=headerTimes.length?Math.max(...headerTimes):null;
   const ranges=rows.map(x=>{
-   const m=String(x.range||'').match(/^(\d+)-(\d+)$/);
+   const m=String(x.range||'').match(/^(\\d+)-(\\d+)$/);
    return m?{start:Number(m[1]),end:Number(m[2])}:null;
   }).filter(Boolean).sort((a,b)=>a.start-b.start);
-  let overlap=0;
-  for(let i=1;i<ranges.length;i++)overlap+=Math.max(0,Math.min(ranges[i-1].end,ranges[i].end)-ranges[i].start+1);
-  moviReport('Seek-Netzwerk: '+rows.length+' Ranges ('+completed.length+' vollständig) · '+(bytes/1048576).toFixed(1)+' MiB · Überlappung '+(overlap/1048576).toFixed(1)+' MiB · max. Header '+maxHeader+' ms');
-  moviSeekTrace=null;
- },3000);
+  let overlap=0,coveredEnd=-1;
+  for(const range of ranges){
+   if(range.start<=coveredEnd)overlap+=Math.max(0,Math.min(range.end,coveredEnd)-range.start+1);
+   coveredEnd=Math.max(coveredEnd,range.end);
+  }
+  moviReport('Seek-Netzwerk: '+rows.length+' Ranges ('+completed.length+' vollständig) · '+(bytes/1048576).toFixed(1)+' MiB · Überlappung '+(overlap/1048576).toFixed(1)+' MiB · max. Header '+(maxHeader??'?')+' ms');
+  moviSeekHistory=moviSeekHistory.filter(x=>x!==trace);
+ },3200);
+ moviSeekSummaryTimers.push(timer);
 }
 function monitorMoviRanges(valid){
  const playback=xtPlayback;
@@ -307,13 +314,15 @@ function monitorMoviRanges(valid){
    const data=await response.json();
    if(!valid())return;
    for(const r of Array.isArray(data.requests)?data.requests:[]){
-    if(moviSeekTrace&&r.at>=moviSeekTrace.start-500&&(moviSeekTrace.end===null||r.at<=moviSeekTrace.end+1200))moviSeekTrace.requests.set(r.seq,r);
+    for(const trace of moviSeekHistory){
+     if(r.at>=trace.start-300&&(trace.end===null||r.at<=trace.end+800))trace.requests.set(r.seq,r);
+    }
     const prev=seen.get(r.seq);
     if(prev===r.state)continue;
     seen.set(r.seq,r.state);
     if(r.state==='opening')continue;
     // Individual Range events remain in the browser console; UI stays compact during seeks.
-    if(moviSeekTrace)continue;
+    if(moviSeekHistory.length)continue;
     if(r.state==='streaming'&&prev)continue;
     const info='#'+r.seq+' · '+String(r.range||'').slice(0,40)+' · HTTP '+r.status+' · Header '+(r.header_ms??'?')+' ms · erstes Byte '+(r.first_byte_ms??'?')+' ms';
     if(r.state==='streaming'){moviReport('Range '+info);continue;}
