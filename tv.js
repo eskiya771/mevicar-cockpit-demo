@@ -233,13 +233,20 @@ function moviReport(message,level='info'){
  const box=root?.querySelector('.tv-movi-log');if(box)box.textContent=moviLog.join('\n');
  if(level==='error')console.error('[MeviTV MKV]',safe);else console.info('[MeviTV MKV]',safe);
 }
+function moviExperimentalRequested(){
+ return new URLSearchParams(location.search).get('moviExperimental')==='1';
+}
+function moviAssetBase(){
+ return moviExperimentalRequested()?'./vendor/experimental/':'./vendor/';
+}
 function loadMoviPlayer(){
  if(customElements.get('movi-player'))return Promise.resolve();
  if(!moviPromise)moviPromise=new Promise((resolve,reject)=>{
   const script=document.createElement('script');
-  script.src='./vendor/movi-player-0.4.1.slim.global.js';script.async=true;
+  script.src=moviExperimentalRequested()?'./vendor/experimental/element.slim.global.js':'./vendor/movi-player-0.4.1.slim.global.js';
+  script.async=true;
   script.onload=()=>customElements.whenDefined('movi-player').then(resolve,reject);
-  script.onerror=()=>reject(Error('Movi-Player-Datei konnte nicht geladen werden'));
+  script.onerror=()=>reject(Error('Movi-'+(moviExperimentalRequested()?'Experimental-':'')+'Player konnte nicht geladen werden; entferne ?moviExperimental=1 für die stabile Version'));
   document.head.appendChild(script);
  }).catch(e=>{moviPromise=null;throw e;});
  return moviPromise;
@@ -355,7 +362,7 @@ async function playMoviVod(url,name,stillCurrent){
   element.setAttribute('playsinline','');
   element.setAttribute('aria-label',name);
   element.setAttribute('buffersize',String(moviBufferMB));
-  element.setAttribute('wasmurl',new URL('./vendor/movi.wasm',document.baseURI).href);
+  element.setAttribute('wasmurl',new URL(moviAssetBase()+'movi.wasm',document.baseURI).href);
   element.addEventListener('playing',()=>{if(valid()){status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
   element.addEventListener('loadedmetadata',()=>{if(valid())moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');});
   let seekStartedAt=null,seekReadyAt=null,seekWatchdog=null,lastSeekState='';
@@ -393,7 +400,7 @@ async function playMoviVod(url,name,stillCurrent){
   element.addEventListener('errordisplay',e=>{if(valid()){const d=e.detail||{};moviReport('Decoder/Codec: '+String(d.title||'Fehler')+' · '+String(d.message||''),'error');}});
   const stage=root.querySelector('.tv-stage');
   stage.appendChild(element);moviElement=element;video.hidden=true;
-  moviReport('Engine: '+String(element.build||'slim')+' · WASM separat geladen');
+  moviReport('Engine: '+String(element.build||'slim')+' · WASM separat geladen'+(moviExperimentalRequested()?' · QUELLCODE-TESTBUILD':' · STABIL'));
   void moviNetworkCheck(url,valid);
   monitorMoviRanges(valid);
   element.src=url;
