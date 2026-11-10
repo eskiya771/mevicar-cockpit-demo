@@ -110,6 +110,12 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   if(!authorize(req))return reply(res,401,{error:'Unauthorized'});
   const result=await proxyUpdater.apply();return reply(res,result.code,result);
  }
+ if(req.method==='POST'&&url.pathname==='/update/rollback'){
+  if(req.headers.origin!==origin)return reply(res,403,{error:'Origin denied'});
+  if(!authorize(req))return reply(res,401,{error:'Unauthorized'});
+  if(typeof proxyUpdater.rollback!=='function')return reply(res,503,{error:'Updater requires a one-time Docker rebuild'});
+  const result=await proxyUpdater.rollback();return reply(res,result.code,result);
+ }
  if(req.method==='GET'&&url.pathname==='/metrics'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});return reply(res,200,mediaMetrics());}
  if(req.method==='GET'&&/^\/(stream|hls|remux)\//.test(url.pathname))trackMediaResponse(res);
  if(req.method==='GET'&&url.pathname==='/health')return reply(res,200,{status:'ready'});
