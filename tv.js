@@ -19,7 +19,7 @@ if(!global.document)return;
 const KEY='mevicar-tv-v1',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,mpegtsPlayer=null,mpegtsHealthTimer=null,mpegtsFail=null,generation=0,deadline=null;
 let networkTimer=null,networkBusy=false,networkWaits=0,networkStarted=0,vodDiagnostic='';
-let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekTimer=null,moviRangeTimer=null ,moviSeekTrace=null;
+let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekTimer=null,moviRangeTimer=null,moviSeekTrace=null;
 let query='',country='ALL',only=false,libraryPromise=null,mpegtsPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='',mpegtsFallback=null;
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 function channels(){return [...CATALOG,...custom];}
@@ -282,7 +282,7 @@ function moviFinishSeekTrace(){
   const headerTimes=rows.map(x=>Number(x.header_ms)).filter(x=>Number.isFinite(x)&&x>=0);
   const maxHeader=headerTimes.length?Math.max(...headerTimes):0;
   const ranges=rows.map(x=>{
-   const m=String(x.range||'').match(/^(\\d+)-(\\d+)$/);
+   const m=String(x.range||'').match(/^(\d+)-(\d+)$/);
    return m?{start:Number(m[1]),end:Number(m[2])}:null;
   }).filter(Boolean).sort((a,b)=>a.start-b.start);
   let overlap=0;
@@ -312,6 +312,8 @@ function monitorMoviRanges(valid){
     if(prev===r.state)continue;
     seen.set(r.seq,r.state);
     if(r.state==='opening')continue;
+    // Individual Range events remain in the browser console; UI stays compact during seeks.
+    if(moviSeekTrace)continue;
     if(r.state==='streaming'&&prev)continue;
     const info='#'+r.seq+' · '+String(r.range||'').slice(0,40)+' · HTTP '+r.status+' · Header '+(r.header_ms??'?')+' ms · erstes Byte '+(r.first_byte_ms??'?')+' ms';
     if(r.state==='streaming'){moviReport('Range '+info);continue;}
@@ -348,17 +350,17 @@ async function playMoviVod(url,name,stillCurrent){
   element.setAttribute('wasmurl',new URL('./vendor/movi.wasm',document.baseURI).href);
   element.addEventListener('playing',()=>{if(valid()){status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
   element.addEventListener('loadedmetadata',()=>{if(valid())moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');});
-  let seekStartedAt=null,seekWatchdog=null,lastSeekState='';
+  let seekStartedAt=null,seekReadyAt=null,seekWatchdog=null,lastSeekState='';
   const onSeekState=state=>{
    if(state==='seeking'&&seekStartedAt===null){
-    seekStartedAt=performance.now();moviBeginSeekTrace();
+    seekStartedAt=performance.now();seekReadyAt=null;moviBeginSeekTrace();
     moviReport('Spulen gestartet · Player sucht Schlüsselbild und Dateibereich');
     seekWatchdog=moviSeekTimer=setTimeout(()=>{
      if(valid()&&seekStartedAt!==null)moviReport('Spulen dauert länger als 12 Sekunden · prüfe Netzwerk/Range und Decoder','error');
     },12000);
    }
    if(seekStartedAt!==null&&state==='playing'&&lastSeekState!=='playing'){
-    moviReport('Spulen bis Wiedergabe · '+Math.round(performance.now()-seekStartedAt)+' ms');
+    moviReport('Spulen bis Wiedergabe · '+Math.round(performance.now()-seekStartedAt)+' ms'+(seekReadyAt!==null?' · Ready→Playing '+Math.round(performance.now()-seekReadyAt)+' ms':''));
     seekStartedAt=null;clearTimeout(seekWatchdog);seekWatchdog=null;moviSeekTimer=null;moviFinishSeekTrace();
    }
    lastSeekState=state;
@@ -372,12 +374,12 @@ async function playMoviVod(url,name,stillCurrent){
    moviReport('Seek-Ereignis abgeschlossen nach '+Math.round(performance.now()-seekStartedAt)+' ms; warte auf Bild');
   });
   element.addEventListener('trackschange',e=>{if(valid())moviTrackReport(e.detail);});
-  element.addEventListener('loadeddata',()=>{if(valid())moviReport('Erstes Videobild decodiert');});
+  element.addEventListener('loadeddata',()=>{if(valid())moviReport('Videodaten verfügbar (loadeddata; nicht zwingend gerendert)');});
   element.addEventListener('statechange',e=>{if(!valid())return;const state=String(e.detail?.state||e.detail||'unbekannt').slice(0,80);moviReport('Player-Zustand: '+state);onSeekState(state);});
   element.addEventListener('linearmode',()=>{if(valid())moviReport('Range nicht unterstützt: nur lineares Streaming möglich','error');});
   element.addEventListener('stalled',()=>{if(valid())moviReport(seekStartedAt!==null?'Beim Spulen: Warte auf Dateibereich · '+Math.round(performance.now()-seekStartedAt)+' ms':'Pufferung: Daten werden nachgeladen (noch kein nachgewiesener Fehler)');});
   element.addEventListener('waiting',()=>{if(valid())moviReport('Warten auf Videodaten / Decoder');});
-  element.addEventListener('canplay',()=>{if(valid())moviReport('Wiedergabepuffer bereit');});
+  element.addEventListener('canplay',()=>{if(valid()){if(seekStartedAt!==null)seekReadyAt=performance.now();moviReport('Wiedergabepuffer bereit');}});
   element.addEventListener('smoothwarning',e=>{if(valid()){const d=e.detail||{};moviReport('Leistungswarnung: '+String(d.message||'Decoder oder Datenrate').slice(0,100)+(d.software?' · Softwaredecoder':'')+(d.link?' · Netzwerkdatenrate':'')+(d.neededBps?' · benötigt '+Math.round(d.neededBps/1000)+' kbit/s':'')+(d.measuredBps?' · gemessen '+Math.round(d.measuredBps/1000)+' kbit/s':''),'error');}});
   element.addEventListener('error',e=>{if(valid()){const message=String(e.detail?.message||e.detail?.error||e.detail||'unbekannter Fehler');moviReport('Player-Fehler: '+message,'error');status('MKV-Fehler: '+message.slice(0,100)+'');}});
   element.addEventListener('errordisplay',e=>{if(valid()){const d=e.detail||{};moviReport('Decoder/Codec: '+String(d.title||'Fehler')+' · '+String(d.message||''),'error');}});
