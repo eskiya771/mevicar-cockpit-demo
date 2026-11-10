@@ -17,9 +17,9 @@ globalThis.fetch=async (url,options={})=>{
     assert.equal(u.searchParams.get('password'),'test-pass');
     return new Response(JSON.stringify([{category_id:1,category_name:'News'}]),{headers:{'Content-Type':'application/json'}});
   }
+  if(u.pathname==='/cdn/44.mp4')return new Response('redirected film bytes',{headers:{'Content-Type':'video/mp4','Accept-Ranges':'bytes'}});
   if(u.pathname.endsWith('/44.mp4'))return new Response(null,{status:302,headers:{Location:'/cdn/44.mp4'}});
   if(u.pathname.endsWith('/45.mp4'))return new Response(null,{status:302,headers:{Location:'https://unknown-cdn.example/file.mp4?secret=do-not-leak'}});
-  if(u.pathname==='/cdn/44.mp4')return new Response('redirected film bytes',{headers:{'Content-Type':'video/mp4','Accept-Ranges':'bytes'}});
   if(u.pathname.startsWith('/movie/')||u.pathname.startsWith('/live/'))return new Response('mock transport stream',{headers:{'Content-Type':'video/mp2t'}});
   throw Error('Unexpected upstream path');
 };
