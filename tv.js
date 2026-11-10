@@ -18,7 +18,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports={CATALOG,safeURL,p
 if(!global.document)return;
 const KEY='mevicar-tv-v1',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,mpegtsPlayer=null,mpegtsHealthTimer=null,mpegtsFail=null,generation=0,deadline=null;
-let networkTimer=null,networkBusy=false,networkWaits=0,networkStarted=0;
+let networkTimer=null,networkBusy=false,networkWaits=0,networkStarted=0,vodDiagnostic='';
 let query='',country='ALL',only=false,libraryPromise=null,mpegtsPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='',mpegtsFallback=null;
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 function channels(){return [...CATALOG,...custom];}
@@ -86,7 +86,7 @@ async function play(){if(!root)return;clearEPG();xtRequestSeq++;xtPlayback=null;
  }catch(e){if(valid()){cleanup();status(e.message||'Stream konnte nicht gestartet werden.');}}
 }
 function onPlaying(){if(playerTransition)return;playerFault='';clearTimeout(deadline);deadline=null;status('▶ '+(activePlaybackName||current().name));}
-function onError(){if(playerTransition||!video?.currentSrc&&!video?.src)return;if(playbackFormat==='mpegts'&&mpegtsFail){mpegtsFail('Browserdecoder: '+(video?.error?.code||0));return;}clearTimeout(deadline);const code=video.error?.code||0;if(xtPlayback){if(playerFault){status('HLS-Fehler: '+playerFault);return;}if(playbackFormat==='hls'){status('HLS-Medienfehler '+code+': Decoder/Codec oder beschädigtes Segment.');}else if(playbackFormat==='ts'){status('MPEG-TS kann vom Browser nicht direkt decodiert werden.');}else{status('Xtream-Wiedergabefehler '+code+': Streamformat und Codec prüfen.');}return;}status('Stream nicht verfügbar. Möglich sind Netz-, Länder- oder Senderbeschränkungen.');}
+function onError(){if(playerTransition||!video?.currentSrc&&!video?.src)return;if(playbackFormat==='mpegts'&&mpegtsFail){mpegtsFail('Browserdecoder: '+(video?.error?.code||0));return;}clearTimeout(deadline);const code=video.error?.code||0;if(xtPlayback){if(playerFault){status('HLS-Fehler: '+playerFault);return;}if(playbackFormat==='hls'){status('HLS-Medienfehler '+code+': Decoder/Codec oder beschädigtes Segment.');}else if(playbackFormat==='ts'){status('MPEG-TS kann vom Browser nicht direkt decodiert werden.');}else{status('Film-/Serienfehler '+code+': '+(vodDiagnostic||'Dateiformat oder Audio-/Videocodec nicht unterstützt.'));}return;}status('Stream nicht verfügbar. Möglich sind Netz-, Länder- oder Senderbeschränkungen.');}
 function onWaiting(){if(!playerTransition){networkWaits++;status('Puffere …');}}
 function stop(){xtRequestSeq++;xtPlayback=null;activePlaybackName='';playbackFormat='';cleanup();status('Gestoppt');}
 function paintSources(){if(!root)return;const list=root.querySelector('.tv-source-list');if(!list)return;list.innerHTML=sources.map(x=>'<div class="tv-source-row"><span>'+esc(x.name)+' <small>'+custom.filter(c=>c.sourceId===x.id).length+' Sender</small></span><button data-source-refresh="'+esc(x.id)+'">Aktualisieren</button><button data-source-delete="'+esc(x.id)+'">Löschen</button></div>').join('')||'<p>Noch keine M3U-URL hinzugefügt.</p>';}
@@ -103,6 +103,7 @@ async function startXtMedia(api,a,type,id,extension,name){
  selectEPG(api,a,type,id,name);
  xtPlayback={api,a,type,id,extension,name};
  activePlaybackName=name;
+ vodDiagnostic='';
  const mountRoot=root,request=++xtRequestSeq;
  cleanup();status('Verbinde mit '+name+' …');
  const stillCurrent=()=>root===mountRoot&&request===xtRequestSeq;
@@ -176,6 +177,25 @@ async function playMpegts(url,name,engine,stillCurrent,fallback){
   },4000);
  }catch(e){fail(e.message||'MPEG-TS-Player konnte nicht starten');}
 }
+async function probeVod(url,valid){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
+ try{
+  const response=await fetch(url,{headers:{Range:'bytes=0-1'},credentials:'omit',cache:'no-store',signal:controller.signal});
+  if(!valid()){await response.body?.cancel?.();return false;}
+  if(!response.ok){let detail='';try{const data=await response.json();if(typeof data.error==='string')detail=data.error.slice(0,110);}catch{}
+   vodDiagnostic='HTTP '+response.status+(detail?' – '+detail:'');
+   status('Filmdaten nicht erreichbar: '+vodDiagnostic);return false;
+  }
+  const type=(response.headers.get('content-type')||'').toLowerCase();
+  await response.body?.cancel?.();
+  if(type.includes('application/json')||type.includes('text/html')){vodDiagnostic='Anstelle eines Videos liefert der Server '+type;status(vodDiagnostic);return false;}
+  vodDiagnostic='Datei erreichbar (HTTP '+response.status+'); Browser oder Codec prüfen';
+  return true;
+ }catch(e){
+  if(valid()){vodDiagnostic=e.name==='AbortError'?'Zeitüberschreitung':'Netzwerkfehler: '+String(e.message).slice(0,100);status('Filmprüfung fehlgeschlagen: '+vodDiagnostic);}
+  return false;
+ }finally{clearTimeout(timer);}
+}
 async function playXtMedia(url,name,onHlsFailure=null){
  if(!root)return;
  cleanup();const token=generation,v=video,valid=()=>root&&generation===token&&video===v;
@@ -220,6 +240,11 @@ async function playXtMedia(url,name,onHlsFailure=null){
    else status('HLS-Player konnte nicht geladen werden: '+e.message);
   }
   return;
+ }
+ if(xtPlayback&&(xtPlayback.type==='movie'||xtPlayback.type==='series')){
+  if(!await probeVod(url,valid))return;
+  if(!valid())return;
+  if(/\.(mkv|avi)$/i.test(pathname))vodDiagnostic='MKV/AVI wird in Browsern oft nicht unterstützt; ggf. MP4/H.264 oder serverseitige Konvertierung erforderlich';
  }
  playerTransition=false;v.src=url;start();
  if(isTs)status('MPEG-TS erkannt. Wiedergabe wird versucht; Browserunterstützung ist nicht garantiert.');
