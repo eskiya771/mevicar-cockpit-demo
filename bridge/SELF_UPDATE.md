@@ -1,6 +1,6 @@
 # MeviTV proxy updates — integrated (one-time bootstrap)
 
-The proxy checks GitHub **only when MeviCar Next requests it**. Opening MeviCar Next → TV → Proxy triggers an immediate fresh check; **Status prüfen** requests another. There is no background polling.
+The proxy checks the published `proxy-release.json` on GitHub Pages **only when MeviCar Next requests it**. It does not use the anonymous GitHub REST API (which can return HTTP 403 when rate-limited). Opening MeviCar Next → TV → Proxy triggers an immediate fresh check; **Status prüfen** requests another. There is no background polling.
 Nothing is downloaded/installed until the user presses **Proxy aktualisieren** and confirms.
 
 ## One-time migration on your Synology
@@ -52,3 +52,7 @@ permission. Secure access to the public proxy through network restrictions where
 ## Migration note for already-running proxy updater
 
 The updater and launcher are **immutable image files**. A proxy running the old 60-second updater cannot install this change into its own updater via the browser button; apply the one-time file copy and `docker compose up -d --build` steps above. Thereafter application-only bridge releases (`server.cjs`, `hls.cjs`, `remux.cjs`) can be installed from the MeviCar dialog. Changes to `self-update.cjs`, `launcher.cjs`, Dockerfile, or Compose always require a manual image rebuild.
+
+## Rate-limit fix (existing installations)
+
+The release manifest is published to `https://eskiya771.github.io/mevicar-cockpit-demo/proxy-release.json` only after successful GitHub Actions deployment. Since `self-update.cjs` is part of the immutable Docker image, a currently deployed updater that still calls `api.github.com` needs **one last manual image rebuild** with the latest `self-update.cjs` before this fix takes effect. No `.env` changes, API token, or new container are needed. Afterwards, future application-only proxy releases work from the MeviCar update button.
