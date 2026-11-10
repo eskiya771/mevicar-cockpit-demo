@@ -35,7 +35,9 @@ jobs:
       - name: Build matching slim browser player
         run: |
           cd movi-src
-          MOVI_ENTRY=element.slim MOVI_FORMAT=iife MOVI_JOBS=1 npm run build:ts:fast
+          node scripts/check-wasm.js
+          ./node_modules/.bin/tsc --emitDeclarationOnly
+          MOVI_ENTRY=element.slim MOVI_FORMAT=iife MOVI_JOBS=1 MOVI_TERSER_PASSES=2 node scripts/build-standalone.js
           test -s dist/element.slim.global.js
           test -s dist/movi.wasm
       - name: Stamp traceable artifact
