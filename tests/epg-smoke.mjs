@@ -3,6 +3,8 @@ import {createRequire} from 'node:module';
 const api=createRequire(import.meta.url)('../xtream.js');
 const b64=text=>Buffer.from(text,'utf8').toString('base64');
 const start=Date.UTC(2026,10,10,18),end=start+3600000;
+// Keep the fixture inside the current broadcast window regardless of wall clock.
+const realNow=Date.now;Date.now=()=>start+1000;
 const row={title:b64('Güncel · Nachrichten'),description:b64('Türkçe & Deutsch <script>\nBeschreibung'),start_timestamp:String(start/1000),stop_timestamp:String(end/1000)};
 assert.deepEqual(api.normalizeEPG({epg_listings:[row,row,null,{title:'bad',start_timestamp:3,stop_timestamp:2}]}),[{title:'Güncel · Nachrichten',description:'Türkçe & Deutsch <script>\nBeschreibung',start,end}]);
 assert.equal(api.normalizeEPG([{...row,start_timestamp:start,stop_timestamp:end}])[0].start,start);
@@ -34,5 +36,5 @@ try{
  const pending=api.epg(account,'124',{signal:controller.signal});controller.abort();
  await assert.rejects(pending,{name:'AbortError'});
  await assert.rejects(api.epg(account,'123',{signal:controller.signal}),{name:'AbortError'});
-}finally{globalThis.fetch=savedFetch;}
+}finally{globalThis.fetch=savedFetch;Date.now=realNow;}
 console.log('EPG: UTF-8 base64/plain text, timestamps/timezones, invalid data, cache isolation, refresh, HTTP errors and cancellation passed.');
