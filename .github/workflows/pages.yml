@@ -168,6 +168,14 @@ jobs:
       - name: Generate PWA icons and copy assets
         run: |
           mkdir -p dist/vendor
+          # Apache-2.0 Movi Player: pinned npm package, served from our own Pages
+          # origin. This avoids dynamic CDN requests and cross-origin WASM issues.
+          npm pack movi-player@0.4.1 --pack-destination /tmp --silent
+          mkdir -p /tmp/mevi-movi
+          tar -xzf /tmp/movi-player-0.4.1.tgz -C /tmp/mevi-movi
+          test -s /tmp/mevi-movi/package/dist/element.global.js
+          cp /tmp/mevi-movi/package/dist/element.global.js dist/vendor/movi-player-0.4.1.global.js
+          if test -f /tmp/mevi-movi/package/LICENSE; then cp /tmp/mevi-movi/package/LICENSE dist/vendor/movi-player-LICENSE.txt; fi
           # Download the pinned browser bundle directly; the npm package
           # installation does not reliably expose this artifact at the expected path.
           curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/mpegts.js@1.8.2/dist/mpegts.min.js -o dist/vendor/mpegts-1.8.2.min.js
