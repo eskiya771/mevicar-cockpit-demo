@@ -171,7 +171,7 @@ jobs:
           # Apache-2.0 Movi Player: pinned npm package, served from our own Pages
           # origin. This avoids dynamic CDN requests and cross-origin WASM issues.
           MOVI_VERSION=$(npm view movi-player version)
-          node -e 'if (Number(process.argv[1].split(".")[0]) !== 0 || Number(process.argv[1].split(".")[1]) < 4 || (Number(process.argv[1].split(".")[1]) === 4 && Number(process.argv[1].split(".")[2]) < 1)) process.exit(1)' "$MOVI_VERSION"
+          node -e 'const v=process.argv[1].split(".").map(Number); if (!((v[0]>0)||(v[0]===0&&(v[1]>4||(v[1]===4&&v[2]>=1))))) process.exit(1)' "$MOVI_VERSION"
           npm pack "movi-player@$MOVI_VERSION" --pack-destination /tmp --silent
           mkdir -p /tmp/mevi-movi
           tar -xzf "/tmp/movi-player-$MOVI_VERSION.tgz" -C /tmp/mevi-movi
