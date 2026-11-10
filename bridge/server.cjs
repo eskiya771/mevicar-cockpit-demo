@@ -99,7 +99,7 @@ function trackMediaResponse(res){activeMediaResponses++;let closed=false;res.onc
 // Header TTFB and first payload-byte latency are measured separately.
 const mkvRanges=[];let mkvRangeSeq=0;
 function mkvRangeStart(req,id){
- const value=String(req.headers.range||'').match(/^bytes=(\\d+)-(\\d*)$/i);
+ const value=String(req.headers.range||'').match(/^bytes=(\d+)-(\d*)$/i);
  const item={seq:++mkvRangeSeq,id,range:value?value[1]+'-'+(value[2]||''):req.headers.range?'other':'none',at:Date.now(),redirects:0,status:0,header_ms:null,first_byte_ms:null,duration_ms:null,bytes:0,state:'opening'};
  mkvRanges.push(item);if(mkvRanges.length>100)mkvRanges.shift();
  return item;
