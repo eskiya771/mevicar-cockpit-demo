@@ -31,7 +31,7 @@ jobs:
         run: |
           cd movi-src
           docker compose run --rm build
-          test -s dist/movi.wasm
+          test -s dist/wasm/external/movi.wasm
       - name: Build matching slim browser player
         run: |
           cd movi-src
@@ -39,7 +39,11 @@ jobs:
           ./node_modules/.bin/tsc --emitDeclarationOnly
           MOVI_ENTRY=element.slim MOVI_FORMAT=iife MOVI_JOBS=1 MOVI_TERSER_PASSES=2 node scripts/build-standalone.js
           test -s dist/element.slim.global.js
-          test -s dist/movi.wasm
+          test -s dist/wasm/external/movi.wasm
+      - name: Stage standalone WASM alongside browser bundle
+        run: |
+          cd movi-src
+          cp dist/wasm/external/movi.wasm dist/movi.wasm
       - name: Stamp traceable artifact
         run: |
           cd movi-src
