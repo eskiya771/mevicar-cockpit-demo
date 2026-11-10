@@ -76,9 +76,17 @@ async function hlsResponse(req,res,target){
   Readable.fromWeb(remote.body).pipe(res);
  }finally{clearTimeout(timeout);}
 }
+// Rolling media egress: bytes written by Node to the HTTP response, not ISP uplink capacity.
+const mediaEgress=new Map();
+let activeMediaResponses=0;
+function mediaBytes(n){if(!n)return;const second=Math.floor(Date.now()/1000);mediaEgress.set(second,(mediaEgress.get(second)||0)+n);for(const key of mediaEgress.keys())if(key<second-60)mediaEgress.delete(key);}
+function mediaMetrics(){const now=Math.floor(Date.now()/1000);let bytes10=0,bytes60=0,peak=0;for(const [second,bytes] of mediaEgress){if(second>now-10)bytes10+=bytes;if(second>now-60)bytes60+=bytes;if(second>now-10)peak=Math.max(peak,bytes*8/1000000);}return {window_seconds:10,mbps:Number((bytes10*8/10000000).toFixed(2)),mbps_60s:Number((bytes60*8/60000000).toFixed(2)),peak_mbps:Number(peak.toFixed(2)),active_stream_requests:activeMediaResponses,scope:'bridge_media_egress_all_clients',note:'Bytes written by bridge HTTP server; not measured ISP uplink capacity'};}
+function trackMediaResponse(res){activeMediaResponses++;let closed=false;res.once('close',()=>{if(!closed){closed=true;activeMediaResponses=Math.max(0,activeMediaResponses-1);}});const write=res.write.bind(res),end=res.end.bind(res);res.write=function(chunk,...args){if(chunk)mediaBytes(Buffer.byteLength(chunk));return write(chunk,...args);};res.end=function(chunk,...args){if(chunk)mediaBytes(Buffer.byteLength(chunk));return end(chunk,...args);};}
 async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Cache-Control','no-store');cors(req,res);
  if(req.method==='OPTIONS'){if(req.headers.origin!==origin)return reply(res,403,{error:'Origin denied'});res.statusCode=204;return res.end();}
  const url=new URL(req.url,'http://localhost');
+ if(req.method==='GET'&&url.pathname==='/metrics'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});return reply(res,200,mediaMetrics());}
+ if(req.method==='GET'&&/^\/(stream|hls|remux)\//.test(url.pathname))trackMediaResponse(res);
  if(req.method==='GET'&&url.pathname==='/health')return reply(res,200,{status:'ready'});
  if(req.method==='POST'&&url.pathname==='/session'){
   // Require browser Origin, no PIN embedded in public PWA. Single global limiter
