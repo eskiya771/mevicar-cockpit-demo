@@ -29,7 +29,6 @@ function checkedMediaRedirect(location,previous){
  // Never follow redirects to untrusted or private destinations via arbitrary URLs.
  const sameProvider=next.hostname.toLowerCase()===base.hostname.toLowerCase()&&next.port===base.port;
  if(!sameProvider&&!vodRedirectHosts.has(next.hostname.toLowerCase()))throw Error('CDN_HOST_NOT_ALLOWED:'+next.hostname.toLowerCase());
- if(!sameProvider&&next.protocol!=='https:')throw Error('CDN_REQUIRES_HTTPS');
  return next;
 }
 
