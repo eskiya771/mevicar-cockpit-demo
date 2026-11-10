@@ -177,6 +177,31 @@ async function playMpegts(url,name,engine,stillCurrent,fallback){
   },4000);
  }catch(e){fail(e.message||'MPEG-TS-Player konnte nicht starten');}
 }
+async function playVodTransportStream(url,name){
+ // VOD MPEG-TS must be opened as a seekable file, never as a live stream.
+ // This leaves the proven Live-TV player and its FFmpeg fallback untouched.
+ const engine=await loadMpegts();
+ if(!supportsMpegts(engine))throw Error('mpegts.js / MediaSource wird von diesem Browser nicht unterstützt.');
+ cleanup();
+ const token=generation,v=video,valid=()=>root&&video===v&&generation===token;
+ root.classList.add('tv-watching');root.querySelector('.tv-empty').hidden=true;
+ root.querySelector('.tv-title').textContent=name;
+ playbackFormat='vod-mpegts';playerFault='';
+ try{
+  mpegtsPlayer=engine.createPlayer({type:'mpegts',isLive:false,url,cors:true,withCredentials:false},{
+   enableWorker:false,enableStashBuffer:true,stashInitialSize:384*1024,
+   autoCleanupSourceBuffer:false,lazyLoad:true,accurateSeek:true
+  });
+  mpegtsPlayer.on(engine.Events.ERROR,(kind,detail)=>{
+   if(valid())status('VOD-MPEG-TS: '+String(kind)+': '+String(detail).slice(0,100));
+  });
+  mpegtsPlayer.attachMediaElement(v);mpegtsPlayer.load();
+  playerTransition=false;
+  status('Film wird über mpegts.js geladen …');
+  const started=mpegtsPlayer.play();
+  started?.catch(e=>{if(valid())status(e.name==='NotAllowedError'?'Bitte ▶ im Videoplayer antippen.':'VOD-MPEG-TS: '+String(e.message).slice(0,100));});
+ }catch(e){if(valid()){cleanup();status('VOD-MPEG-TS konnte nicht starten: '+e.message);}}
+}
 async function probeVod(url,valid){
  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),9000);
  try{
@@ -244,7 +269,15 @@ async function playXtMedia(url,name,onHlsFailure=null){
  if(xtPlayback&&(xtPlayback.type==='movie'||xtPlayback.type==='series')){
   if(!await probeVod(url,valid))return;
   if(!valid())return;
-  if(/\.(mkv|avi)$/i.test(pathname))vodDiagnostic='MKV/AVI wird in Browsern oft nicht unterstützt; ggf. MP4/H.264 oder serverseitige Konvertierung erforderlich';
+  if(isTs){
+   try{await playVodTransportStream(url,name);}
+   catch(e){if(valid())status('MPEG-TS-Film nicht abspielbar: '+e.message);}
+   return;
+  }
+  if(/\.(mkv|avi)$/i.test(pathname)){
+   status('Der Anbieter liefert '+pathname.split('.').pop().toUpperCase()+'. Browser unterstützen dieses Filmformat meist nicht; eine serverseitige Umwandlung ist nötig.');
+   return;
+  }
  }
  playerTransition=false;v.src=url;start();
  if(isTs)status('MPEG-TS erkannt. Wiedergabe wird versucht; Browserunterstützung ist nicht garantiert.');
