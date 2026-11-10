@@ -19,6 +19,10 @@ assert(tvSource.includes('monitorMoviRanges(valid)'));
 assert(tvSource.includes('moviDesktopBufferMB()'));
 assert(tvSource.includes("/Windows NT/i.test(ua)"));
 assert(tvSource.includes('moviBeginSeekTrace()'));
+assert(tvSource.includes('moviSeekHistory.push(moviSeekTrace)'));
+assert(tvSource.includes('for(const trace of moviSeekHistory)'));
+assert(tvSource.includes('moviSeekSummaryTimers.push(timer)'));
+
 assert(tvSource.includes('Seek-Netzwerk:'));
 assert(tvSource.includes('Ready→Playing'));
 
