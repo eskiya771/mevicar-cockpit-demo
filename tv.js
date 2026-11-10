@@ -285,7 +285,7 @@ function moviFinishSeekTrace(){
   const headerTimes=rows.map(x=>x.header_ms).filter(x=>typeof x==='number'&&Number.isFinite(x)&&x>=0);
   const maxHeader=headerTimes.length?Math.max(...headerTimes):null;
   const ranges=rows.map(x=>{
-   const m=String(x.range||'').match(/^(\\d+)-(\\d+)$/);
+   const m=String(x.range||'').match(/^(\d+)-(\d+)$/);
    return m?{start:Number(m[1]),end:Number(m[2])}:null;
   }).filter(Boolean).sort((a,b)=>a.start-b.start);
   let overlap=0,coveredEnd=-1;
