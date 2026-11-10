@@ -83,6 +83,12 @@ try{
  const blocked=await response.json();
  assert.match(blocked.error,/unknown-cdn.example/);
  assert.doesNotMatch(blocked.error,/do-not-leak/);
+ response=await originalFetch(base+'/update/rollback',{method:'POST',headers:{Authorization:'Bearer '+token}});
+ assert.equal(response.status,403);
+ response=await originalFetch(base+'/update/rollback',{method:'POST',headers:{Origin:'https://example.github.io'}});
+ assert.equal(response.status,401);
+ response=await originalFetch(base+'/update/rollback',{method:'POST',headers:{Authorization:'Bearer '+token,Origin:'https://example.github.io'}});
+ assert.equal(response.status,409);
  response=await originalFetch(base+'/stream/movie/42.mp4?exp=123&sig='+'0'.repeat(64));assert.equal(response.status,401);
  response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'live',id:'42',ext:'ts'})});
  assert.equal(response.status,200);
