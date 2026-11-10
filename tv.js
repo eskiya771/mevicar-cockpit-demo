@@ -19,7 +19,7 @@ if(!global.document)return;
 const KEY='mevicar-tv-v1',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,mpegtsPlayer=null,mpegtsHealthTimer=null,mpegtsFail=null,generation=0,deadline=null;
 let networkTimer=null,networkBusy=false,networkWaits=0,networkStarted=0,vodDiagnostic='';
-let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekProgress=0;
+let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[];
 let query='',country='ALL',only=false,libraryPromise=null,mpegtsPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='',mpegtsFallback=null;
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 function channels(){return [...CATALOG,...custom];}
@@ -269,7 +269,7 @@ async function playMoviVod(url,name,stillCurrent){
  root.classList.add('tv-watching');root.querySelector('.tv-empty').hidden=true;
  root.querySelector('.tv-title').textContent=name;
  activePlaybackName=name;playbackFormat='movi';
- moviLog=[];moviSeekProgress=0;
+ moviLog=[];
  const diagnostic=root.querySelector('.tv-movi-diagnostics');
  if(diagnostic){diagnostic.hidden=false;diagnostic.open=true;}
  moviReport('MKV-Test gestartet: '+name);
@@ -298,10 +298,6 @@ async function playMoviVod(url,name,stillCurrent){
    const elapsed=seekStartedAt===null?null:Math.round(performance.now()-seekStartedAt);
    seekStartedAt=null;
    moviReport('Spulen abgeschlossen'+(elapsed!==null?' · '+elapsed+' ms':'')+(Number.isFinite(Number(e.detail))?' · Position '+Math.round(Number(e.detail))+' s':''));
-  });
-  element.addEventListener('progress',e=>{
-   if(!valid()||seekStartedAt===null)return;
-   const value=Number(e.detail);if(Number.isFinite(value))moviSeekProgress=value;
   });
   element.addEventListener('trackschange',e=>{if(valid())moviTrackReport(e.detail);});
   element.addEventListener('loadeddata',()=>{if(valid())moviReport('Erstes Videobild decodiert');});
