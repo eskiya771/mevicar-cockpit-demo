@@ -120,3 +120,9 @@
 .tv-epg-diagnostics{margin:8px 0;color:#b9d4df}
 .tv-epg-diagnostics summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
 .tv-epg-diagnostic-text{overflow-wrap:anywhere;line-height:1.5}
+
+/* Optional live diagnostics, kept below player status without covering the video or dock. */
+.tv-network{font-size:11px;line-height:1.4;color:#b4e7f4;overflow-wrap:anywhere;padding:4px 7px;background:#0b2638;border:1px solid #39738b;border-radius:7px;flex:none}
+.tv-network[hidden]{display:none!important}
+.tv-network-toggle[aria-expanded="true"]{outline:1px solid #75d8ff}
+@media (orientation:landscape) and (max-height:480px){.tv-network{font-size:10px;max-height:43px;overflow:auto}}
