@@ -17,7 +17,7 @@ assert(tvSource.includes("element.addEventListener('seeked'"));
 assert(tvSource.includes('Spulen bis Wiedergabe'));
 assert(tvSource.includes('monitorMoviRanges(valid)'));
 assert(tvSource.includes('moviDesktopBufferMB()'));
-assert(tvSource.includes("/Windows NT/i.test(ua)"));
+assert(tvSource.includes('return 50;'));
 assert(tvSource.includes('moviBeginSeekTrace()'));
 assert(tvSource.includes('moviSeekHistory.push(moviSeekTrace)'));
 assert(tvSource.includes('for(const trace of moviSeekHistory)'));
