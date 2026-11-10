@@ -116,3 +116,7 @@
  .tv-root .tv-player .tv-xtream-tabs{gap:4px}
  .tv-root .tv-player>header{gap:6px}
 }
+
+.tv-epg-diagnostics{margin:8px 0;color:#b9d4df}
+.tv-epg-diagnostics summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+.tv-epg-diagnostic-text{overflow-wrap:anywhere;line-height:1.5}

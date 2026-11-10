@@ -47,8 +47,10 @@ try{
     if(path==='/session')return route.fulfill({json:{session:'visual.fixture'}});
     if(path==='/api'){
      const {action,stream_id}=request.postDataJSON();
-     if(action==='get_short_epg'){
+     if(action==='get_short_epg'||action==='get_simple_data_table'){
       if(epgMode==='error')return route.fulfill({status:503,json:{error:'EPG fixture unavailable'}});
+      if(epgMode==='full'&&action==='get_short_epg')return route.fulfill({json:{epg_listings:[]}});
+      if(epgMode==='provider-times')return route.fulfill({json:{epg_listings:[{title:'Anbieterprogramm',start:'2026-11-10 08:00:00',end:'2026-11-10 09:00:00'}]}});
       if(epgMode==='empty')return route.fulfill({json:{epg_listings:[]}});
       if(stream_id==='2')await new Promise(r=>setTimeout(r,350));
       const now=Math.floor(Date.now()/1000),text=value=>Buffer.from(value).toString('base64');
@@ -108,11 +110,19 @@ try{
    await page.screenshot({path:`${output}/${prefix}-epg.png`});
    epgMode='empty';
    await page.locator('.tv-epg-dialog').getByRole('button',{name:'Aktualisieren'}).click();
-   await expect(page.locator('.tv-epg-content')).toContainText('Keine Programmdaten vom Anbieter verfügbar.');
+   await expect(page.locator('.tv-epg-content')).toContainText('Die EPG-Abfragen liefern für diesen Sender keine Einträge.');
    epgMode='error';
    await page.locator('.tv-epg-dialog').getByRole('button',{name:'Aktualisieren'}).click();
    await expect(page.locator('.tv-epg-content')).toContainText('EPG derzeit nicht verfügbar.');
    assert.equal(tickets.length,1,'EPG errors do not restart video');
+   epgMode='full';
+   await page.locator('.tv-epg-dialog').getByRole('button',{name:'Aktualisieren'}).click();
+   await expect(page.locator('.tv-epg-now')).toContainText('Jetzt: Sendung 1');
+   await expect(page.locator('.tv-epg-diagnostic-text')).toContainText('get_simple_data_table');
+   epgMode='provider-times';
+   await page.locator('.tv-epg-dialog').getByRole('button',{name:'Aktualisieren'}).click();
+   await expect(page.locator('.tv-epg-content')).toContainText('Anbieterprogramm');
+   await expect(page.locator('.tv-epg-channel')).toContainText('Anbieterzeiten ohne Zeitzonenangabe');
    epgMode='success';
    await page.locator('.tv-epg-dialog').getByRole('button',{name:'Aktualisieren'}).click();
    await expect(page.locator('.tv-epg-now')).toContainText('Jetzt: Sendung 1');

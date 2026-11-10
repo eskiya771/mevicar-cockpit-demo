@@ -173,3 +173,18 @@ curl -fsS http://127.0.0.1:8787/health
 ```
 
 Die private `.env` bleibt unverändert. Erst nach erfolgreichem Pages-Deployment im gleichen Browser einen funktionierenden Sender und mehrere schnelle Senderwechsel testen. Beim nativen mpegts-Modus erscheint der Hinweis `mpegts.js: Verbinde …`. Wenn stattdessen `HLS/FFmpeg` erscheint, den gemeldeten Grund notieren. Reale Wiedergabe ist noch nicht abgenommen.
+
+## EPG-Kompatibilitätsupdate (10. November 2026)
+
+Der Player versucht die Kurzabfrage `get_short_epg` mit `limit=12`. Wenn sie keine aktuellen verwertbaren Einträge liefert oder fehlschlägt, versucht er `get_simple_data_table` für denselben Sender. Die Bridge erlaubt nun auch diese zweite, lesende Abfrage und reicht das begrenzte Kurzabfrage-Limit weiter (1–50). Anbieter-Zugang, Sessions, Medien-Tickets und mpegts.js bleiben davon unberührt.
+
+**Bestehende Synology-Installation:** `server.cjs` aus diesem Ordner in den vorhandenen Bridge-Ordner kopieren, vorhandene `.env` beibehalten und das bestehende Projekt neu bauen/starten:
+
+```sh
+cd /volume1/docker/mevitv-bridge
+sudo docker compose up -d --build
+```
+
+Ein Pages-Deploy aktualisiert den NAS-Container **nicht**. Ein alter Container antwortet auf `get_simple_data_table` mit HTTP 400; MeviTV zeigt dann bei leerer Kurzabfrage einen konkreten Hinweis zum Proxy-Update. Im EPG-Dialog gibt es eine aufklappbare Diagnose mit Status, Datenanzahl und Format, ohne Zugangsdaten oder rohe Providerantwort.
+
+Auch damit bleibt die EPG-Verfügbarkeit vom Anbieter und der Zuordnung des gewählten Streams abhängig. Andere Player können stattdessen XMLTV nutzen; dessen Abruf/Zuordnung ist hier noch nicht implementiert. Implementierungsreferenz: [Xtream-kompatible EPG-Abfragen](https://xui.live/docs/api/xtream/).

@@ -33,13 +33,33 @@ function epgTime(value,date){
  if(typeof date==='string'&&/(?:Z|[+-]\d{2}:?\d{2})$/i.test(date)){const ms=Date.parse(date);if(Number.isFinite(ms))return ms;}
  return null;
 }
+function epgRows(raw){
+ const value=Array.isArray(raw)?raw:raw?.epg_listings??raw?.data?.epg_listings;
+ if(Array.isArray(value))return value;
+ if(value&&typeof value==='object')return Object.values(value);
+ return [];
+}
+function providerDate(value){return typeof value==='string'&&/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2})?$/.test(value)?value:null;}
 function normalizeEPG(raw){
- const rows=Array.isArray(raw)?raw:raw?.epg_listings;
- const seen=new Set();
- return (Array.isArray(rows)?rows:[]).slice(0,100).map(x=>({
-  title:epgText(x?.title,300)||'Sendung ohne Titel',description:epgText(x?.description),
-  start:epgTime(x?.start_timestamp,x?.start),end:epgTime(x?.stop_timestamp??x?.end_timestamp,x?.end)
- })).filter(x=>{if(x.start===null||x.end===null||x.end<=x.start)return false;const key=x.start+'|'+x.end+'|'+x.title;if(seen.has(key))return false;seen.add(key);return true;}).sort((a,b)=>a.start-b.start);
+ const rows=epgRows(raw),seen=new Set(),items=[];
+ for(const x of rows.slice(0,200)){
+  if(!x||typeof x!=='object'||(!x.title&&!x.name))continue;
+  const entry={title:epgText(x.title??x.name,300)||'Sendung ohne Titel',description:epgText(x.description),
+   start:epgTime(x.start_timestamp,x.start)??epgTime(x.start,x.start),
+   end:epgTime(x.stop_timestamp,x.end)??epgTime(x.end_timestamp,x.end)??epgTime(x.end??x.stop,x.end??x.stop)};
+  if(entry.start===null||entry.end===null){
+   const start=providerDate(x.start),end=providerDate(x.end??x.stop);
+   if(!start||!end||end<=start)continue;
+   // Preserve provider wall-clock times visibly, without claiming a timezone
+   // conversion or guessing which programme is currently on air.
+   entry.start=null;entry.end=null;entry.providerStart=start;entry.providerEnd=end;
+  }else if(entry.end<=entry.start)continue;
+  const key=(entry.start??entry.providerStart)+'|'+(entry.end??entry.providerEnd)+'|'+entry.title;
+  if(seen.has(key))continue;seen.add(key);items.push(entry);
+ }
+ items.sort((a,b)=>a.start!==null&&b.start!==null?a.start-b.start:String(a.providerStart??'').localeCompare(String(b.providerStart??'')));
+ Object.defineProperty(items,'diagnostics',{value:{format:Array.isArray(raw)||raw?.epg_listings!==undefined||raw?.data?.epg_listings!==undefined?'list':'unrecognized',received:rows.length,usable:items.length,providerTimes:items.filter(x=>x.start===null).length},configurable:true});
+ return items;
 }
 const epgCache=new WeakMap();
 async function epg(account,id,{signal,force=false}={}){
@@ -48,8 +68,20 @@ async function epg(account,id,{signal,force=false}={}){
  let cache=epgCache.get(account);if(!cache){cache=new Map();epgCache.set(account,cache);}
  const key=String(id),saved=cache.get(key);
  if(!force&&saved&&saved.until>Date.now())return saved.items;
- const raw=await readJSON(apiURL(account.credentials,'get_short_epg',{stream_id:key}),account.credentials,{signal,timeoutMs:12000});
- const items=normalizeEPG(raw);
+ let items=[],diagnostics={received:0,usable:0,providerTimes:0,source:'get_short_epg'};
+ try{
+  const raw=await readJSON(apiURL(account.credentials,'get_short_epg',{stream_id:key,limit:12}),account.credentials,{signal,timeoutMs:12000});
+  items=normalizeEPG(raw);Object.assign(diagnostics,items.diagnostics);
+ }catch(e){if(signal?.aborted)throw e;diagnostics.shortError=/HTTP \d+/.exec(e.message)?.[0]||'Abruf fehlgeschlagen';}
+ if(!items.some(x=>x.end===null||x.end>Date.now())){
+  try{
+   const raw=await readJSON(apiURL(account.credentials,'get_simple_data_table',{stream_id:key}),account.credentials,{signal,timeoutMs:12000});
+   const full=normalizeEPG(raw);
+   diagnostics.fullReceived=full.diagnostics.received;
+   if(full.length){items=full;Object.assign(diagnostics,full.diagnostics,{source:'get_simple_data_table'});}
+  }catch(e){if(signal?.aborted)throw e;diagnostics.fullError=/HTTP \d+/.exec(e.message)?.[0]||'Abruf fehlgeschlagen';}
+ }
+ Object.defineProperty(items,'diagnostics',{value:diagnostics,configurable:true});
  cache.delete(key);cache.set(key,{items,until:Date.now()+120000});
  if(cache.size>30)cache.delete(cache.keys().next().value);
  return items;

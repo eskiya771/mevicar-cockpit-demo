@@ -8,11 +8,11 @@ process.env.XTREAM_PASSWORD='test-pass';
 process.env.MEVITV_BRIDGE_TOKEN='test-token-which-is-at-least-32-characters-long';
 process.env.MEVITV_ORIGIN='https://example.github.io';
 process.env.MEVITV_PIN='7392';
-const originalFetch=globalThis.fetch;
+const originalFetch=globalThis.fetch;let lastParams;
 globalThis.fetch=async (url,options={})=>{
   const u=new URL(url);
   assert.equal(u.hostname,'127.0.0.1');
-  if(u.pathname==='/player_api.php'){
+  if(u.pathname==='/player_api.php'){lastParams=u.searchParams;
     assert.equal(u.searchParams.get('username'),'test-user');
     assert.equal(u.searchParams.get('password'),'test-pass');
     return new Response(JSON.stringify([{category_id:1,category_name:'News'}]),{headers:{'Content-Type':'application/json'}});
@@ -55,6 +55,13 @@ try{
  response=await originalFetch(base+'/api',{method:'POST',headers:{Authorization:'Bearer '+session,'Content-Type':'application/json',Origin:'https://example.github.io'},body:JSON.stringify({action:'get_live_categories'})});
  assert.equal(response.status,200);
  response=await originalFetch(base+'/api',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action:'delete_everything'})});
+ assert.equal(response.status,400);
+ for(const action of ['get_short_epg','get_simple_data_table']){
+  response=await originalFetch(base+'/api',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action,stream_id:'123',limit:12})});
+  assert.equal(response.status,200);assert.equal(lastParams.get('action'),action);assert.equal(lastParams.get('stream_id'),'123');
+  if(action==='get_short_epg')assert.equal(lastParams.get('limit'),'12');
+ }
+ response=await originalFetch(base+'/api',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action:'get_short_epg',stream_id:'123',limit:99999})});
  assert.equal(response.status,400);
  response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'movie',id:'42',ext:'mp4'})});
  assert.equal(response.status,200);

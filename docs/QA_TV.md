@@ -141,3 +141,9 @@ Nur `tv.css` und die Katalog-UI in `tv.js` wurden angepasst. Der mpegts.js-Wiede
 - UTC-Epochen bzw. explizite Offsets in lokale Browserzeit umgerechnet; UTF-8-Base64 dekodiert, Text escaped, fehlerhafte/mehrdeutige Zeiten verworfen.
 - Abort/Generationen gegen verspätete Antworten, 12-Sekunden-Timeout, kontoabhängiger Zwei-Minuten-Cache mit höchstens 30 Sendern, minütliche Aktualisierung des ausgewählten Senders. Keine Kopplung eines EPG-Fehlers an die Wiedergabe.
 - 17 lokale Node-Smoke-Tests bestanden. Browserregression ergänzt um EPG-Dialog, Fehler/Leerzustand/Retry und Senderwechsel; Screenshots und konkretes Ergebnis im jeweiligen `mevitv-browser-qa`-Artefakt. Reale Providerdaten und iPhone-Safari bleiben Gerätetests.
+
+### Reale Rückmeldung: Build 431 zeigt leeres RTL-EPG
+
+Der Nutzer bestätigt EPG im anderen Player. Ohne rohe Providerantwort ist nicht bewiesen, ob die Kurzabfrage leer bleibt, Zeitformate verworfen werden oder der andere Player XMLTV verwendet. Daher keine pauschale Anbieterdiagnose.
+
+Ergänzt: numerische start/end-Aliase, objektförmige Listen, sichtbare Anbieterzeiten ohne angenommene Zeitzone, vollständige Sender-EPG-Abfrage als Fallback, getrennte Status-/Formatdiagnose. Regressionsfälle prüfen Fallback, alte Bridge mit HTTP 400, Abbruch und erhaltene Wiedergabe. `bridge/server.cjs` muss für den zusätzlichen Endpunkt auf der Synology aktualisiert und neu gebaut werden; dieses Deployment ist hier mangels NAS-Zugriff nicht erfolgt.
