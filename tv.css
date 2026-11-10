@@ -126,3 +126,33 @@
 .tv-network[hidden]{display:none!important}
 .tv-network-toggle[aria-expanded="true"]{outline:1px solid #75d8ff}
 @media (orientation:landscape) and (max-height:480px){.tv-network{font-size:10px;max-height:43px;overflow:auto}}
+
+
+/* MeviTV proxy update: compact, readable across desktop and landscape phones. */
+.tv-proxy-dialog{width:min(92vw,600px);max-height:calc(100dvh - 24px);padding:22px 24px;background:#10283c;border-color:#4f829c;box-shadow:0 18px 52px #0009}
+.tv-proxy-head{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:17px}
+.tv-proxy-head h3{font-size:20px;line-height:1.2;margin:0;color:#f1faff}
+.tv-proxy-status{font-size:13px;line-height:1.25;font-weight:750;white-space:nowrap;border-radius:999px;padding:7px 12px;background:#294054;color:#dfedf6}
+.tv-proxy-status[data-state=ok]{background:#163e36;color:#9ef3c5}
+.tv-proxy-status[data-state=update]{background:#494019;color:#ffe18c}
+.tv-proxy-status[data-state=error]{background:#522b32;color:#ffd0d4}
+.tv-proxy-status[data-state=busy]{background:#224b62;color:#b7ecff}
+.tv-proxy-versions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tv-proxy-version{min-width:0;border:1px solid #47677d;background:#1a3549;border-radius:12px;padding:13px 15px;display:flex;flex-direction:column;gap:7px}
+.tv-proxy-label{font-size:13px;font-weight:600;letter-spacing:.015em;color:#afcbdc}
+.tv-proxy-version strong{font-size:clamp(16px,2.5vw,20px);font-weight:750;line-height:1.3;color:#f6fbff;overflow-wrap:anywhere}
+.tv-proxy-dialog .tv-proxy-details{font-size:15px;line-height:1.45;margin:16px 0 0;color:#e1f2ff}
+.tv-proxy-dialog .tv-proxy-note{font-size:12px;line-height:1.4;margin:7px 0 0;color:#a4bfce}
+.tv-proxy-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:20px}
+.tv-proxy-actions button{min-height:46px;border-radius:11px;font-size:14px;font-weight:650;padding:10px 15px;white-space:nowrap}
+.tv-proxy-actions [data-act=proxy-update]{background:#227b99;border-color:#53c7e9;color:#fff}
+.tv-proxy-actions [data-act=proxy-update]:disabled{opacity:.48;cursor:default}
+.tv-proxy-actions [data-act=proxy-close]{margin-left:auto}
+@media(max-width:490px),(max-height:440px){
+ .tv-proxy-dialog{padding:13px 16px}
+ .tv-proxy-head{margin-bottom:10px}
+ .tv-proxy-versions{gap:8px}
+ .tv-proxy-version{padding:10px}
+ .tv-proxy-actions{margin-top:12px;gap:7px}
+ .tv-proxy-actions button{min-height:42px;padding:8px 11px}
+}
