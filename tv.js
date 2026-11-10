@@ -265,7 +265,7 @@ async function moviNetworkCheck(url,valid){
 function monitorMoviRanges(valid){
  const playback=xtPlayback;
  const c=playback?.a?.credentials;
- if(!c?.bridge||!c?.host||!c?.token||!/^\\d{1,15}$/.test(String(playback.id)))return;
+ if(!c?.bridge||!c?.host||!c?.token||!/^\d{1,15}$/.test(String(playback.id)))return;
  const seen=new Map();let unavailable=false;
  async function check(){
   if(!valid()||unavailable)return;
