@@ -66,12 +66,12 @@ try{
  }
  response=await originalFetch(base+'/api',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action:'get_short_epg',stream_id:'123',limit:99999})});
  assert.equal(response.status,400);
- response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'movie',id:'42',ext:'mkv',transport:'hls'})});
+ response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'movie',id:'42',ext:'mkv'})});
  assert.equal(response.status,200);
- const vodHlsTicket=(await response.json()).url;
- assert.match(vodHlsTicket,/^\/vodhls\/movie\/42\.mkv\/index\.m3u8\?exp=\d+&sig=[a-f0-9]{64}$/);
+ const directMkv=(await response.json()).url;
+ assert.match(directMkv,/^\/stream\/movie\/42\.mkv\?exp=\d+&sig=[a-f0-9]{64}$/);
  response=await originalFetch(base+'/vodhls/movie/42.mkv/index.m3u8?exp=123&sig='+'0'.repeat(64));
- assert.equal(response.status,401);
+ assert.equal(response.status,404);
  response=await originalFetch(base+'/ticket',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({type:'movie',id:'42',ext:'mp4'})});
  assert.equal(response.status,200);
  const ticket=await response.json();
