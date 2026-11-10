@@ -6,7 +6,7 @@ const {CATALOG,safeURL,parseM3U,filtered}=createRequire(import.meta.url)('../tv.
 const tvSource=readFileSync(new URL('../tv.js',import.meta.url),'utf8');
 assert(tvSource.includes('movi-player-0.4.1.slim.global.js'));
 assert(tvSource.includes("String(extension||'').toLowerCase()==='mkv'"));
-assert(tvSource.includes("element.setAttribute('buffersize','50')"));
+assert(tvSource.includes("element.setAttribute('buffersize',String(moviBufferMB))"));
 assert(tvSource.includes("element.setAttribute('wasmurl'"));
 assert(tvSource.includes("moviElement.destroy?.()"));
 assert(tvSource.includes("element.addEventListener('trackschange'"));
