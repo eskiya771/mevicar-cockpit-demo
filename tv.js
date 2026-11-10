@@ -227,7 +227,7 @@ async function probeVod(url,valid){
 }
 function moviReport(message,level='info'){
  // Never log signed URLs, provider paths or credentials.
- const safe=String(message).replace(/https?:\\/\\/\\S+/gi,'[URL entfernt]').slice(0,260);
+ const safe=String(message).replace(/https?:\/\/\S+/gi,'[URL entfernt]').slice(0,260);
  const line=new Date().toLocaleTimeString('de-DE')+' · '+safe;
  moviLog.push(line);if(moviLog.length>70)moviLog.shift();
  const box=root?.querySelector('.tv-movi-log');if(box)box.textContent=moviLog.join('\\n');
