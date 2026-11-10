@@ -139,33 +139,6 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   let target;try{target=relay.open(match[1]);}catch{return reply(res,401,{error:'Expired or invalid HLS URL'});}
   return hlsResponse(req,res,target);
  }
- if(req.method==='GET'&&url.pathname.startsWith('/vodhls/')){
-  const match=url.pathname.match(/^\/vodhls\/(movie|series)\/(\d{1,15})\.(mkv|avi)\/(index\.m3u8|seg\d{5,9}\.ts)$/);
-  if(!match)return reply(res,404,{error:'VOD HLS resource not found'});
-  const [,type,id,ext,name]=match,exp=Number(url.searchParams.get('exp')),sig=url.searchParams.get('sig')||'';
-  const ticketPath='/vodhls/'+type+'/'+id+'.'+ext;
-  const now=Math.floor(Date.now()/1000);
-  if(!Number.isSafeInteger(exp)||exp<now||exp>now+14400||!/^[a-f0-9]{64}$/.test(sig)||!crypto.timingSafeEqual(Buffer.from(sig),Buffer.from(mac(ticketPath+'|'+exp))))return reply(res,401,{error:'Invalid VOD ticket'});
-  try{
-   if(name==='index.m3u8'){
-    const sourcePath='/stream/'+type+'/'+id+'.'+ext;
-    const sourceExp=Math.floor(Date.now()/1000)+14400;
-    const sourceUrl='http://127.0.0.1:'+port+sourcePath+'?exp='+sourceExp+'&sig='+mac(sourcePath+'|'+sourceExp);
-    const item=remux.vodStart(type,id,sourceUrl);
-    await remux.vodReady(item);
-    res.setHeader('Content-Type','application/vnd.apple.mpegurl; charset=utf-8');
-    return res.end(remux.vodPlaylist(item,exp,sig));
-   }
-   const filename=remux.vodSegment(type,id,name);
-   if(!fs.existsSync(filename))return reply(res,404,{error:'VOD segment expired'});
-   const stat=fs.statSync(filename);
-   res.setHeader('Content-Type','video/mp2t');res.setHeader('Content-Length',stat.size);
-   return fs.createReadStream(filename).pipe(res);
-  }catch(e){
-   console.warn('[MeviTV VOD HLS] conversion error:',String(e.message).slice(0,150));
-   return reply(res,503,{error:'Filmumwandlung fehlgeschlagen: '+String(e.message).slice(0,120)});
-  }
- }
  if(req.method==='GET'&&url.pathname.startsWith('/remux/')){
   const m=url.pathname.match(/^\/remux\/live\/(\d{1,15})\/(index\.m3u8|seg\d{5,9}\.ts)$/);
   if(!m)return reply(res,404,{error:'Remux resource not found'});
@@ -191,7 +164,7 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
    fs.createReadStream(sessionPath).pipe(res);return;
   }catch(e){return reply(res,503,{error:'Remux unavailable: '+String(e.message).slice(0,100)});}
  }
- if(req.method==='POST'&&url.pathname==='/ticket'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});const d=await body(req);if(!['live','movie','series'].includes(d.type)||!safeId(d.id)||!safeExt(d.ext))return reply(res,400,{error:'Invalid media'});const exp=Math.floor(Date.now()/1000)+14400;const convert=d.transport==='hls'&&d.type!=='live'&&['mkv','avi'].includes(d.ext);const path=convert?'/vodhls/'+d.type+'/'+d.id+'.'+d.ext+'/index.m3u8':d.type==='live'&&d.ext==='ts'&&d.transport!=='raw'?'/remux/live/'+d.id+'/index.m3u8':'/stream/'+d.type+'/'+d.id+'.'+d.ext;const signPath=convert?'/vodhls/'+d.type+'/'+d.id+'.'+d.ext:path.startsWith('/remux/')?'/remux/live/'+d.id:path;const signature=mac(signPath+'|'+exp);return reply(res,200,{url:path+'?exp='+exp+'&sig='+signature,expires:exp});}
+ if(req.method==='POST'&&url.pathname==='/ticket'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});const d=await body(req);if(!['live','movie','series'].includes(d.type)||!safeId(d.id)||!safeExt(d.ext))return reply(res,400,{error:'Invalid media'});const exp=Math.floor(Date.now()/1000)+14400;const path=d.type==='live'&&d.ext==='ts'&&d.transport!=='raw'?'/remux/live/'+d.id+'/index.m3u8':'/stream/'+d.type+'/'+d.id+'.'+d.ext;const signPath=path.startsWith('/remux/')?'/remux/live/'+d.id:path;const signature=mac(signPath+'|'+exp);return reply(res,200,{url:path+'?exp='+exp+'&sig='+signature,expires:exp});}
  if((req.method==='GET'||req.method==='HEAD')&&url.pathname.startsWith('/stream/')){
   const match=url.pathname.match(/^\/stream\/(live|movie|series)\/(\d{1,15})\.(m3u8|ts|mp4|mkv|avi|mov)$/);
   if(!match)return reply(res,400,{error:'Invalid media'});
