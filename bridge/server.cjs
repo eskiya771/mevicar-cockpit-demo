@@ -95,6 +95,23 @@ let activeMediaResponses=0;
 function mediaBytes(n){if(!n)return;const second=Math.floor(Date.now()/1000);mediaEgress.set(second,(mediaEgress.get(second)||0)+n);for(const key of mediaEgress.keys())if(key<second-60)mediaEgress.delete(key);}
 function mediaMetrics(){const now=Math.floor(Date.now()/1000);let bytes10=0,bytes60=0,peak=0;for(const [second,bytes] of mediaEgress){if(second>now-10)bytes10+=bytes;if(second>now-60)bytes60+=bytes;if(second>now-10)peak=Math.max(peak,bytes*8/1000000);}return {window_seconds:10,mbps:Number((bytes10*8/10000000).toFixed(2)),mbps_60s:Number((bytes60*8/60000000).toFixed(2)),peak_mbps:Number(peak.toFixed(2)),active_stream_requests:activeMediaResponses,scope:'bridge_media_egress_all_clients',note:'Bytes written by bridge HTTP server; not measured ISP uplink capacity'};}
 function trackMediaResponse(res){activeMediaResponses++;let closed=false;res.once('close',()=>{if(!closed){closed=true;activeMediaResponses=Math.max(0,activeMediaResponses-1);}});const write=res.write.bind(res),end=res.end.bind(res);res.write=function(chunk,...args){if(chunk)mediaBytes(Buffer.byteLength(chunk));return write(chunk,...args);};res.end=function(chunk,...args){if(chunk)mediaBytes(Buffer.byteLength(chunk));return end(chunk,...args);};}
+// Bounded, credential-free diagnostic telemetry for MKV seek Range requests.
+// Header TTFB and first payload-byte latency are measured separately.
+const mkvRanges=[];let mkvRangeSeq=0;
+function mkvRangeStart(req,id){
+ const value=String(req.headers.range||'').match(/^bytes=(\\d+)-(\\d*)$/i);
+ const item={seq:++mkvRangeSeq,id,range:value?value[1]+'-'+(value[2]||''):req.headers.range?'other':'none',at:Date.now(),redirects:0,status:0,header_ms:null,first_byte_ms:null,duration_ms:null,bytes:0,state:'opening'};
+ mkvRanges.push(item);if(mkvRanges.length>100)mkvRanges.shift();
+ return item;
+}
+function mkvRangeSnapshot(id){
+ const now=Date.now();
+ return mkvRanges.filter(x=>x.id===id&&now-x.at<120000).slice(-45).map(x=>({
+  seq:x.seq,at:x.at,range:x.range,redirects:x.redirects,status:x.status,
+  header_ms:x.header_ms,first_byte_ms:x.first_byte_ms,duration_ms:x.duration_ms,
+  bytes:x.bytes,state:x.state
+ }));
+}
 // Immutable updater controller in the container image; downloads only JS releases to /runtime.
 const proxyUpdater=require(fs.existsSync('/app/self-update.cjs')?'/app/self-update.cjs':'./self-update.cjs');
 async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Cache-Control','no-store');cors(req,res);
@@ -117,6 +134,7 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   const result=await proxyUpdater.rollback();return reply(res,result.code,result);
  }
  if(req.method==='GET'&&url.pathname==='/metrics'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});return reply(res,200,mediaMetrics());}
+ if(req.method==='GET'&&url.pathname==='/diagnostics/mkv-ranges'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});const id=url.searchParams.get('id')||'';if(!safeId(id))return reply(res,400,{error:'Invalid media'});return reply(res,200,{requests:mkvRangeSnapshot(id)});}
  if(req.method==='GET'&&/^\/(stream|hls|remux)\//.test(url.pathname))trackMediaResponse(res);
  if(req.method==='GET'&&url.pathname==='/health')return reply(res,200,{status:'ready'});
  if(req.method==='POST'&&url.pathname==='/session'){
@@ -173,11 +191,17 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   const [,type,id,ext]=match,path='/'+type+'/'+encodeURIComponent(username)+'/'+encodeURIComponent(password)+'/'+id+'.'+ext;
   if(ext==='m3u8'&&req.method==='GET')return hlsResponse(req,res,upstreamURL(path));
   const headers={};if(req.headers.range)headers.Range=req.headers.range;
-  const controller=new AbortController();res.once('close',()=>controller.abort());
+  const trace=req.method==='GET'&&ext==='mkv'&&type!=='live'?mkvRangeStart(req,id):null;
+  const controller=new AbortController();
+  res.once('close',()=>{
+   controller.abort();
+   if(trace&&trace.duration_ms===null){trace.duration_ms=Date.now()-trace.at;trace.state=res.writableFinished?'complete':'aborted';}
+  });
   let remote,current=upstreamURL(path),redirects=0;
   try{
    for(;;){
     remote=await fetch(current,{method:req.method,headers,redirect:'manual',signal:controller.signal});
+    if(trace){trace.redirects=redirects;trace.status=remote.status;trace.header_ms=Date.now()-trace.at;}
     if(![301,302,303,307,308].includes(remote.status))break;
     if(++redirects>5){await remote.body?.cancel?.();return reply(res,502,{error:'Zu viele Medienserver-Weiterleitungen'});}
     const location=remote.headers.get('location');
@@ -208,6 +232,7 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
    return reply(res,502,{error:'Provider media HTTP '+code});
   }
   res.statusCode=remote.status;
+  if(trace){trace.status=remote.status;trace.redirects=redirects;trace.header_ms=Date.now()-trace.at;trace.state='streaming';}
   for(const key of ['content-type','content-length','content-range','accept-ranges']){const value=remote.headers.get(key);if(value)res.setHeader(key,value);}
   const knownType={mp4:'video/mp4',mov:'video/quicktime',mkv:'video/x-matroska',avi:'video/x-msvideo',ts:'video/mp2t'};
   const mime=res.getHeader('content-type');
@@ -215,7 +240,8 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   if(req.method==='HEAD'){await remote.body?.cancel?.();return res.end();}
   if(!remote.body)return res.end();
   const source=Readable.fromWeb(remote.body);
-  source.on('error',()=>{if(!res.destroyed)res.destroy();});
+  source.on('data',chunk=>{if(trace){if(trace.first_byte_ms===null)trace.first_byte_ms=Date.now()-trace.at;trace.bytes+=chunk.length;}});
+  source.on('error',()=>{if(trace)trace.state='upstream_error';if(!res.destroyed)res.destroy();});
   source.pipe(res);return;
  }
  reply(res,404,{error:'Not found'});
