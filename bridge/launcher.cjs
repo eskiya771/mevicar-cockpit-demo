@@ -9,13 +9,13 @@ function entry(sha){if(!/^[a-f0-9]{40}$/.test(sha||''))return null;const base=pa
  try{for(const n of ['server.cjs','hls.cjs','remux.cjs'])execFileSync(process.execPath,['--check',path.join(base,n)],{timeout:5000});return path.join(base,'server.cjs');}catch{return null;}}
 state=read();
 let app=entry(state.installed);
-if(!app&&state.installed){state.installed=state.previous||null;state.previous=null;state.state='rollback';state.message='Invalid update files; running previous version';save(state);app=entry(state.installed);}
+if(!app&&state.installed){state.installed=state.previous||null;state.installed_build=state.previous_build||null;state.previous=null;state.previous_build=null;state.state='rollback';state.message='Invalid update files; running previous version';save(state);app=entry(state.installed);}
 if(!app)app='/app/server.cjs';
 const child=spawn(process.execPath,[app],{stdio:'inherit',env:process.env});
 for(const signal of ['SIGTERM','SIGINT'])process.on(signal,()=>child.kill(signal));
 let stable=false;
 setTimeout(()=>{if(!child.exitCode&&!child.killed){stable=true;const s=read();if(s.state==='restarting'){s.state='ready';s.message='Update started';save(s);}}},12000).unref();
 child.on('exit',(code,signal)=>{
- if(!stable&&app!=='/app/server.cjs'&&code!==78){const s=read();s.installed=s.previous||null;s.previous=null;s.state='rollback';s.message='Updated process exited during startup; previous version restored';save(s);}
+ if(!stable&&app!=='/app/server.cjs'&&code!==78){const s=read();s.installed=s.previous||null;s.installed_build=s.previous_build||null;s.previous=null;s.previous_build=null;s.state='rollback';s.message='Updated process exited during startup; previous version restored';save(s);}
  process.exit(code===78?1:(code|| (signal?1:0)));
 });
