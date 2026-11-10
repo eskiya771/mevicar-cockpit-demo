@@ -325,7 +325,7 @@ async function refreshProxyUpdate(force=false){
   const data=await response.json();
   if(!dialog.open)return;
   const short=v=>/^[a-f0-9]{40}$/.test(v||'')?v.slice(0,8):'Unbekannt';
-  detail.textContent='Installiert: '+short(data.installed)+' · GitHub: '+short(data.latest)+' · Stand: '+(data.checked_at||'noch nicht geprüft')+' · '+(data.message||data.state||'');
+  detail.textContent='Installiert: '+short(data.installed)+' · GitHub: '+short(data.latest)++' · '+(data.message||data.state||'');
   button.disabled=!data.available||data.state==='installing'||data.state==='not_configured';
  }catch(e){if(dialog.open){detail.textContent='Proxy-Versionsabfrage nicht verfügbar: '+e.message+' (Bridge/Updater prüfen).';button.disabled=true;}}
  finally{proxyUpdateBusy=false;}
