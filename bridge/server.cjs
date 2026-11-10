@@ -140,7 +140,7 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
   return hlsResponse(req,res,target);
  }
  if(req.method==='GET'&&url.pathname.startsWith('/vodhls/')){
-  const match=url.pathname.match(/^\\/vodhls\\/(movie|series)\\/(\\d{1,15})\\.(mkv|avi)\\/(index\\.m3u8|seg\\d{5,9}\\.ts)$/);
+  const match=url.pathname.match(/^\/vodhls\/(movie|series)\/(\d{1,15})\.(mkv|avi)\/(index\.m3u8|seg\d{5,9}\.ts)$/);
   if(!match)return reply(res,404,{error:'VOD HLS resource not found'});
   const [,type,id,ext,name]=match,exp=Number(url.searchParams.get('exp')),sig=url.searchParams.get('sig')||'';
   const ticketPath='/vodhls/'+type+'/'+id+'.'+ext;
