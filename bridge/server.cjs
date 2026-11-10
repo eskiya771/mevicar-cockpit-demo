@@ -82,41 +82,20 @@ let activeMediaResponses=0;
 function mediaBytes(n){if(!n)return;const second=Math.floor(Date.now()/1000);mediaEgress.set(second,(mediaEgress.get(second)||0)+n);for(const key of mediaEgress.keys())if(key<second-60)mediaEgress.delete(key);}
 function mediaMetrics(){const now=Math.floor(Date.now()/1000);let bytes10=0,bytes60=0,peak=0;for(const [second,bytes] of mediaEgress){if(second>now-10)bytes10+=bytes;if(second>now-60)bytes60+=bytes;if(second>now-10)peak=Math.max(peak,bytes*8/1000000);}return {window_seconds:10,mbps:Number((bytes10*8/10000000).toFixed(2)),mbps_60s:Number((bytes60*8/60000000).toFixed(2)),peak_mbps:Number(peak.toFixed(2)),active_stream_requests:activeMediaResponses,scope:'bridge_media_egress_all_clients',note:'Bytes written by bridge HTTP server; not measured ISP uplink capacity'};}
 function trackMediaResponse(res){activeMediaResponses++;let closed=false;res.once('close',()=>{if(!closed){closed=true;activeMediaResponses=Math.max(0,activeMediaResponses-1);}});const write=res.write.bind(res),end=res.end.bind(res);res.write=function(chunk,...args){if(chunk)mediaBytes(Buffer.byteLength(chunk));return write(chunk,...args);};res.end=function(chunk,...args){if(chunk)mediaBytes(Buffer.byteLength(chunk));return end(chunk,...args);};}
-// Update mailbox is the only writable bind mount. Docker control stays on the NAS host.
-const UPDATE_DIR='/update-control';
-function readUpdateStatus(){
- try{const data=JSON.parse(fs.readFileSync(UPDATE_DIR+'/status.json','utf8'));return {
-  installed:typeof data.installed==='string'?data.installed:null,
-  latest:typeof data.latest==='string'?data.latest:null,
-  available:data.available===true,
-  checked_at:data.checked_at||null,
-  state:typeof data.state==='string'?data.state:'unknown',
-  message:typeof data.message==='string'?data.message.slice(0,180):''
- };}catch{return {installed:null,latest:null,available:false,checked_at:null,state:'not_configured',message:'Synology-Updater noch nicht eingerichtet'};}
-}
-function requestProxyUpdate(){
- const state=readUpdateStatus();
- if(!state.available||!/^[a-f0-9]{40}$/.test(state.latest||''))return {code:409,error:'Kein geprüftes Update verfügbar'};
- try{
-  // Atomic exclusive creation prevents duplicate requests. Only the fixed latest SHA is sent.
-  const fd=fs.openSync(UPDATE_DIR+'/request.json','wx',0o600);
-  try{fs.writeFileSync(fd,JSON.stringify({target:state.latest,requested_at:new Date().toISOString()}));}
-  finally{fs.closeSync(fd);}
-  return {code:202,state:'queued'};
- }catch(e){return {code:e.code==='EEXIST'?409:503,error:e.code==='EEXIST'?'Update bereits angefordert':'Updater-Mailbox nicht beschreibbar'};}
-}
+// Immutable updater controller in the container image; downloads only JS releases to /runtime.
+const proxyUpdater=require('/app/self-update.cjs');
 async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Cache-Control','no-store');cors(req,res);
  if(req.method==='OPTIONS'){if(req.headers.origin!==origin)return reply(res,403,{error:'Origin denied'});res.statusCode=204;return res.end();}
  const url=new URL(req.url,'http://localhost');
  if(req.method==='GET'&&url.pathname==='/update/status'){
   if(!authorize(req))return reply(res,401,{error:'Unauthorized'});
-  return reply(res,200,readUpdateStatus());
+  return reply(res,200,await proxyUpdater.refresh(true));
  }
  if(req.method==='POST'&&url.pathname==='/update/apply'){
   // Unlike playback tickets, update commands require a matching browser Origin.
   if(req.headers.origin!==origin)return reply(res,403,{error:'Origin denied'});
   if(!authorize(req))return reply(res,401,{error:'Unauthorized'});
-  const result=requestProxyUpdate();return reply(res,result.code,result);
+  const result=await proxyUpdater.apply();return reply(res,result.code,result);
  }
  if(req.method==='GET'&&url.pathname==='/metrics'){if(!authorize(req))return reply(res,401,{error:'Unauthorized'});return reply(res,200,mediaMetrics());}
  if(req.method==='GET'&&/^\/(stream|hls|remux)\//.test(url.pathname))trackMediaResponse(res);
