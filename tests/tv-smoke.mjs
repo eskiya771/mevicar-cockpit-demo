@@ -15,6 +15,10 @@ assert(tvSource.includes("element.addEventListener('linearmode'"));
 assert(tvSource.includes("element.addEventListener('seeking'"));
 assert(tvSource.includes("element.addEventListener('seeked'"));
 assert(tvSource.includes('Spulen bis Wiedergabe'));
+assert(tvSource.includes('monitorMoviRanges(valid)'));
+assert(tvSource.includes("'/diagnostics/mkv-ranges?id='"));
+assert(tvSource.includes('clearInterval(moviRangeTimer)'));
+
 assert(tvSource.includes('onSeekState(state)'));
 assert(tvSource.includes('Spulen dauert länger als 12 Sekunden'));
 
