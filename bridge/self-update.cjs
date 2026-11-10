@@ -25,10 +25,11 @@ async function refresh(force=false){
  checking=(async()=>{
   const s=read();
   try{
-   const data=JSON.parse((await get('https://api.github.com/repos/'+REPO+'/commits?sha=main&path=bridge&per_page=1')).toString());
-   const sha=data?.[0]?.sha;if(!isSha(sha))throw Error('GitHub version invalid');
-   const release=JSON.parse((await get('https://raw.githubusercontent.com/'+REPO+'/'+sha+'/bridge/release.json',20000)).toString());
-   if(!Number.isSafeInteger(release.build)||release.build<1||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(release.version||''))throw Error('Invalid proxy release metadata');
+   // GitHub Pages publishes a manifest only after deployment succeeds.
+   // No GitHub REST API call: anonymous Synology addresses otherwise hit HTTP 403.
+   const release=JSON.parse((await get('https://eskiya771.github.io/mevicar-cockpit-demo/proxy-release.json?t='+Date.now(),20000)).toString());
+   const sha=release.sha;
+   if(!isSha(sha)||!Number.isSafeInteger(release.build)||release.build<1||!/^[0-9]+\.[0-9]+\.[0-9]+$/.test(release.version||''))throw Error('Invalid proxy release metadata');
    s.latest=sha;s.latest_build=release.build;s.latest_version=release.version;s.checked_ms=Date.now();s.checked_at=new Date().toISOString();
    if(s.state!=='installing'&&s.state!=='restarting')s.state='ready';
    s.message='';
