@@ -165,3 +165,11 @@
 .tv-stage video[hidden]{display:none!important}
 .tv-actions [data-act=vod-fallback]{background:#314454;border-color:#6a92a8;color:#dbeeff}
 .tv-actions [data-act=vod-fallback][hidden]{display:none!important}
+
+/* MKV-only diagnostics: compact, readable and deliberately below the video. */
+.tv-movi-diagnostics{flex:none;max-height:min(22dvh,140px);overflow:auto;padding:7px 10px;border:1px solid #44647c;border-radius:8px;background:#102638;color:#cde6f3;font-size:11px}
+.tv-movi-diagnostics[hidden]{display:none!important}
+.tv-movi-diagnostics summary{font-weight:700;font-size:12px;cursor:pointer;touch-action:manipulation}
+.tv-movi-log{font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:80px;overflow:auto;margin:5px 0}
+.tv-movi-diagnostics button{min-height:32px;padding:4px 9px;font-size:11px}
+@media(max-height:460px){.tv-movi-diagnostics{max-height:95px}.tv-movi-log{max-height:45px}}
