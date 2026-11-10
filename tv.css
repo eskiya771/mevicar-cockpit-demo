@@ -156,3 +156,6 @@
  .tv-proxy-actions{margin-top:12px;gap:7px}
  .tv-proxy-actions button{min-height:42px;padding:8px 11px}
 }
+
+.tv-proxy-actions [data-act=proxy-rollback]{background:#273b4c;border-color:#6b8595;color:#d7e9f3}
+.tv-proxy-actions [data-act=proxy-rollback]:disabled{opacity:.43;cursor:default}
