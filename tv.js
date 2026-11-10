@@ -19,7 +19,7 @@ if(!global.document)return;
 const KEY='mevicar-tv-v1',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,mpegtsPlayer=null,mpegtsHealthTimer=null,mpegtsFail=null,generation=0,deadline=null;
 let networkTimer=null,networkBusy=false,networkWaits=0,networkStarted=0,vodDiagnostic='';
-let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[];
+let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekTimer=null;
 let query='',country='ALL',only=false,libraryPromise=null,mpegtsPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='',mpegtsFallback=null;
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 function channels(){return [...CATALOG,...custom];}
@@ -72,7 +72,7 @@ function selectEPG(api,account,type,id,name){
 
 function paintList(){if(!root)return;root.querySelector('.tv-list').innerHTML=filtered(channels(),query,country,favorites,only).map(c=>'<div class="tv-row '+(current().id===c.id?'selected':'')+'"><button data-channel="'+esc(c.id)+'"><span class="tv-logo" aria-hidden="true">'+esc(c.name.split(' ').map(x=>x[0]).join('').slice(0,3))+'</span><span>'+esc(c.name)+'<small>'+({DE:'Deutschland',TR:'Türkiye',OTHER:'Eigener Sender'}[c.country])+'</small></span></button><button data-fav="'+esc(c.id)+'" aria-label="'+esc(c.name)+' als Favorit" aria-pressed="'+favorites.includes(c.id)+'">'+(favorites.includes(c.id)?'★':'☆')+'</button></div>').join('')||'<p>Keine Sender gefunden.</p>';root.querySelector('[data-act="favorites"]').setAttribute('aria-pressed',String(only));}
 function paintTitle(){const c=current();root.querySelector('.tv-title').textContent=c.name;const a=root.querySelector('.tv-web');a.hidden=!c.web;if(c.web)a.href=c.web;else a.removeAttribute('href');}
-function cleanup(){if(moviElement){try{moviElement.pause?.();moviElement.destroy?.();moviElement.remove();}catch{}moviElement=null;}if(video)video.hidden=false;networkWaits=0;networkStarted=Date.now();generation++;clearTimeout(deadline);deadline=null;clearInterval(mpegtsHealthTimer);mpegtsHealthTimer=null;mpegtsFail=null;if(xtProbe){xtProbe.abort();xtProbe=null;}playerTransition=true;mpegtsFallback=null;if(mpegtsPlayer){const previous=mpegtsPlayer;mpegtsPlayer=null;for(const operation of ['pause','unload','detachMediaElement','destroy']){try{previous[operation]?.();}catch{}}}if(hls){hls.destroy();hls=null;}if(video){video.pause();video.removeAttribute('src');video.load();}}
+function cleanup(){clearTimeout(moviSeekTimer);moviSeekTimer=null;if(moviElement){try{moviElement.pause?.();moviElement.destroy?.();moviElement.remove();}catch{}moviElement=null;}if(video)video.hidden=false;networkWaits=0;networkStarted=Date.now();generation++;clearTimeout(deadline);deadline=null;clearInterval(mpegtsHealthTimer);mpegtsHealthTimer=null;mpegtsFail=null;if(xtProbe){xtProbe.abort();xtProbe=null;}playerTransition=true;mpegtsFallback=null;if(mpegtsPlayer){const previous=mpegtsPlayer;mpegtsPlayer=null;for(const operation of ['pause','unload','detachMediaElement','destroy']){try{previous[operation]?.();}catch{}}}if(hls){hls.destroy();hls=null;}if(video){video.pause();video.removeAttribute('src');video.load();}}
 function loadMpegts(){if(global.mpegts)return Promise.resolve(global.mpegts);if(!mpegtsPromise)mpegtsPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/mpegts-1.8.2.min.js';s.onload=()=>global.mpegts?resolve(global.mpegts):(mpegtsPromise=null,reject(Error('mpegts.js ist nicht verfügbar')));s.onerror=()=>{s.remove();mpegtsPromise=null;reject(Error('mpegts.js konnte nicht geladen werden'));};document.head.appendChild(s);});return mpegtsPromise;}
 function supportsMpegts(engine){return !!(engine?.isSupported?.()&&engine?.getFeatureList?.()?.mseLivePlayback);}
 function loadHls(){if(global.Hls)return Promise.resolve(global.Hls);if(!libraryPromise)libraryPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/hls-1.6.15.min.js';s.onload=()=>global.Hls?resolve(global.Hls):reject(Error('Player fehlt'));s.onerror=()=>{s.remove();libraryPromise=null;reject(Error('Player konnte nicht geladen werden'));};document.head.appendChild(s);});return libraryPromise;}
@@ -286,22 +286,32 @@ async function playMoviVod(url,name,stillCurrent){
   element.setAttribute('wasmurl',new URL('./vendor/movi.wasm',document.baseURI).href);
   element.addEventListener('playing',()=>{if(valid()){status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
   element.addEventListener('loadedmetadata',()=>{if(valid())moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');});
-  let seekStartedAt=null;
-  element.addEventListener('seeking',e=>{
+  let seekStartedAt=null,seekWatchdog=null,lastSeekState='';
+  const onSeekState=state=>{
+   if(state==='seeking'&&seekStartedAt===null){
+    seekStartedAt=performance.now();
+    moviReport('Spulen gestartet · Player sucht Schlüsselbild und Dateibereich');
+    seekWatchdog=moviSeekTimer=setTimeout(()=>{
+     if(valid()&&seekStartedAt!==null)moviReport('Spulen dauert länger als 12 Sekunden · prüfe Netzwerk/Range und Decoder','error');
+    },12000);
+   }
+   if(seekStartedAt!==null&&state==='playing'&&lastSeekState!=='playing'){
+    moviReport('Spulen bis Wiedergabe · '+Math.round(performance.now()-seekStartedAt)+' ms');
+    seekStartedAt=null;clearTimeout(seekWatchdog);seekWatchdog=null;moviSeekTimer=null;
+   }
+   lastSeekState=state;
+  };
+  element.addEventListener('seeking',()=>{
    if(!valid())return;
-   seekStartedAt=performance.now();
-   const destination=Number(e.detail);
-   moviReport('Spulen gestartet'+(Number.isFinite(destination)?' · Ziel '+Math.round(destination)+' s':''));
+   if(seekStartedAt===null)onSeekState('seeking');
   });
-  element.addEventListener('seeked',e=>{
-   if(!valid())return;
-   const elapsed=seekStartedAt===null?null:Math.round(performance.now()-seekStartedAt);
-   seekStartedAt=null;
-   moviReport('Spulen abgeschlossen'+(elapsed!==null?' · '+elapsed+' ms':'')+(Number.isFinite(Number(e.detail))?' · Position '+Math.round(Number(e.detail))+' s':''));
+  element.addEventListener('seeked',()=>{
+   if(!valid()||seekStartedAt===null)return;
+   moviReport('Seek-Ereignis abgeschlossen nach '+Math.round(performance.now()-seekStartedAt)+' ms; warte auf Bild');
   });
   element.addEventListener('trackschange',e=>{if(valid())moviTrackReport(e.detail);});
   element.addEventListener('loadeddata',()=>{if(valid())moviReport('Erstes Videobild decodiert');});
-  element.addEventListener('statechange',e=>{if(valid())moviReport('Player-Zustand: '+String(e.detail?.state||e.detail||'unbekannt').slice(0,80));});
+  element.addEventListener('statechange',e=>{if(!valid())return;const state=String(e.detail?.state||e.detail||'unbekannt').slice(0,80);moviReport('Player-Zustand: '+state);onSeekState(state);});
   element.addEventListener('linearmode',()=>{if(valid())moviReport('Range nicht unterstützt: nur lineares Streaming möglich','error');});
   element.addEventListener('stalled',()=>{if(valid())moviReport(seekStartedAt!==null?'Beim Spulen: Warte auf Dateibereich · '+Math.round(performance.now()-seekStartedAt)+' ms':'Pufferung: Daten werden nachgeladen (noch kein nachgewiesener Fehler)');});
   element.addEventListener('waiting',()=>{if(valid())moviReport('Warten auf Videodaten / Decoder');});
