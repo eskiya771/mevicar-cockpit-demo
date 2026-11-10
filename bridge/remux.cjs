@@ -106,7 +106,7 @@ function vodStart(type,id,input){
 async function vodReady(item){
  const target=path.join(item.dir,'index.m3u8'),until=Date.now()+45000;
  while(Date.now()<until){
-  try{const list=fs.readFileSync(target,'utf8');if(list.includes('#EXTM3U')&&/seg\\d+\\.ts/.test(list))return list;}catch{}
+  try{const list=fs.readFileSync(target,'utf8');if(list.includes('#EXTM3U')&&/seg\d+\.ts/.test(list))return list;}catch{}
   if(item.exited)throw Error('FFmpeg exited before first HLS segment'+(item.error?': '+item.error:''));
   await new Promise(done=>setTimeout(done,500));
  }
@@ -115,7 +115,7 @@ async function vodReady(item){
 function vodPlaylist(item,exp,sig){
  item.used=Date.now();
  return fs.readFileSync(path.join(item.dir,'index.m3u8'),'utf8')
-  .split(/\\r?\\n/).map(l=>safeSegment(l.trim())?l.trim()+'?exp='+exp+'&sig='+sig:l).join('\\n');
+  .split(/\r?\n/).map(l=>safeSegment(l.trim())?l.trim()+'?exp='+exp+'&sig='+sig:l).join('\n');
 }
 function vodSegment(type,id,name){
  if(!safeSegment(name))throw Error('Invalid VOD segment');
