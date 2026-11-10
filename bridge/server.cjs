@@ -83,7 +83,7 @@ function mediaBytes(n){if(!n)return;const second=Math.floor(Date.now()/1000);med
 function mediaMetrics(){const now=Math.floor(Date.now()/1000);let bytes10=0,bytes60=0,peak=0;for(const [second,bytes] of mediaEgress){if(second>now-10)bytes10+=bytes;if(second>now-60)bytes60+=bytes;if(second>now-10)peak=Math.max(peak,bytes*8/1000000);}return {window_seconds:10,mbps:Number((bytes10*8/10000000).toFixed(2)),mbps_60s:Number((bytes60*8/60000000).toFixed(2)),peak_mbps:Number(peak.toFixed(2)),active_stream_requests:activeMediaResponses,scope:'bridge_media_egress_all_clients',note:'Bytes written by bridge HTTP server; not measured ISP uplink capacity'};}
 function trackMediaResponse(res){activeMediaResponses++;let closed=false;res.once('close',()=>{if(!closed){closed=true;activeMediaResponses=Math.max(0,activeMediaResponses-1);}});const write=res.write.bind(res),end=res.end.bind(res);res.write=function(chunk,...args){if(chunk)mediaBytes(Buffer.byteLength(chunk));return write(chunk,...args);};res.end=function(chunk,...args){if(chunk)mediaBytes(Buffer.byteLength(chunk));return end(chunk,...args);};}
 // Immutable updater controller in the container image; downloads only JS releases to /runtime.
-const proxyUpdater=require('/app/self-update.cjs');
+const proxyUpdater=require(fs.existsSync('/app/self-update.cjs')?'/app/self-update.cjs':'./self-update.cjs');
 async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Cache-Control','no-store');cors(req,res);
  if(req.method==='OPTIONS'){if(req.headers.origin!==origin)return reply(res,403,{error:'Origin denied'});res.statusCode=204;return res.end();}
  const url=new URL(req.url,'http://localhost');
