@@ -262,6 +262,11 @@ async function moviNetworkCheck(url,valid){
   }finally{clearTimeout(timeout);}
  }catch(e){if(valid())moviReport('Range/CORS-Test: '+(e.name==='AbortError'?'Timeout':'Netzwerk oder CORS blockiert'),'error');}
 }
+function moviDesktopBufferMB(){
+ // Only Windows desktop; Android TVs, DeX, tablets and phones remain at 50 MB.
+ const ua=String(navigator?.userAgent||'');
+ return /Windows NT/i.test(ua)&&!/Android|Mobile|Tablet/i.test(ua)?100:50;
+}
 function monitorMoviRanges(valid){
  const playback=xtPlayback;
  const c=playback?.a?.credentials;
@@ -303,7 +308,9 @@ async function playMoviVod(url,name,stillCurrent){
  const diagnostic=root.querySelector('.tv-movi-diagnostics');
  if(diagnostic){diagnostic.hidden=false;diagnostic.open=true;}
  moviReport('MKV-Test gestartet: '+name);
- status('MKV wird clientseitig geladen (Movi Player, 50 MB Puffer) …');
+ const moviBufferMB=moviDesktopBufferMB();
+ status('MKV wird clientseitig geladen (Movi Player, '+moviBufferMB+' MB Hintergrundpuffer) …');
+ moviReport('Pufferlimit: '+moviBufferMB+' MB · Startschwelle unverändert');
  global.meviMediaStopForSource?.('tv');global.meviSpotifyPauseForSource?.('tv');
  try{
   await loadMoviPlayer();
@@ -312,7 +319,7 @@ async function playMoviVod(url,name,stillCurrent){
   element.setAttribute('controls','');
   element.setAttribute('playsinline','');
   element.setAttribute('aria-label',name);
-  element.setAttribute('buffersize','50');
+  element.setAttribute('buffersize',String(moviBufferMB));
   element.setAttribute('wasmurl',new URL('./vendor/movi.wasm',document.baseURI).href);
   element.addEventListener('playing',()=>{if(valid()){status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
   element.addEventListener('loadedmetadata',()=>{if(valid())moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');});
