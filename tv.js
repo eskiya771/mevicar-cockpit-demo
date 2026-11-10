@@ -120,7 +120,9 @@ async function startXtMedia(api,a,type,id,extension,name){
  };
  try{
   if(type!=='live'||!a.credentials.bridge){
-   const url=await api.playbackURL(a.credentials,type,id,extension);
+   const convert=type!=='live'&&a.credentials.bridge&&['mkv','avi'].includes(String(extension||'').toLowerCase());
+   if(convert)status('Filmformat '+String(extension).toUpperCase()+': Synology wandelt für den Browser in HLS um …');
+   const url=await api.playbackURL(a.credentials,type,id,extension,convert?'hls':'default');
    if(stillCurrent())await playXtMedia(url,name);
    return;
   }
