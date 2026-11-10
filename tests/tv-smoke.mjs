@@ -16,6 +16,12 @@ assert(tvSource.includes("element.addEventListener('seeking'"));
 assert(tvSource.includes("element.addEventListener('seeked'"));
 assert(tvSource.includes('Spulen bis Wiedergabe'));
 assert(tvSource.includes('monitorMoviRanges(valid)'));
+assert(tvSource.includes('moviDesktopBufferMB()'));
+assert(tvSource.includes("/Windows NT/i.test(ua)"));
+assert(tvSource.includes('moviBeginSeekTrace()'));
+assert(tvSource.includes('Seek-Netzwerk:'));
+assert(tvSource.includes('Ready→Playing'));
+
 assert(tvSource.includes("'/diagnostics/mkv-ranges?id='"));
 assert(tvSource.includes('clearInterval(moviRangeTimer)'));
 
