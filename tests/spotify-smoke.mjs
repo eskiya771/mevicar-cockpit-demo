@@ -235,6 +235,9 @@ assert.ok(source.includes('meviSpotifyWebPlayer'),'Local player control must be 
 assert.ok(source.includes('device_ids:[id]'),'Local player must use Spotify Connect transfer');
 assert.ok(source.includes('webTransferBusy'),'Device transfer must be guarded against duplicate requests');
 assert.match(css,/\.sp-library-column/,'Library and search share the left media column');
+assert.match(css,/Match Spotify player proportions and bottom transport|November media alignment/,'MeviMedia-sized fullscreen layout');
+assert.match(css,/grid-template-rows:minmax\(0,1fr\) auto auto auto auto/,'Player transport must stay anchored below artwork');
+assert.match(css,/\.sp-shell:not\(\.is-compact\) \.sp-now \.sp-art/,'Cover must scale separately from split screen');
 
 /* Premium errors surface as a readable state instead of fake playback. */
 const premium=createEnv({connected:true,shell:{},fetchImpl:url=>url.includes('/me/player')?json({error:{status:403,message:'Player command failed: Premium required'}},403):json({})});
