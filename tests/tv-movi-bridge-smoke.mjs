@@ -41,7 +41,7 @@ const blocked='Medienserver cdn.example ist nicht freigegeben. In MEVITV_VOD_RED
  assert.deepEqual(h.stats(),{requests:1,plays:0,loads:0});
  assert.equal(h.elements.length,0);
  assert.match(h.api.moviLogText(),/Bridge-Fehler: HTTP 502.*cdn\.example.*MEVITV_VOD_REDIRECT_HOSTS/);
- assert.match(h.nodes.get('.tv-status').textContent,/MKV nicht erreichbar: HTTP 502.*cdn\.example/);
+ assert.match(h.nodes.get('.tv-status').textContent,/Videodatei nicht erreichbar: HTTP 502.*cdn\.example/);
  for(let i=0;i<80;i++)h.api.moviReport('Other diagnostic '+i);
  assert.match(h.api.moviLogText(),/cdn\.example/);
 }
