@@ -211,8 +211,9 @@ async function playMpegts(url,name,engine,stillCurrent,fallback){
  mpegtsFallback=fallback;mpegtsFail=fail;
  try{
   mpegtsPlayer=engine.createPlayer({type:'mpegts',isLive:true,url,cors:true,withCredentials:false},{
-   enableWorker:false,enableStashBuffer:true,stashInitialSize:384*1024,autoCleanupSourceBuffer:true,
-   liveBufferLatencyChasing:true
+   enableWorker:false,enableStashBuffer:true,stashInitialSize:768*1024,autoCleanupSourceBuffer:true,
+   // Prefer a stable several-second buffer over chasing the live edge (default max latency 1.5 s).
+   liveBufferLatencyChasing:false,liveSync:false
   });
   mpegtsPlayer.on(engine.Events.ERROR,(kind,detail)=>fail(String(kind)+': '+String(detail)));
   mpegtsPlayer.attachMediaElement(v);
