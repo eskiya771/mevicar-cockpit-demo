@@ -1,0 +1,218 @@
+name: MeviCar Quality Check
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test MeviMedia playback and library
+        run: node tests/mevimedia-smoke.mjs
+      - name: Test split-screen Lichtshow effect app
+        run: node tests/lightshow-smoke.mjs
+      - name: Test navigation and UX quality
+        run: node tests/ui-quality-smoke.mjs
+      - name: Test five supported display profiles
+        run: node tests/display-profiles-smoke.mjs
+      - name: Test premium speedometer
+        run: node tests/speedometer-smoke.mjs
+      - name: Test Spotify Connect remote integration
+        run: node tests/spotify-smoke.mjs
+      - name: Test Tetris game rules
+        run: node tests/tetris-smoke.mjs
+      - name: Test TV catalog and playlists
+        run: node tests/tv-smoke.mjs
+      - name: Test MeviTV iPhone landscape sender scrolling
+        run: node tests/tv-iphone-landscape-smoke.mjs
+      - name: Test Xtream API catalog adapter
+        run: node tests/xtream-smoke.mjs
+      - name: Test IPTV programme guide
+        run: node tests/epg-smoke.mjs
+      - name: Test direct MPEG-TS browser routing
+        run: node tests/mpegts-smoke.mjs
+      - name: Stress-test MPEG-TS zapping and resource cleanup
+        run: node tests/mpegts-lifecycle-smoke.mjs
+      - name: Test MKV bridge error handling
+        run: node tests/tv-movi-bridge-smoke.mjs
+      - name: Test public media redirect policy
+        run: node tests/mkv-public-redirects-smoke.mjs
+      - name: Test secure Xtream HTTP bridge
+        run: node tests/xtream-bridge-smoke.mjs
+      - name: Test signed HLS manifests and segment relay
+        run: node tests/hls-relay-smoke.mjs
+      - name: Test FFmpeg sender switching and eviction
+        run: node tests/remux-switch-smoke.mjs
+      - name: Test bounded MKV index probe
+        run: node tests/mkv-index-probe.test.mjs
+      - name: Generate versioned site
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          BUILD_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p dist
+          python3 - <<'PY'
+          import os, json, pathlib
+          build = int(os.environ['BUILD_NUMBER'])
+          version = pathlib.Path('VERSION').read_text().strip()
+          info = {'version': version, 'build': build, 'commit': os.environ['BUILD_SHA']}
+          html = pathlib.Path('index.html').read_text()
+          assert '__MEVICAR_BUILD__' in html, 'Build placeholder missing'
+          html = html.replace('__MEVICAR_BUILD__', json.dumps(info, ensure_ascii=False))
+          # Critical: bundle theme CSS into the versioned HTML. An installed PWA may
+          # otherwise receive a fresh HTML shell with an outdated, cache-first CSS
+          # asset, collapsing the SVG launcher into small black default buttons.
+          css_link = '<link rel="stylesheet" href="./themes.css">'
+          assert css_link in html, 'Theme CSS link missing'
+          theme_css = pathlib.Path('themes.css').read_text()
+          assert '.app-home-grid' in theme_css and '.app-illustration' in theme_css
+          html = html.replace(css_link, '<style id="mevicar-versioned-themes">' + theme_css + '</style>')
+          saver_css_link = '<link rel="stylesheet" href="./screensaver.css">'
+          saver_js_tag = '<script src="./screensaver.js"></script>'
+          assert saver_css_link in html and saver_js_tag in html, 'Screensaver assets missing'
+          saver_css = pathlib.Path('screensaver.css').read_text()
+          saver_js = pathlib.Path('screensaver.js').read_text()
+          assert '#mevi-saver' in saver_css and 'meviSaverPreview' in saver_js
+          html = html.replace(saver_css_link, '<style id="mevicar-screensaver-styles">' + saver_css + '</style>')
+          # Keep the media player JS/CSS in the same versioned HTML as the cockpit.
+          media_css_link = '<link rel="stylesheet" href="./mevimedia.css">'
+          media_script_tag = '<script src="./mevimedia.js"></script>'
+          assert media_css_link in html and media_script_tag in html, 'MeviMedia files missing'
+          media_css = pathlib.Path('mevimedia.css').read_text()
+          media_js = pathlib.Path('mevimedia.js').read_text()
+          assert '.mm-shell' in media_css and 'meviMediaHTML' in media_js
+          html = html.replace(media_css_link, '<style id="mevicar-media-styles">' + media_css + '</style>')
+          html = html.replace(media_script_tag, '<script id="mevicar-media-script">' + media_js + '</script>')
+          # Spotify remote control is part of the same versioned shell.
+          spotify_css_link = '<link rel="stylesheet" href="./spotify.css">'
+          spotify_script_tag = '<script src="./spotify.js"></script>'
+          assert spotify_css_link in html and spotify_script_tag in html, 'Spotify assets missing'
+          spotify_css = pathlib.Path('spotify.css').read_text()
+          spotify_js = pathlib.Path('spotify.js').read_text()
+          assert '.sp-shell' in spotify_css and 'meviSpotifyHTML' in spotify_js
+          html = html.replace(spotify_css_link, '<style id="mevicar-spotify-styles">' + spotify_css + '</style>')
+          html = html.replace(spotify_script_tag, '<script id="mevicar-spotify-script">' + spotify_js + '</script>')
+          # Lichtshow is an independent live app using the already bundled MeviDarts renderer.
+          lightshow_css_link = '<link rel="stylesheet" href="./lightshow.css">'
+          lightshow_script_tag = '<script src="./lightshow.js"></script>'
+          assert lightshow_css_link in html and lightshow_script_tag in html, 'Lichtshow assets missing'
+          lightshow_css = pathlib.Path('lightshow.css').read_text()
+          lightshow_js = pathlib.Path('lightshow.js').read_text()
+          assert '.lightshow-app' in lightshow_css and 'meviLightshowMount' in lightshow_js
+          html = html.replace(lightshow_css_link, '<style id="mevicar-lightshow-styles">' + lightshow_css + '</style>')
+          html = html.replace(lightshow_script_tag, '<script id="mevicar-lightshow-script">' + lightshow_js + '</script>')
+          speed_css_link = '<link rel="stylesheet" href="./speedometer.css">'
+          speed_script_tag = '<script src="./speedometer.js"></script>'
+          assert speed_css_link in html and speed_script_tag in html, 'Speedometer assets missing'
+          speed_css = pathlib.Path('speedometer.css').read_text()
+          speed_js = pathlib.Path('speedometer.js').read_text()
+          assert '.tacho-app' in speed_css and 'meviSpeedHTML' in speed_js and 'meviSpeedIngest' in speed_js
+          html = html.replace(speed_css_link, '<style id="mevicar-speedometer-styles">' + speed_css + '</style>')
+          html = html.replace(speed_script_tag, '<script id="mevicar-speedometer-script">' + speed_js + '</script>')
+          # Keep all five responsive viewport profiles within the atomic HTML build.
+          profiles_css_link = '<link rel="stylesheet" href="./display-profiles.css">'
+          assert profiles_css_link in html, 'Display profile link missing'
+          profiles_css = pathlib.Path('display-profiles.css').read_text()
+          assert 'DeX 1920x1200' in profiles_css and '1920x720' in profiles_css
+          html = html.replace(profiles_css_link, '<style id="mevicar-display-profiles">' + profiles_css + '</style>')
+          html = html.replace(saver_js_tag, '<script id="mevicar-screensaver-script">' + saver_js + '</script>')
+          # Bundle the full original MeviDarts library in dependency order.
+          # Inlining prevents the PWA from mixing mismatched cached JS versions.
+          for name in ('mevidarts-parallax', 'mevidarts-showcase', 'mevidarts-light-renderer'):
+              script_tag = '<script src="./' + name + '.js"></script>'
+              assert script_tag in html, 'Missing MeviDarts dependency: ' + name
+              source = pathlib.Path(name + '.js').read_text()
+              assert len(source) > 2000, 'MeviDarts source incomplete: ' + name
+              html = html.replace(script_tag, '<script id="' + name + '">' + source + '</script>')
+          # Native Tacho Next is bundled into the versioned shell like the other apps.
+          tn_css_link = '<link rel="stylesheet" href="./tacho-next.css">'
+          tn_js_tag = '<script src="./tacho-next.js"></script>'
+          assert tn_css_link in html and tn_js_tag in html, 'Native Tacho Next assets missing'
+          tn_css = pathlib.Path('tacho-next.css').read_text()
+          tn_js = pathlib.Path('tacho-next.js').read_text()
+          assert '.tn-gauges' in tn_css and 'meviTachoNextMount' in tn_js
+          html = html.replace(tn_css_link, '<style id="mevicar-tacho-next-styles">' + tn_css + '</style>')
+          html = html.replace(tn_js_tag, '<script id="mevicar-tacho-next-script">' + tn_js + '</script>')
+          sudoku_css_link = '<link rel="stylesheet" href="./sudoku.css">'
+          sudoku_js_tag = '<script src="./sudoku.js"></script>'
+          assert sudoku_css_link in html and sudoku_js_tag in html, 'Sudoku assets missing'
+          sudoku_css = pathlib.Path('sudoku.css').read_text()
+          sudoku_js = pathlib.Path('sudoku.js').read_text()
+          assert '.sdk-board' in sudoku_css and 'meviSudokuMount' in sudoku_js
+          html = html.replace(sudoku_css_link, '<style id="mevicar-sudoku-styles">' + sudoku_css + '</style>')
+          html = html.replace(sudoku_js_tag, '<script id="mevicar-sudoku-script">' + sudoku_js + '</script>')
+          html = html.replace('<link rel="stylesheet" href="./tetris.css">', '<style>' + pathlib.Path('tetris.css').read_text() + '</style>')
+          html = html.replace('<script src="./tetris.js"></script>', '<script>' + pathlib.Path('tetris.js').read_text() + '</script>')
+          html = html.replace('<link rel="stylesheet" href="./tv.css">', '<style>' + pathlib.Path('tv.css').read_text() + '</style>')
+          html = html.replace('<script src="./xtream.js"></script>', '<script>' + pathlib.Path('xtream.js').read_text() + '</script>')
+          html = html.replace('<script src="./tv.js"></script>', '<script>' + pathlib.Path('tv.js').read_text() + '</script>')
+          pathlib.Path('dist/index.html').write_text(html)
+          pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
+          # Public proxy release manifest: no anonymous GitHub API requests needed
+          # by Synology clients (which otherwise hit the 60 requests/hour limit).
+          proxy = json.loads(pathlib.Path('bridge/release.json').read_text())
+          assert isinstance(proxy['build'], int) and proxy['build'] > 0
+          assert isinstance(proxy['version'], str)
+          pathlib.Path('dist/proxy-release.json').write_text(json.dumps({
+              'version': proxy['version'], 'build': proxy['build'], 'sha': os.environ['BUILD_SHA']
+          }))
+          PY
+      - name: Generate PWA icons and copy assets
+        run: |
+          mkdir -p dist/vendor
+          # Ship the exact JS/WASM pair accepted in the real MKV seek test.
+          node tests/movi-official-smoke.mjs
+          cp -R vendor/movi-mevitv-mkv-size-2 dist/vendor/
+          cp vendor/movi-mevitv-mkv-size-2/movi-build.json dist/vendor/movi-build.json
+          cp vendor/movi-mevitv-mkv-size-2/LICENSE.txt dist/vendor/movi-player-LICENSE.txt
+          # Compatibility URLs for tabs opened before the official promotion.
+          cp vendor/movi-mevitv-mkv-size-2/element.slim.global.js dist/vendor/movi-player-0.4.1.slim.global.js
+          cp vendor/movi-mevitv-mkv-size-2/movi.wasm dist/vendor/movi.wasm
+          mkdir -p dist/vendor/experimental
+          cp vendor/movi-mevitv-mkv-size-2/element.slim.global.js vendor/movi-mevitv-mkv-size-2/movi.wasm dist/vendor/experimental/
+          # Download the pinned browser bundle directly; the npm package
+          # installation does not reliably expose this artifact at the expected path.
+          curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/mpegts.js@1.8.2/dist/mpegts.min.js -o dist/vendor/mpegts-1.8.2.min.js
+          test "$(wc -c < dist/vendor/mpegts-1.8.2.min.js)" -gt 100000
+          curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js -o dist/vendor/hls-1.6.15.min.js
+          (cd dist && sha256sum -c ../vendor/hls.sha256)
+          cp vendor/hls-LICENSE.txt dist/vendor/
+          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          python3 -m pip install --quiet --break-system-packages pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw, ImageFont
+          for n in (192, 512):
+              im=Image.new('RGB',(n,n),'#08111b')
+              d=ImageDraw.Draw(im)
+              d.rounded_rectangle((n*.09,n*.09,n*.91,n*.91),radius=n*.2,fill='#102c42',outline='#18d7ed',width=max(3,n//70))
+              d.arc((n*.23,n*.23,n*.77,n*.77),145,395,fill='#24e2f7',width=max(6,n//24))
+              d.line((n*.5,n*.5,n*.68,n*.33),fill='#e8fbff',width=max(4,n//35))
+              d.ellipse((n*.46,n*.46,n*.54,n*.54),fill='#e8fbff')
+              im.save(f'dist/icon-{n}.png')
+          PY
+      - name: Install browser regression dependencies
+        run: |
+          npm install --no-save --package-lock=false playwright@1.58.2
+          npx playwright install --with-deps chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+      - name: Test MeviTV in five display profiles and three themes
+        run: |
+          mkdir -p tests/fixtures
+          ffmpeg -hide_banner -loglevel error -f lavfi -i "testsrc2=size=640x360:rate=25" -t 12 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -g 25 -an -f mpegts tests/fixtures/tv-test.ts
+          node tests/tv-visual-layout.mjs
+      - name: Save MeviTV browser screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mevitv-browser-qa
+          path: visual-results/tv/
+          if-no-files-found: warn
+          retention-days: 14
