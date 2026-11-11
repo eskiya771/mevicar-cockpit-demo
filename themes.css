@@ -454,7 +454,7 @@ html .cockpit .dock button:not(.active){
 }
 .app-home-surface .app-home-grid{
  grid-template-columns:repeat(4,minmax(0,1fr));
- grid-auto-rows:190px;
+ grid-auto-rows:205px;
  column-gap:clamp(8px,1.5vw,22px);
  row-gap:10px;
 }
@@ -463,7 +463,7 @@ html .cockpit .dock button:not(.active){
  box-sizing:border-box;
  display:grid!important;
  grid-template-columns:minmax(0,1fr);
- grid-template-rows:minmax(0,1fr) 32px;
+ grid-template-rows:minmax(0,1fr) 42px;
  align-items:stretch;
  justify-items:stretch;
  justify-content:initial;
@@ -516,16 +516,16 @@ html .cockpit .dock button:not(.active){
  overflow-wrap:normal;
  word-break:normal;
  line-height:1.15;
- font-size:clamp(15px,1.95vh,20px);
+ font-size:clamp(19px,2.55vh,25px);
  font-weight:700;
 }
 .app-home-side .app-home-grid{
  grid-template-columns:repeat(2,minmax(0,1fr));
- grid-auto-rows:110px;
+ grid-auto-rows:122px;
  gap:5px;
 }
 .app-home-side .app-home-tile{
- grid-template-rows:minmax(0,1fr) 21px;
+ grid-template-rows:minmax(0,1fr) 27px;
  padding:4px 2px!important;
  gap:2px!important;
 }
@@ -535,15 +535,15 @@ html .cockpit .dock button:not(.active){
  max-width:100%;
 }
 .app-home-side .app-home-label{
- font-size:clamp(10px,1.3vh,13px);
+ font-size:clamp(12px,1.65vh,16px);
 }
 @media (orientation:landscape) and (max-height:529px){
  .app-home-surface .app-home-grid{
-  grid-auto-rows:120px;
+  grid-auto-rows:132px;
   row-gap:4px;
  }
  .app-home-surface .app-home-tile{
-  grid-template-rows:minmax(0,1fr) 22px;
+  grid-template-rows:minmax(0,1fr) 28px;
   padding:4px 3px!important;
   gap:3px!important;
  }
@@ -551,9 +551,9 @@ html .cockpit .dock button:not(.active){
   width:70px;height:70px;max-width:100%;
  }
  .app-home-surface .app-home-label{
-  font-size:clamp(11px,2.5vh,14px);
+  font-size:clamp(13px,3vh,17px);
  }
- .app-home-side .app-home-grid{grid-auto-rows:85px}
+ .app-home-side .app-home-grid{grid-auto-rows:96px}
  .app-home-side .app-home-icon{width:48px;height:48px}
- .app-home-side .app-home-label{font-size:10px}
+ .app-home-side .app-home-label{font-size:12px}
 }
