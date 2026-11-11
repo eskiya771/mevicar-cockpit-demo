@@ -519,3 +519,76 @@ html .cockpit .dock button:not(.active){
    grid-auto-rows:minmax(76px,1fr);
  }
 }
+
+/* App launcher visual fix: reserve an actual text row below each illustration.
+   Do not let vector SVG artwork and labels share the same space. */
+.app-home-surface .app-home-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-rows:none;
+  grid-auto-rows:clamp(150px,21vh,205px);
+  align-content:start;
+  row-gap:clamp(8px,1.6vh,18px);
+}
+.app-home-surface .app-home-tile{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-rows:minmax(0,1fr) minmax(23px,auto);
+  justify-items:center;
+  align-items:center;
+  align-content:stretch;
+  min-height:0;
+  overflow:hidden;
+  gap:clamp(7px,1vh,12px)!important;
+  padding:clamp(8px,1.25vh,14px)!important;
+}
+.app-home-surface .app-home-icon{
+  grid-row:1;
+  align-self:center;
+  justify-self:center;
+  display:grid;
+  place-items:center;
+  flex:none;
+  width:min(100%,clamp(75px,12vh,116px));
+  height:min(100%,clamp(75px,12vh,116px));
+  max-height:100%;
+  min-height:0;
+}
+.app-home-surface .app-home-label{
+  grid-row:2;
+  display:block;
+  position:relative;
+  align-self:center;
+  justify-self:center;
+  padding:0 5px;
+  margin:0;
+  line-height:1.25;
+  font-size:clamp(12px,1.6vh,17px);
+  overflow-wrap:normal;
+  word-break:normal;
+  white-space:normal;
+  max-width:100%;
+}
+.app-home-side .app-home-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-rows:none;
+  grid-auto-rows:105px;
+  align-content:start;
+}
+.app-home-side .app-home-tile{
+  display:grid!important;
+  grid-template-rows:minmax(0,1fr) minmax(18px,auto);
+  grid-template-columns:minmax(0,1fr);
+  align-items:center;
+  justify-items:center;
+  gap:3px!important;
+  min-height:0;
+}
+.app-home-side .app-home-icon{grid-row:1;max-height:100%;height:min(65px,100%);width:min(65px,100%)}
+.app-home-side .app-home-label{grid-row:2;line-height:1.15;position:relative}
+@media (orientation:landscape) and (max-height:529px){
+ .app-home-surface .app-home-grid{grid-auto-rows:clamp(100px,34vh,136px)}
+ .app-home-surface .app-home-tile{gap:4px!important;padding:4px!important;grid-template-rows:minmax(0,1fr) minmax(18px,auto)}
+ .app-home-surface .app-home-icon{width:min(100%,18vh);height:min(100%,18vh)}
+ .app-home-surface .app-home-label{font-size:clamp(10px,2.3vh,13px)}
+ .app-home-side .app-home-grid{grid-auto-rows:80px}
+}
