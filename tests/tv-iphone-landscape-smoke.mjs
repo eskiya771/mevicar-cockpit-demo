@@ -26,5 +26,5 @@ assert(!markup.slice(0,markup.indexOf('<section class="tv-player">')).includes('
 assert(player.includes('class="tv-xtream-tabs"'));
 assert(player.includes('aria-label="TV-Programm öffnen"'));
 assert.match(read('index.html'),/<link rel="stylesheet" href="\.\/tv\.css">/);
-assert.match(read('.github/workflows/pages.yml'),/node tests\/tv-visual-layout.mjs/);
+assert.match(read('.github/workflows/quality.yml'),/node tests\/tv-visual-layout.mjs/);
 console.log('MeviTV structure: shared dock, simultaneous full-screen panes, controls above video, safe-area spacing.');
