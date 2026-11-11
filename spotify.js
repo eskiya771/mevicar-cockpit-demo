@@ -1,5 +1,5 @@
-/* MeviCar Next – Spotify Connect remote control.
-   Controls the user's active Spotify device through the Spotify Web API.
+/* MeviCar Next – Spotify Premium browser player.
+   Plays exclusively on this MeviCar device through the Spotify Web Playback SDK.
    OAuth Authorization Code + PKCE only: no backend, no client secret, tokens stay local. */
 (function () {
   'use strict';
@@ -914,7 +914,7 @@
     const name = st.profile?.display_name || st.profile?.id || 'Verbunden';
     const top = $('sp-account-name'); if (top) top.textContent = name;
     const display = $('sp-account-display'); if (display) display.textContent = name;
-    const id = $('sp-account-id'); if (id) id.textContent = st.profile?.id || 'Spotify Connect';
+    const id = $('sp-account-id'); if (id) id.textContent = st.profile?.id || 'Spotify Premium';
   }
 
   const browseSerial = {};
@@ -1324,8 +1324,6 @@
     const volume = Math.round(clamp(Number(value) || 0, 0, 100));
     try {
       await api('/me/player/volume?volume_percent=' + volume + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
-      const active = st.devices.find(device => device.is_active);
-      if (active) active.volume_percent = volume;
       if (st.player?.device) st.player.device.volume_percent = volume;
       setNotice('Spotify-Lautstärke ' + volume + ' %.');
       paintNow();
