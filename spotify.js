@@ -631,6 +631,7 @@
         player.addListener('ready', ({ device_id }) => {
           st.webDeviceId = device_id;
           webPlayerStatus('Bereit');
+          transferToWebPlayer().catch(() => {});
         });
         player.addListener('not_ready', ({ device_id }) => {
           if (st.webDeviceId === device_id) st.webDeviceId = '';
@@ -681,7 +682,7 @@
   function topMarkup() {
     const account = st.profile?.display_name || st.profile?.id || 'Verbunden';
     return '<div class="sp-top">' +
-      '<div class="sp-identity"><span class="sp-eyebrow">SPOTIFY CONNECT</span><span class="sp-heading">SPOTIFY <em>REMOTE</em></span></div>' +
+      '<div class="sp-identity"><span class="sp-eyebrow">SPOTIFY CONNECT</span><span class="sp-heading">SPOTIFY <em>PREMIUM</em></span></div>' +
       '<div class="sp-top-actions">' + sourceMarkup() +
       (st.token ? '<span class="sp-account" title="Verbundenes Spotify-Konto"><span class="sp-dot"></span><span id="sp-account-name">' + esc(account) + '</span></span>' : '') +
       (st.token ? '<button type="button" class="sp-icon-button" aria-label="Spotify aktualisieren" title="Aktualisieren" onclick="meviSpotifyRefresh()">' + icon('refresh') + '</button>' : '') +
@@ -703,12 +704,12 @@
     const hasClient = !!st.clientId;
     return '<div class="sp-onboard">' +
       '<div class="sp-onboard-head"><span class="sp-onboard-icon">' + icon('spotify') + '</span><div>' +
-      '<span class="sp-eyebrow">SPOTIFY CONNECT // REMOTE</span><h2>Spotify im Cockpit steuern</h2>' +
-      '<p>Die PWA steuert ein aktives Spotify-Gerät über die Web API. Die Musik läuft weiter in der Spotify-App, nicht im Browser. Spotify Premium ist erforderlich.</p></div></div>' +
+      '<span class="sp-eyebrow">SPOTIFY PREMIUM // MEVICAR NEXT</span><h2>Spotify direkt im Cockpit hören</h2>' +
+      '<p>Mit Spotify Premium kannst du Musik direkt in MeviCar Next wiedergeben oder ein anderes Spotify-Connect-Gerät steuern. Die Wiedergabe im Cockpit benötigt einen unterstützten Browser.</p></div></div>' +
       (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
       (st.notice ? '<div class="sp-alert is-ok">' + icon('check') + '<span>' + esc(st.notice) + '</span></div>' : '') +
       '<div class="sp-setup">' +
-      '<div class="sp-step"><span class="sp-step-num">1</span><div><strong>Spotify-App bereithalten</strong><p>Öffne Spotify auf iPhone, PC oder DeX und starte einen Titel, damit ein Gerät aktiv ist.</p><button type="button" class="sp-linkbtn" onclick="meviSpotifyOpen()">Spotify öffnen' + icon('external') + '</button></div></div>' +
+      '<div class="sp-step"><span class="sp-step-num">1</span><div><strong>Spotify Premium</strong><p>Für die Wiedergabe direkt in MeviCar genügt dein Premium-Konto. Für externe Lautsprecher oder Handys kannst du weiterhin Spotify Connect verwenden.</p><button type="button" class="sp-linkbtn" onclick="meviSpotifyOpen()">Spotify öffnen' + icon('external') + '</button></div></div>' +
       '<div class="sp-step"><span class="sp-step-num">2</span><div><strong>Redirect-URI hinterlegen</strong><p>Im Spotify Developer Dashboard unter Edit Settings als Redirect URI eintragen. Sie muss exakt übereinstimmen.</p><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirect) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div><a class="sp-linkbtn" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Developer Dashboard' + icon('external') + '</a></div></div>' +
       '<div class="sp-step"><span class="sp-step-num">3</span><div><strong>Client ID eintragen</strong><p>Die Client ID ist öffentlich. Ein Client Secret wird nicht benötigt und nicht gespeichert.</p><div class="sp-client"><input id="sp-client-id" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Spotify Client ID" value="' + esc(st.clientId) + '" aria-label="Spotify Client ID" onkeydown="if(event.key===\'Enter\'){event.preventDefault();meviSpotifySaveClient(this.value)}"><button type="button" onclick="meviSpotifySaveClient(document.getElementById(\'sp-client-id\').value)">Speichern</button></div></div></div>' +
       '</div>' +
