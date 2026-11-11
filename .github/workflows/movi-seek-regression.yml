@@ -3,6 +3,9 @@ on:
   pull_request:
     paths:
       - 'patches/movi-seek.patch'
+      - 'patches/movi-cues-fastseek.patch'
+      - 'tv.js'
+      - 'tests/tv-movi-diagnostics-smoke.mjs'
       - '.github/workflows/movi-experiment.yml'
       - '.github/workflows/movi-seek-regression.yml'
   workflow_dispatch:
@@ -19,15 +22,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24.22.2'
+      - name: Check MeviTV diagnostics
+        run: node tests/tv-movi-diagnostics-smoke.mjs
       - name: Check patch against pinned upstream
         run: |
           git clone --filter=blob:none https://github.com/MrUjjwalG/movi-player.git movi-src
           git -C movi-src checkout 8bd0b50d7cdfcef635e015ea93e365876088969d
           git -C movi-src apply --check ../patches/movi-seek.patch
           git -C movi-src apply ../patches/movi-seek.patch
+          git -C movi-src apply --check ../patches/movi-cues-fastseek.patch
+          git -C movi-src apply ../patches/movi-cues-fastseek.patch
       - name: Check types and HTTP seek regressions
         working-directory: movi-src
         run: |
           npm ci --ignore-scripts
           npm run typecheck
-          npx vitest run src/demux/Demuxer.seek.test.ts
+          npx vitest run src/demux/Demuxer.seek.test.ts src/source/HttpSource.size.test.ts

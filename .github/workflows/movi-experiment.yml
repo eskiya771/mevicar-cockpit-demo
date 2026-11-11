@@ -40,7 +40,7 @@ jobs:
           mkdir -p dist
           npm ci --ignore-scripts
           npm run typecheck
-          npx vitest run src/demux/Demuxer.seek.test.ts
+          npx vitest run src/demux/Demuxer.seek.test.ts src/source/HttpSource.size.test.ts
       - name: Build FFmpeg and Matroska seek demuxer to WebAssembly
         run: |
           cd movi-src

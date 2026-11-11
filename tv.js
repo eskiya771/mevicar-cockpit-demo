@@ -19,7 +19,7 @@ if(!global.document)return;
 const KEY='mevicar-tv-v1',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,mpegtsPlayer=null,mpegtsHealthTimer=null,mpegtsFail=null,generation=0,deadline=null;
 let networkTimer=null,networkBusy=false,networkWaits=0,networkStarted=0,vodDiagnostic='';
-let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekTimer=null,moviRangeTimer=null,moviSeekTrace=null,moviSeekHistory=[],moviSeekSummaryTimers=[],moviBenchmark=null,moviEverPlayed=false,moviSeekBusy=false;
+let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSessionInfo=new Map(),moviSeekTimer=null,moviRangeTimer=null,moviSeekTrace=null,moviSeekHistory=[],moviSeekSummaryTimers=[],moviBenchmark=null,moviEverPlayed=false,moviSeekBusy=false;
 let query='',country='ALL',only=false,libraryPromise=null,mpegtsPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='',mpegtsFallback=null;
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 function channels(){return [...CATALOG,...custom];}
@@ -225,12 +225,17 @@ async function probeVod(url,valid){
   return false;
  }finally{clearTimeout(timer);}
 }
-function moviReport(message,level='info'){
+function moviLogText(){
+ const pinned=[...moviSessionInfo.values()];
+ return [...pinned,...moviLog.filter(line=>!pinned.includes(line))].join('\n');
+}
+function moviReport(message,level='info',key=''){
  // Never log signed URLs, provider paths or credentials.
  const safe=String(message).replace(/https?:\/\/\S+/gi,'[URL entfernt]').slice(0,260);
  const line=new Date().toLocaleTimeString('de-DE')+' · '+safe;
+ if(key)moviSessionInfo.set(key,line);
  moviLog.push(line);if(moviLog.length>70)moviLog.shift();
- const box=root?.querySelector('.tv-movi-log');if(box)box.textContent=moviLog.join('\n');
+ const box=root?.querySelector('.tv-movi-log');if(box)box.textContent=moviLogText();
  if(level==='error')console.error('[MeviTV MKV]',safe);else console.info('[MeviTV MKV]',safe);
 }
 function moviExperimentalRequested(){
@@ -252,10 +257,19 @@ function loadMoviPlayer(){
  return moviPromise;
 }
 function moviTrackReport(tracks){
- const list=Array.isArray(tracks)?tracks:[];
+ const valid=track=>track&&typeof track==='object';
+ const list=Array.isArray(tracks)?tracks.filter(valid):['video','audio','subtitle'].flatMap(type=>
+  (Array.isArray(tracks?.[type])?tracks[type]:[]).filter(valid).map(track=>({...track,type:track.type||type})));
  const group=type=>list.filter(t=>String(t.type||t.kind||t.codec_type||'').toLowerCase()===type).map(t=>[t.codec||t.codecName||t.codec_id||'Codec unbekannt',t.language||t.lang||'',t.width&&t.height?t.width+'x'+t.height:''].filter(Boolean).join(' '));
- moviReport('Video-Tracks: '+(group('video').join(' | ')||'nicht gemeldet')+' · insgesamt '+list.length+' Tracks');
- moviReport('Audio-Tracks: '+(group('audio').join(' | ')||'nicht gemeldet'));
+ moviReport('Video-Tracks: '+(group('video').join(' | ')||'nicht gemeldet')+' · insgesamt '+list.length+' Tracks','info','video-tracks');
+ moviReport('Audio-Tracks: '+(group('audio').join(' | ')||'nicht gemeldet'),'info','audio-tracks');
+}
+function moviSourceReport(element){
+ const d=element.player?.getReadDiagnostics?.();
+ if(!d){moviReport('HTTP-Quelldiagnose nicht verfügbar (Player ohne Größen-Fix)','info','source');return;}
+ const bytes=n=>Number.isSafeInteger(n)&&n>0?String(n):'unbekannt';
+ const capacity=Number.isFinite(d.bufferCapacityBytes)?(d.bufferCapacityBytes/1048576).toFixed(1):'?';
+ moviReport('Datei/Demuxer: '+bytes(d.fileSizeBytes)+'/'+bytes(d.demuxerFileSizeBytes)+' Bytes · HTTP-Puffer: '+capacity+' MiB · HEAD-Length: '+(d.headContentLength??'?')+' · Größe per '+(d.sizeSource||'?')+' · Patch '+d.revision,'info','source');
 }
 async function moviNetworkCheck(url,valid){
  try{
@@ -440,13 +454,13 @@ async function playMoviVod(url,name,stillCurrent){
  root.classList.add('tv-watching');root.querySelector('.tv-empty').hidden=true;
  root.querySelector('.tv-title').textContent=name;
  activePlaybackName=name;playbackFormat='movi';
- moviLog=[];
+ moviLog=[];moviSessionInfo.clear();
  const diagnostic=root.querySelector('.tv-movi-diagnostics');
  if(diagnostic){diagnostic.hidden=false;diagnostic.open=true;}
  moviReport('MKV-Test gestartet: '+name);
  const moviBufferMB=moviDesktopBufferMB();
  status('MKV wird clientseitig geladen (Movi Player, '+moviBufferMB+' MB Hintergrundpuffer) …');
- moviReport('Pufferlimit: '+moviBufferMB+' MB · Startschwelle unverändert');
+ moviReport('Pufferlimit: '+moviBufferMB+' MB · Startschwelle unverändert','info','buffer-limit');
  global.meviMediaStopForSource?.('tv');global.meviSpotifyPauseForSource?.('tv');
  try{
   await loadMoviPlayer();
@@ -458,12 +472,13 @@ async function playMoviVod(url,name,stillCurrent){
   element.setAttribute('buffersize',String(moviBufferMB));
   element.setAttribute('wasmurl',new URL(moviAssetBase()+'movi.wasm',document.baseURI).href);
   element.addEventListener('playing',()=>{if(valid()){moviEverPlayed=true;moviSeekBusy=false;status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
-  element.addEventListener('loadedmetadata',()=>{if(valid())moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');});
+  element.addEventListener('loadedmetadata',()=>{if(valid()){moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');moviSourceReport(element);}});
   let seekStartedAt=null,seekReadyAt=null,seekWatchdog=null,lastSeekState='';
   const onSeekState=state=>{
    if(state==='seeking'){moviSeekBusy=true;}
    if(state==='seeking'&&seekStartedAt===null){
     seekStartedAt=performance.now();seekReadyAt=null;moviBeginSeekTrace(Number(element.currentTime));
+    moviSourceReport(element);
     moviReport('Spulen gestartet · Ziel '+(Number.isFinite(Number(element.currentTime))?Math.round(Number(element.currentTime))+' s':'unbekannt')+' · Player sucht Schlüsselbild und Dateibereich');
     seekWatchdog=moviSeekTimer=setTimeout(()=>{
      if(valid()&&seekStartedAt!==null)moviReport('Spulen dauert länger als 12 Sekunden · prüfe Netzwerk/Range und Decoder','error');
@@ -496,7 +511,7 @@ async function playMoviVod(url,name,stillCurrent){
   element.addEventListener('errordisplay',e=>{if(valid()){const d=e.detail||{};moviReport('Decoder/Codec: '+String(d.title||'Fehler')+' · '+String(d.message||''),'error');}});
   const stage=root.querySelector('.tv-stage');
   stage.appendChild(element);moviElement=element;video.hidden=true;
-  moviReport('Engine: '+String(element.build||'slim')+' · WASM separat geladen'+(moviExperimentalRequested()?' · QUELLCODE-TESTBUILD':' · STABIL'));
+  moviReport('Engine: '+String(element.build||'slim')+' · WASM separat geladen'+(moviExperimentalRequested()?' · QUELLCODE-TESTBUILD':' · STABIL'),'info','engine');
   void moviNetworkCheck(url,valid);
   monitorMoviRanges(valid);
   element.src=url;
@@ -662,7 +677,7 @@ function openProxyDialog(){
 function closeProxyDialog(){root?.querySelector('.tv-proxy-dialog')?.close();}
 function paintCustom(){root.querySelector('.tv-custom').innerHTML=custom.map(c=>'<div>'+esc(c.name)+' <button data-delete="'+esc(c.id)+'" aria-label="'+esc(c.name)+' löschen">Löschen</button></div>').join('');}
 function add(items){let n=0;for(const c of items){if(custom.length>=100)break;if(channels().some(x=>x.url===c.url))continue;custom.push({...c,id:'custom-'+Date.now().toString(36)+'-'+n+'-'+Math.random().toString(36).slice(2,7),country:'OTHER'});n++;}save();paintList();paintCustom();return n;}
-function click(e){const b=e.target.closest('button');if(!b)return;if(b.dataset.xtAccount){const api=global.meviXtream;if(api){api.state.active=b.dataset.xtAccount;api.state.kind='live';api.state.group='ALL';api.state.query='';paintXtream();root.querySelector('.tv-xtream-dialog').close();}return;}if(b.dataset.xtDelete){global.meviXtream?.remove(b.dataset.xtDelete);paintXtAccounts();paintXtream();return;}if(b.dataset.kind){const api=global.meviXtream;if(api){api.state.kind=b.dataset.kind;api.state.group='ALL';api.state.query='';paintXtream();}return;}if(b.dataset.xtItem){selectXtItem(b.dataset.xtItem);return;}if(b.dataset.xtEpisode){const api=global.meviXtream,a=api?.active(),ep=xtreamSelected?.episodes.find(x=>x.id===b.dataset.xtEpisode);if(ep&&a)startXtMedia(api,a,'series',ep.id,ep.extension,ep.name);return;}if(b.dataset.channel){selected=b.dataset.channel;paintList();play();return;}if(b.dataset.fav){const id=b.dataset.fav;favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];save();paintList();return;}if(b.dataset.sourceRefresh){const x=sources.find(s=>s.id===b.dataset.sourceRefresh);if(x)syncSource(x);return;}if(b.dataset.sourceDelete){const id=b.dataset.sourceDelete;const x=sources.find(s=>s.id===id);if(!x)return;if(!confirm('Quelle „'+x.name+'“ und ihre Sender löschen?'))return;sources=sources.filter(s=>s.id!==id);custom=custom.filter(c=>c.sourceId!==id);favorites=favorites.filter(id=>channels().some(c=>c.id===id));if(!channels().some(c=>c.id===selected)){stop();selected='zdf';paintTitle();}save();paintList();paintSources();sourceStatus('Quelle gelöscht.');return;}if(b.dataset.delete){const id=b.dataset.delete;if(selected===id){stop();selected='zdf';paintTitle();}custom=custom.filter(c=>c.id!==id);favorites=favorites.filter(x=>x!==id);save();paintCustom();paintList();return;}switch(b.dataset.act){case'movi-index-check':void moviCheckMkvIndex();break;case'movi-seek-75':moviBenchmark75();break;case'movi-copy-log':navigator.clipboard?.writeText(moviLog.join('\n'));break;case'proxy-status':openProxyDialog();break;case'proxy-close':closeProxyDialog();break;case'proxy-refresh':refreshProxyUpdate(true);break;case'proxy-update':applyProxyUpdate();break;case'proxy-rollback':applyProxyRollback();break;case'network':toggleNetwork();break;case'epg':paintEPG();root.querySelector('.tv-epg-dialog').showModal();break;case'epg-close':root.querySelector('.tv-epg-dialog').close();break;case'epg-refresh':refreshEPG(true);break;case'play':if(xtPlayback){const p=xtPlayback;startXtMedia(p.api,p.a,p.type,p.id,p.extension,p.name);}else play();break;case'stop':stop();break;case'favorites':only=!only;paintList();break;case'list':root.classList.toggle('tv-watching');break;case'xtream':paintXtAccounts();root.querySelector('.tv-xtream-dialog').showModal();break;case'xtream-close':root.querySelector('.tv-xtream-dialog').close();break;case'xtream-back':global.meviXtream.state.active=null;paintXtream();paintList();break;case'xtream-series-back':paintXtream();break;case'sources':paintSources();root.querySelector('.tv-sources-dialog').showModal();break;case'sources-close':root.querySelector('.tv-sources-dialog').close();break;case'add':paintCustom();root.querySelector('.tv-custom-dialog').showModal();break;case'close':root.querySelector('.tv-custom-dialog').close();break;case'fullscreen':if(moviElement){if(moviElement.requestFullscreen)moviElement.requestFullscreen().catch(()=>status('Vollbild nicht verfügbar.'));break;}if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();else if(video.requestFullscreen)video.requestFullscreen().catch(()=>status('Vollbild nicht verfügbar.'));else status('Vollbild nicht verfügbar.');break;}}
+function click(e){const b=e.target.closest('button');if(!b)return;if(b.dataset.xtAccount){const api=global.meviXtream;if(api){api.state.active=b.dataset.xtAccount;api.state.kind='live';api.state.group='ALL';api.state.query='';paintXtream();root.querySelector('.tv-xtream-dialog').close();}return;}if(b.dataset.xtDelete){global.meviXtream?.remove(b.dataset.xtDelete);paintXtAccounts();paintXtream();return;}if(b.dataset.kind){const api=global.meviXtream;if(api){api.state.kind=b.dataset.kind;api.state.group='ALL';api.state.query='';paintXtream();}return;}if(b.dataset.xtItem){selectXtItem(b.dataset.xtItem);return;}if(b.dataset.xtEpisode){const api=global.meviXtream,a=api?.active(),ep=xtreamSelected?.episodes.find(x=>x.id===b.dataset.xtEpisode);if(ep&&a)startXtMedia(api,a,'series',ep.id,ep.extension,ep.name);return;}if(b.dataset.channel){selected=b.dataset.channel;paintList();play();return;}if(b.dataset.fav){const id=b.dataset.fav;favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];save();paintList();return;}if(b.dataset.sourceRefresh){const x=sources.find(s=>s.id===b.dataset.sourceRefresh);if(x)syncSource(x);return;}if(b.dataset.sourceDelete){const id=b.dataset.sourceDelete;const x=sources.find(s=>s.id===id);if(!x)return;if(!confirm('Quelle „'+x.name+'“ und ihre Sender löschen?'))return;sources=sources.filter(s=>s.id!==id);custom=custom.filter(c=>c.sourceId!==id);favorites=favorites.filter(id=>channels().some(c=>c.id===id));if(!channels().some(c=>c.id===selected)){stop();selected='zdf';paintTitle();}save();paintList();paintSources();sourceStatus('Quelle gelöscht.');return;}if(b.dataset.delete){const id=b.dataset.delete;if(selected===id){stop();selected='zdf';paintTitle();}custom=custom.filter(c=>c.id!==id);favorites=favorites.filter(x=>x!==id);save();paintCustom();paintList();return;}switch(b.dataset.act){case'movi-index-check':void moviCheckMkvIndex();break;case'movi-seek-75':moviBenchmark75();break;case'movi-copy-log':navigator.clipboard?.writeText(moviLogText());break;case'proxy-status':openProxyDialog();break;case'proxy-close':closeProxyDialog();break;case'proxy-refresh':refreshProxyUpdate(true);break;case'proxy-update':applyProxyUpdate();break;case'proxy-rollback':applyProxyRollback();break;case'network':toggleNetwork();break;case'epg':paintEPG();root.querySelector('.tv-epg-dialog').showModal();break;case'epg-close':root.querySelector('.tv-epg-dialog').close();break;case'epg-refresh':refreshEPG(true);break;case'play':if(xtPlayback){const p=xtPlayback;startXtMedia(p.api,p.a,p.type,p.id,p.extension,p.name);}else play();break;case'stop':stop();break;case'favorites':only=!only;paintList();break;case'list':root.classList.toggle('tv-watching');break;case'xtream':paintXtAccounts();root.querySelector('.tv-xtream-dialog').showModal();break;case'xtream-close':root.querySelector('.tv-xtream-dialog').close();break;case'xtream-back':global.meviXtream.state.active=null;paintXtream();paintList();break;case'xtream-series-back':paintXtream();break;case'sources':paintSources();root.querySelector('.tv-sources-dialog').showModal();break;case'sources-close':root.querySelector('.tv-sources-dialog').close();break;case'add':paintCustom();root.querySelector('.tv-custom-dialog').showModal();break;case'close':root.querySelector('.tv-custom-dialog').close();break;case'fullscreen':if(moviElement){if(moviElement.requestFullscreen)moviElement.requestFullscreen().catch(()=>status('Vollbild nicht verfügbar.'));break;}if(video.webkitEnterFullscreen)video.webkitEnterFullscreen();else if(video.requestFullscreen)video.requestFullscreen().catch(()=>status('Vollbild nicht verfügbar.'));else status('Vollbild nicht verfügbar.');break;}}
 function input(e){if(e.target.matches('.tv-xtream-mode')){const form=e.target.closest('form'),bridge=e.target.value==='bridge';form.querySelector('[name=username]').required=!bridge;form.querySelector('[name=password]').required=!bridge;form.querySelector('[name=token]').required=bridge;form.querySelector('[name=username]').closest('label').hidden=bridge;form.querySelector('[name=password]').closest('label').hidden=bridge;form.querySelector('[name=token]').closest('label').hidden=!bridge;return;}if(e.target.matches('.tv-xtream-search')){global.meviXtream.state.query=e.target.value;paintXtream();return;}if(e.target.matches('.tv-search')){query=e.target.value;paintList();}}
 async function change(e){if(e.target.matches('.tv-xtream-mode')){const form=e.target.closest('form'),bridge=e.target.value==='bridge';for(const name of ['username','password','token']){const field=form.querySelector('[name='+name+']');if(field){field.required=name==='token'?bridge:!bridge;field.closest('label').hidden=name==='token'?!bridge:bridge;}}form.querySelector('[name=server]').placeholder=bridge?'https://meine-bridge.example':'https://anbieter.example:443';return;}if(e.target.matches('.tv-xtream-group')){global.meviXtream.state.group=e.target.value;paintXtream();return;}if(e.target.matches('.tv-country')){country=e.target.value;paintList();}if(e.target.matches('.tv-file')){const file=e.target.files?.[0],owner=root;if(!file)return;const out=root.querySelector('.tv-import-status');try{if(file.size>1000000)throw Error('Datei zu groß (max. 1 MB).');const items=parseM3U(await file.text());if(root!==owner)return;out.textContent=add(items)+' Sender importiert. Ungültige URLs und Duplikate wurden übersprungen.';}catch(err){if(root===owner)out.textContent=err.message;}e.target.value='';}}
 function submit(e){if(e.target.matches('.tv-xtream-form')){e.preventDefault();const api=global.meviXtream;if(!api)return xtStatus('Xtream-Modul nicht geladen.');const form=e.target,data=new FormData(form),pin=String(data.get('pin')||'');if(!/^[0-9]{4}$/.test(pin)){xtStatus('Vierstelligen Code eingeben.');return;}const button=form.querySelector('button[type=submit]');if(button)button.disabled=true;api.pinCredentials(pin).then(c=>api.connect(data.get('name'),c,xtStatus)).then(a=>{if(!root)return;form.querySelector('[name=pin]').value='';paintXtAccounts();paintXtream();xtStatus(a.name+' verbunden. Kataloge geladen.');}).catch(err=>xtStatus('Verbindung fehlgeschlagen: '+(err.name==='TypeError'?'Netzwerk/CORS prüfen':err.message))).finally(()=>{if(button)button.disabled=false;});return;}if(e.target.matches('.tv-source-form')){e.preventDefault();const data=new FormData(e.target),name=String(data.get('name')||'').trim().slice(0,80),url=safeURL(data.get('url'));if(!name||!url){sourceStatus('Bitte Name und gültige HTTPS-M3U-Adresse eingeben.');return;}if(sources.length>=30){sourceStatus('Maximal 30 Quellen.');return;}if(sources.some(x=>x.url===url)){sourceStatus('Quelle existiert bereits.');return;}const source={id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),name,url};syncSource(source);return;}if(!e.target.matches('.tv-form'))return;e.preventDefault();const data=new FormData(e.target),url=safeURL(data.get('url')),name=String(data.get('name')||'').trim();const out=root.querySelector('.tv-import-status');if(!url||!name){out.textContent='Name und gültige HTTPS-Adresse ohne Benutzername/Passwort eingeben.';return;}out.textContent=add([{name:name.slice(0,80),url}])?'Sender gespeichert.':'Sender bereits vorhanden oder Liste voll.';}

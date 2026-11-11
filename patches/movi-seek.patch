@@ -1,3 +1,25 @@
+diff --git a/src/core/MoviPlayer.ts b/src/core/MoviPlayer.ts
+index 2ec9589..fce0d12 100644
+--- a/src/core/MoviPlayer.ts
++++ b/src/core/MoviPlayer.ts
+@@ -13650,6 +13650,17 @@ export class MoviPlayer extends EventEmitter<PlayerEventMap> {
+     return this.mediaInfo?.duration ?? 0;
+   }
+ 
++  /** HTTP window metrics; the LRU cache is a separate buffer. */
++  getReadDiagnostics() {
++    return {
++      revision: "mevitv-mkv-size-2",
++      demuxerFileSizeBytes: this.fileSize,
++      ...(this.source instanceof HttpSource
++        ? this.source.getReadDiagnostics()
++        : {}),
++    };
++  }
++
+   /**
+    * Get LRU cache statistics
+    */
 diff --git a/src/demux/Demuxer.seek.test.ts b/src/demux/Demuxer.seek.test.ts
 new file mode 100644
 index 0000000..38b1d00
@@ -212,3 +234,317 @@ index 27e21c8..26b2e4f 100644
    }
  
    /**
+diff --git a/src/source/HttpSource.size.test.ts b/src/source/HttpSource.size.test.ts
+new file mode 100644
+index 0000000..73a8720
+--- /dev/null
++++ b/src/source/HttpSource.size.test.ts
+@@ -0,0 +1,170 @@
++import { afterEach, describe, expect, it, vi } from "vitest";
++import { createServer, type Server } from "node:http";
++import type { AddressInfo } from "node:net";
++import { HttpSource } from "./HttpSource";
++
++const MiB = 1024 * 1024;
++const filmSize = 1570800962;
++const sources: HttpSource[] = [];
++const servers: Server[] = [];
++afterEach(async () => {
++  for (const source of sources.splice(0)) source.close();
++  for (const server of servers.splice(0)) {
++    server.closeAllConnections();
++    await new Promise<void>(resolve => server.close(() => resolve()));
++  }
++  vi.unstubAllGlobals();
++});
++
++function source(url = "https://size.test/film.mkv") {
++  vi.stubGlobal("crossOriginIsolated", false);
++  const value = new HttpSource(url, {}, 50);
++  sources.push(value);
++  return value;
++}
++
++function answer(headers: Record<string, string>, status = 200) {
++  return new Response(null, { status, headers });
++}
++
++describe("HTTP size discovery", () => {
++  it.each(["0", "123bytes", "-1", "9007199254740992"])(
++    "recovers an unusable HEAD length %s with one bounded range",
++    async value => {
++      const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) =>
++        init?.method === "HEAD"
++          ? answer({ "Content-Length": value })
++          : answer({ "Content-Length": "1", "Content-Range": `bytes 0-0/${filmSize}` }, 206));
++      vi.stubGlobal("fetch", fetcher);
++      const s = source();
++      expect(await s.getSize()).toBe(filmSize);
++      expect(await s.getSize()).toBe(filmSize);
++      expect(fetcher).toHaveBeenCalledTimes(2);
++      expect(new Headers(fetcher.mock.calls[1][1]?.headers).get("Range")).toBe("bytes=0-0");
++      expect(s.getReadDiagnostics().bufferCapacityBytes).toBe(50 * MiB);
++    },
++  );
++
++  it("keeps a valid full HEAD response at one request", async () => {
++    const fetcher = vi.fn(async () => answer({ "Content-Length": String(filmSize) }));
++    vi.stubGlobal("fetch", fetcher);
++    expect(await source().getSize()).toBe(filmSize);
++    expect(fetcher).toHaveBeenCalledTimes(1);
++  });
++
++  it("uses the total, not Content-Length, for a partial HEAD response", async () => {
++    const fetcher = vi.fn(async () =>
++      answer({ "Content-Length": "1", "Content-Range": `bytes 0-0/${filmSize}` }, 206));
++    vi.stubGlobal("fetch", fetcher);
++    expect(await source().getSize()).toBe(filmSize);
++    expect(fetcher).toHaveBeenCalledTimes(1);
++  });
++
++  it("probes a partial HEAD response that has no total", async () => {
++    const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) =>
++      init?.method === "HEAD" ? answer({ "Content-Length": "1" }, 206)
++        : answer({ "Content-Length": "1", "Content-Range": `bytes 0-0/${filmSize}` }, 206));
++    vi.stubGlobal("fetch", fetcher);
++    expect(await source().getSize()).toBe(filmSize);
++    expect(fetcher).toHaveBeenCalledTimes(2);
++  });
++
++  it("uses full GET headers if a ranged response cannot name its total", async () => {
++    const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) => {
++      if (init?.method === "HEAD") return answer({ "Content-Length": "0" });
++      if (new Headers(init?.headers).has("Range")) {
++        return answer({ "Content-Length": "1", "Content-Range": "bytes 0-0/*" }, 206);
++      }
++      return answer({ "Content-Length": String(filmSize) });
++    });
++    vi.stubGlobal("fetch", fetcher);
++    const s = source();
++    expect(await s.getSize()).toBe(filmSize);
++    expect(fetcher).toHaveBeenCalledTimes(3);
++    expect(s.getReadDiagnostics().sizeSource).toBe("get");
++  });
++
++  it("cancels an ignored Range body and uses its complete length without another GET", async () => {
++    const cancel = vi.fn();
++    const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) =>
++      init?.method === "HEAD" ? answer({ "Content-Length": "0" })
++        : new Response(new ReadableStream({ cancel }), {
++          status: 200, headers: { "Content-Length": String(filmSize) },
++        }));
++    vi.stubGlobal("fetch", fetcher);
++    const s = source();
++    expect(await s.getSize()).toBe(filmSize);
++    expect(fetcher).toHaveBeenCalledTimes(2);
++    expect(cancel).toHaveBeenCalledOnce();
++    expect(s.getReadDiagnostics().sizeSource).toBe("range-ignored");
++  });
++
++  it.each(["bytes 0-10/10", "bytes 0-0/9007199254740992", "bytes 2-1/10"])(
++    "does not trust an invalid Content-Range %s or its partial length",
++    async contentRange => {
++      const cancel = vi.fn();
++      const fetcher = vi.fn(async (_url: unknown, init?: RequestInit) => {
++        if (init?.method === "HEAD") return answer({ "Content-Length": "0" });
++        if (new Headers(init?.headers).has("Range")) {
++          return new Response(new ReadableStream({ cancel }), {
++            status: 206, headers: { "Content-Length": "1", "Content-Range": contentRange },
++          });
++        }
++        return answer({ "Content-Length": String(filmSize) });
++      });
++      vi.stubGlobal("fetch", fetcher);
++      expect(await source().getSize()).toBe(filmSize);
++      expect(fetcher).toHaveBeenCalledTimes(3);
++      expect(cancel).toHaveBeenCalledOnce();
++    },
++  );
++
++  it("rejects a zero size from a custom resolver without caching it", async () => {
++    class EmptySource extends HttpSource {
++      protected async resolveSize() { return 0; }
++    }
++    const s = new EmptySource("https://size.test/empty", {}, 50);
++    sources.push(s);
++    await expect(s.getSize()).rejects.toThrow("file size");
++    expect(s.getKnownSize()).toBe(-1);
++  });
++
++  it("replaces the reported 1.8 MiB restart pattern over a real HTTP connection", async () => {
++    const ranges: Array<{ start: number; end: number }> = [];
++    const server = createServer((req, res) => {
++      if (req.method === "HEAD") {
++        res.writeHead(200, { "Content-Length": "0" });
++        res.end();
++        return;
++      }
++      const range = /^bytes=(\d+)-(\d+)$/.exec(req.headers.range || "");
++      if (!range) { res.writeHead(400); res.end(); return; }
++      const start = Number(range[1]), end = Number(range[2]);
++      ranges.push({ start, end });
++      res.writeHead(206, {
++        "Content-Length": end - start + 1,
++        "Content-Range": `bytes ${start}-${end}/${filmSize}`,
++      });
++      res.end(Buffer.alloc(end - start + 1, 0x5a));
++    });
++    servers.push(server);
++    await new Promise<void>(resolve => server.listen(0, "127.0.0.1", resolve));
++    const s = source(`http://127.0.0.1:${(server.address() as AddressInfo).port}/film.mkv`);
++    const size = await s.getSize();
++    const data = new Uint8Array(await s.read(100 * MiB, 512 * 1024));
++    const opening = ranges.find(r => r.start === 100 * MiB)!;
++    expect({
++      size,
++      openingRangeBytes: opening.end - opening.start + 1,
++      bytesRead: data.length,
++    }).toEqual({ size: filmSize, openingRangeBytes: 4 * MiB, bytesRead: 512 * 1024 });
++    expect(data[0]).toBe(0x5a);
++    expect(data[data.length - 1]).toBe(0x5a);
++    expect(s.getReadDiagnostics()).toEqual({
++      fileSizeBytes: filmSize,
++      bufferCapacityBytes: 50 * MiB,
++      headContentLength: "0",
++      sizeSource: "range",
++    });
++  });
++});
+diff --git a/src/source/HttpSource.ts b/src/source/HttpSource.ts
+index ea2304c..a62e91c 100644
+--- a/src/source/HttpSource.ts
++++ b/src/source/HttpSource.ts
+@@ -10,6 +10,24 @@ import { Logger } from "../utils/Logger";
+ 
+ const TAG = "HttpSource";
+ 
++// HEAD may describe an empty response even when the ranged resource is a film.
++// Do not cache zero, partial-body lengths or parseInt's truncated garbage as
++// the file size: that disables bounded seeking and leaves the 2 MiB window.
++function positiveFileSize(value: string | null): number | null {
++  if (value === null || !/^\d+$/.test(value.trim())) return null;
++  const size = Number(value);
++  return Number.isSafeInteger(size) && size > 0 ? size : null;
++}
++
++function contentRangeSize(value: string | null): number | null {
++  const match = /^bytes\s+(\d+)-(\d+)\/(\d+)$/i.exec(value?.trim() ?? "");
++  if (!match) return null;
++  const total = positiveFileSize(match[3]);
++  const start = Number(match[1]), end = Number(match[2]);
++  return total !== null && Number.isSafeInteger(start) &&
++    Number.isSafeInteger(end) && start <= end && end < total ? total : null;
++}
++
+ // Configuration
+ const MIN_BUFFER_SIZE = 2 * 1024 * 1024; // 2MB minimum
+ const DEFAULT_MAX_BUFFER_SIZE_MB = 250; // ~250MB cap (YouTube-like: Chrome gives ~150-300MB per tab for video)
+@@ -108,6 +126,8 @@ export class HttpSource implements SourceAdapter {
+   private url: string;
+   private headers: Record<string, string>;
+   private size: number = -1;
++  private headContentLength: string | null = null;
++  private sizeSource = "unknown";
+   private position: number = 0;
+   private _contentDispositionFilename: string | null = null;
+ 
+@@ -704,9 +724,17 @@ export class HttpSource implements SourceAdapter {
+           this.noteContentType(response.headers.get("Content-Type"));
+ 
+           const contentLength = response.headers.get("Content-Length");
+-          if (contentLength) return parseInt(contentLength, 10);
++          this.headContentLength = contentLength === null ? null :
++            /^\d{1,24}$/.test(contentLength.trim()) ? contentLength.trim() : "invalid";
++          const headTotal = contentRangeSize(response.headers.get("Content-Range"));
++          const headSize = headTotal ?? (response.status === 200
++            ? positiveFileSize(contentLength) : null);
++          if (headSize !== null) {
++            this.sizeSource = headTotal !== null ? "head-range" : "head";
++            return headSize;
++          }
+ 
+-          // HEAD had no Content-Length — recover the total from a 1-byte ranged
++          // HEAD had no usable total — recover it from a 1-byte ranged
+           // GET's Content-Range ("bytes 0-0/<total>").
+           const sizeViaRange = await this.resolveSizeViaRange();
+           if (sizeViaRange !== null) return sizeViaRange;
+@@ -796,16 +824,16 @@ export class HttpSource implements SourceAdapter {
+     this.setFilenameFromDisposition(res.headers.get("Content-Disposition"));
+     this.noteContentType(res.headers.get("Content-Type"));
+ 
+-    const contentRange = res.headers.get("Content-Range");
+-    if (contentRange) {
+-      // "bytes 0-0/12345678" — capture the total after the slash (skip "*").
+-      const m = /\/\s*(\d+)\s*$/.exec(contentRange);
+-      if (m) return parseInt(m[1], 10);
++    const rangeSize = contentRangeSize(res.headers.get("Content-Range"));
++    if (rangeSize !== null) {
++      this.sizeSource = "range";
++      return rangeSize;
+     }
+-    // Server ignored Range and answered 200, but still reported a length.
+-    const cl = res.headers.get("Content-Length");
+-    if (res.status === 200 && cl) return parseInt(cl, 10);
+-    return null;
++    // A 206 Content-Length is only the slice length, never the file size.
++    const fullSize = res.status === 200
++      ? positiveFileSize(res.headers.get("Content-Length")) : null;
++    if (fullSize !== null) this.sizeSource = "range-ignored";
++    return fullSize;
+   }
+ 
+   /**
+@@ -827,16 +855,15 @@ export class HttpSource implements SourceAdapter {
+     }
+     res.body?.cancel().catch(() => {});
+     if (!res.ok) return null;
+-    const cl = res.headers.get("Content-Length");
+-    if (res.status === 200 && cl) return parseInt(cl, 10);
+-    // A 206 (server forced a default range) still carries the total in
+-    // Content-Range, when it's exposed.
+-    const contentRange = res.headers.get("Content-Range");
+-    if (contentRange) {
+-      const m = /\/\s*(\d+)\s*$/.exec(contentRange);
+-      if (m) return parseInt(m[1], 10);
++    const fullSize = res.status === 200
++      ? positiveFileSize(res.headers.get("Content-Length")) : null;
++    if (fullSize !== null) {
++      this.sizeSource = "get";
++      return fullSize;
+     }
+-    return null;
++    const rangeSize = contentRangeSize(res.headers.get("Content-Range"));
++    if (rangeSize !== null) this.sizeSource = "get-range";
++    return rangeSize;
+   }
+ 
+   /** Pull a download filename out of a Content-Disposition header, if present. */
+@@ -939,7 +966,11 @@ export class HttpSource implements SourceAdapter {
+     if (this.size >= 0) return this.size;
+ 
+     try {
+-      this.size = await this.resolveSize();
++      const resolvedSize = await this.resolveSize();
++      if (!Number.isSafeInteger(resolvedSize) || resolvedSize <= 0) {
++        throw new Error("No valid positive file size received");
++      }
++      this.size = resolvedSize;
+       Logger.debug(TAG, `File size: ${this.size} bytes`);
+ 
+       // Buffer sizing strategy (YouTube-like):
+@@ -2839,6 +2870,15 @@ export class HttpSource implements SourceAdapter {
+     return this.size;
+   }
+ 
++  getReadDiagnostics() {
++    return {
++      fileSizeBytes: this.size,
++      bufferCapacityBytes: this.bufferSize,
++      headContentLength: this.headContentLength,
++      sizeSource: this.sizeSource,
++    };
++  }
++
+   private static readonly DELIVERY_WINDOW_MS = 10000;
+   // Longer than this between two arrivals is the stream not running (window
+   // full, stopped, parked), not the link being slow: that stretch is left out.
