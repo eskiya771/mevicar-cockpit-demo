@@ -5,10 +5,10 @@ function vint(a,p,strip){
  if(p>=a.length)return null;
  let mask=128,n=1;while(n<=8&&!(a[p]&mask)){mask>>=1;n++;}
  if(n>8||p+n>a.length)return null;
+ const unknown=strip&&(a[p]&(~mask))===(mask-1)&&Array.from(a.subarray(p+1,p+n)).every(x=>x===255);
  let value=strip?(a[p]&(~mask)):(a[p]);for(let j=1;j<n;j++)value=value*256+a[p+j];
- if(!Number.isSafeInteger(value))return null;
- const unknown=strip&&value===2**(7*n)-1;
- return {value,n,unknown};
+ if(!Number.isSafeInteger(value)&&!unknown)return null;
+ return {value:unknown?0:value,n,unknown};
 }
 function field(a,p){
  const id=vint(a,p,false);if(!id)return null;
