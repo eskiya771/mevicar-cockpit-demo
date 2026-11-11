@@ -33,3 +33,45 @@
 .tn-compass-pointer{position:absolute;left:50%;top:0;transform:translateX(-50%);width:2px;height:100%;background:#2ef2ff;box-shadow:0 0 6px #00ddff;pointer-events:none}
 .tn-compass-pointer:before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid #2ef2ff}
 @media(max-height:450px){.tn-compass-band{height:27px;margin-top:3px}.tn-compass-mark{top:2px}}
+
+/* Full-screen Tacho Next: improve central digital legibility without enlarging dials.
+   Compact split mode deliberately retains the original proportions. */
+.cockpit .full.tacho-next-host .tn-readout{
+  min-width:clamp(125px,17vw,235px);
+  padding:clamp(12px,1.55vw,23px) clamp(14px,1.8vw,26px);
+}
+.cockpit .full.tacho-next-host .tn-number{
+  font-size:clamp(36px,6.2vw,86px);
+  line-height:1.08;
+}
+.cockpit .full.tacho-next-host .tn-rpm-number{
+  font-size:clamp(32px,4.8vw,64px);
+}
+.cockpit .full.tacho-next-host .tn-unit{
+  font-size:clamp(11px,1.25vw,17px);
+}
+.cockpit .full.tacho-next-host .tn-compass-band{
+  width:clamp(120px,13.5vw,195px);
+  height:clamp(31px,3.2vw,44px);
+  margin-top:8px;
+}
+.cockpit .full.tacho-next-host .tn-compass-mark{
+  font-size:clamp(11px,1.15vw,15px);
+  top:5px;
+}
+.cockpit .full.tacho-next-host .tn-stats{
+  min-height:clamp(50px,5.2vh,75px);
+  padding:clamp(8px,.8vw,14px) clamp(12px,1.5vw,24px);
+  align-items:center;
+}
+.cockpit .full.tacho-next-host .tn-stat-label{font-size:clamp(10px,1vw,14px)}
+.cockpit .full.tacho-next-host .tn-stat-value{font-size:clamp(17px,1.85vw,27px)}
+/* The phone landscape viewport is short: avoid readout overlap with the needle scale. */
+@media (max-height:500px){
+ .cockpit .full.tacho-next-host .tn-readout{min-width:clamp(92px,12vw,145px);padding:6px 9px}
+ .cockpit .full.tacho-next-host .tn-number{font-size:clamp(27px,4vw,49px)}
+ .cockpit .full.tacho-next-host .tn-rpm-number{font-size:clamp(25px,3.4vw,42px)}
+ .cockpit .full.tacho-next-host .tn-compass-band{width:clamp(90px,11vw,135px);height:27px;margin-top:3px}
+ .cockpit .full.tacho-next-host .tn-compass-mark{font-size:10px;top:2px}
+ .cockpit .full.tacho-next-host .tn-stats{min-height:0;padding:3px 10px}
+}
