@@ -15,6 +15,17 @@ assert(tvSource.includes("element.addEventListener('linearmode'"));
 assert(tvSource.includes("element.addEventListener('seeking'"));
 assert(tvSource.includes("element.addEventListener('seeked'"));
 assert(tvSource.includes('Spulen bis Wiedergabe'));
+assert(tvSource.includes('data-act="movi-seek-75"'));
+assert(tvSource.includes("case'movi-seek-75':moviBenchmark75();break;"));
+assert(tvSource.includes('const target=duration*0.75'));
+assert(tvSource.includes('element.currentTime=target'));
+assert(tvSource.includes('element.addEventListener(\'seeked\',onSeeked)'));
+assert(tvSource.includes('element.addEventListener(\'playing\',onPlaying)'));
+assert(tvSource.includes('75%-Benchmark START'));
+assert(tvSource.includes('75%-Benchmark: '));
+assert(tvSource.includes('innerhalb 90 s'));
+assert(tvSource.includes('moviBenchmark?.cancel?.()'));
+
 assert(tvSource.includes('monitorMoviRanges(valid)'));
 assert(tvSource.includes('moviDesktopBufferMB()'));
 assert(tvSource.includes("get('moviExperimental')==='1'"));
