@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/movi-experiment.yml'
       - 'patches/movi-seek.patch'
+      - 'patches/movi-cues-fastseek.patch'
 
 permissions:
   contents: read
@@ -30,6 +31,9 @@ jobs:
           grep -q 'AVIO_SEEKABLE_NORMAL' wasm/movi.c
           git apply --check ../patches/movi-seek.patch
           git apply ../patches/movi-seek.patch
+          git apply --check ../patches/movi-cues-fastseek.patch
+          git apply ../patches/movi-cues-fastseek.patch
+          grep -q 'Fast path for indexed Matroska' wasm/movi_streams.c
       - name: Prepare and test patched source
         run: |
           cd movi-src
