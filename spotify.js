@@ -803,6 +803,12 @@
       '<button type="button" class="sp-tool' + (st.queueOpen ? ' is-on' : '') + '" aria-pressed="' + !!st.queueOpen + '" title="Warteschlange" onclick="meviSpotifyToggleQueue()">' + icon('queue') + '<span>Warteschlange</span></button>' +
       '<button type="button" class="sp-tool' + (st.devicesOpen ? ' is-on' : '') + '" aria-pressed="' + !!st.devicesOpen + '" title="Geräte" onclick="meviSpotifyToggleDevices()">' + icon('devices') + '<span>Geräte</span></button>' +
       '<button type="button" class="sp-tool" title="Spotify öffnen" onclick="meviSpotifyOpen()">' + icon('external') + '<span>Spotify</span></button>' +
+      (Number.isFinite(player.device?.volume_percent) && player.device?.supports_volume !== false
+        ? '<label class="sp-main-volume" title="Spotify-Lautstärke">' + icon('volume') +
+          '<input type="range" min="0" max="100" step="1" value="' + clamp(player.device.volume_percent, 0, 100) +
+          '" oninput="this.nextElementSibling.textContent=this.value+\' %\'" onchange="meviSpotifyVolume(this.value)" aria-label="Spotify-Lautstärke">' +
+          '<span>' + Math.round(player.device.volume_percent) + ' %</span></label>'
+        : '') +
       '</div>' +
       ((st.devicesOpen || st.queueOpen) ? '<div class="sp-drawers">' + (st.devicesOpen ? devicesMarkup() : '') + (st.queueOpen ? queueMarkup() : '') + '</div>' : '') +
       '</div>';
