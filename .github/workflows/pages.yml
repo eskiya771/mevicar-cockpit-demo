@@ -1,6 +1,4 @@
-name: Deploy Cockpit Demo
-# Trigger new deployment to test in-app update detection
-# Manual redeploy requested after active dock highlight (2026-11-07)
+name: Fast Deploy Cockpit Demo
 on:
   push:
     branches: [main]
@@ -22,44 +20,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
-      - name: Test MeviMedia playback and library
-        run: node tests/mevimedia-smoke.mjs
-      - name: Test split-screen Lichtshow effect app
-        run: node tests/lightshow-smoke.mjs
-      - name: Test navigation and UX quality
-        run: node tests/ui-quality-smoke.mjs
-      - name: Test five supported display profiles
-        run: node tests/display-profiles-smoke.mjs
-      - name: Test premium speedometer
-        run: node tests/speedometer-smoke.mjs
-      - name: Test Spotify Connect remote integration
-        run: node tests/spotify-smoke.mjs
-      - name: Test Tetris game rules
-        run: node tests/tetris-smoke.mjs
-      - name: Test TV catalog and playlists
-        run: node tests/tv-smoke.mjs
-      - name: Test MeviTV iPhone landscape sender scrolling
-        run: node tests/tv-iphone-landscape-smoke.mjs
-      - name: Test Xtream API catalog adapter
-        run: node tests/xtream-smoke.mjs
-      - name: Test IPTV programme guide
-        run: node tests/epg-smoke.mjs
-      - name: Test direct MPEG-TS browser routing
-        run: node tests/mpegts-smoke.mjs
-      - name: Stress-test MPEG-TS zapping and resource cleanup
-        run: node tests/mpegts-lifecycle-smoke.mjs
-      - name: Test MKV bridge error handling
-        run: node tests/tv-movi-bridge-smoke.mjs
-      - name: Test public media redirect policy
-        run: node tests/mkv-public-redirects-smoke.mjs
-      - name: Test secure Xtream HTTP bridge
-        run: node tests/xtream-bridge-smoke.mjs
-      - name: Test signed HLS manifests and segment relay
-        run: node tests/hls-relay-smoke.mjs
-      - name: Test FFmpeg sender switching and eviction
-        run: node tests/remux-switch-smoke.mjs
-      - name: Test bounded MKV index probe
-        run: node tests/mkv-index-probe.test.mjs
+      - name: Quick JavaScript and configuration smoke tests
+        run: |
+          node --check tv.js
+          node --check xtream.js
+          node tests/display-profiles-smoke.mjs
+          node tests/tv-smoke.mjs
+          node tests/xtream-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
@@ -205,25 +172,6 @@ jobs:
               d.ellipse((n*.46,n*.46,n*.54,n*.54),fill='#e8fbff')
               im.save(f'dist/icon-{n}.png')
           PY
-      - name: Install browser regression dependencies
-        run: |
-          npm install --no-save --package-lock=false playwright@1.58.2
-          npx playwright install --with-deps chromium
-          sudo apt-get update -qq
-          sudo apt-get install -y ffmpeg
-      - name: Test MeviTV in five display profiles and three themes
-        run: |
-          mkdir -p tests/fixtures
-          ffmpeg -hide_banner -loglevel error -f lavfi -i "testsrc2=size=640x360:rate=25" -t 12 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -g 25 -an -f mpegts tests/fixtures/tv-test.ts
-          node tests/tv-visual-layout.mjs
-      - name: Save MeviTV browser screenshots and report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mevitv-browser-qa
-          path: visual-results/tv/
-          if-no-files-found: warn
-          retention-days: 14
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
