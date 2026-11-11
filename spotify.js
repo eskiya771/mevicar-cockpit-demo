@@ -739,15 +739,21 @@
     if (!connected) content = onboardingMarkup();
     else if (st.accountOpen) content = accountMarkup();
     else content = '<div class="sp-body">' +
-      '<section class="sp-pane sp-now-pane" aria-label="Aktuelle Wiedergabe"><div id="sp-now-region">' + nowMarkup() + '</div></section>' +
+      '<div class="sp-library-column" aria-label="Spotify-Bibliothek">' +
+      '<div class="sp-library-tabs">' + tabsMarkup() + '</div>' +
       '<section class="sp-pane sp-browse-pane" aria-label="Spotify durchsuchen"><div id="sp-browse-region">' + browseMarkup() + '</div></section>' +
       '<section class="sp-pane sp-search-pane" aria-label="Spotify suchen"><div id="sp-search-region">' + searchMarkup() + '</div></section>' +
+      '</div>' +
+      '<section class="sp-pane sp-now-pane" aria-label="Aktuelle Wiedergabe"><div id="sp-now-region">' + nowMarkup() + '</div></section>' +
       '</div>';
-    return '<section class="sp-shell' + (compact ? ' is-compact' : '') + '" data-tab="' + st.tab + '" data-state="' + (connected ? (st.accountOpen ? 'account' : 'ready') : 'setup') + '" aria-label="Spotify Player in MeviCar">' +
-      topMarkup() + (connected && !st.accountOpen ? bannerMarkup() + webPlayerMarkup() + tabsMarkup() : '') + content + '</section>';
+    return '<section class="sp-shell' + (compact ? ' is-compact' : '') +
+      '" data-tab="' + st.tab + '" data-state="' + (connected ? (st.accountOpen ? 'account' : 'ready') : 'setup') +
+      '" aria-label="Spotify direkt in MeviCar">' +
+      topMarkup() + (connected && !st.accountOpen ? bannerMarkup() : '') + content + '</section>';
   }
 
   function nowMarkup() {
+    if (!st.webDeviceId) return noDeviceMarkup();
     if (!st.playerLoaded && !st.player && !st.error) {
       return '<div class="sp-empty"><span class="sp-spinner" aria-hidden="true"></span><strong>Wiedergabestatus wird geladen</strong><p>MeviCar Player wird abgefragt.</p><button type="button" onclick="meviSpotifyRefresh()">' + icon('refresh') + 'Aktualisieren</button></div>';
     }
@@ -917,6 +923,8 @@
     if (!['now', 'browse', 'search'].includes(tab)) return;
     if (tab !== 'search' && st.voiceListening) stopVoice();
     st.tab = tab;
+    const shell = document.querySelector('.sp-shell');
+    if (shell) shell.dataset.tab = tab;
     paintTabs();
     if (tab === 'browse') {
       const cache = st.browseData[st.browse];
