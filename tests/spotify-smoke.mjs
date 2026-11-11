@@ -127,7 +127,7 @@ function createEnv({connected=false,fetchImpl,shell=null,speechCtor=null}={}){
 /* Setup state without a token. */
 const setup=createEnv();
 let markup=setup.win.meviSpotifyHTML(false);
-assert.match(markup,/Spotify im Cockpit steuern/);
+assert.match(markup,/Spotify direkt im Cockpit hören/);
 assert.match(markup,/Redirect-URI/);
 assert.ok(markup.includes('https://example.test/mevicar/'),'Redirect URI must be the exact PWA path');
 assert.match(markup,/Client ID/);
@@ -150,7 +150,7 @@ assert.match(markup,/is-compact/);
 const connected=createEnv({connected:true,shell:{}});
 markup=connected.win.meviSpotifyHTML(false);
 assert.match(markup,/data-state="ready"/);
-assert.match(markup,/SPOTIFY REMOTE|SPOTIFY <em>REMOTE<\/em>/);
+assert.match(markup,/SPOTIFY <em>PREMIUM<\/em>/);
 assert.match(markup,/id="sp-now-region"/);
 assert.match(markup,/id="sp-browse-region"/);
 assert.match(markup,/id="sp-search-region"/);
