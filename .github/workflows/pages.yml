@@ -5,9 +5,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  workflow_run:
-    workflows: ['Experimental Movi MKV WASM from source']
-    types: [completed]
 permissions:
   contents: read
   actions: read
@@ -18,7 +15,6 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
-    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository)
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -179,20 +175,16 @@ jobs:
       - name: Generate PWA icons and copy assets
         run: |
           mkdir -p dist/vendor
-          # Apache-2.0 Movi Player: pinned npm package, served from our own Pages
-          # origin. This avoids dynamic CDN requests and cross-origin WASM issues.
-          MOVI_VERSION=$(npm view movi-player version)
-          node -e 'const v=process.argv[1].split(".").map(Number); if (!((v[0]>0)||(v[0]===0&&(v[1]>4||(v[1]===4&&v[2]>=1))))) process.exit(1)' "$MOVI_VERSION"
-          npm pack "movi-player@$MOVI_VERSION" --pack-destination /tmp --silent
-          mkdir -p /tmp/mevi-movi
-          tar -xzf "/tmp/movi-player-$MOVI_VERSION.tgz" -C /tmp/mevi-movi
-          test -s /tmp/mevi-movi/package/dist/element.slim.global.js
-          test -s /tmp/mevi-movi/package/dist/movi.wasm
-          cp /tmp/mevi-movi/package/dist/element.slim.global.js dist/vendor/movi-player-0.4.1.slim.global.js
-          cp /tmp/mevi-movi/package/dist/movi.wasm dist/vendor/movi.wasm
-          node -e 'const fs=require("fs"),crypto=require("crypto"),p="dist/vendor/movi.wasm"; fs.writeFileSync("dist/vendor/movi-build.json",JSON.stringify({version:process.argv[1],wasm_sha256:crypto.createHash("sha256").update(fs.readFileSync(p)).digest("hex"),bundle:"element.slim.global.js",build_sha:process.env.BUILD_SHA||"unknown"},null,2))' "$MOVI_VERSION"
-          # GitHub Pages serves .wasm as application/wasm; verify HTTP MIME in browser QA.
-          if test -f /tmp/mevi-movi/package/LICENSE; then cp /tmp/mevi-movi/package/LICENSE dist/vendor/movi-player-LICENSE.txt; fi
+          # Ship the exact JS/WASM pair accepted in the real MKV seek test.
+          node tests/movi-official-smoke.mjs
+          cp -R vendor/movi-mevitv-mkv-size-2 dist/vendor/
+          cp vendor/movi-mevitv-mkv-size-2/movi-build.json dist/vendor/movi-build.json
+          cp vendor/movi-mevitv-mkv-size-2/LICENSE.txt dist/vendor/movi-player-LICENSE.txt
+          # Compatibility URLs for tabs opened before the official promotion.
+          cp vendor/movi-mevitv-mkv-size-2/element.slim.global.js dist/vendor/movi-player-0.4.1.slim.global.js
+          cp vendor/movi-mevitv-mkv-size-2/movi.wasm dist/vendor/movi.wasm
+          mkdir -p dist/vendor/experimental
+          cp vendor/movi-mevitv-mkv-size-2/element.slim.global.js vendor/movi-mevitv-mkv-size-2/movi.wasm dist/vendor/experimental/
           # Download the pinned browser bundle directly; the npm package
           # installation does not reliably expose this artifact at the expected path.
           curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/mpegts.js@1.8.2/dist/mpegts.min.js -o dist/vendor/mpegts-1.8.2.min.js
@@ -232,21 +224,6 @@ jobs:
           path: visual-results/tv/
           if-no-files-found: warn
           retention-days: 14
-      - name: Include optional source-built Movi experiment
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Experimental files are never selected unless ?moviExperimental=1.
-          # Keep the stable npm/WASM bundle untouched.
-          RUN_ID=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/movi-experiment.yml/runs?status=success&branch=main&per_page=1" --jq '.workflow_runs[0].id // empty' || true)
-          if [ -n "$RUN_ID" ]; then
-            mkdir -p dist/vendor/experimental
-            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name movi-mkv-experimental-source-build --dir dist/vendor/experimental
-            test -s dist/vendor/experimental/movi.wasm
-            test -s dist/vendor/experimental/element.slim.global.js
-          else
-            echo "No successful experimental Movi build yet; stable player remains active."
-          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

@@ -238,20 +238,17 @@ function moviReport(message,level='info',key=''){
  const box=root?.querySelector('.tv-movi-log');if(box)box.textContent=moviLogText();
  if(level==='error')console.error('[MeviTV MKV]',safe);else console.info('[MeviTV MKV]',safe);
 }
-function moviExperimentalRequested(){
- return new URLSearchParams(location.search).get('moviExperimental')==='1';
-}
 function moviAssetBase(){
- return moviExperimentalRequested()?'./vendor/experimental/':'./vendor/';
+ return './vendor/movi-mevitv-mkv-size-2/';
 }
 function loadMoviPlayer(){
  if(customElements.get('movi-player'))return Promise.resolve();
  if(!moviPromise)moviPromise=new Promise((resolve,reject)=>{
   const script=document.createElement('script');
-  script.src=moviExperimentalRequested()?'./vendor/experimental/element.slim.global.js':'./vendor/movi-player-0.4.1.slim.global.js';
+  script.src=moviAssetBase()+'element.slim.global.js';
   script.async=true;
   script.onload=()=>customElements.whenDefined('movi-player').then(resolve,reject);
-  script.onerror=()=>reject(Error('Movi-'+(moviExperimentalRequested()?'Experimental-':'')+'Player konnte nicht geladen werden; entferne ?moviExperimental=1 für die stabile Version'));
+  script.onerror=()=>reject(Error('MeviCar-Player konnte nicht geladen werden. Bitte die App neu laden.'));
   document.head.appendChild(script);
  }).catch(e=>{moviPromise=null;throw e;});
  return moviPromise;
@@ -381,7 +378,7 @@ function moviBenchmark75(){
   if(finished)return;
   finished=true;
   const elapsed=Math.round(performance.now()-started);
-  if(valid())moviReport('75%-Benchmark: '+outcome+' · '+elapsed+' ms · Seek-Ereignisse '+seekCount+' · Ziel '+target.toFixed(1)+' s · Position '+(Number(element.currentTime)||0).toFixed(1)+' s · '+detail+(moviExperimentalRequested()?' · EXPERIMENTELL':' · STABIL'));
+  if(valid())moviReport('75%-Benchmark: '+outcome+' · '+elapsed+' ms · Seek-Ereignisse '+seekCount+' · Ziel '+target.toFixed(1)+' s · Position '+(Number(element.currentTime)||0).toFixed(1)+' s · '+detail+' · MEVICAR NEXT');
   cleanupTest();
  };
  const onSeeking=()=>{if(!valid())return;seeked=false;seekCount++;moviReport('75%-Benchmark: seeking #'+seekCount+' nach '+Math.round(performance.now()-started)+' ms');};
@@ -404,7 +401,7 @@ function moviBenchmark75(){
  element.addEventListener('playing',onPlaying);
  element.addEventListener('error',onError);
  timer=setTimeout(()=>{if(valid())done('Timeout','kein erfolgreicher Seek mit playing innerhalb 90 s');else test.cancel();},90000);
- moviReport('75%-Benchmark START · '+startedAt+' · '+(moviExperimentalRequested()?'EXPERIMENTELL':'STABIL')+' · Dauer '+duration.toFixed(1)+' s · Ziel '+target.toFixed(1)+' s · Ausgang '+(Number(element.currentTime)||0).toFixed(1)+' s');
+ moviReport('75%-Benchmark START · '+startedAt+' · MEVICAR NEXT · Dauer '+duration.toFixed(1)+' s · Ziel '+target.toFixed(1)+' s · Ausgang '+(Number(element.currentTime)||0).toFixed(1)+' s');
  try{
   // Begin measuring before assigning currentTime. The user's normal play state is retained.
   element.currentTime=target;
@@ -548,7 +545,7 @@ async function playMoviVod(url,name,stillCurrent){
   element.addEventListener('errordisplay',e=>{if(valid()){const d=e.detail||{};moviReport('Decoder/Codec: '+String(d.title||'Fehler')+' · '+String(d.message||''),'error');}});
   const stage=root.querySelector('.tv-stage');
   stage.appendChild(element);moviElement=element;video.hidden=true;
-  moviReport('Engine: '+String(element.build||'slim')+' · WASM separat geladen'+(moviExperimentalRequested()?' · QUELLCODE-TESTBUILD':' · STABIL'),'info','engine');
+  moviReport('Engine: '+String(element.build||'slim')+' · WASM separat geladen · MEVICAR NEXT','info','engine');
   monitorMoviRanges(valid);
   element.src=url;
   const started=element.play?.();

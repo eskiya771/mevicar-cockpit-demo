@@ -1,5 +1,10 @@
 # Öffentliche Medienserver-Weiterleitungen
 
+## Offizieller Stand
+
+Der bestätigte Player ist jetzt die reguläre Auswahl für MeviCar Next; ein Testparameter ist nicht mehr nötig. Versionsfeste Dateien und Abnahme: [QA_MKV_OFFICIAL.md](QA_MKV_OFFICIAL.md). Die nachfolgenden Abschnitte dokumentieren die vorherige Diagnose und Testphase.
+
+
 ## Problem und Änderung
 
 Ein MKV-Film scheiterte mit `Content-Length missing`. Die App hatte jedoch

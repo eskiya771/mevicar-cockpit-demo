@@ -1,5 +1,10 @@
 # MKV-Seek: HTTP-Dateigröße und Suchphase
 
+## Offizieller Stand
+
+Der bestätigte Player ist jetzt die reguläre Auswahl für MeviCar Next; ein Testparameter ist nicht mehr nötig. Versionsfeste Dateien und Abnahme: [QA_MKV_OFFICIAL.md](QA_MKV_OFFICIAL.md). Die nachfolgenden Abschnitte dokumentieren die vorherige Diagnose und Testphase.
+
+
 Stand: 11. November 2026. Gepinnter Movi-Upstream:
 `8bd0b50d7cdfcef635e015ea93e365876088969d`.
 
