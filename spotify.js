@@ -21,7 +21,6 @@
     client: 'mevicar-spotify-client-v1',
     token: 'mevicar-spotify-token-v1',
     history: 'mevicar-spotify-history-v1',
-    device: 'mevicar-spotify-device-v1',
     auth: 'mevicar-spotify-auth-v1'
   };
   const KINDS = new Set(['track', 'album', 'playlist', 'artist', 'show', 'episode']);
@@ -110,14 +109,6 @@
     try { return String(localStorage.getItem(KEYS.client) || '').trim(); } catch { return ''; }
   }
   function validClientId(value) { return /^[A-Za-z0-9]{8,64}$/.test(value); }
-  function readDeviceId() {
-    try { return String(localStorage.getItem(KEYS.device) || '').trim(); } catch { return ''; }
-  }
-  function rememberDevice(id) {
-    const value = String(id || '').trim();
-    if (!value) return;
-    try { localStorage.setItem(KEYS.device, value); } catch { /* storage can be blocked */ }
-  }
   function readToken() {
     const token = readJson(localStorage, KEYS.token, null);
     if (!token || typeof token.access_token !== 'string' || !token.access_token) return null;
@@ -251,10 +242,6 @@
     playerLoaded: false,
     playerAt: 0,
     progressBase: 0,
-    devices: [],
-    devicesOpen: false,
-    devicesLoading: false,
-    devicesError: '',
     pendingPlay: null,
     queue: null,
     queueOpen: false,
@@ -568,8 +555,6 @@
     if (error.code === 'no-device') {
       st.player = null;
       st.playerLoaded = true;
-      st.devicesOpen = true;
-      loadDevices().catch(() => {});
     }
     if (fromPoll) {
       paintBanner();
@@ -608,13 +593,14 @@
       rerender();
       return;
     }
-    if (!window.isSecureContext) {
+    if (window.isSecureContext === false) {
       webPlayerStatus('Nicht verfügbar','Der MeviCar Player benötigt HTTPS.');
       return;
     }
     if (st.webPlayer && st.webDeviceId) {
       st.webPlayer.activateElement();
-      await transferToWebPlayer();
+      if (st.pendingPlay) await transferToWebPlayer();
+      else webPlayerStatus('Bereit');
       return;
     }
     webPlayerStatus('Verbinde …');
@@ -659,7 +645,6 @@
       const id = st.webDeviceId;
       const pending = pendingPlayback();
       await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[id],play:!!pending})});
-      rememberDevice(id);
       if (pending) {
         await api('/me/player/play?device_id=' + encodeURIComponent(id),
           {method:'PUT',body:JSON.stringify(pending.body)});
@@ -819,19 +804,6 @@
     return '<div class="sp-empty">' + icon('spotify') +
       '<strong>Spotify direkt in MeviCar</strong><p>Starte den MeviCar Player und wähle einen Titel oder eine Playlist aus.</p>' +
       '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + 'MeviCar Player starten</button></div></div>';
-  }
-  function devicesMarkup() {
-    const active = st.devices.find(d => d?.is_active);
-    return '<div class="sp-drawer"><div class="sp-drawer-head"><strong>Spotify-Geräte</strong><button type="button" class="sp-icon-button" aria-label="Geräte aktualisieren" title="Aktualisieren" onclick="meviSpotifyLoadDevices()">' + icon('refresh') + '</button></div>' +
-      (st.devicesLoading && !st.devices.length ? '<p class="sp-drawer-note">Geräte werden gesucht …</p>' : '') +
-      (st.devicesError ? '<p class="sp-drawer-note is-error">' + esc(st.devicesError) + '</p>' : '') +
-      (st.devices.length ? st.devices.map(device => {
-        const type = { Computer: 'Computer', Smartphone: 'Smartphone', Speaker: 'Lautsprecher', TV: 'TV', Automobile: 'Auto' }[device.type] || device.type || 'Gerät';
-        return '<div class="sp-device' + (device.is_active ? ' is-active' : '') + '"><span class="sp-device-icon">' + icon(device.type === 'Computer' ? 'disc' : 'devices') + '</span><span class="sp-device-text"><strong>' + esc(device.name || 'Spotify-Gerät') + '</strong><small>' + esc(type) + (Number.isFinite(device.volume_percent) ? ' · ' + device.volume_percent + ' %' : '') + '</small></span>' +
-          (device.is_active ? '<span class="sp-pill">Aktiv</span>' : '<button type="button" class="sp-device-action" onclick="meviSpotifyTransfer(\'' + safeArg(device.id) + '\')">Hierher</button>') + '</div>';
-      }).join('') : (st.devicesLoading ? '' : '<p class="sp-drawer-note">Keine Geräte gefunden. Öffne Spotify und starte einen Titel.</p>')) +
-      (active && Number.isFinite(active.volume_percent) ? '<label class="sp-volume">' + icon('volume') + '<span class="visually-hidden">Lautstärke</span><input type="range" min="0" max="100" value="' + active.volume_percent + '" onchange="meviSpotifyVolume(this.value)" aria-label="Spotify-Lautstärke"><span>' + active.volume_percent + ' %</span></label>' : '') +
-      '</div>';
   }
   function queueMarkup() {
     const current = st.queue?.currently_playing;
@@ -1332,65 +1304,11 @@
     if (st.queueOpen) loadQueue();
     else paintNow();
   }
-  async function fetchDevices() {
-    const data = await api('/me/player/devices');
-    st.devices = Array.isArray(data?.devices) ? data.devices : [];
-    return st.devices;
-  }
-  async function loadDevices() {
-    if (!st.token) return st.devices;
-    st.devicesOpen = true;
-    st.devicesLoading = true;
-    st.devicesError = '';
-    paintNow();
-    try {
-      await fetchDevices();
-    } catch (error) { st.devicesError = errorText(error); }
-    finally { st.devicesLoading = false; paintNow(); }
-    return st.devices;
-  }
-  function toggleDevices() {
-    st.devicesOpen = !st.devicesOpen;
-    if (st.devicesOpen) loadDevices();
-    else paintNow();
-  }
-  // Spotify only marks a device active while it plays. Prefer the last device the
-  // cockpit used, then an already active one, then a single available device.
-  // With several idle devices the user must pick one explicitly.
-  function pickDevice(devices) {
-    const remembered = readDeviceId();
-    return devices.find(device => device?.id && device.id === remembered)
-      || devices.find(device => device?.is_active)
-      || (devices.length === 1 ? devices[0] : null);
-  }
-  async function playbackDevice() {
-    return { id: st.webDeviceId || '', devices: [] };
-  }
   function pendingPlayback() {
     const pending = st.pendingPlay;
     if (!pending) return null;
     if (Date.now() - pending.at > 120000) { st.pendingPlay = null; return null; }
     return pending;
-  }
-  async function transferDevice(encoded) {
-    const id = decodeArg(encoded);
-    const pending = pendingPlayback();
-    try {
-      await api('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [id], play: pending ? true : (st.player ? !!st.player.is_playing : true) }) });
-      rememberDevice(id);
-      st.devicesOpen = false;
-      if (pending) {
-        st.pendingPlay = null;
-        await api('/me/player/play?device_id=' + encodeURIComponent(id), { method: 'PUT', body: JSON.stringify(pending.body) });
-        setNotice('Wiedergabe: ' + pending.title);
-      } else {
-        setNotice('Wiedergabe auf das Gerät umgestellt.');
-      }
-      await sleep(350);
-      await poll(true);
-      if (!st.player) { await sleep(600); await poll(true); }
-      rerender();
-    } catch (error) { handleApiError(error); }
   }
   async function setVolume(value) {
     if (!st.webDeviceId) return;
@@ -1450,7 +1368,6 @@
     try {
       const data = await api('/me/player');
       st.player = data || null;
-      if (data?.device?.id) rememberDevice(data.device.id);
       st.playerLoaded = true;
       st.playerAt = Date.now();
       st.progressBase = Number(data?.progress_ms) || 0;
@@ -1478,10 +1395,8 @@
       if (error.code === 'no-device' || error.code === 'not-found') {
         st.player = null;
         st.playerLoaded = true;
-        st.devicesOpen = true;
         st.liked = null;
         st.likedUri = '';
-        loadDevices().catch(() => {});
       }
       handleApiError(error, true);
       paintNow();
@@ -1537,9 +1452,6 @@
     st.player = null;
     st.playerLoaded = false;
     st.profile = null;
-    st.devices = [];
-    st.devicesOpen = false;
-    st.devicesLoading = false;
     st.queue = null;
     st.queueOpen = false;
     st.liked = null;
@@ -1659,7 +1571,6 @@
         device: st.player.device?.name || '',
         progress: Number(st.player.progress_ms) || 0
       } : null,
-      devices: st.devices.length,
       pendingPlay: !!st.pendingPlay,
       queue: Array.isArray(st.queue?.queue) ? st.queue.queue.length : 0,
       liked: st.liked,
@@ -1675,7 +1586,6 @@
   Object.assign(window, {
     meviSpotifyHTML: html,
     meviSpotifyWebPlayer: startWebPlayer,
-    meviSpotifyTransferWeb: transferToWebPlayer,
     meviSpotifyMount: mount,
     meviSpotifyUnmount: unmount,
     meviSpotifyConnect: showDialog => connect(showDialog === true),
@@ -1705,9 +1615,6 @@
     meviSpotifyLike: likeCurrent,
     meviSpotifyToggleQueue: toggleQueue,
     meviSpotifyLoadQueue: loadQueue,
-    meviSpotifyToggleDevices: toggleDevices,
-    meviSpotifyLoadDevices: loadDevices,
-    meviSpotifyTransfer: transferDevice,
     meviSpotifyVolume: setVolume,
     meviSpotifyPlayLink: playLink,
     meviSpotifyOpen: openSpotify,
