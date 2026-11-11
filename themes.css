@@ -602,3 +602,22 @@ html .cockpit .dock button:not(.active){
   transform:translateY(-3px) scale(.84);
   transform-origin:center center;
 }
+
+/* Larger launcher captions while retaining a dedicated text row. */
+@media (min-width:760px) and (min-height:530px){
+ .app-home-surface .app-home-label{
+   font-size:clamp(16px,2.25vh,22px);
+   line-height:1.25;
+   font-weight:700;
+ }
+ .app-home-surface .app-home-tile{
+   grid-template-rows:minmax(0,1fr) minmax(30px,auto);
+ }
+ .app-home-side .app-home-label{
+   font-size:clamp(11px,1.65vh,15px);
+   line-height:1.2;
+ }
+}
+@media (orientation:landscape) and (max-height:529px){
+ .app-home-surface .app-home-label{font-size:clamp(11px,2.7vh,15px)}
+}
