@@ -135,7 +135,7 @@ try{
    // Simulated asymmetric safe areas for both iPhone landscape directions.
    // This checks CSS only, not physical iOS/Safari behavior.
    if(profile.name==='iPhone 17'){
-    await page.getByRole('button',{name:'■ Stopp',exact:true}).click();
+    await page.evaluate(()=>window.meviTVStopForSource?.('layout-test'));
     for(const side of ['left','right']){
      const css=await page.locator('style').allTextContents();
      const values={left:side==='left'?62:0,right:side==='right'?62:0,top:0,bottom:21};
@@ -147,7 +147,7 @@ try{
      await page.screenshot({path:`${output}/${prefix}-safe-${side}.png`});
      await override.evaluate(e=>e.remove());
     }
-   }else await page.getByRole('button',{name:'■ Stopp',exact:true}).click();
+   }else await page.evaluate(()=>window.meviTVStopForSource?.('layout-test'));
    await page.getByRole('button',{name:'Filme',exact:true}).click();
    assert.equal(await page.locator('.tv-xtream-list').innerText(),'Keine Einträge gefunden.');
    await page.getByRole('button',{name:'Live',exact:true}).click();
