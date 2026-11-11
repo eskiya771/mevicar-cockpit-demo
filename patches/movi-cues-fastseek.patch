@@ -1,7 +1,7 @@
 diff --git a/wasm/movi_streams.c b/wasm/movi_streams.c
 --- a/wasm/movi_streams.c
 +++ b/wasm/movi_streams.c
-@@ -851,7 +851,27 @@ int movi_seek_to(MoviContext *ctx, double timestamp, int stream_index,
+@@ -851,5 +851,26 @@ int movi_seek_to(MoviContext *ctx, double timestamp, int stream_index,
    // follows then starts the decoder on a keyframe instead of a GOP of packets
    // it has to throw away.
    int ret = -1;
