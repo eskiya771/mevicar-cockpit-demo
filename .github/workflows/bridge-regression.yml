@@ -1,0 +1,34 @@
+name: MeviTV bridge regression
+on:
+  pull_request:
+    paths:
+      - 'bridge/**'
+      - 'tv.js'
+      - 'tests/*bridge*'
+      - 'tests/mkv-public-redirects-smoke.mjs'
+      - '.github/workflows/bridge-regression.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        node: ['22', '24.22.2']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Test public media redirects and DNS pinning
+        run: node tests/mkv-public-redirects-smoke.mjs
+      - name: Test existing bridge allowlist mode
+        run: node tests/xtream-bridge-smoke.mjs
+      - name: Test MKV HTTP failure handling
+        run: node tests/tv-movi-bridge-smoke.mjs
+      - name: Test MeviTV diagnostics and playback
+        run: |
+          node tests/tv-movi-diagnostics-smoke.mjs
+          node tests/tv-smoke.mjs

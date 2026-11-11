@@ -188,3 +188,24 @@ sudo docker compose up -d --build
 Ein Pages-Deploy aktualisiert den NAS-Container **nicht**. Ein alter Container antwortet auf `get_simple_data_table` mit HTTP 400; MeviTV zeigt dann bei leerer Kurzabfrage einen konkreten Hinweis zum Proxy-Update. Im EPG-Dialog gibt es eine aufklappbare Diagnose mit Status, Datenanzahl und Format, ohne Zugangsdaten oder rohe Providerantwort.
 
 Auch damit bleibt die EPG-Verfügbarkeit vom Anbieter und der Zuordnung des gewählten Streams abhängig. Andere Player können stattdessen XMLTV nutzen; dessen Abruf/Zuordnung ist hier noch nicht implementiert. Implementierungsreferenz: [Xtream-kompatible EPG-Abfragen](https://xui.live/docs/api/xtream/).
+
+## Automatische öffentliche Filmserver ab Proxy Build 8
+
+Anbieter können verschiedene Filme auf unterschiedliche CDN-Server
+weiterleiten. Ab **1.0.7 / Build 8** werden öffentliche Weiterleitungsziele
+automatisch geprüft und zugelassen; neue öffentliche IPs müssen nicht pro
+Film ergänzt werden. Interne und reservierte Ziele werden abgelehnt, und
+die Verbindung bleibt an die geprüfte DNS-Auflösung gebunden.
+
+Nach dem Pages-Deployment in MeviTV **Proxy → Status prüfen → Proxy
+aktualisieren** auf Build 8 wählen. Ein neues Dockerimage ist dafür nicht
+nötig. Bestehende Installationen ohne zusätzliche Moduseinstellung verwenden
+automatisch den öffentlichen Modus.
+
+Für eine bewusst eingeschränkte Liste bleibt
+`MEVITV_VOD_REDIRECT_MODE=allowlist` mit
+`MEVITV_VOD_REDIRECT_HOSTS=cdn.example,another-cdn.example` verfügbar.
+Umgebungsänderungen mit Compose durch Neuerstellen des Containers
+übernehmen; ein einfacher Neustart übernimmt keine geänderte `.env`.
+
+Details, Tests und Abnahme: [QA_MKV_REDIRECTS.md](../docs/QA_MKV_REDIRECTS.md).
