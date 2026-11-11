@@ -115,7 +115,7 @@ assert.match(js,/MeviGoogleNav\.startGuidance\(\)/);
 assert.match(html,/navigation-google\.js/);
 assert.match(html,/navigation-google\.css/);
 assert.match(readFileSync(new URL('../navigation-google.js',import.meta.url),'utf8'),/AutocompleteSuggestion\.fetchAutocompleteSuggestions/);
-assert.match(readFileSync(new URL('../navigation-google.js',import.meta.url),'utf8'),/DirectionsService/);
+assert.match(readFileSync(new URL('../navigation-google.js',import.meta.url),'utf8'),/Route\.computeRoutes/);
 get('backToBrowse()');
 assert.equal(get('s.nav'),'browse');
 console.log('UI smoke OK: 3 themes, fullscreen toggles, CarPlay-like search overlay, Google Maps/Places route adapter linked.');
