@@ -136,4 +136,6 @@ function stopGuidance(){if(geoWatch!==null){navigator.geolocation.clearWatch(geo
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.myLocation()" aria-label="Meinen Standort anzeigen" title="Meinen Standort anzeigen">◎</button>'}
 function routeInfo(){return routeSummary}
 window.MeviGoogleNav={mount,mapBackdrop,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,setKey,removeKey,hasKey:()=>!!key(),calculateRoute,startGuidance,stopGuidance,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+// Repaint after this defer-like script loads; the inline cockpit rendered before it.
+if (typeof window.render === 'function') window.render();
 })();
