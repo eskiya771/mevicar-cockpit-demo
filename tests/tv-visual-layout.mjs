@@ -75,6 +75,14 @@ try{
    await page.goto(base,{waitUntil:'load'});
    await page.getByRole('button',{name:'Apps öffnen',exact:true}).click();
    const dockBefore=await page.locator('#dock').boundingBox();
+   // Every app, including Settings, must have a distinct icon and caption row.
+   for(const tile of await page.locator('.app-home-surface .app-home-tile').all()){
+    await tile.scrollIntoViewIfNeeded();
+    const icon=await tile.locator('.app-home-icon').boundingBox();
+    const label=await tile.locator('.app-home-label').boundingBox();
+    assert(icon&&label&&label.y>=icon.y+icon.height+1,
+      'launcher caption must sit below illustration: '+await tile.getAttribute('aria-label'));
+   }
    await page.getByRole('button',{name:'TV öffnen',exact:true}).click();
    await page.locator('.tv-root').waitFor();
    assert.deepEqual(await page.locator('#dock').boundingBox(),dockBefore,'TV must preserve shared dock geometry');
