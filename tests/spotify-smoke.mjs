@@ -10,6 +10,7 @@ const css=readFileSync(new URL('../spotify.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 const workflow=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');
+const qualityWorkflow=readFileSync(new URL('../.github/workflows/quality.yml',import.meta.url),'utf8');
 const media=readFileSync(new URL('../mevimedia.js',import.meta.url),'utf8');
 new Function(source);
 new Function(media);
@@ -76,7 +77,7 @@ assert.doesNotMatch(media,/meviAudioDemoHTML|demoCatalog|demoState/,'MeviMedia m
 /* --- Shell: it must be the only Spotify implementation --- */
 assert.match(sw,/spotify\.css/);
 assert.match(sw,/spotify\.js/);
-assert.match(workflow,/spotify-smoke\.mjs/);
+assert.match(qualityWorkflow,/spotify-smoke\.mjs/);
 assert.match(workflow,/spotify\.css/);
 assert.match(workflow,/spotify\.js/);
 
