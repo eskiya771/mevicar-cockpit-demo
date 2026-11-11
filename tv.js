@@ -309,8 +309,8 @@ function moviDesktopBufferMB(){
  // 100 MB desktop experiment showed no reliable seek benefit; use 50 MB on all platforms.
  return 50;
 }
-function moviBeginSeekTrace(){
- moviSeekTrace={start:Date.now(),end:null,requests:new Map()};
+function moviBeginSeekTrace(targetSeconds){
+ moviSeekTrace={start:Date.now(),end:null,targetSeconds:Number.isFinite(targetSeconds)?targetSeconds:null,requests:new Map()};
  moviSeekHistory.push(moviSeekTrace);
  if(moviSeekHistory.length>8)moviSeekHistory.shift();
 }
@@ -336,6 +336,7 @@ function moviFinishSeekTrace(){
    coveredEnd=Math.max(coveredEnd,range.end);
   }
   moviReport('Seek-Netzwerk: '+rows.length+' Ranges ('+completed.length+' vollständig) · '+(bytes/1048576).toFixed(1)+' MiB · Überlappung '+(overlap/1048576).toFixed(1)+' MiB · max. Header '+(maxHeader??'?')+' ms');
+  if(ranges.length)moviReport('Seek-Dateibereiche: '+(ranges[0].start/1048576).toFixed(1)+'–'+(coveredEnd/1048576).toFixed(1)+' MiB · Ziel '+(trace.targetSeconds===null?'unbekannt':Math.round(trace.targetSeconds)+' s')+' (nur Proxy-Ranges, keine bestätigte Demuxer-Landeposition)');
   moviSeekHistory=moviSeekHistory.filter(x=>x!==trace);
  },3200);
  moviSeekSummaryTimers.push(timer);
@@ -404,8 +405,8 @@ async function playMoviVod(url,name,stillCurrent){
   let seekStartedAt=null,seekReadyAt=null,seekWatchdog=null,lastSeekState='';
   const onSeekState=state=>{
    if(state==='seeking'&&seekStartedAt===null){
-    seekStartedAt=performance.now();seekReadyAt=null;moviBeginSeekTrace();
-    moviReport('Spulen gestartet · Player sucht Schlüsselbild und Dateibereich');
+    seekStartedAt=performance.now();seekReadyAt=null;moviBeginSeekTrace(Number(element.currentTime));
+    moviReport('Spulen gestartet · Ziel '+(Number.isFinite(Number(element.currentTime))?Math.round(Number(element.currentTime))+' s':'unbekannt')+' · Player sucht Schlüsselbild und Dateibereich');
     seekWatchdog=moviSeekTimer=setTimeout(()=>{
      if(valid()&&seekStartedAt!==null)moviReport('Spulen dauert länger als 12 Sekunden · prüfe Netzwerk/Range und Decoder','error');
     },12000);
