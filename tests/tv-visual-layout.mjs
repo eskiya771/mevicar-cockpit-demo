@@ -91,6 +91,7 @@ try{
    await page.getByLabel('Kategorie',{exact:true}).selectOption('ALL');
    // Independent country filter and persistent favorite selection.
    await page.getByLabel('IPTV-Land').selectOption('DE');
+   assert.deepEqual(await page.getByLabel('Kategorie',{exact:true}).locator('option').allTextContents(),['Alle Kategorien','Sport'],'German categories only');
    assert.equal(await page.locator('.tv-xtream-item').count(),1,'Germany only');
    await page.locator('.tv-xtream-star').first().click();
    await page.getByRole('button',{name:'Nur IPTV-Favoriten'}).click();
@@ -98,6 +99,7 @@ try{
    assert(await page.getByLabel('IPTV-Land').isDisabled(),'country disabled while favorites active');
    await page.getByRole('button',{name:'Nur IPTV-Favoriten'}).click();
    await page.getByLabel('IPTV-Land').selectOption('TR');
+   assert.deepEqual(await page.getByLabel('Kategorie',{exact:true}).locator('option').allTextContents(),['Alle Kategorien','Kultur'],'Turkish categories only');
    assert.equal(await page.locator('.tv-xtream-item').count(),1,'Turkey only');
    await page.getByLabel('IPTV-Land').selectOption('ALL');
    assert.equal(await page.locator('.tv-xtream-item').count(),120,'all countries restored');
