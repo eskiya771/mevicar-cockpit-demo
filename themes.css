@@ -621,3 +621,16 @@ html .cockpit .dock button:not(.active){
 @media (orientation:landscape) and (max-height:529px){
  .app-home-surface .app-home-label{font-size:clamp(11px,2.7vh,15px)}
 }
+
+/* Final launcher settings clearance: artwork has an oversized gear silhouette. */
+.app-home-surface .app-settings .app-home-icon{
+  transform:translateY(-13px) scale(.71);
+}
+.app-home-surface .app-settings .app-home-label{
+  align-self:end;
+  margin-bottom:4px;
+}
+@media (orientation:landscape) and (max-height:529px){
+ .app-home-surface .app-settings .app-home-icon{transform:translateY(-7px) scale(.74)}
+ .app-home-surface .app-settings .app-home-label{margin-bottom:1px}
+}
