@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'patches/movi-seek.patch'
+      - 'patches/movi-cues-fastseek.patch'
       - 'tv.js'
       - 'tests/tv-movi-diagnostics-smoke.mjs'
       - '.github/workflows/movi-experiment.yml'
@@ -29,6 +30,8 @@ jobs:
           git -C movi-src checkout 8bd0b50d7cdfcef635e015ea93e365876088969d
           git -C movi-src apply --check ../patches/movi-seek.patch
           git -C movi-src apply ../patches/movi-seek.patch
+          git -C movi-src apply --check ../patches/movi-cues-fastseek.patch
+          git -C movi-src apply ../patches/movi-cues-fastseek.patch
       - name: Check types and HTTP seek regressions
         working-directory: movi-src
         run: |
