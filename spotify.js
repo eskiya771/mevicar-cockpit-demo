@@ -666,13 +666,12 @@
   }
   function webPlayerMarkup() {
     if (!st.token) return '';
-    const current = st.player?.device?.id === st.webDeviceId && !!st.webDeviceId;
+    const ready = !!st.webDeviceId;
     return '<div class="sp-web-player">' +
-      '<button type="button" class="sp-web-action'+(current?' is-on':'')+
-      '" onclick="meviSpotifyWebPlayer()" aria-label="Spotify direkt in MeviCar abspielen">'+icon('devices')+
-      '<span>'+(current?'MeviCar spielt':'Im MeviCar abspielen')+'</span></button>'+
+      '<button type="button" class="sp-web-action'+(ready?' is-on':'')+
+      '" onclick="meviSpotifyWebPlayer()" aria-label="MeviCar Spotify Player aktivieren">'+icon('play')+
+      '<span>'+(ready?'MeviCar Player aktiv':'MeviCar Player starten')+'</span></button>'+
       '<span class="sp-web-status">'+esc(st.webStatus)+'</span>'+
-      (st.webDeviceId&&!current?'<button type="button" class="sp-web-action" onclick="meviSpotifyTransferWeb()">Hierher wechseln</button>':'')+
       (st.webError?'<span class="sp-web-error" role="status">'+esc(st.webError)+'</span>':'')+
       '</div>';
   }
@@ -709,11 +708,11 @@
     return '<div class="sp-onboard">' +
       '<div class="sp-onboard-head"><span class="sp-onboard-icon">' + icon('spotify') + '</span><div>' +
       '<span class="sp-eyebrow">SPOTIFY PREMIUM // MEVICAR NEXT</span><h2>Spotify direkt im Cockpit hören</h2>' +
-      '<p>Mit Spotify Premium kannst du Musik direkt in MeviCar Next wiedergeben oder ein anderes Spotify-Connect-Gerät steuern. Die Wiedergabe im Cockpit benötigt einen unterstützten Browser.</p></div></div>' +
+      '<p>Mit Spotify Premium spielst du Musik direkt in MeviCar Next ab. Dafür wird ein unterstützter Browser benötigt.</p></div></div>' +
       (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
       (st.notice ? '<div class="sp-alert is-ok">' + icon('check') + '<span>' + esc(st.notice) + '</span></div>' : '') +
       '<div class="sp-setup">' +
-      '<div class="sp-step"><span class="sp-step-num">1</span><div><strong>Spotify Premium</strong><p>Für die Wiedergabe direkt in MeviCar genügt dein Premium-Konto. Für externe Lautsprecher oder Handys kannst du weiterhin Spotify Connect verwenden.</p><button type="button" class="sp-linkbtn" onclick="meviSpotifyOpen()">Spotify öffnen' + icon('external') + '</button></div></div>' +
+      '<div class="sp-step"><span class="sp-step-num">1</span><div><strong>Spotify Premium</strong><p>Mit deinem Premium-Konto spielt der MeviCar Player die Musik direkt über dieses Gerät ab.</p><button type="button" class="sp-linkbtn" onclick="meviSpotifyOpen()">Spotify-Anmeldung' + icon('external') + '</button></div></div>' +
       '<div class="sp-step"><span class="sp-step-num">2</span><div><strong>Redirect-URI hinterlegen</strong><p>Im Spotify Developer Dashboard unter Edit Settings als Redirect URI eintragen. Sie muss exakt übereinstimmen.</p><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirect) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div><a class="sp-linkbtn" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Developer Dashboard' + icon('external') + '</a></div></div>' +
       '<div class="sp-step"><span class="sp-step-num">3</span><div><strong>Client ID eintragen</strong><p>Die Client ID ist öffentlich. Ein Client Secret wird nicht benötigt und nicht gespeichert.</p><div class="sp-client"><input id="sp-client-id" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Spotify Client ID" value="' + esc(st.clientId) + '" aria-label="Spotify Client ID" onkeydown="if(event.key===\'Enter\'){event.preventDefault();meviSpotifySaveClient(this.value)}"><button type="button" onclick="meviSpotifySaveClient(document.getElementById(\'sp-client-id\').value)">Speichern</button></div></div></div>' +
       '</div>' +
@@ -757,14 +756,12 @@
 
   function nowMarkup() {
     if (!st.playerLoaded && !st.player && !st.error) {
-      return '<div class="sp-empty"><span class="sp-spinner" aria-hidden="true"></span><strong>Wiedergabestatus wird geladen</strong><p>Spotify Connect wird abgefragt.</p><button type="button" onclick="meviSpotifyRefresh()">' + icon('refresh') + 'Aktualisieren</button></div>';
+      return '<div class="sp-empty"><span class="sp-spinner" aria-hidden="true"></span><strong>Wiedergabestatus wird geladen</strong><p>MeviCar Player wird abgefragt.</p><button type="button" onclick="meviSpotifyRefresh()">' + icon('refresh') + 'Aktualisieren</button></div>';
     }
-    if (!st.player) return noDeviceMarkup();
+    if (!st.webDeviceId || !st.player || st.player.device?.id !== st.webDeviceId) return noDeviceMarkup();
     const player = st.player;
     const item = player.item;
-    if (!item) {
-      return '<div class="sp-empty">' + icon('spotify') + '<strong>Spotify spielt gerade keinen Titel</strong><p>Werbung oder unbekannter Inhalt. Öffne Spotify und starte einen Titel.</p><div class="sp-empty-actions"><button type="button" onclick="meviSpotifyLoadDevices()">' + icon('devices') + 'Geräte</button><button type="button" onclick="meviSpotifyOpen()">' + icon('external') + 'Spotify öffnen</button></div>' + (st.devicesOpen ? devicesMarkup() : '') + '</div>';
-    }
+    if (!item) return '<div class="sp-empty">' + icon('music') + '<strong>Bereit für Musik</strong><p>Wähle einen Titel, ein Album oder eine Playlist aus deiner Bibliothek.</p></div>';
     const episode = item.type === 'episode';
     const uri = item.uri || '';
     const duration = Number(item.duration_ms) || 0;
@@ -801,8 +798,6 @@
       (episode ? '<button type="button" class="sp-tool" title="15 Sekunden vor" onclick="meviSpotifySeekBy(15000)">' + icon('clock') + '<span>+15 s</span></button>' : '') +
       '<button type="button" class="sp-tool' + (st.liked === true ? ' is-on' : '') + '" aria-pressed="' + (st.liked === true) + '" title="' + (st.liked === true ? 'Aus der Spotify-Bibliothek entfernen' : 'Zur Spotify-Bibliothek hinzufügen') + '" onclick="meviSpotifyLike()" ' + (uri ? '' : 'disabled') + '>' + icon('heart') + '<span>Gefällt mir</span></button>' +
       '<button type="button" class="sp-tool' + (st.queueOpen ? ' is-on' : '') + '" aria-pressed="' + !!st.queueOpen + '" title="Warteschlange" onclick="meviSpotifyToggleQueue()">' + icon('queue') + '<span>Warteschlange</span></button>' +
-      '<button type="button" class="sp-tool' + (st.devicesOpen ? ' is-on' : '') + '" aria-pressed="' + !!st.devicesOpen + '" title="Geräte" onclick="meviSpotifyToggleDevices()">' + icon('devices') + '<span>Geräte</span></button>' +
-      '<button type="button" class="sp-tool" title="Spotify öffnen" onclick="meviSpotifyOpen()">' + icon('external') + '<span>Spotify</span></button>' +
       (Number.isFinite(player.device?.volume_percent) && player.device?.supports_volume !== false
         ? '<label class="sp-main-volume" title="Spotify-Lautstärke">' + icon('volume') +
           '<input type="range" min="0" max="100" step="1" value="' + clamp(player.device.volume_percent, 0, 100) +
@@ -810,13 +805,13 @@
           '<span>' + Math.round(player.device.volume_percent) + ' %</span></label>'
         : '') +
       '</div>' +
-      ((st.devicesOpen || st.queueOpen) ? '<div class="sp-drawers">' + (st.devicesOpen ? devicesMarkup() : '') + (st.queueOpen ? queueMarkup() : '') + '</div>' : '') +
+      (st.queueOpen ? '<div class="sp-drawers">' + queueMarkup() + '</div>' : '') +
       '</div>';
   }
   function noDeviceMarkup() {
-    return '<div class="sp-empty">' + icon('devices') + '<strong>Kein aktives Spotify-Gerät</strong><p>Öffne Spotify auf iPhone, PC oder DeX und starte einen Titel. Danach hier aktualisieren.</p>' +
-      '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyLoadDevices()">' + icon('devices') + 'Geräte suchen</button><button type="button" onclick="meviSpotifyOpen()">' + icon('external') + 'Spotify öffnen</button><button type="button" onclick="meviSpotifyRefresh()">' + icon('refresh') + 'Aktualisieren</button></div>' +
-      (st.devicesOpen ? devicesMarkup() : '') + '</div>';
+    return '<div class="sp-empty">' + icon('spotify') +
+      '<strong>Spotify direkt in MeviCar</strong><p>Starte den MeviCar Player und wähle einen Titel oder eine Playlist aus.</p>' +
+      '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + 'MeviCar Player starten</button></div></div>';
   }
   function devicesMarkup() {
     const active = st.devices.find(d => d?.is_active);
@@ -1165,20 +1160,14 @@
   async function playItem(item) {
     if (!item?.uri) return;
     const body = item.kind === 'track' || item.kind === 'episode' ? { uris: [item.uri] } : { context_uri: item.uri };
+    if (!st.webDeviceId) {
+      st.pendingPlay = { body, title: item.title, at: Date.now() };
+      await startWebPlayer();
+      return;
+    }
     try {
       window.meviMediaStopForSource?.('spotify');
-      const target = await playbackDevice();
-      if (!target.id) {
-        st.pendingPlay = { body, title: item.title, at: Date.now() };
-        st.error = '';
-        await loadDevices();
-        setNotice(target.devices.length
-          ? 'Mehrere Geräte gefunden. „Hierher“ startet die Wiedergabe.'
-          : 'Kein Spotify-Gerät gefunden. Öffne Spotify und starte einen Titel.');
-        return;
-      }
-      await api('/me/player/play?device_id=' + encodeURIComponent(target.id), { method: 'PUT', body: JSON.stringify(body) });
-      rememberDevice(target.id);
+      await api('/me/player/play?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT', body: JSON.stringify(body) });
       st.pendingPlay = null;
       st.error = '';
       setNotice('Wiedergabe: ' + item.title);
@@ -1204,10 +1193,11 @@
   }
   async function toggle() {
     const player = st.player;
-    if (!player) return;
+    if (!st.webDeviceId) { await startWebPlayer(); return; }
+    if (!player || player.device?.id !== st.webDeviceId) return;
     const wasPlaying = !!player.is_playing;
     try {
-      await api(wasPlaying ? '/me/player/pause' : '/me/player/play', { method: 'PUT' });
+      await api((wasPlaying ? '/me/player/pause' : '/me/player/play') + '?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
       if (!wasPlaying) window.meviMediaStopForSource?.('spotify');
       player.is_playing = !wasPlaying;
       st.playerAt = Date.now();
@@ -1219,8 +1209,9 @@
     } catch (error) { handleApiError(error); }
   }
   async function skip(direction) {
+    if (!st.webDeviceId) return;
     try {
-      await api('/me/player/' + direction, { method: 'POST' });
+      await api('/me/player/' + direction + '?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'POST' });
       if (st.player) { st.player.progress_ms = 0; st.progressBase = 0; st.playerAt = Date.now(); }
       st.error = '';
       await sleep(300);
@@ -1360,9 +1351,7 @@
       || (devices.length === 1 ? devices[0] : null);
   }
   async function playbackDevice() {
-    if (st.player?.device?.id) return { id: st.player.device.id, devices: st.devices };
-    if (!st.devices.length) { try { await fetchDevices(); } catch { /* keep empty */ } }
-    return { id: pickDevice(st.devices)?.id || '', devices: st.devices };
+    return { id: st.webDeviceId || '', devices: [] };
   }
   function pendingPlayback() {
     const pending = st.pendingPlay;
