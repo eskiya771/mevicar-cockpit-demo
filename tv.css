@@ -173,7 +173,7 @@
 @media(max-height:460px){.tv-movi-diagnostics{max-height:95px}.tv-movi-log{max-height:45px}}
 
 /* MeviTV landscape: reclaim safe-area width and maximize uninterrupted video. */
-.cockpit .full:has(>.tv-root){padding:2px 0 2px 4px;margin-right:0;margin-top:0;margin-bottom:0}
+.cockpit .full:has(>.tv-root){padding:2px 0 2px 4px;margin-right:env(safe-area-inset-right,0px);margin-top:env(safe-area-inset-top,0px);margin-bottom:env(safe-area-inset-bottom,0px)}
 .cockpit .full>.tv-root{gap:8px}
 .cockpit .full>.tv-root>.tv-library{flex:0 0 clamp(170px,25%,300px);width:auto;min-width:0}
 .tv-root.tv-xtream-mode .tv-xtream-tools{gap:4px}
