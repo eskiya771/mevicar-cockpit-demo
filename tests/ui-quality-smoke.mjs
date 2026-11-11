@@ -53,7 +53,8 @@ assert.deepEqual(Array.from(new Set(['default','cyberpunk','liquidglass'])),['de
 let browse=app.browseOverlay();
 assert.match(browse,/overlay glass nav-browse/,'Responsive browse styles must be bound to the real markup');
 assert.equal((browse.match(/Ort oder Adresse/g)||[]).length,1);
-assert.equal((browse.match(/Zuletzt verwendet · Demo/g)||[]).length,3);
+assert.match(browse,/Letzte Ziele/);
+assert.doesNotMatch(browse,/Zuletzt verwendet · Demo/);
 assert.doesNotMatch(browse,/🎙|Apple-Karten-Stil · Suchen|Orte ›/);
 assert.match(browse,/Favoriten/);
 assert.match(browse,/app-illustration/);
@@ -71,9 +72,9 @@ assert.doesNotMatch(search,/Zum Scrollen wischen/);
 assert.doesNotMatch(app.mapHTML(),/IN 850 M|↱ Rechts abbiegen|Zusatzscreen|map-tools/);
 assert.doesNotMatch(app.mapHTML(),/KARTE · DEMO/);
 assert.doesNotMatch(app.previewHTML(),/24 Min|29 Min|Alternative Route/);
-assert.match(app.previewHTML(),/keine Wegberechnung/);
+assert.match(app.previewHTML(),/Google Maps/);
 assert.match(app.previewHTML(),/preview glass nav-preview/);
-assert.match(app.previewHTML(),/Demo starten/);
+assert.match(app.previewHTML(),/Route berechnen/);
 
 // Re-run the user's paths in one persistent JS VM using a small mock DOM.
 assert.equal(get('s.mode'),'map');
@@ -103,18 +104,18 @@ get('openApp("nav")');
 get('openSearch()');
 assert.equal(get('s.nav'),'search');
 assert.match(node('screen').innerHTML,/Ziel suchen/);
-assert.equal(get('resultsHTML().split("<strong>Erlangen-Nord</strong>").length-1'),1);
-get('s.query="XYZ Testadresse 17"');
-assert.match(get('resultsHTML()'),/Eigene Zieleingabe · Demo/);
-get('selectPlace("Erlangen Arcaden")');
-assert.equal(get('s.nav'),'preview','A single selection must accept the destination with the keyboard open');
-assert.equal(get('s.keyboard'),false);
-assert.match(get('previewHTML()'),/Nürnberger Straße, Erlangen/);
-get('selectPlace("Unknown test destination")');
-assert.match(get('previewHTML()'),/Keine vollständige Adresse hinterlegt/);
-get('startRoute()');
-assert.equal(get('s.nav'),'driving');
-assert.doesNotMatch(node('screen').innerHTML,/IN 850 M|Zusatzscreen/);
-get('stopRoute()');
+// The legacy fixed-destination demo is replaced by an isolated Web navigation
+// adapter. Assert the integration contract, not fake address results/routes.
+assert.match(node('screen').innerHTML,/mg-navigation/);
+assert.doesNotMatch(node('screen').innerHTML,/Erlangen · Demo-Karte|ROUTEN-DEMO/);
+assert.match(js,/MeviGoogleNav\?\.resultsHTML\(\)/);
+assert.match(js,/MeviGoogleNav\?\.changeQuery\(v\)/);
+assert.match(js,/MeviGoogleNav\.calculateRoute\(\)/);
+assert.match(js,/MeviGoogleNav\.startGuidance\(\)/);
+assert.match(html,/navigation-google\.js/);
+assert.match(html,/navigation-google\.css/);
+assert.match(readFileSync(new URL('../navigation-google.js',import.meta.url),'utf8'),/AutocompleteSuggestion\.fetchAutocompleteSuggestions/);
+assert.match(readFileSync(new URL('../navigation-google.js',import.meta.url),'utf8'),/DirectionsService/);
+get('backToBrowse()');
 assert.equal(get('s.nav'),'browse');
-console.log('UI smoke OK: 3 themes, fullscreen-first toggle, search dedupe, demo route, SVG suggestions, no duplicate/dead controls.');
+console.log('UI smoke OK: 3 themes, fullscreen toggles, CarPlay-like search overlay, Google Maps/Places route adapter linked.');
