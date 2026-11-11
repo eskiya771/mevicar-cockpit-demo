@@ -460,3 +460,58 @@ html[data-theme="liquidglass"] .sp-web-action{background:#d9fff42d;border-color:
  .sp-main-volume .sp-icon{width:15px;height:15px}
  .sp-main-volume span{font-size:10px}
 }
+
+/* The source toolbar is shared with Radio and MeviMedia. Do not redefine its
+   dimensions: the mm-mode-button contract is authoritative for all three. */
+.sp-shell .sp-unified-top{
+ display:flex;align-items:center;justify-content:space-between;
+ gap:10px;padding:8px clamp(9px,1.3vw,17px);
+ border-bottom:1px solid #82a8d02b;flex:none;min-width:0;
+}
+.sp-shell .sp-unified-top .mm-identity{flex:0 1 auto;min-width:0}
+.sp-shell .sp-unified-top .mm-top-actions{
+ display:flex;align-items:center;gap:clamp(4px,.6vw,10px);
+ flex-wrap:nowrap;min-width:0;
+}
+.sp-shell .sp-unified-top .mm-mode-button{
+ min-height:clamp(34px,6.5vh,50px);
+ min-width:clamp(36px,4.3vw,54px);
+ display:flex;align-items:center;justify-content:center;
+ gap:6px;border:1px solid #64dafa54;color:#e7fbff;
+ background:linear-gradient(145deg,#1b3750,#142338);
+ border-radius:11px;padding:7px 11px;font-weight:750;
+ font-size:clamp(10px,1.6vh,14px);
+ flex:none;
+}
+.sp-shell .sp-unified-top .mm-mode-button.active{
+ border-color:#69e7f8;background:linear-gradient(145deg,#20506a,#173752);
+ box-shadow:inset 0 1px #b9f9ff37,0 0 11px #50e4ff24;
+}
+.sp-shell .sp-unified-top .mm-mode-button.active[data-source="spotify"]{
+ border-color:#2ce985;background:linear-gradient(135deg,#155334,#164034);
+}
+.sp-shell .sp-unified-top .mm-mode-button .sp-icon{
+ width:clamp(16px,2.9vh,23px);height:clamp(16px,2.9vh,23px)
+}
+.sp-shell .sp-unified-top .sp-icon-button{
+ width:clamp(34px,6.5vh,50px);
+ min-width:clamp(34px,6.5vh,50px);
+ height:clamp(34px,6.5vh,50px);
+ border:1px solid #64dafa54;border-radius:11px;
+ background:linear-gradient(145deg,#1b3750,#142338);
+}
+.sp-shell .sp-unified-top .sp-icon-button .sp-icon{width:clamp(16px,2.9vh,23px);height:clamp(16px,2.9vh,23px)}
+/* Local playback is the only Spotify player; its activation is an action
+   inside the player, not a competing source toolbar. */
+.sp-shell .sp-web-player{background:transparent;border-bottom:1px solid #82a8d024}
+@media(max-height:480px){
+ .sp-shell .sp-unified-top{padding:3px 6px;gap:4px}
+ .sp-shell .sp-unified-top .mm-mode-button{min-height:32px;min-width:0;padding:5px 6px;font-size:10px}
+ .sp-shell .sp-unified-top .mm-mode-button .sp-icon{width:16px;height:16px}
+ .sp-shell .sp-unified-top .sp-icon-button{
+  width:32px;min-width:32px;height:32px;padding:4px;
+ }
+ .sp-shell .sp-unified-top .mm-identity{display:none}
+}
+.sp-shell.is-compact .sp-unified-top .mm-mode-button{min-width:0;padding:5px 6px;font-size:10px}
+.sp-shell.is-compact .sp-unified-top .mm-mode-button .sp-icon{display:none}
