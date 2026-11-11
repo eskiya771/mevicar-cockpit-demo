@@ -30,7 +30,7 @@ const transport=await readFile('tests/fixtures/tv-test.ts');
 const browser=await chromium.launch();
 const report={build:JSON.parse(await readFile('dist/build-info.json','utf8')),browser:browser.version(),profiles:[],fixture:'Synthetic 120-channel catalog + FFmpeg test video through real mpegts.js; no provider access'};
 const categories=[{category_id:'1',category_name:'Nachrichten'},{category_id:'2',category_name:'Sport'},{category_id:'3',category_name:'Kultur'}];
-const items=Array.from({length:120},(_,i)=>({stream_id:i+1,name:`Testsender ${String(i+1).padStart(3,'0')} · ${i===0?'Sehr langer Sendername für die Layoutprüfung':'HD'}`,category_id:String(i%3+1),container_extension:'ts'}));
+const items=Array.from({length:120},(_,i)=>({stream_id:i+1,name:`${i===118?'DE: ':i===119?'TR: ':''}Testsender ${String(i+1).padStart(3,'0')} · ${i===0?'Sehr langer Sendername für die Layoutprüfung':'HD'}`,category_id:String(i%3+1),container_extension:'ts'}));
 let failures=0;
 try{
  for(const [index,profile] of profiles.entries())for(const theme of ['default','cyberpunk','liquidglass']){
@@ -89,6 +89,18 @@ try{
    assert.equal(await page.locator('.tv-xtream-list').innerText(),'Keine Einträge gefunden.');
    await page.getByLabel('Katalog durchsuchen').fill('');
    await page.getByLabel('Kategorie',{exact:true}).selectOption('ALL');
+   // Independent country filter and persistent favorite selection.
+   await page.getByLabel('IPTV-Land').selectOption('DE');
+   assert.equal(await page.locator('.tv-xtream-item').count(),1,'Germany only');
+   await page.locator('.tv-xtream-star').first().click();
+   await page.getByRole('button',{name:'Nur IPTV-Favoriten'}).click();
+   assert.equal(await page.locator('.tv-xtream-item').count(),1,'favorites independent of country');
+   assert(await page.getByLabel('IPTV-Land').isDisabled(),'country disabled while favorites active');
+   await page.getByRole('button',{name:'Nur IPTV-Favoriten'}).click();
+   await page.getByLabel('IPTV-Land').selectOption('TR');
+   assert.equal(await page.locator('.tv-xtream-item').count(),1,'Turkey only');
+   await page.getByLabel('IPTV-Land').selectOption('ALL');
+   assert.equal(await page.locator('.tv-xtream-item').count(),120,'all countries restored');
    await page.locator('.tv-xtream-item').last().scrollIntoViewIfNeeded();
    assert(await page.locator('.tv-xtream-list').evaluate(e=>e.scrollTop>0),'long catalog scrolls');
    await page.locator('.tv-xtream-item').first().scrollIntoViewIfNeeded();
