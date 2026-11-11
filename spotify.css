@@ -570,3 +570,85 @@ html[data-theme="liquidglass"] .sp-web-action{background:#d9fff42d;border-color:
  .sp-shell .sp-now .sp-tools .sp-tool span{display:none}
  .sp-shell .sp-now .sp-tools .sp-tool{min-height:30px;padding:4px 6px}
 }
+
+/* November media alignment: full-screen Spotify should use the same visual
+   hierarchy as MeviMedia: large cover/title, transport anchored at the bottom.
+   The last overrides intentionally supersede older compact experiment rules. */
+@media (min-width:1000px) and (min-height:580px) {
+ .sp-shell:not(.is-compact) .sp-now{
+   grid-template-columns:minmax(0,41%) minmax(0,59%)!important;
+   grid-template-rows:minmax(0,1fr) auto auto auto auto;
+   align-content:stretch!important;
+   column-gap:clamp(15px,1.7vw,28px)!important;
+   row-gap:clamp(10px,1.45vh,18px)!important;
+   padding:clamp(14px,1.8vh,24px) clamp(15px,1.6vw,28px)!important;
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-art{
+   width:min(100%,36vh,340px)!important;
+   height:auto!important;
+   aspect-ratio:1;
+   max-height:100%;
+   justify-self:center;
+   align-self:center;
+   border-radius:clamp(15px,1.8vw,24px);
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-meta{
+   align-self:center;gap:clamp(7px,1.1vh,13px);
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-title{
+   font-size:clamp(24px,3.25vh,40px)!important;
+   letter-spacing:-.02em;
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-artist{
+   font-size:clamp(15px,2.1vh,22px)!important;
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-now-eyebrow{
+   font-size:clamp(11px,1.35vh,14px);
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-album{
+   font-size:clamp(12px,1.6vh,16px);
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-transport{
+   justify-content:center;gap:clamp(10px,1.5vw,22px);
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-transport button{
+   width:clamp(54px,7vh,72px)!important;
+   height:clamp(54px,7vh,72px)!important;
+   border-radius:17px;
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-transport .sp-primary{
+   width:clamp(68px,9vh,90px)!important;
+   height:clamp(68px,9vh,90px)!important;
+   border-radius:21px;
+ }
+ .sp-shell:not(.is-compact) .sp-now .sp-tools{
+   min-height:40px;gap:clamp(6px,.8vw,12px);
+ }
+ .sp-shell:not(.is-compact) .sp-row{
+   min-height:clamp(58px,7.1vh,76px);
+ }
+ .sp-shell:not(.is-compact) .sp-row-art{
+   width:clamp(40px,5.4vh,54px);
+   height:clamp(40px,5.4vh,54px);
+ }
+ .sp-shell:not(.is-compact) .sp-row-text strong{
+   font-size:clamp(13px,1.75vh,17px);
+ }
+ .sp-shell:not(.is-compact) .sp-row-text small{
+   font-size:clamp(11px,1.35vh,13px);
+ }
+}
+/* Keep all controls available in split and phone landscape without stealing
+   space from the two media columns. */
+.sp-shell.is-compact .sp-now{
+ grid-template-rows:minmax(0,1fr) auto auto auto auto;
+ align-content:stretch!important;
+}
+.sp-shell.is-compact .sp-now .sp-art{
+ max-width:100%;max-height:100%;
+}
+@media (max-height:480px) {
+ .sp-shell .sp-now{grid-template-rows:minmax(0,1fr) auto auto auto auto}
+ .sp-shell .sp-now .sp-meta{align-self:center}
+ .sp-shell .sp-now .sp-transport{gap:4px}
+}
