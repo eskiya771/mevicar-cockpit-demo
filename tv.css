@@ -181,7 +181,7 @@
 .tv-root .tv-xtream-item{min-height:43px;padding:5px 9px}
 .tv-player>header{min-height:34px;gap:5px}
 .tv-root .tv-player .tv-xtream-tabs button,.tv-root .tv-settings{min-height:34px;height:34px;padding:3px 7px}
-.tv-root .tv-settings{flex-basis:38px;width:38px;font-size:20px}
+.tv-root .tv-settings{flex-basis:44px;width:44px;font-size:20px}
 .tv-root .tv-player{gap:4px}
 .tv-root .tv-actions{display:none}
 .tv-root .tv-program{row-gap:2px}
