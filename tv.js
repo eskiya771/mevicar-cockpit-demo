@@ -19,7 +19,7 @@ if(!global.document)return;
 const KEY='mevicar-tv-v1',esc=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let sources=[],custom=[],favorites=[],selected='zdf',root=null,video=null,hls=null,mpegtsPlayer=null,mpegtsHealthTimer=null,mpegtsFail=null,generation=0,deadline=null;
 let networkTimer=null,networkBusy=false,networkWaits=0,networkStarted=0,vodDiagnostic='';
-let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekTimer=null,moviRangeTimer=null,moviSeekTrace=null,moviSeekHistory=[],moviSeekSummaryTimers=[],moviBenchmark=null;
+let proxyUpdateBusy=false,moviPromise=null,moviElement=null,moviLog=[],moviSeekTimer=null,moviRangeTimer=null,moviSeekTrace=null,moviSeekHistory=[],moviSeekSummaryTimers=[],moviBenchmark=null,moviEverPlayed=false,moviSeekBusy=false;
 let query='',country='ALL',only=false,libraryPromise=null,mpegtsPromise=null,xtPlayback=null,activePlaybackName='',playbackFormat='',xtRequestSeq=0,xtProbe=null,playerTransition=false,playerFault='',mpegtsFallback=null;
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 function channels(){return [...CATALOG,...custom];}
@@ -72,7 +72,7 @@ function selectEPG(api,account,type,id,name){
 
 function paintList(){if(!root)return;root.querySelector('.tv-list').innerHTML=filtered(channels(),query,country,favorites,only).map(c=>'<div class="tv-row '+(current().id===c.id?'selected':'')+'"><button data-channel="'+esc(c.id)+'"><span class="tv-logo" aria-hidden="true">'+esc(c.name.split(' ').map(x=>x[0]).join('').slice(0,3))+'</span><span>'+esc(c.name)+'<small>'+({DE:'Deutschland',TR:'Türkiye',OTHER:'Eigener Sender'}[c.country])+'</small></span></button><button data-fav="'+esc(c.id)+'" aria-label="'+esc(c.name)+' als Favorit" aria-pressed="'+favorites.includes(c.id)+'">'+(favorites.includes(c.id)?'★':'☆')+'</button></div>').join('')||'<p>Keine Sender gefunden.</p>';root.querySelector('[data-act="favorites"]').setAttribute('aria-pressed',String(only));}
 function paintTitle(){const c=current();root.querySelector('.tv-title').textContent=c.name;const a=root.querySelector('.tv-web');a.hidden=!c.web;if(c.web)a.href=c.web;else a.removeAttribute('href');}
-function cleanup(){moviBenchmark?.cancel?.();moviBenchmark=null;for(const t of moviSeekSummaryTimers)clearTimeout(t);moviSeekSummaryTimers=[];moviSeekHistory=[];moviSeekTrace=null;clearInterval(moviRangeTimer);moviRangeTimer=null;clearTimeout(moviSeekTimer);moviSeekTimer=null;if(moviElement){try{moviElement.pause?.();moviElement.destroy?.();moviElement.remove();}catch{}moviElement=null;}if(video)video.hidden=false;networkWaits=0;networkStarted=Date.now();generation++;clearTimeout(deadline);deadline=null;clearInterval(mpegtsHealthTimer);mpegtsHealthTimer=null;mpegtsFail=null;if(xtProbe){xtProbe.abort();xtProbe=null;}playerTransition=true;mpegtsFallback=null;if(mpegtsPlayer){const previous=mpegtsPlayer;mpegtsPlayer=null;for(const operation of ['pause','unload','detachMediaElement','destroy']){try{previous[operation]?.();}catch{}}}if(hls){hls.destroy();hls=null;}if(video){video.pause();video.removeAttribute('src');video.load();}}
+function cleanup(){moviBenchmark?.cancel?.();moviBenchmark=null;moviEverPlayed=false;moviSeekBusy=false;for(const t of moviSeekSummaryTimers)clearTimeout(t);moviSeekSummaryTimers=[];moviSeekHistory=[];moviSeekTrace=null;clearInterval(moviRangeTimer);moviRangeTimer=null;clearTimeout(moviSeekTimer);moviSeekTimer=null;if(moviElement){try{moviElement.pause?.();moviElement.destroy?.();moviElement.remove();}catch{}moviElement=null;}if(video)video.hidden=false;networkWaits=0;networkStarted=Date.now();generation++;clearTimeout(deadline);deadline=null;clearInterval(mpegtsHealthTimer);mpegtsHealthTimer=null;mpegtsFail=null;if(xtProbe){xtProbe.abort();xtProbe=null;}playerTransition=true;mpegtsFallback=null;if(mpegtsPlayer){const previous=mpegtsPlayer;mpegtsPlayer=null;for(const operation of ['pause','unload','detachMediaElement','destroy']){try{previous[operation]?.();}catch{}}}if(hls){hls.destroy();hls=null;}if(video){video.pause();video.removeAttribute('src');video.load();}}
 function loadMpegts(){if(global.mpegts)return Promise.resolve(global.mpegts);if(!mpegtsPromise)mpegtsPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/mpegts-1.8.2.min.js';s.onload=()=>global.mpegts?resolve(global.mpegts):(mpegtsPromise=null,reject(Error('mpegts.js ist nicht verfügbar')));s.onerror=()=>{s.remove();mpegtsPromise=null;reject(Error('mpegts.js konnte nicht geladen werden'));};document.head.appendChild(s);});return mpegtsPromise;}
 function supportsMpegts(engine){return !!(engine?.isSupported?.()&&engine?.getFeatureList?.()?.mseLivePlayback);}
 function loadHls(){if(global.Hls)return Promise.resolve(global.Hls);if(!libraryPromise)libraryPromise=new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='./vendor/hls-1.6.15.min.js';s.onload=()=>global.Hls?resolve(global.Hls):reject(Error('Player fehlt'));s.onerror=()=>{s.remove();libraryPromise=null;reject(Error('Player konnte nicht geladen werden'));};document.head.appendChild(s);});return libraryPromise;}
@@ -312,13 +312,15 @@ function moviBenchmark75(){
   moviReport('75%-Test: Film zuerst laden und Metadaten abwarten','error');return;
  }
  if(moviBenchmark){moviReport('75%-Test: läuft bereits');return;}
+ if(!moviEverPlayed||moviSeekBusy){moviReport('75%-Test: Startwiedergabe noch nicht abgeschlossen – erst normales playing abwarten, damit kein Seek in einen laufenden Start-Seek fällt','error');return;}
  const target=duration*0.75;
  const token=generation,started=performance.now(),startedAt=new Date().toISOString();
  const button=root?.querySelector('[data-act="movi-seek-75"]');
  const valid=()=>generation===token&&moviElement===element&&Boolean(root);
- let seeked=false,finished=false,timer=null;
+ let seeked=false,finished=false,timer=null,seekCount=0;
  const cleanupTest=()=>{
   clearTimeout(timer);
+  element.removeEventListener('seeking',onSeeking);
   element.removeEventListener('seeked',onSeeked);
   element.removeEventListener('playing',onPlaying);
   element.removeEventListener('error',onError);
@@ -329,9 +331,10 @@ function moviBenchmark75(){
   if(finished)return;
   finished=true;
   const elapsed=Math.round(performance.now()-started);
-  if(valid())moviReport('75%-Benchmark: '+outcome+' · '+elapsed+' ms · Ziel '+target.toFixed(1)+' s · Position '+(Number(element.currentTime)||0).toFixed(1)+' s · '+detail+(moviExperimentalRequested()?' · EXPERIMENTELL':' · STABIL'));
+  if(valid())moviReport('75%-Benchmark: '+outcome+' · '+elapsed+' ms · Seek-Ereignisse '+seekCount+' · Ziel '+target.toFixed(1)+' s · Position '+(Number(element.currentTime)||0).toFixed(1)+' s · '+detail+(moviExperimentalRequested()?' · EXPERIMENTELL':' · STABIL'));
   cleanupTest();
  };
+ const onSeeking=()=>{if(!valid())return;seeked=false;seekCount++;moviReport('75%-Benchmark: seeking #'+seekCount+' nach '+Math.round(performance.now()-started)+' ms');};
  const onSeeked=()=>{if(!valid())return;seeked=true;moviReport('75%-Benchmark: seeked nach '+Math.round(performance.now()-started)+' ms · warte auf playing');};
  const onPlaying=()=>{
   if(!valid()||!seeked)return;
@@ -346,6 +349,7 @@ function moviBenchmark75(){
  const test={cancel:()=>{finished=true;cleanupTest();}};
  moviBenchmark=test;
  if(button){button.disabled=true;button.textContent='75-%-Test läuft …';}
+ element.addEventListener('seeking',onSeeking);
  element.addEventListener('seeked',onSeeked);
  element.addEventListener('playing',onPlaying);
  element.addEventListener('error',onError);
@@ -453,10 +457,11 @@ async function playMoviVod(url,name,stillCurrent){
   element.setAttribute('aria-label',name);
   element.setAttribute('buffersize',String(moviBufferMB));
   element.setAttribute('wasmurl',new URL(moviAssetBase()+'movi.wasm',document.baseURI).href);
-  element.addEventListener('playing',()=>{if(valid()){status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
+  element.addEventListener('playing',()=>{if(valid()){moviEverPlayed=true;moviSeekBusy=false;status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
   element.addEventListener('loadedmetadata',()=>{if(valid())moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');});
   let seekStartedAt=null,seekReadyAt=null,seekWatchdog=null,lastSeekState='';
   const onSeekState=state=>{
+   if(state==='seeking'){moviSeekBusy=true;}
    if(state==='seeking'&&seekStartedAt===null){
     seekStartedAt=performance.now();seekReadyAt=null;moviBeginSeekTrace(Number(element.currentTime));
     moviReport('Spulen gestartet · Ziel '+(Number.isFinite(Number(element.currentTime))?Math.round(Number(element.currentTime))+' s':'unbekannt')+' · Player sucht Schlüsselbild und Dateibereich');
@@ -464,6 +469,7 @@ async function playMoviVod(url,name,stillCurrent){
      if(valid()&&seekStartedAt!==null)moviReport('Spulen dauert länger als 12 Sekunden · prüfe Netzwerk/Range und Decoder','error');
     },12000);
    }
+   if(state==='playing'){moviEverPlayed=true;moviSeekBusy=false;}
    if(seekStartedAt!==null&&state==='playing'&&lastSeekState!=='playing'){
     moviReport('Spulen bis Wiedergabe · '+Math.round(performance.now()-seekStartedAt)+' ms'+(seekReadyAt!==null?' · Ready→Playing '+Math.round(performance.now()-seekReadyAt)+' ms':''));
     seekStartedAt=null;clearTimeout(seekWatchdog);seekWatchdog=null;moviSeekTimer=null;moviFinishSeekTrace();
