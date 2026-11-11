@@ -14,7 +14,8 @@
     'user-library-modify',
     'playlist-read-private',
     'playlist-read-collaborative',
-    'user-read-recently-played'
+    'user-read-recently-played',
+    'streaming'
   ].join(' ');
   const KEYS = {
     client: 'mevicar-spotify-client-v1',
@@ -280,11 +281,16 @@
     error: '',
     notice: '',
     mounted: false,
+    webPlayer: null,
+    webDeviceId: '',
+    webStatus: 'Aus',
+    webError: '',
     pollBlockedUntil: 0
   };
   if (!Array.isArray(st.history)) st.history = [];
   if (st.token && !st.clientId) { clearToken(); }
 
+  let sdkLoading = null;
   let pollTimer = null;
   let tickTimer = null;
   let pollBusy = false;
@@ -570,6 +576,102 @@
     } else rerender();
   }
 
+  // Load the official Spotify Web Playback SDK only at user request.
+  function loadWebPlaybackSDK() {
+    if (window.Spotify?.Player) return Promise.resolve();
+    if (sdkLoading) return sdkLoading;
+    sdkLoading = new Promise((resolve, reject) => {
+      const previous = window.onSpotifyWebPlaybackSDKReady;
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        if (typeof previous === 'function') previous();
+        resolve();
+      };
+      const script = document.createElement('script');
+      script.src = 'https://sdk.scdn.co/spotify-player.js';
+      script.async = true;
+      script.onerror = () => reject(new Error('Spotify Web Playback SDK konnte nicht geladen werden.'));
+      document.head.appendChild(script);
+    }).catch(error => { sdkLoading = null; throw error; });
+    return sdkLoading;
+  }
+  function webPlayerStatus(text, error = '') {
+    st.webStatus = text;
+    st.webError = error;
+    if (st.mounted) rerender();
+  }
+  async function startWebPlayer() {
+    if (!st.token) { setNotice('Bitte zunächst mit Spotify verbinden.'); return; }
+    if (!(st.token.scope || '').split(' ').includes('streaming')) {
+      st.accountOpen = true;
+      st.authError = 'Für die Wiedergabe direkt in MeviCar bitte erneut mit Spotify verbinden und Streaming freigeben.';
+      rerender();
+      return;
+    }
+    if (!window.isSecureContext) {
+      webPlayerStatus('Nicht verfügbar','Der MeviCar Player benötigt HTTPS.');
+      return;
+    }
+    if (st.webPlayer && st.webDeviceId) {
+      st.webPlayer.activateElement();
+      await transferToWebPlayer();
+      return;
+    }
+    webPlayerStatus('Verbinde …');
+    try {
+      await loadWebPlaybackSDK();
+      if (!window.Spotify?.Player) throw new Error('Spotify SDK nicht verfügbar.');
+      if (!st.webPlayer) {
+        const player = new window.Spotify.Player({
+          name: 'MeviCar Next',
+          getOAuthToken: cb => accessToken().then(cb).catch(() => webPlayerStatus('Anmeldung erforderlich','Spotify erneut verbinden.')),
+          volume: 0.65,
+          enableMediaSession: true
+        });
+        st.webPlayer = player;
+        player.addListener('ready', ({ device_id }) => {
+          st.webDeviceId = device_id;
+          webPlayerStatus('Bereit');
+        });
+        player.addListener('not_ready', ({ device_id }) => {
+          if (st.webDeviceId === device_id) st.webDeviceId = '';
+          webPlayerStatus('Offline','Spotify-Player nicht erreichbar.');
+        });
+        for (const event of ['initialization_error','authentication_error','account_error','playback_error']) {
+          player.addListener(event, ({ message }) => webPlayerStatus('Fehler', message || event));
+        }
+        player.addListener('autoplay_failed', () => webPlayerStatus('Bereit','Wiedergabe mit Play-Taste aktivieren.'));
+        player.addListener('player_state_changed', () => { if (st.mounted) poll(true); });
+      }
+      st.webPlayer.activateElement();
+      if (!await st.webPlayer.connect()) throw new Error('Spotify konnte den MeviCar Player nicht verbinden.');
+      if (st.webDeviceId) await transferToWebPlayer();
+      else webPlayerStatus('Registriere Gerät …');
+    } catch(error) { webPlayerStatus('Fehler',error.message || String(error)); }
+  }
+  async function transferToWebPlayer() {
+    if (!st.webDeviceId) return;
+    try {
+      window.meviMediaStopForSource?.('spotify');
+      st.webPlayer?.activateElement();
+      await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[st.webDeviceId],play:true})});
+      rememberDevice(st.webDeviceId);
+      webPlayerStatus('Wiedergabe über MeviCar');
+      await poll(true);
+    } catch(error) { webPlayerStatus('Bereit',errorText(error)); }
+  }
+  function webPlayerMarkup() {
+    if (!st.token) return '';
+    const current = st.player?.device?.id === st.webDeviceId && !!st.webDeviceId;
+    return '<div class="sp-web-player">' +
+      '<button type="button" class="sp-web-action'+(current?' is-on':'')+
+      '" onclick="meviSpotifyWebPlayer()" aria-label="Spotify direkt in MeviCar abspielen">'+icon('devices')+
+      '<span>'+(current?'MeviCar spielt':'Im MeviCar abspielen')+'</span></button>'+
+      '<span class="sp-web-status">'+esc(st.webStatus)+'</span>'+
+      (st.webDeviceId&&!current?'<button type="button" class="sp-web-action" onclick="meviSpotifyTransferWeb()">Hierher wechseln</button>':'')+
+      (st.webError?'<span class="sp-web-error" role="status">'+esc(st.webError)+'</span>':'')+
+      '</div>';
+  }
+
   function sourceMarkup() {
     return '<div class="sp-sources" role="group" aria-label="Audioquelle">' +
       [['radio', 'Radio', 'music'], ['spotify', 'Spotify', 'spotify'], ['media', 'Medien', 'folder']].map(([id, label, glyph]) =>
@@ -644,7 +746,7 @@
       '<section class="sp-pane sp-search-pane" aria-label="Spotify suchen"><div id="sp-search-region">' + searchMarkup() + '</div></section>' +
       '</div>';
     return '<section class="sp-shell' + (compact ? ' is-compact' : '') + '" data-tab="' + st.tab + '" data-state="' + (connected ? (st.accountOpen ? 'account' : 'ready') : 'setup') + '" aria-label="Spotify Fernsteuerung">' +
-      topMarkup() + (connected && !st.accountOpen ? bannerMarkup() + tabsMarkup() : '') + content + '</section>';
+      topMarkup() + (connected && !st.accountOpen ? bannerMarkup() + webPlayerMarkup() + tabsMarkup() : '') + content + '</section>';
   }
 
   function nowMarkup() {
@@ -1547,6 +1649,7 @@
       liked: st.liked,
       results: st.results ? Object.fromEntries(Object.entries(st.results).map(([key, value]) => [key, value.length])) : null,
       mounted: st.mounted,
+      webPlayer: { status: st.webStatus, device: !!st.webDeviceId },
       polling: !!pollTimer,
       error: st.error,
       notice: st.notice
@@ -1555,6 +1658,8 @@
 
   Object.assign(window, {
     meviSpotifyHTML: html,
+    meviSpotifyWebPlayer: startWebPlayer,
+    meviSpotifyTransferWeb: transferToWebPlayer,
     meviSpotifyMount: mount,
     meviSpotifyUnmount: unmount,
     meviSpotifyConnect: showDialog => connect(showDialog === true),
