@@ -21,9 +21,8 @@ an; sein unabhängiger Range-Test meldet 1.570.800.962 Bytes Gesamtgröße.
 
 HttpSource akzeptierte `HEAD Content-Length: 0` als Dateigröße. Dadurch
 bleibt der HTTP-Puffer minimal und der dateigrößenabhängigen Suche fehlt
-eine gültige Obergrenze. Dieser Codefehler ist reproduziert. Die tatsächliche
-HEAD-Antwort des betroffenen Providers ist noch nicht beobachtet: Ob dieser
-Pfad den konkreten Film betrifft, muss die neue Diagnose zeigen.
+eine gültige Obergrenze. Dieser Codefehler ist reproduziert. Die spätere Nutzerabnahme bestätigt HEAD-Length 0 und diesen Fehlerpfad
+auch für den betroffenen Film; siehe reale Rückmeldung unten.
 
 Der ergänzte `patches/movi-seek.patch`:
 
@@ -112,3 +111,17 @@ wenige Ranges bei langem Stillstand auf Decoder, Audio und Wiedergabefreigabe.
 Dafür fehlen noch native Seek-Rückkehr, erste Paketzeit und erstes
 decodiertes/gerendertes Bild. `seeked` und `canplay` ersetzen diese
 Messpunkte nicht.
+
+## Reale Rückmeldung nach PR #3
+
+Der Filmtest bestätigt HEAD-Length 0, korrekt ermittelte
+1.570.800.962 Bytes und 50.0 MiB HTTP-Puffer. Der 75-%-Benchmark erreicht
+playing nach 641 ms, die folgenden Sprünge nach 527, 695 und 1.265 ms.
+Die Zusammenfassung für den Benchmark meldet fünf Ranges, 36 MiB und
+keine Überlappung. Der Nutzer bestätigt sofort sichtbares Bild und
+synchronen Ton. Damit ist die Seek-Korrektur für diesen Film praktisch
+bestätigt. Die Startsequenz benötigt weiterhin 12.590 ms.
+
+Ein anderer Film scheitert an einer nicht freigegebenen 302-Weiterleitung,
+nicht am bestätigten Größen-Fallback. Folgekorrektur:
+[QA_MKV_REDIRECTS.md](QA_MKV_REDIRECTS.md).

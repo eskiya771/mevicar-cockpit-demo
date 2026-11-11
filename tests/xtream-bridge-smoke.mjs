@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 const require=createRequire(import.meta.url);
 const {once}=await import('node:events');
+process.env.MEVITV_VOD_REDIRECT_MODE='allowlist';
 process.env.XTREAM_UPSTREAM='http://127.0.0.1:8080';
 process.env.XTREAM_USER='test-user';
 process.env.XTREAM_PASSWORD='test-pass';

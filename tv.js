@@ -271,17 +271,53 @@ function moviSourceReport(element){
  const capacity=Number.isFinite(d.bufferCapacityBytes)?(d.bufferCapacityBytes/1048576).toFixed(1):'?';
  moviReport('Datei/Demuxer: '+bytes(d.fileSizeBytes)+'/'+bytes(d.demuxerFileSizeBytes)+' Bytes · HTTP-Puffer: '+capacity+' MiB · HEAD-Length: '+(d.headContentLength??'?')+' · Größe per '+(d.sizeSource||'?')+' · Patch '+d.revision,'info','source');
 }
+async function moviBridgeReason(response){
+ if(!(response.headers.get('content-type')||'').toLowerCase().includes('application/json')){
+  await response.body?.cancel?.();return '';
+ }
+ const reader=response.body?.getReader?.();if(!reader)return '';
+ let text='',size=0;const decoder=new TextDecoder();
+ try{
+  for(;;){
+   const {value,done}=await reader.read();if(done)break;
+   size+=value.byteLength;if(size>4096)return '';
+   text+=decoder.decode(value,{stream:true});
+  }
+  text+=decoder.decode();
+  const message=JSON.parse(text)?.error;if(typeof message!=='string')return '';
+  // Only relay the bridge's defined messages; never arbitrary upstream bodies.
+  if(message==='Expired media ticket')return 'Wiedergabe-Link abgelaufen. Film erneut starten.';
+  if(/^Medienserver [a-z0-9.-]{1,253} ist nicht freigegeben\. In MEVITV_VOD_REDIRECT_HOSTS eintragen\.$/.test(message)||
+     /^Unsichere Medienserver-Weiterleitung \([A-Z_]{1,48}\)$/.test(message)||
+     /^Provider media HTTP [1-5][0-9]{2}$/.test(message)||
+     /^Provider-Verbindung fehlgeschlagen \([A-Z0-9_]{2,48}\)$/.test(message)||
+     message==='Zu viele Medienserver-Weiterleitungen')return message;
+  return '';
+ }catch{return '';}
+ finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
+}
 async function moviNetworkCheck(url,valid){
  try{
   const ctrl=new AbortController(),timeout=setTimeout(()=>ctrl.abort(),8000);
   try{
    const response=await fetch(url,{method:'GET',headers:{Range:'bytes=0-1'},cache:'no-store',credentials:'omit',signal:ctrl.signal});
-   if(!valid()){await response.body?.cancel?.();return;}
+   if(!valid()){await response.body?.cancel?.();return false;}
    const range=response.headers.get('content-range');
    moviReport('Range-Test: HTTP '+response.status+(range?' · Content-Range '+range.slice(0,80):' · Content-Range nicht sichtbar')+(response.status===206?' · Partial Content':response.status===200?' · Range ignoriert':' · HTTP-Fehler'),response.ok?'info':'error');
-   await response.body?.cancel?.();
+   if(!response.ok){
+    const reason=await moviBridgeReason(response);if(!valid())return false;
+    const detail='HTTP '+response.status+(reason?' · '+reason:' · Bridge/Provider liefert keine erreichbare Filmdatei');
+    moviReport('Bridge-Fehler: '+detail,'error','bridge-error');
+    status('MKV nicht erreichbar: '+detail);
+    return false;
+   }
+   await response.body?.cancel?.();return true;
   }finally{clearTimeout(timeout);}
- }catch(e){if(valid())moviReport('Range/CORS-Test: '+(e.name==='AbortError'?'Timeout':'Netzwerk oder CORS blockiert'),'error');}
+ }catch(e){
+  if(!valid())return false;
+  moviReport('Range/CORS-Test: '+(e.name==='AbortError'?'Timeout':'Netzwerk oder CORS blockiert'),'error');
+  return true; // Inconclusive probe: retain Movi's own network recovery.
+ }
 }
 async function moviCheckMkvIndex(){
  const element=moviElement,src=element?.src;
@@ -463,6 +499,7 @@ async function playMoviVod(url,name,stillCurrent){
  moviReport('Pufferlimit: '+moviBufferMB+' MB · Startschwelle unverändert','info','buffer-limit');
  global.meviMediaStopForSource?.('tv');global.meviSpotifyPauseForSource?.('tv');
  try{
+  if(!await moviNetworkCheck(url,valid)||!valid())return;
   await loadMoviPlayer();
   if(!valid())return;
   const element=document.createElement('movi-player');
@@ -512,7 +549,6 @@ async function playMoviVod(url,name,stillCurrent){
   const stage=root.querySelector('.tv-stage');
   stage.appendChild(element);moviElement=element;video.hidden=true;
   moviReport('Engine: '+String(element.build||'slim')+' · WASM separat geladen'+(moviExperimentalRequested()?' · QUELLCODE-TESTBUILD':' · STABIL'),'info','engine');
-  void moviNetworkCheck(url,valid);
   monitorMoviRanges(valid);
   element.src=url;
   const started=element.play?.();

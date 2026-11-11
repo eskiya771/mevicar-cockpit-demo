@@ -2,6 +2,9 @@
 // Run behind an HTTPS reverse proxy (e.g. Synology). Never expose this service without TLS.
 'use strict';
 const http=require('node:http');
+const https=require('node:https');
+const net=require('node:net');
+const dns=require('node:dns/promises');
 const crypto=require('node:crypto');
 const {Readable}=require('node:stream');
 const fs=require('node:fs');
@@ -20,16 +23,89 @@ const allowedActions=new Set(['get_live_categories','get_live_streams','get_vod_
 const safeId=id=>/^\d{1,15}$/.test(String(id));
 const safeExt=ext=>/^(m3u8|ts|mp4|mkv|avi|mov)$/.test(String(ext));
 const vodRedirectHosts=new Set((process.env.MEVITV_VOD_REDIRECT_HOSTS||'').split(',').map(s=>s.trim().toLowerCase()).filter(s=>/^[a-z0-9.-]+$/.test(s)));
-function checkedMediaRedirect(location,previous){
+const publicMediaRedirects=(process.env.MEVITV_VOD_REDIRECT_MODE||'public')==='public';
+function isPublicMediaAddress(address){
+ const family=net.isIP(address);
+ if(family===4){
+  const [a,b,c]=address.split('.').map(Number);
+  return !(a===0||a===10||a===127||a>=224||
+   (a===168&&b===63&&c===129&&address.endsWith('.16'))||(a===100&&b>=64&&b<=127)||(a===169&&b===254)||
+   (a===172&&b>=16&&b<=31)||(a===192&&(b===168||
+    (b===0&&(c===0||c===2))||(b===88&&c===99)))||
+   (a===198&&(b===18||b===19||(b===51&&c===100)))||
+   (a===203&&b===0&&c===113));
+ }
+ if(family===6){
+  // Only global unicast. Excludes mapped IPv4, NAT64, local/link-local,
+  // multicast, Teredo/6to4 and documentation/special-use prefixes.
+  const normalized=new URL('http://['+address+']/').hostname.slice(1,-1);
+  const [first,second]=normalized.split(':').map(x=>parseInt(x||'0',16));
+  return first>=0x2000&&first<=0x3fff&&first!==0x2002&&first!==0x3fff&&
+   !(first===0x2001&&(second<0x200||second===0xdb8));
+ }
+ return false;
+}
+function pinnedMediaLookup(hostname,addresses){
+ const approved=addresses.map(x=>({address:x.address,family:x.family}));
+ return (name,options,callback)=>{
+  if(typeof options==='function'){callback=options;options={};}
+  const opts=typeof options==='number'?{family:options}:options||{};
+  if(name.replace(/^\[|\]$/g,'').toLowerCase()!==hostname.toLowerCase()){
+   const error=Error('Unexpected media hostname');error.code='EAI_NONAME';return callback(error);
+  }
+  const found=approved.filter(x=>!opts.family||x.family===opts.family);
+  if(!found.length){const error=Error('No matching media address');error.code='EAI_ADDRFAMILY';return callback(error);}
+  if(opts.all)return callback(null,found);
+  callback(null,found[0].address,found[0].family);
+ };
+}
+async function checkedMediaRedirect(location,previous,signal,resolve=dns.lookup){
  if(!location)throw Error('MISSING_LOCATION');
  let next;
  try{next=new URL(location,previous);}catch{throw Error('BAD_LOCATION');}
  if(!['http:','https:'].includes(next.protocol)||next.username||next.password||next.hash)throw Error('UNSAFE_URL');
- // Only the configured provider and explicitly trusted CDN hostnames are permitted.
- // Never follow redirects to untrusted or private destinations via arbitrary URLs.
  const sameProvider=next.hostname.toLowerCase()===base.hostname.toLowerCase()&&next.port===base.port;
- if(!sameProvider&&!vodRedirectHosts.has(next.hostname.toLowerCase()))throw Error('CDN_HOST_NOT_ALLOWED:'+next.hostname.toLowerCase());
- return next;
+ if(sameProvider)return {url:next,lookup:null};
+ if(!publicMediaRedirects){
+  if(!vodRedirectHosts.has(next.hostname.toLowerCase()))throw Error('CDN_HOST_NOT_ALLOWED:'+next.hostname.toLowerCase());
+  return {url:next,lookup:null};
+ }
+ if(signal?.aborted)throw Error('REQUEST_ABORTED');
+ const hostname=next.hostname.replace(/^\[|\]$/g,'');
+ let addresses,onAbort;
+ try{
+  const family=net.isIP(hostname);
+  if(family)addresses=[{address:hostname,family}];
+  else{
+   const aborted=new Promise((_,reject)=>{
+    onAbort=()=>reject(Error('REQUEST_ABORTED'));
+    signal?.addEventListener('abort',onAbort,{once:true});
+   });
+   addresses=await Promise.race([resolve(hostname,{all:true,verbatim:true}),aborted]);
+  }
+ }catch{throw Error(signal?.aborted?'REQUEST_ABORTED':'DNS_LOOKUP_FAILED');}
+ finally{if(onAbort)signal?.removeEventListener('abort',onAbort);}
+ // Reject mixed public/private answers too. The connection below uses these
+ // exact addresses, so a second DNS lookup cannot rebind to an internal host.
+ if(!addresses.length||addresses.some(x=>!isPublicMediaAddress(x.address)||net.isIP(x.address)!==x.family)){
+  throw Error('NON_PUBLIC_ADDRESS');
+ }
+ return {url:next,lookup:pinnedMediaLookup(hostname,addresses)};
+}
+function fetchPinnedMedia(url,{method,headers,signal,lookup}){
+ return new Promise((resolve,reject)=>{
+  const transport=url.protocol==='https:'?https:http;
+  const request=transport.request(url,{method,headers:{...headers,'Accept-Encoding':'identity'},
+   signal,lookup,agent:false},incoming=>{
+   const responseHeaders=new Headers();
+   for(let i=0;i<incoming.rawHeaders.length;i+=2)responseHeaders.append(incoming.rawHeaders[i],incoming.rawHeaders[i+1]);
+   const noBody=method==='HEAD'||[204,205,304].includes(incoming.statusCode);
+   if(noBody)incoming.resume();
+   resolve(new Response(noBody?null:Readable.toWeb(incoming),{status:incoming.statusCode,headers:responseHeaders}));
+  });
+  request.once('error',reject);
+  request.end();
+ });
 }
 
 function provider(){const u=new URL(upstream);if(!['http:','https:'].includes(u.protocol)||u.username||u.password||u.search||u.hash)throw Error('Invalid upstream');if(!username||!password||token.length<32||!origin.startsWith('https://'))throw Error('Missing secure environment');return u;}
@@ -197,16 +273,18 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
    controller.abort();
    if(trace&&trace.duration_ms===null){trace.duration_ms=Date.now()-trace.at;trace.state=res.writableFinished?'complete':'aborted';}
   });
-  let remote,current=upstreamURL(path),redirects=0;
+  let remote,current=upstreamURL(path),redirects=0,mediaLookup=null;
   try{
    for(;;){
-    remote=await fetch(current,{method:req.method,headers,redirect:'manual',signal:controller.signal});
+    remote=mediaLookup
+     ?await fetchPinnedMedia(current,{method:req.method,headers,signal:controller.signal,lookup:mediaLookup})
+     :await fetch(current,{method:req.method,headers,redirect:'manual',signal:controller.signal});
     if(trace){trace.redirects=redirects;trace.status=remote.status;trace.header_ms=Date.now()-trace.at;}
     if(![301,302,303,307,308].includes(remote.status))break;
     if(++redirects>5){await remote.body?.cancel?.();return reply(res,502,{error:'Zu viele Medienserver-Weiterleitungen'});}
     const location=remote.headers.get('location');
     let next;
-    try{next=checkedMediaRedirect(location,current);}
+    try{next=await checkedMediaRedirect(location,current,controller.signal);}
     catch(e){
      await remote.body?.cancel?.();
      const message=String(e.message);
@@ -215,7 +293,7 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
      return reply(res,502,{error:host?'Medienserver '+host+' ist nicht freigegeben. In MEVITV_VOD_REDIRECT_HOSTS eintragen.':'Unsichere Medienserver-Weiterleitung ('+message+')'});
     }
     await remote.body?.cancel?.();
-    current=next;
+    current=next.url;mediaLookup=next.lookup;
    }
    if(redirects)console.info('[MeviTV VOD] Followed',redirects,'approved redirect(s)','type:',type,'extension:',ext);
   }catch(e){
@@ -248,4 +326,4 @@ async function handler(req,res){res.setHeader('Referrer-Policy','no-referrer');r
 }
 const server=http.createServer((req,res)=>handler(req,res).catch(()=>{if(!res.headersSent)reply(res,502,{error:'Bridge request failed'});else res.destroy();}));
 if(require.main===module)server.listen(port,host,()=>console.log('MeviTV bridge listening on '+host+':'+port));
-module.exports={handler,server,mac,safeExt,safeId};
+module.exports={handler,server,mac,safeExt,safeId,checkedMediaRedirect,isPublicMediaAddress,fetchPinnedMedia};
