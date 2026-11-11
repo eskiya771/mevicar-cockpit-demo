@@ -21,7 +21,7 @@ assert(tvSource.includes("get('moviExperimental')==='1'"));
 assert(tvSource.includes("'./vendor/experimental/element.slim.global.js'"));
 assert(tvSource.includes("moviAssetBase()+'movi.wasm'"));
 assert(tvSource.includes('return 50;'));
-assert(tvSource.includes('moviBeginSeekTrace()'));
+assert(tvSource.includes('moviBeginSeekTrace(Number(element.currentTime))'));
 assert(tvSource.includes('moviSeekHistory.push(moviSeekTrace)'));
 assert(tvSource.includes('for(const trace of moviSeekHistory)'));
 assert(tvSource.includes('moviSeekSummaryTimers.push(timer)'));
