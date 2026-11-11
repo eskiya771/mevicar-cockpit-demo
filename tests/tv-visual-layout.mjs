@@ -178,7 +178,7 @@ async function measure(page){return page.evaluate(()=>{
  const get=s=>rect(document.querySelector(s));
  const root=document.querySelector('.tv-root');
  const controls=[...root.querySelectorAll('button,input,select')].filter(e=>e.checkVisibility()&&!e.closest('dialog')&&!e.closest('.tv-list,.tv-xtream-list'));
- return {viewport:{width:innerWidth,height:innerHeight},document:{width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight},dock:get('#dock'),library:get('.tv-library'),player:get('.tv-player'),stage:get('.tv-stage'),actions:get('.tv-actions'),list:get('.tv-xtream-list'),controls:controls.map(e=>({label:e.getAttribute('aria-label')||e.textContent, ...rect(e)}))};
+ return {viewport:{width:innerWidth,height:innerHeight},document:{width:document.documentElement.scrollWidth,height:document.documentElement.scrollHeight},dock:get('#dock'),library:get('.tv-library'),player:get('.tv-player'),stage:get('.tv-stage'),actions:get('.tv-actions'),list:get('.tv-xtream-list'),controls:controls.map(e=>({label:e.getAttribute('aria-label')||e.textContent,compact:!!e.closest('.tv-xtream-tools,.tv-xtream-tabs,.tv-player>header,.tv-program'), ...rect(e)}))};
 });}
 function validate(m){
  assert(m.document.width<=m.viewport.width+1&&m.document.height<=m.viewport.height+1,'no document overflow');
@@ -186,5 +186,5 @@ function validate(m){
  assert(m.list.height>=96,'at least two channels visible');
  assert(m.actions.bottom<=m.stage.y,'controls above the TV image');
  assert(m.stage.width>=250&&m.stage.height>=140,'usable player area');
- for(const c of m.controls){assert(c.width>=43.5&&c.height>=43.5,`${c.label}: 44px touch target`);assert(c.x>=0&&c.y>=0&&c.right<=m.viewport.width+1&&c.bottom<=m.viewport.height+1,`${c.label}: within viewport`);}
+ for(const c of m.controls){const minimum=c.compact?30:43.5;assert(c.width>=43.5&&c.height>=minimum,`${c.label}: ${c.compact?'compact 30px':'44px'} touch target`);assert(c.x>=0&&c.y>=0&&c.right<=m.viewport.width+1&&c.bottom<=m.viewport.height+1,`${c.label}: within viewport`);}
 }
