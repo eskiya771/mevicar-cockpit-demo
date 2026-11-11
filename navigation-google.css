@@ -1,0 +1,29 @@
+/* MeviCar Next Google Maps: preserve Classic-like full-map navigation overlays. */
+.mg-navigation{isolation:isolate;background:#162737}
+.mg-navigation:before{display:none!important}
+.mg-navigation .mg-map{position:absolute;inset:0;z-index:0;width:100%;height:100%;background:#132a3b}
+.mg-navigation .overlay,.mg-navigation .preview,.mg-navigation .navbanner{z-index:3}
+.mg-navigation .keyboard{z-index:4}
+.mg-map-state{position:absolute;z-index:1;top:12px;right:12px;max-width:min(340px,44%);border-radius:12px;background:#10283edc;color:#e2f6ff;font-size:12px;padding:9px 12px;pointer-events:none}
+.mg-map-state[hidden]{display:none}
+.mg-my-location{position:absolute;z-index:3;right:14px;bottom:20px;width:48px;height:48px;border:1px solid #7aeaff86;border-radius:14px;color:#e7fdff;background:#17394be8;font-size:30px;display:grid;place-items:center;box-shadow:0 5px 18px #0006}
+.mg-search-message{display:block;padding:12px;color:#d2e8f5;font-size:clamp(12px,1.55vh,15px);line-height:1.45}
+.mg-setup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;gap:9px;max-width:min(440px,90%);width:100%;padding:clamp(13px,2vw,22px);border:1px solid #59dffc77;border-radius:16px;background:#12283ef5;box-shadow:0 12px 48px #000a;color:#e9faff;text-align:left}
+.mg-setup strong{font-size:clamp(17px,2.7vh,24px)}
+.mg-setup p,.mg-setup small{font-size:clamp(10px,1.5vh,13px);line-height:1.4;margin:0}
+.mg-setup code{font-size:11px;overflow-wrap:anywhere}
+.mg-setup input{width:100%;min-height:42px;border-radius:9px;padding:8px;background:#091c30;color:#fff;border:1px solid #75a9ce88}
+.mg-setup button{min-height:43px;border-radius:10px;background:#1aaec3;border:1px solid #bbffff;color:#021b27;font-weight:800}
+.mg-navigation .overlay:has(.nav-suggestions .mg-setup) .mg-setup{position:static;transform:none;max-width:none}
+.mg-result{width:100%;text-align:left}
+.mg-navigation .nav-preview{max-width:min(480px,85%);z-index:5}
+.mg-route-banner{max-width:min(430px,60%);min-width:0}
+#mg-live-gps{color:#b5e8fa;margin-top:6px;font-size:clamp(12px,1.7vh,16px)}
+@media (orientation:landscape) and (max-height:500px){
+ .mg-setup{gap:4px;padding:9px;max-width:400px}
+ .mg-setup strong{font-size:15px}
+ .mg-setup p,.mg-setup small{font-size:10px}
+ .mg-setup input,.mg-setup button{min-height:30px;padding:5px}
+ .mg-my-location{width:39px;height:39px;font-size:22px;bottom:7px;right:7px}
+ .mg-map-state{font-size:10px;padding:5px;max-width:35%}
+}
