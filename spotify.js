@@ -249,7 +249,7 @@
     queueError: '',
     liked: null,
     likedUri: '',
-    tab: 'now',
+    tab: 'browse',
     browse: 'playlists',
     browseData: {},
     browseLoading: false,
@@ -691,7 +691,7 @@
   }
   function tabsMarkup() {
     return '<div class="sp-tabs" role="tablist" aria-label="Spotify-Ansichten">' +
-      [['now', 'Jetzt', 'disc'], ['browse', 'Durchsuchen', 'list'], ['search', 'Suche', 'search']].map(([id, label, glyph]) =>
+      [['browse', 'Bibliothek', 'list'], ['search', 'Suche', 'search']].map(([id, label, glyph]) =>
         '<button type="button" class="sp-tab' + (st.tab === id ? ' selected' : '') + '" role="tab" data-tab="' + id + '" aria-selected="' + (st.tab === id) + '" onclick="meviSpotifyTab(\'' + id + '\')">' + icon(glyph) + '<span>' + esc(label) + '</span></button>'
       ).join('') + '</div>';
   }
