@@ -657,8 +657,15 @@
       // iOS: activateElement must be invoked by a user click whenever possible.
       st.webPlayer?.activateElement();
       const id = st.webDeviceId;
-      await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[id],play:true})});
+      const pending = pendingPlayback();
+      await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[id],play:!!pending})});
       rememberDevice(id);
+      if (pending) {
+        await api('/me/player/play?device_id=' + encodeURIComponent(id),
+          {method:'PUT',body:JSON.stringify(pending.body)});
+        st.pendingPlay = null;
+        setNotice('Wiedergabe: ' + pending.title);
+      }
       webPlayerStatus('Wiedergabe über MeviCar');
       await poll(true);
     } catch(error) { webPlayerStatus('Bereit',errorText(error)); }
@@ -1179,13 +1186,17 @@
   }
   async function queueItem(item) {
     if (!item?.uri) return;
+    if (!st.webDeviceId) {
+      setNotice('Zuerst den MeviCar Player starten.');
+      return;
+    }
     if (item.kind !== 'track' && item.kind !== 'episode') {
       st.error = 'Nur Titel und Podcast-Folgen lassen sich zur Warteschlange hinzufügen.';
       paintBanner();
       return;
     }
     try {
-      await api('/me/player/queue?' + new URLSearchParams({ uri: item.uri }).toString(), { method: 'POST' });
+      await api('/me/player/queue?' + new URLSearchParams({ uri: item.uri, device_id: st.webDeviceId }).toString(), { method: 'POST' });
       setNotice('Zur Warteschlange: ' + item.title);
       const link = $('sp-link'); if (link) link.value = '';
       if (st.queueOpen) { await loadQueue(); paintNow(); }
@@ -1231,11 +1242,12 @@
   }
   async function seek(value) {
     const player = st.player;
+    if (!st.webDeviceId || player?.device?.id !== st.webDeviceId) return;
     const duration = Number(player?.item?.duration_ms) || 0;
     if (!duration) return;
     const ms = Math.round(clamp(Number(value) || 0, 0, 1000) / 1000 * duration);
     try {
-      await api('/me/player/seek?position_ms=' + ms, { method: 'PUT' });
+      await api('/me/player/seek?position_ms=' + ms + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
       player.progress_ms = ms;
       st.progressBase = ms;
       st.playerAt = Date.now();
@@ -1246,11 +1258,12 @@
   }
   async function seekBy(delta) {
     const player = st.player;
+    if (!st.webDeviceId || player?.device?.id !== st.webDeviceId) return;
     const duration = Number(player?.item?.duration_ms) || 0;
     const base = Number(st.progressBase) || 0;
     const ms = clamp(base + (Number(delta) || 0), 0, duration || Number.MAX_SAFE_INTEGER);
     try {
-      await api('/me/player/seek?position_ms=' + Math.round(ms), { method: 'PUT' });
+      await api('/me/player/seek?position_ms=' + Math.round(ms) + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
       player.progress_ms = ms;
       st.progressBase = ms;
       st.playerAt = Date.now();
@@ -1259,20 +1272,20 @@
     } catch (error) { handleApiError(error); }
   }
   async function shuffle() {
-    if (!st.player) return;
+    if (!st.webDeviceId || st.player?.device?.id !== st.webDeviceId) return;
     try {
       const next = !st.player.shuffle_state;
-      await api('/me/player/shuffle?state=' + String(next), { method: 'PUT' });
+      await api('/me/player/shuffle?state=' + String(next) + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
       st.player.shuffle_state = next;
       paintNow();
     } catch (error) { handleApiError(error); }
   }
   async function repeat() {
-    if (!st.player) return;
+    if (!st.webDeviceId || st.player?.device?.id !== st.webDeviceId) return;
     const sequence = { off: 'context', context: 'track', track: 'off' };
     const next = sequence[st.player.repeat_state || 'off'] || 'off';
     try {
-      await api('/me/player/repeat?state=' + next, { method: 'PUT' });
+      await api('/me/player/repeat?state=' + next + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
       st.player.repeat_state = next;
       paintNow();
     } catch (error) { handleApiError(error); }
@@ -1380,9 +1393,10 @@
     } catch (error) { handleApiError(error); }
   }
   async function setVolume(value) {
+    if (!st.webDeviceId) return;
     const volume = Math.round(clamp(Number(value) || 0, 0, 100));
     try {
-      await api('/me/player/volume?volume_percent=' + volume, { method: 'PUT' });
+      await api('/me/player/volume?volume_percent=' + volume + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
       const active = st.devices.find(device => device.is_active);
       if (active) active.volume_percent = volume;
       if (st.player?.device) st.player.device.volume_percent = volume;
@@ -1589,8 +1603,9 @@
     else playItem(item);
   }
   function pauseForSource(target) {
-    if (target === 'spotify' || !st.token || !st.player?.is_playing) return;
-    api('/me/player/pause', { method: 'PUT' }).then(() => {
+    if (target === 'spotify' || !st.token || !st.webDeviceId || !st.player?.is_playing ||
+        st.player.device?.id !== st.webDeviceId) return;
+    api('/me/player/pause?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' }).then(() => {
       if (st.player) st.player.is_playing = false;
       paintNow();
       paintBanner();
