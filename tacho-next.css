@@ -75,3 +75,33 @@
  .cockpit .full.tacho-next-host .tn-compass-mark{font-size:10px;top:2px}
  .cockpit .full.tacho-next-host .tn-stats{min-height:0;padding:3px 10px}
 }
+
+/* Legible compass tape: only cardinal/intercardinal bearings get text. */
+.tn-compass-band{
+  isolation:isolate;
+  mask-image:none;
+  -webkit-mask-image:none;
+  background:linear-gradient(90deg,#0a1525 0%,#153448 50%,#0a1525 100%);
+}
+.tn-compass-track{
+  mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
+}
+.tn-compass-mark{
+  top:5px;
+  height:calc(100% - 6px);
+  gap:5px;
+  font-variant-numeric:tabular-nums;
+}
+.tn-compass-mark i{height:7px;width:1px;background:#65869a}
+.tn-compass-mark.tn-minor{opacity:.65}
+.tn-compass-mark.tn-cardinal{color:#53ebf3}
+.tn-compass-mark.tn-cardinal i{height:11px;width:2px;background:#53ebf3}
+.tn-compass-mark b{font-size:inherit;font-weight:800;line-height:1.2}
+.tn-compass-pointer{z-index:2;box-shadow:0 0 8px #00ddff}
+.cockpit .full.tacho-next-host .tn-compass-band{height:clamp(38px,3.3vw,46px)}
+@media(max-height:500px){
+ .cockpit .full.tacho-next-host .tn-compass-band{height:30px}
+ .tn-compass-mark{top:3px;gap:2px}
+ .tn-compass-mark.tn-cardinal i{height:7px}
+}
