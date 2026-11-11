@@ -18,6 +18,7 @@ function status(message){
  error=message;
  const e=document.getElementById('mg-status');
  if(e){e.textContent=message;e.hidden=false;e.classList.add('mg-diagnostic')}
+ const notice=document.getElementById('mg-map-notice');if(notice)notice.hidden=false;
  const change=document.getElementById('mg-change-key');
  if(change)change.hidden=false;
 }
