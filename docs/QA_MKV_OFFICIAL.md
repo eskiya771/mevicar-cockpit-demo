@@ -57,3 +57,40 @@ Nach der Veröffentlichung die normale MeviCar-Next-URL beziehungsweise die
 installierte PWA neu laden. Der bekannte Größen-Fix bleibt im Diagnoseprotokoll
 sichtbar. Die rund 12,6 Sekunden Startladezeit des ursprünglichen Testfilms
 war nicht Gegenstand dieser Übernahme.
+
+## Wartung und Aufräumen (11. November 2026)
+
+**Ein neuer MoviPlayer-Build ist nicht bei jedem MeviCar-Release erforderlich.**
+Die offizielle Auslieferung verwendet ausschließlich das eingecheckte,
+versionsfeste und per SHA-256 geprüfte Paar aus JavaScript und WASM.
+Der normale Pages-Workflow baut MoviPlayer daher bewusst nicht selbst.
+
+Die Fehlerbehebung bestand aus zwei Ebenen:
+
+- **JavaScript/TypeScript:** Die Korrekturen der HTTP-Dateigröße,
+  Range-Anfragen und der Seek-/Probe-Übergabe erforderten ein neues
+  Browser-Bundle, aber für sich genommen **keinen neuen WASM-Build**.
+- **Nativer Matroska-Demuxer:** `patches/movi-cues-fastseek.patch` verändert
+  den C-/FFmpeg-basierten Teil. Damit dieser Fix wirksam wird, war ein
+  **neuer WASM-Build** nötig, gefolgt von der gemeinsamen Validierung des
+  JS-/WASM-Paars.
+
+**Dauerhaft behalten:** die beiden Patches, den gepinnten Upstream-Commit,
+`.github/workflows/movi-experiment.yml` für einen späteren gezielten
+Quellcode-Neubau, die Seek-Regressionen, den offiziellen Versionsordner
+und die Integritätsprüfung in `tests/movi-official-smoke.mjs`.
+Der Experimental-Workflow ist kein Bestandteil des normalen Pages-Releases;
+sein Ergebnis ersetzt den offiziellen Player nicht automatisch.
+
+**Bewusst nicht löschen:** die alten JS-/WASM-URLs unter
+`dist/vendor/` einschließlich `experimental/`. Sie sind lediglich
+Kompatibilitätskopien desselben bestätigten Players für alte Tabs und
+PWA-Caches; es gibt dadurch **keine zweite aktive Player-Variante**.
+Den Parameter `?moviExperimental=1` wertet die aktuelle Anwendung
+nicht mehr als Player-Umschaltung aus.
+
+**Nur noch Historie:** `docs/QA_MKV_SEEK.md` und die älteren
+experimentellen Testergebnisse beschreiben die Fehlersuche. Für Betrieb
+und Updates gilt diese offizielle Anleitung. Neue Änderungen am Player
+nur mit neuem Versionsverzeichnis, aktualisiertem Manifest, erneuter
+Regression und anschließendem realen MKV-Abnahmetest übernehmen.
