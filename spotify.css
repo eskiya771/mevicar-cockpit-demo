@@ -335,3 +335,28 @@ html[data-theme="liquidglass"] .sp-art{border-color:#ffffff66}
 }
 html[data-theme="cyberpunk"] .sp-voice-button.is-listening{background:#8d2886;border-color:#f39df2}
 html[data-theme="liquidglass"] .sp-voice-button{background:#c2eeff26;border-color:#ddf6ff93}
+
+/* Spotify Premium browser playback, consistent with the compact media toolbar. */
+.sp-web-player{
+ display:flex;align-items:center;flex-wrap:wrap;gap:7px;
+ flex:none;padding:6px clamp(8px,1.1vw,14px);
+ background:#0d2630;border-bottom:1px solid #43d69a45;
+ min-width:0;
+}
+.sp-web-action{
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;
+ min-height:38px;padding:6px 13px;border-radius:10px;
+ background:#14553c;border:1px solid #47d89299;
+ color:#e3ffed;font-size:clamp(11px,1.5vh,14px);font-weight:800;
+}
+.sp-web-action .sp-icon{width:18px;height:18px}
+.sp-web-action.is-on{background:#23a65c;color:#051a0f}
+.sp-web-status{color:#adcad2;font-size:clamp(10px,1.3vh,12px)}
+.sp-web-error{color:#ffc4cd;font-size:clamp(10px,1.3vh,12px);min-width:0}
+.sp-shell.is-compact .sp-web-player{padding:4px 7px;gap:4px}
+.sp-shell.is-compact .sp-web-action{min-height:32px;padding:4px 8px;font-size:10px}
+.sp-shell.is-compact .sp-web-status{font-size:10px}
+@media (orientation:landscape) and (max-height:480px){
+ .sp-web-player{padding:3px 8px;gap:4px}
+ .sp-web-action{min-height:30px;padding:3px 8px}
+}
