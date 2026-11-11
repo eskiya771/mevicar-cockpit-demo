@@ -14,9 +14,15 @@ function persist(){try{localStorage.setItem(DATA,JSON.stringify(cache))}catch{}}
 function key(){try{return localStorage.getItem(KEY)||''}catch{return ''}}
 function setKey(){const input=document.getElementById('mg-key');const k=(input?.value||'').trim();if(!/^[A-Za-z0-9_-]{20,}$/.test(k)){status('Ungültiger Google Maps API-Key.');return}try{localStorage.setItem(KEY,k)}catch{status('Browser-Speicher nicht verfügbar.');return}location.reload()}
 function removeKey(){try{localStorage.removeItem(KEY)}catch{}location.reload()}
-function status(message){error=message;const e=document.getElementById('mg-status');if(e)e.textContent=message}
-function setupHTML(){return '<div class="mg-setup"><strong>Google Maps aktivieren</strong><p>Für die Web-App benötigst du einen Google Maps JavaScript API-Key mit HTTP-Referrer-Beschränkung auf <code>https://eskiya771.github.io/mevicar-cockpit-demo/*</code>.</p><input id="mg-key" type="text" spellcheck="false" autocomplete="off" placeholder="Browser-API-Key" aria-label="Google Maps Browser-API-Key"><button type="button" onclick="MeviGoogleNav.setKey()">Google Maps verbinden</button><small>Google Maps JavaScript API, Places API (New) und Routes API aktivieren. Der Key wird ausschließlich in diesem Browser gespeichert.</small><span id="mg-status" role="status">'+text(error)+'</span></div>'}
-function mapBackdrop(){return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+(!key()?setupHTML():'<div class="mg-map-state" id="mg-status" role="status">'+text(error||'Google Maps wird geladen …')+'</div>')}
+function status(message){
+ error=message;
+ const e=document.getElementById('mg-status');
+ if(e){e.textContent=message;e.hidden=false;e.classList.add('mg-diagnostic')}
+ const change=document.getElementById('mg-change-key');
+ if(change)change.hidden=false;
+}
+function setupHTML(){return '<div class="mg-setup"><strong>Google Maps aktivieren</strong><p>Für die Web-App benötigst du einen Browser-API-Key. Als zugelassene Website füge <code>https://eskiya771.github.io/*</code> hinzu (manche Browser übertragen nur die Domain als Referrer).</p><input id="mg-key" type="text" spellcheck="false" autocomplete="off" placeholder="Browser-API-Key" aria-label="Google Maps Browser-API-Key"><button type="button" onclick="MeviGoogleNav.setKey()">Google Maps verbinden</button><small>Google Maps JavaScript API, Places API (New) und Routes API aktivieren. Der Key wird ausschließlich in diesem Browser gespeichert.</small><span id="mg-status" role="status">'+text(error)+'</span></div>'}
+function mapBackdrop(){return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+(!key()?setupHTML():'<div class="mg-map-state" id="mg-map-notice" role="status"><span id="mg-status">'+text(error||'Google Maps wird geladen …')+'</span><button type="button" id="mg-change-key" class="mg-change-key" onclick="MeviGoogleNav.removeKey()"'+(error?'':' hidden')+'>API-Schlüssel erneut einrichten</button></div>')}
 function load(){
  if(!key())return Promise.reject(new Error('Google Maps Browser-Key fehlt.'));
  if(window.google?.maps?.importLibrary)return Promise.resolve(window.google.maps);
@@ -24,6 +30,8 @@ function load(){
  mapLoading=new Promise((resolve,reject)=>{
    const cb='__meviMapsReady';
    const script=document.createElement('script');
+   // Google's callback also fires when the script loads but authorization fails.
+   window.gm_authFailure=()=>status('Google Maps verweigert die Berechtigung. Prüfe Abrechnung, Maps JavaScript API und die Website-Freigabe https://eskiya771.github.io/* in Google Cloud.');
    const timeout=setTimeout(()=>{cleanup();reject(new Error('Google Maps konnte nicht geladen werden. API-Key und Cloud-Freigaben prüfen.'))},15000);
    function cleanup(){clearTimeout(timeout);delete window[cb]}
    window[cb]=()=>{cleanup();resolve(window.google.maps)};
@@ -47,7 +55,7 @@ async function mount(nextState){
      if(selected)mark(selected);
      if(routeData)drawRoute();
    }
-   const hint=document.querySelector('.mg-map-state');if(hint)hint.hidden=true;
+   const hint=document.querySelector('.mg-map-state');if(hint)hint.hidden=!error;
  }catch(e){status(e.message)}
 }
 function mark(place){if(!map||!place)return;if(marker)marker.setMap(null);marker=new google.maps.Marker({map,position:{lat:place.lat,lng:place.lng},title:place.name});map.panTo({lat:place.lat,lng:place.lng});map.setZoom(15)}
@@ -103,20 +111,34 @@ function selectedAddress(){return selected?.address||'Bitte gültige Adresse aus
 function position(){return new Promise((resolve,reject)=>{if(!navigator.geolocation){reject(new Error('Standortfunktion nicht verfügbar'));return}navigator.geolocation.getCurrentPosition(p=>{current={lat:p.coords.latitude,lng:p.coords.longitude};resolve(current)},e=>reject(new Error('Standort nicht verfügbar: '+e.message)),{enableHighAccuracy:true,timeout:12000,maximumAge:5000})})}
 async function myLocation(){try{const p=await position();if(map){map.panTo(p);map.setZoom(16)}status('Aktueller Standort gefunden.')}catch(e){status(e.message)}}
 function clearLines(){for(const l of routeLines)l.setMap(null);routeLines=[]}
-function drawRoute(){clearLines();if(!map||!routeData)return;const renderer=new google.maps.DirectionsRenderer({map,suppressMarkers:false,preserveViewport:false,polylineOptions:{strokeColor:'#26dcff',strokeWeight:7}});renderer.setDirections(routeData);routeLines=[{setMap:x=>renderer.setMap(x)}]}
+function drawRoute(){
+ clearLines();if(!map||!routeData)return;
+ routeLines=routeData.createPolylines();
+ for(const line of routeLines){line.setOptions({strokeColor:'#26dcff',strokeWeight:7});line.setMap(map)}
+ const path=routeData.path||[];
+ if(path.length>1){
+  const bounds=new google.maps.LatLngBounds();
+  for(const point of path)bounds.extend({lat:point.lat,lng:point.lng});
+  map.fitBounds(bounds,55);
+ }
+}
 let routeSummary='';
 async function calculateRoute(){
  if(!selected){status('Bitte zuerst ein Ziel auswählen.');return false}
  try{
    await load();
    const from=await position();
-   const destination={lat:selected.lat,lng:selected.lng};
-   const service=new google.maps.DirectionsService();
-   const r=await service.route({origin:from,destination,travelMode:google.maps.TravelMode.DRIVING,provideRouteAlternatives:false});
-   if(!r.routes?.length)throw new Error('Keine Fahrroute gefunden.');
-   routeData=r;drawRoute();
-   const leg=r.routes[0].legs[0];
-   routeSummary=(leg.distance?.text||'')+' · '+(leg.duration?.text||'');
+   const {Route}=await google.maps.importLibrary('routes');
+   const {routes}=await Route.computeRoutes({
+     origin:from,destination:{lat:selected.lat,lng:selected.lng},
+     travelMode:'DRIVING',
+     fields:['path','distanceMeters','durationMillis']
+   });
+   if(!routes?.length)throw new Error('Keine Fahrroute gefunden.');
+   routeData=routes[0];drawRoute();
+   const km=(routeData.distanceMeters||0)/1000;
+   const minutes=Math.round((routeData.durationMillis||0)/60000);
+   routeSummary=new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(km)+' km · '+minutes+' Min.';
    window.meviGoogleRouteReady?.(routeSummary);
    return true;
  }catch(e){status('Routenberechnung fehlgeschlagen: '+(e.message||e));return false}
