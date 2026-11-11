@@ -226,7 +226,9 @@ assert.match(api.scopes,/streaming/,'Spotify Premium Web Playback requires strea
 assert.ok(source.includes('https://sdk.scdn.co/spotify-player.js'),'Official Web Playback SDK');
 assert.ok(source.includes('activateElement()'),'Browser playback must support user activation');
 assert.ok(source.includes('meviSpotifyWebPlayer'),'Local player control must be bound');
-assert.ok(source.includes('device_ids:[st.webDeviceId]'),'Local player must use Spotify Connect transfer');
+assert.ok(source.includes('device_ids:[id]'),'Local player must use Spotify Connect transfer');
+assert.ok(source.includes('webTransferBusy'),'Device transfer must be guarded against duplicate requests');
+assert.match(css,/data-tab="now"\] \.sp-body/,'Desktop Now tab must have a dedicated layout');
 
 /* Premium errors surface as a readable state instead of fake playback. */
 const premium=createEnv({connected:true,shell:{},fetchImpl:url=>url.includes('/me/player')?json({error:{status:403,message:'Player command failed: Premium required'}},403):json({})});
