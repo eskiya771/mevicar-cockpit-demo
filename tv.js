@@ -127,10 +127,22 @@ function xtFilteredItems(api,account){
 }
 function xtStatus(v){const e=root?.querySelector('.tv-xtream-status');if(e)e.textContent=v;}
 function paintXtAccounts(){const api=global.meviXtream,e=root?.querySelector('.tv-xtream-accounts');if(!api||!e)return;e.innerHTML=api.state.accounts.map(a=>'<div class="tv-source-row"><span>'+esc(a.name)+' <small>'+a.items.live.length+' Live · '+a.items.movie.length+' Filme · '+a.items.series.length+' Serien</small></span><button data-xt-account="'+esc(a.id)+'">Öffnen</button><button data-xt-delete="'+esc(a.id)+'">Löschen</button></div>').join('')||'<p>Noch kein Xtream-Katalog verbunden.</p>';}
-function paintXtream(){const api=global.meviXtream,area=root?.querySelector('.tv-xtream-catalog');if(!api||!area)return;const a=api.active();xtreamView=!!a;root.classList.toggle('tv-xtream-mode',xtreamView);root.querySelector('.tv-list').hidden=xtreamView;root.querySelector('.tv-search').hidden=xtreamView;root.querySelector('.tv-filters').hidden=xtreamView;area.hidden=!xtreamView;if(!a)return;root.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(api.state.kind===b.dataset.kind)));const opts=[{id:'ALL',name:'Alle Kategorien'},...(a.categories[api.state.kind]||[])];area.querySelector('.tv-xtream-group').innerHTML=opts.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');area.querySelector('.tv-xtream-group').value=api.state.group;area.querySelector('.tv-xtream-search').value=api.state.query;
+function paintXtream(){const api=global.meviXtream,area=root?.querySelector('.tv-xtream-catalog');if(!api||!area)return;const a=api.active();xtreamView=!!a;root.classList.toggle('tv-xtream-mode',xtreamView);root.querySelector('.tv-list').hidden=xtreamView;root.querySelector('.tv-search').hidden=xtreamView;root.querySelector('.tv-filters').hidden=xtreamView;area.hidden=!xtreamView;if(!a)return;root.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(api.state.kind===b.dataset.kind)));const isLive=api.state.kind==='live';
+ const categories=a.categories[api.state.kind]||[];
+ let availableCategories=categories;
+ if(isLive&&(xtCountry!=='ALL'||xtFavoritesOnly)){
+  const categoryNames=new Map(categories.map(c=>[c.id,c.name]));
+  const relevant=(a.items.live||[]).filter(item=>xtFavoritesOnly?xtFavorites.includes(xtFavoriteKey(a,item)):xtCountryCode(item,categoryNames)===xtCountry);
+  const categoryIds=new Set(relevant.map(item=>item.category));
+  availableCategories=categories.filter(c=>categoryIds.has(c.id));
+ }
+ if(api.state.group!=='ALL'&&!availableCategories.some(c=>c.id===api.state.group))api.state.group='ALL';
+ const opts=[{id:'ALL',name:'Alle Kategorien'},...availableCategories];
+ area.querySelector('.tv-xtream-group').innerHTML=opts.map(x=>'<option value="'+esc(x.id)+'">'+esc(x.name)+'</option>').join('');
+ area.querySelector('.tv-xtream-group').value=api.state.group;area.querySelector('.tv-xtream-search').value=api.state.query;
  const live=api.state.kind==='live',countryRow=area.querySelector('.tv-live-filter-row'),countrySelect=area.querySelector('.tv-live-country'),favoriteFilter=area.querySelector('.tv-live-favorites');
  countryRow.hidden=!live;
- if(live){const countries=xtLiveCountries(a);if(xtCountry!=='ALL'&&!countries.includes(xtCountry)){xtCountry='ALL';saveXtFilters();}
+ if(live){const countries=xtLiveCountries(a);if(xtCountry!=='ALL'&&xtCountry!=='OTHER'&&!countries.includes(xtCountry)){xtCountry='ALL';saveXtFilters();}
  countrySelect.innerHTML='<option value="ALL">🌍 Alle Länder</option>'+countries.map(code=>'<option value="'+esc(code)+'">'+esc(COUNTRY_NAMES[code]||code)+'</option>').join('')+'<option value="OTHER">Sonstige</option>';
  countrySelect.value=xtCountry;countrySelect.disabled=xtFavoritesOnly;countrySelect.title=xtFavoritesOnly?'Favoriten werden unabhängig vom Land angezeigt':'Live-TV nach Land filtern';
  favoriteFilter.setAttribute('aria-pressed',String(xtFavoritesOnly));favoriteFilter.textContent=(xtFavoritesOnly?'★':'☆')+' Favoriten';}
