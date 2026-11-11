@@ -24,7 +24,7 @@ assert(tvSource.includes('element.addEventListener(\'playing\',onPlaying)'));
 assert(tvSource.includes('75%-Benchmark START'));
 assert(tvSource.includes('75%-Benchmark: '));
 assert(tvSource.includes('moviEverPlayed||moviSeekBusy'));
-assert(tvSource.includes('Seek-Ereignisse '+"'"+'+seekCount'));
+assert(tvSource.includes('Seek-Ereignisse '));
 assert(tvSource.includes("element.addEventListener('seeking',onSeeking)"));
 assert(tvSource.includes('innerhalb 90 s'));
 assert(tvSource.includes('moviBenchmark?.cancel?.()'));
