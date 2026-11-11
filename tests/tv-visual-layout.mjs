@@ -30,7 +30,7 @@ const transport=await readFile('tests/fixtures/tv-test.ts');
 const browser=await chromium.launch();
 const report={build:JSON.parse(await readFile('dist/build-info.json','utf8')),browser:browser.version(),profiles:[],fixture:'Synthetic 120-channel catalog + FFmpeg test video through real mpegts.js; no provider access'};
 const categories=[{category_id:'1',category_name:'Nachrichten'},{category_id:'2',category_name:'Sport'},{category_id:'3',category_name:'Kultur'}];
-const items=Array.from({length:120},(_,i)=>({stream_id:i+1,name:`${i===118?'DE: ':i===119?'TR: ':''}Testsender ${String(i+1).padStart(3,'0')} · ${i===0?'Sehr langer Sendername für die Layoutprüfung':'HD'}`,category_id:String(i%3+1),container_extension:'ts'}));
+const items=Array.from({length:120},(_,i)=>({stream_id:i+1,name:`${i===118?'DE: ':i===119?'TR: ':''}Testsender ${String(i+1).padStart(3,'0')} · ${i===0?'Sehr langer Sendername für die Layoutprüfung':'HD'}`,category_id:String(i%3+1),container_extension:'ts',stream_icon:i===0?'https://logos.fixture.test/ok.svg':i===1?'https://logos.fixture.test/missing.svg':''}));
 let failures=0;
 try{
  for(const [index,profile] of profiles.entries())for(const theme of ['default','cyberpunk','liquidglass']){
@@ -68,6 +68,10 @@ try{
     if(path.endsWith('.ts'))return route.fulfill({status:200,contentType:'video/mp2t',body:transport});
     return route.abort();
    });
+   await context.route('https://logos.fixture.test/**',route=>{
+    if(route.request().url().endsWith('/missing.svg'))return route.fulfill({status:404,body:'Not found'});
+    return route.fulfill({status:200,contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><circle cx="20" cy="20" r="16" fill="#33badd"/></svg>'});
+   });
    await page.goto(base,{waitUntil:'load'});
    await page.getByRole('button',{name:'Apps öffnen',exact:true}).click();
    const dockBefore=await page.locator('#dock').boundingBox();
@@ -80,6 +84,9 @@ try{
    await page.locator('.tv-xtream-item').first().waitFor();
    await page.locator('.tv-xtream-dialog').getByRole('button',{name:'Schließen',exact:true}).click();
    assert.equal(await page.locator('.tv-xtream-item').count(),120);
+   assert.equal(await page.locator('.tv-xtream-row').first().locator('img').getAttribute('loading'),'lazy','logos use lazy loading');
+   await expect(page.locator('.tv-xtream-row').nth(1).locator('.tv-channel-fallback')).toBeVisible();
+   await expect(page.locator('.tv-xtream-row').first().locator('img')).toBeVisible();
    await page.getByLabel('Kategorie',{exact:true}).selectOption('2');
    assert.equal(await page.locator('.tv-xtream-item').count(),40);
    await page.getByLabel('Katalog durchsuchen').fill('002');
@@ -90,6 +97,7 @@ try{
    await page.getByLabel('Katalog durchsuchen').fill('');
    await page.getByLabel('Kategorie',{exact:true}).selectOption('ALL');
    // Independent country filter and persistent favorite selection.
+   assert((await page.getByLabel('IPTV-Land').locator('option[value="DE"]').textContent()).includes('🇩🇪'),'country option includes German flag');
    await page.getByLabel('IPTV-Land').selectOption('DE');
    assert.deepEqual(await page.getByLabel('Kategorie',{exact:true}).locator('option').allTextContents(),['Alle Kategorien','Sport'],'German categories only');
    assert.equal(await page.locator('.tv-xtream-item').count(),1,'Germany only');
@@ -108,6 +116,7 @@ try{
    await page.locator('.tv-xtream-item').first().scrollIntoViewIfNeeded();
    // Real pinned mpegts.js and browser media decoder; only the incoming TS is synthetic.
    await page.locator('.tv-xtream-item').first().click();
+   await expect(page.locator('.tv-playing-logo')).toBeVisible();
    await page.waitForFunction(()=>{const v=document.querySelector('.tv-stage video');return v.videoWidth>0&&v.currentTime>0.1;},null,{timeout:20000});
    assert.equal(tickets.length,1,'one media ticket');
    assert.equal(tickets[0].transport,'raw','healthy mpegts.js must not fall back');
