@@ -283,6 +283,7 @@
     mounted: false,
     webPlayer: null,
     webDeviceId: '',
+    webTransferBusy: false,
     webStatus: 'Aus',
     webError: '',
     pollBlockedUntil: 0
@@ -645,20 +646,23 @@
       }
       st.webPlayer.activateElement();
       if (!await st.webPlayer.connect()) throw new Error('Spotify konnte den MeviCar Player nicht verbinden.');
-      if (st.webDeviceId) await transferToWebPlayer();
-      else webPlayerStatus('Registriere Gerät …');
+      if (!st.webDeviceId) webPlayerStatus('Registriere Gerät …');
     } catch(error) { webPlayerStatus('Fehler',error.message || String(error)); }
   }
   async function transferToWebPlayer() {
-    if (!st.webDeviceId) return;
+    if (!st.webDeviceId || st.webTransferBusy) return;
+    st.webTransferBusy = true;
     try {
       window.meviMediaStopForSource?.('spotify');
+      // iOS: activateElement must be invoked by a user click whenever possible.
       st.webPlayer?.activateElement();
-      await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[st.webDeviceId],play:true})});
-      rememberDevice(st.webDeviceId);
+      const id = st.webDeviceId;
+      await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[id],play:true})});
+      rememberDevice(id);
       webPlayerStatus('Wiedergabe über MeviCar');
       await poll(true);
     } catch(error) { webPlayerStatus('Bereit',errorText(error)); }
+    finally { st.webTransferBusy = false; }
   }
   function webPlayerMarkup() {
     if (!st.token) return '';
@@ -1651,7 +1655,7 @@
       liked: st.liked,
       results: st.results ? Object.fromEntries(Object.entries(st.results).map(([key, value]) => [key, value.length])) : null,
       mounted: st.mounted,
-      webPlayer: { status: st.webStatus, device: !!st.webDeviceId },
+      webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy },
       polling: !!pollTimer,
       error: st.error,
       notice: st.notice
