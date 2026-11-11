@@ -2,8 +2,10 @@ name: Experimental Movi MKV WASM from source
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     paths:
       - '.github/workflows/movi-experiment.yml'
+      - 'patches/movi-seek.patch'
 
 permissions:
   contents: read
@@ -13,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 110
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.22.2'
       - name: Fetch pinned Movi upstream source
         run: |
           git clone --filter=blob:none https://github.com/MrUjjwalG/movi-player.git movi-src
@@ -22,17 +28,19 @@ jobs:
           grep -q 'movi_mkv_index_near_fmt' wasm/movi_streams.c
           grep -q 'movi_mkv_index_misses' wasm/movi_streams.c
           grep -q 'AVIO_SEEKABLE_NORMAL' wasm/movi.c
-      - name: Prepare source build
+          git apply --check ../patches/movi-seek.patch
+          git apply ../patches/movi-seek.patch
+      - name: Prepare and test patched source
         run: |
           cd movi-src
           mkdir -p dist
           npm ci --ignore-scripts
+          npm run typecheck
+          npx vitest run src/demux/Demuxer.seek.test.ts
       - name: Build FFmpeg and Matroska seek demuxer to WebAssembly
         run: |
           cd movi-src
           docker compose run --rm build
-          # Docker builds as root in the bind mount; restore runner ownership
-          # before TypeScript emits declaration files in dist/wasm.
           sudo chown -R "$(id -u):$(id -g)" dist
           test -s dist/wasm/external/movi.wasm
       - name: Build matching slim browser player
@@ -44,15 +52,17 @@ jobs:
           test -s dist/element.slim.global.js
           test -s dist/wasm/external/movi.wasm
       - name: Stage standalone WASM alongside browser bundle
-        run: |
-          cd movi-src
-          cp dist/wasm/external/movi.wasm dist/movi.wasm
+        run: cp movi-src/dist/wasm/external/movi.wasm movi-src/dist/movi.wasm
       - name: Stamp traceable artifact
+        env:
+          MEVICAR_COMMIT: ${{ github.sha }}
         run: |
           cd movi-src
           sha256sum dist/movi.wasm dist/element.slim.global.js > dist/movi-experimental.sha256
           printf 'upstream=%s\n' "$(git rev-parse HEAD)" >> dist/movi-experimental.sha256
-      - name: Upload experimental binaries only (not production)
+          printf 'mevicar=%s\n' "$MEVICAR_COMMIT" >> dist/movi-experimental.sha256
+          printf 'patch_sha256=%s\n' "$(sha256sum ../patches/movi-seek.patch | cut -d' ' -f1)" >> dist/movi-experimental.sha256
+      - name: Upload experimental binaries only
         uses: actions/upload-artifact@v4
         with:
           name: movi-mkv-experimental-source-build

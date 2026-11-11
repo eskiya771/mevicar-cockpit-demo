@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.head_repository.full_name == github.repository)
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -232,7 +232,7 @@ jobs:
         run: |
           # Experimental files are never selected unless ?moviExperimental=1.
           # Keep the stable npm/WASM bundle untouched.
-          RUN_ID=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/movi-experiment.yml/runs?status=success&per_page=1" --jq '.workflow_runs[0].id // empty' || true)
+          RUN_ID=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/movi-experiment.yml/runs?status=success&branch=main&per_page=1" --jq '.workflow_runs[0].id // empty' || true)
           if [ -n "$RUN_ID" ]; then
             mkdir -p dist/vendor/experimental
             gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name movi-mkv-experimental-source-build --dir dist/vendor/experimental

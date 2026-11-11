@@ -1,0 +1,2 @@
+# Unified diff context lines contain significant single spaces.
+patches/*.patch -whitespace
