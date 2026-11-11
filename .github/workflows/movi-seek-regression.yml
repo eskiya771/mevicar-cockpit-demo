@@ -5,6 +5,12 @@ on:
       - 'patches/movi-seek.patch'
       - 'patches/movi-cues-fastseek.patch'
       - 'tv.js'
+      - 'sw.js'
+      - '.gitattributes'
+      - 'vendor/movi-*/**'
+      - 'scripts/verify-official-movi.mjs'
+      - 'tests/movi-official-smoke.mjs'
+      - '.github/workflows/pages.yml'
       - 'tests/tv-movi-diagnostics-smoke.mjs'
       - '.github/workflows/movi-experiment.yml'
       - '.github/workflows/movi-seek-regression.yml'
@@ -23,7 +29,9 @@ jobs:
         with:
           node-version: '24.22.2'
       - name: Check MeviTV diagnostics
-        run: node tests/tv-movi-diagnostics-smoke.mjs
+        run: |
+          node tests/tv-movi-diagnostics-smoke.mjs
+          node tests/movi-official-smoke.mjs
       - name: Check patch against pinned upstream
         run: |
           git clone --filter=blob:none https://github.com/MrUjjwalG/movi-player.git movi-src

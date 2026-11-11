@@ -278,3 +278,8 @@ Der erste experimentelle Suchphasen-Fix (PR #2) reicht laut Nutzerprotokoll noch
 ### Praktische Seek-Abnahme und öffentliche Medienserver
 
 Nach PR #3 bestätigt der Nutzer für den Testfilm sofortiges Bild und synchronen Ton bei 0,5–1,3 Sekunden Seek-Zeit; HEAD=0 wird korrekt per Range aufgelöst. Ein anderer Film scheitert an einer blockierten 302-Weiterleitung. Proxy 1.0.7 / Build 8 führt deshalb automatische öffentliche CDN-Ziele mit Adressprüfung und gebundener DNS-Auflösung ein; der explizite Allowlist-Modus bleibt optional. MeviTV zeigt den Bridge-Grund und vermeidet nutzlose Playerstarts nach HTTP-Fehlern. Details und Installationsstatus: [QA_MKV_REDIRECTS.md](QA_MKV_REDIRECTS.md).
+
+
+### Übernahme als offizieller MKV-Standard
+
+Auf Nutzerauftrag lädt die normale MeviCar-Next-URL nun den bestätigten Player aus `vendor/movi-mevitv-mkv-size-2/`. Frühere Testparameter ändern die Auswahl nicht mehr. JS/WASM sind mit Manifest und Prüfsummen versionsfest enthalten; Pages greift nicht mehr auf wechselnde npm-Versionen oder kurzlebige Actions-Artefakte für den offiziellen Player zurück. Service-Worker-Cache v32 übernimmt die neuen Asset-URLs. Proxy Build 8 ist bereits installiert bestätigt. Details: [QA_MKV_OFFICIAL.md](QA_MKV_OFFICIAL.md).

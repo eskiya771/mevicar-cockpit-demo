@@ -1,2 +1,7 @@
 # Unified diff context lines contain significant single spaces.
 patches/*.patch text eol=lf -whitespace
+
+# Preserve exact generated player bytes on every checkout.
+vendor/movi-*/*.js binary
+vendor/movi-*/*.wasm binary
+vendor/movi-*/LICENSE.txt text eol=lf

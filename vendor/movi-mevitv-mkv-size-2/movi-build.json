@@ -1,0 +1,21 @@
+{
+  "revision": "mevitv-mkv-size-2",
+  "version": "0.4.1",
+  "upstream": "8bd0b50d7cdfcef635e015ea93e365876088969d",
+  "source_commit": "3bad8175e2c12774389bec047d29468fc1c18dc0",
+  "build_run": "https://github.com/eskiya771/mevicar-cockpit-demo/actions/runs/43005124132",
+  "patches": {
+    "movi-seek.patch": "49d8f90ce056d750d33a524e07134b4f258abc877935ad5f3430bfb8a127eb59",
+    "movi-cues-fastseek.patch": "7cfdef387de603dd28387f152f3052242859b749891e730f7da087a563ccd89c"
+  },
+  "files": {
+    "element.slim.global.js": {
+      "sha256": "0b2de2789c03a5843782fdbefee19f267d15534d54711fb954442ab594cba6dc",
+      "bytes": 5082773
+    },
+    "movi.wasm": {
+      "sha256": "e4e67504dadf437ce676bf7abfef7808e05c4851876535a53dfdcd2889682f9c",
+      "bytes": 5644003
+    }
+  }
+}
