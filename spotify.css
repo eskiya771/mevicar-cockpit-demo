@@ -360,3 +360,85 @@ html[data-theme="liquidglass"] .sp-voice-button{background:#c2eeff26;border-colo
  .sp-web-player{padding:3px 8px;gap:4px}
  .sp-web-action{min-height:30px;padding:3px 8px}
 }
+
+/* MeviCar media cockpit: the selected tab must control the actual desktop
+   content. "Jetzt" uses the available space, browsing retains the mini-player. */
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-body{
+ grid-template-columns:minmax(0,1fr);
+}
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-browse-pane,
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-search-pane{
+ display:none;
+}
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-now-pane{
+ border-right:0;
+}
+.sp-shell:not(.is-compact)[data-tab="browse"] .sp-body,
+.sp-shell:not(.is-compact)[data-tab="search"] .sp-body{
+ grid-template-columns:minmax(0,43%) minmax(0,57%);
+}
+.sp-shell:not(.is-compact)[data-tab="browse"] .sp-browse-pane,
+.sp-shell:not(.is-compact)[data-tab="search"] .sp-search-pane{
+ display:flex;
+}
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-now{
+ width:min(100%,920px);
+ margin:0 auto;
+ padding:clamp(12px,2.2vh,26px) clamp(15px,2.8vw,36px);
+ grid-template-columns:minmax(130px,34%) minmax(0,1fr);
+ grid-template-areas:"art meta" "progress progress" "transport transport" "tools tools" "drawers drawers";
+ gap:clamp(8px,1.65vh,18px);
+ align-content:center;
+}
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-art{
+ width:clamp(145px,24vh,260px);
+ height:clamp(145px,24vh,260px);
+ max-width:100%;
+ justify-self:center;
+}
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-title{
+ font-size:clamp(23px,4.5vh,42px);
+ line-height:1.12;
+}
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-artist{
+ font-size:clamp(14px,2.45vh,21px);
+}
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-transport button{
+ width:clamp(48px,7.2vh,64px);
+ height:clamp(48px,7.2vh,64px);
+}
+.sp-shell:not(.is-compact)[data-tab="now"] .sp-transport .sp-primary{
+ width:clamp(64px,9.6vh,82px);
+ height:clamp(64px,9.6vh,82px);
+}
+/* Mobile landscape: avoid permanent player status taking the player height.
+   Keep the activation button visible and make it touch friendly. */
+@media (max-height:480px){
+ .sp-shell:not(.is-compact)[data-tab="now"] .sp-now{
+  width:100%;padding:5px 8px;gap:4px;
+  grid-template-columns:auto minmax(0,1fr);
+ }
+ .sp-shell:not(.is-compact)[data-tab="now"] .sp-art{
+  width:clamp(55px,17vh,85px);height:clamp(55px,17vh,85px);
+ }
+ .sp-shell:not(.is-compact)[data-tab="now"] .sp-title{font-size:clamp(15px,4vh,23px)}
+ .sp-shell:not(.is-compact)[data-tab="now"] .sp-artist{font-size:11px}
+ .sp-shell:not(.is-compact)[data-tab="now"] .sp-transport button{width:42px;height:42px}
+ .sp-shell:not(.is-compact)[data-tab="now"] .sp-transport .sp-primary{width:50px;height:50px}
+ .sp-web-player{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+ .sp-web-player::-webkit-scrollbar{display:none}
+ .sp-web-action{flex:none}
+ .sp-web-status{white-space:nowrap}
+}
+/* Distinguish source, device and playback controls without using three
+   competing oversized toolbars on the split screen. */
+.sp-shell.is-compact .sp-web-player{
+ flex-wrap:nowrap;
+ overflow-x:auto;
+ scrollbar-width:none;
+}
+.sp-shell.is-compact .sp-web-action{white-space:nowrap;flex:none}
+.sp-shell.is-compact .sp-web-status{white-space:nowrap;flex:none}
+html[data-theme="cyberpunk"] .sp-web-action{background:#4a1744;border-color:#ee67d9;color:#ffe0fa}
+html[data-theme="liquidglass"] .sp-web-player{background:#ffffff12;border-color:#ffffff33}
+html[data-theme="liquidglass"] .sp-web-action{background:#d9fff42d;border-color:#d9fff499;color:#eafffa}
