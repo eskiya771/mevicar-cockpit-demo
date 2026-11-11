@@ -8,6 +8,7 @@ const css = readFileSync(new URL('../speedometer.css', import.meta.url), 'utf8')
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const sw = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
 const workflow = readFileSync(new URL('../.github/workflows/pages.yml', import.meta.url), 'utf8');
+const qualityWorkflow = readFileSync(new URL('../.github/workflows/quality.yml', import.meta.url), 'utf8');
 new Function(src);
 
 assert.match(css, /\.tacho-app\.is-compact \.tacho-cluster/);
@@ -41,7 +42,7 @@ assert.ok(html.includes('meviSpeedMount()') && html.includes('meviSpeedUnmount()
 assert.ok(html.includes("s.app==='speed'&&s.mode==='full'") && html.includes('tacho-host'));
 assert.ok(html.includes('mapHTML()'), 'Split screen must keep the navigation map');
 assert.ok(workflow.includes('mevicar-speedometer-styles') && workflow.includes('speedometer.js speedometer.css'));
-assert.ok(workflow.includes('tests/speedometer-smoke.mjs'));
+assert.ok(qualityWorkflow.includes('tests/speedometer-smoke.mjs'));
 assert.ok(sw.includes("'./speedometer.js'") && sw.includes("'./speedometer.css'"));
 assert.match(sw,/mevicar-next-shell-v\d+/, 'Service worker needs a versioned cache');
 
