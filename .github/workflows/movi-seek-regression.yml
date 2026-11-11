@@ -1,0 +1,33 @@
+name: Movi seek regression
+on:
+  pull_request:
+    paths:
+      - 'patches/movi-seek.patch'
+      - '.github/workflows/movi-experiment.yml'
+      - '.github/workflows/movi-seek-regression.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seek:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check patch against pinned upstream
+        run: |
+          git clone --filter=blob:none https://github.com/MrUjjwalG/movi-player.git movi-src
+          git -C movi-src checkout 8bd0b50d7cdfcef635e015ea93e365876088969d
+          git -C movi-src apply --check ../patches/movi-seek.patch
+          git -C movi-src apply ../patches/movi-seek.patch
+      - name: Check types and HTTP seek regressions
+        working-directory: movi-src
+        run: |
+          npm ci --ignore-scripts
+          npm run typecheck
+          npx vitest run src/demux/Demuxer.seek.test.ts

@@ -268,3 +268,8 @@ Der Cache ist kontoabhängig, auf 30 Sender und zwei Minuten begrenzt. Der ausge
 Nutzer meldet funktionierendes EPG beim selben Anbieter in einem anderen Player; MeviTV Build 431 zeigte „Keine Programmdaten vom Anbieter verfügbar“. Die Meldung unterschied nicht zwischen leerer Antwort und verworfenen Zeitformaten. Die reale Providerantwort liegt dieser Sitzung nicht vor; die Ursache ist deshalb noch nicht abschließend verifiziert.
 
 Kompatibilitätskorrektur: numerische `start`/`end`-Felder und objektförmige Listen ebenfalls lesen. Datumsstrings ohne Zeitzone als ausdrücklich gekennzeichnete Anbieterzeiten anzeigen, statt ganze Sendungen zu verwerfen; kein geratenes Now/Next. Bei leerer/veralteter oder fehlgeschlagener Kurzabfrage Rückfall auf `get_simple_data_table`. Diagnose unterscheidet HTTP-Fehler, unbekanntes Antwortformat, empfangene/unlesbare Einträge und fehlende aktuelle Daten. Die neue vollständige Abfrage benötigt aktualisiertes `bridge/server.cjs` im Synology-Container; Pages aktualisiert diesen Container nicht. Anleitung in `bridge/README.md`. Keine Behauptung einer erfolgten NAS-Aktualisierung oder realen EPG-Freigabe.
+
+
+## MKV-Seek-Untersuchung vom 11. November 2026
+
+MeviTV-MKV-VOD nutzt Movi/FFmpeg-WASM im Browser. Ein reproduzierbarer Fehler im Übergang von nativer Seek-Suche zu HTTP-Pufferung wird über patches/movi-seek.patch im experimentellen Player korrigiert. Acht Transport-Regressionen und TypeScript sind geprüft; mangels betroffenem Testfilm sind reale Seek-Latenz und A/V-Abnahme noch offen. Stable und Synology-Bridge bleiben unverändert. Details und reproduzierbarer Build: [QA_MKV_SEEK.md](QA_MKV_SEEK.md).

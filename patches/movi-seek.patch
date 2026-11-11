@@ -1,0 +1,214 @@
+diff --git a/src/demux/Demuxer.seek.test.ts b/src/demux/Demuxer.seek.test.ts
+new file mode 100644
+index 0000000..38b1d00
+--- /dev/null
++++ b/src/demux/Demuxer.seek.test.ts
+@@ -0,0 +1,169 @@
++import { afterEach, describe, expect, it, vi } from "vitest";
++import { HttpSource } from "../source/HttpSource";
++import { Demuxer } from "./Demuxer";
++import type { SourceAdapter } from "../source/SourceAdapter";
++
++// Exercise the real demuxer/source boundary without a browser codec or WASM
++// binary. The native seek is a controlled stand-in; all HTTP reads are real
++// HttpSource reads, with a virtual ranged file as their transport.
++vi.mock("../wasm", () => ({
++  WasmBindings: class {},
++  ThumbnailBindings: class {},
++  loadWasmModule: vi.fn(),
++  loadWasmModuleNew: vi.fn(),
++  claimSharedModule: vi.fn(),
++  releaseSharedModule: vi.fn(),
++}));
++const MiB = 1024 * 1024;
++const sources: HttpSource[] = [];
++afterEach(() => {
++  for (const source of sources.splice(0)) source.close();
++  vi.unstubAllGlobals();
++  vi.restoreAllMocks();
++});
++
++function openedDemuxer(source: SourceAdapter, nativeSeek = async () => {}) {
++  const demuxer = new Demuxer(source);
++  Object.assign(demuxer, {
++    isOpened: true,
++    bindings: { seek: nativeSeek },
++  });
++  return demuxer;
++}
++
++function virtualFile(bufferMB = 2) {
++  const requests: Array<{ start: number; end: number }> = [];
++  const size = 256 * MiB;
++  vi.stubGlobal("crossOriginIsolated", false);
++  vi.stubGlobal("fetch", vi.fn(async (_url: unknown, init?: RequestInit) => {
++    if (init?.method === "HEAD") {
++      return new Response(null, { headers: { "Content-Length": String(size) } });
++    }
++    const range = new Headers(init?.headers).get("Range");
++    const match = /^bytes=(\d+)-(\d+)$/.exec(range || "");
++    if (!match) throw new Error("Expected a bounded range");
++    const start = Number(match[1]), end = Number(match[2]);
++    requests.push({ start, end });
++    const bytes = new Uint8Array(end - start + 1);
++    // Detect corrupt/wrong-position reads as well as redundant requests.
++    for (let i = 0; i < bytes.length; i++) bytes[i] = (start + i) % 251;
++    return new Response(bytes, {
++      status: 206,
++      headers: {
++        "Content-Length": String(bytes.length),
++        "Content-Range": `bytes ${start}-${end}/${size}`,
++      },
++    });
++  }));
++  const source = new HttpSource("https://range.test/film.mkv", {}, bufferMB);
++  sources.push(source);
++  return { source, requests };
++}
++
++describe("native seek to HTTP read handoff", () => {
++  it("brackets all native seek reads, including Cues, and releases probe mode", async () => {
++    const { source } = virtualFile();
++    const probe = vi.spyOn(source, "setProbeMode");
++    const hint = vi.spyOn(source, "hintSeek");
++    const demuxer = openedDemuxer(source, async () => {
++      expect(probe).toHaveBeenLastCalledWith(true);
++      // Native search may consume the player's hint via a cached read.
++      expect(hint).not.toHaveBeenCalled();
++    });
++    await demuxer.seek(120);
++    expect(probe.mock.calls).toEqual([[true], [false]]);
++    expect(hint.mock.calls).toEqual([[]]);
++  });
++
++  it("releases search mode on failure without claiming a successful landing", async () => {
++    const { source } = virtualFile();
++    const probe = vi.spyOn(source, "setProbeMode");
++    const hint = vi.spyOn(source, "hintSeek");
++    const demuxer = openedDemuxer(source, async () => { throw new Error("native seek failed"); });
++    await expect(demuxer.seek(120)).rejects.toThrow("native seek failed");
++    expect(probe.mock.calls).toEqual([[true], [false]]);
++    expect(hint).not.toHaveBeenCalled();
++  });
++
++  it.each([2, 50])("does not keep VBR landing reads in probe mode (%i MiB cap)", async (bufferMB) => {
++    const { source, requests } = virtualFile(bufferMB);
++    await source.getSize();
++    await source.read(8 * MiB, 256 * 1024);
++    source.hintSeek(220 * MiB); // Linear estimate: deliberately far from the real landing.
++    await openedDemuxer(source).seek(600);
++    const firstRequest = requests.length;
++    const landing = 100 * MiB;
++    for (let n = 0; n < 6; n++) {
++      const offset = landing + n * 256 * 1024;
++      const bytes = new Uint8Array(await source.read(offset, 256 * 1024));
++      expect(bytes.length).toBe(256 * 1024);
++      expect(bytes[0]).toBe(offset % 251);
++      expect(bytes[bytes.length - 1]).toBe((offset + bytes.length - 1) % 251);
++    }
++    const landed = requests.slice(firstRequest).filter(r => r.start >= landing);
++    // A bounded streaming window, rather than one HTTP request per AVIO read.
++    expect(landed.length).toBeLessThan(6);
++    expect(landed.filter(r => r.end - r.start + 1 === 256 * 1024)).toHaveLength(0);
++  });
++
++
++  it("keeps scattered native index probes bounded", async () => {
++    const { source, requests } = virtualFile(2);
++    await source.getSize();
++    await source.read(8 * MiB, 256 * 1024);
++    source.hintSeek(220 * MiB);
++    const firstRequest = requests.length;
++    const demuxer = openedDemuxer(source, async () => {
++      for (const offset of [220, 200, 180]) {
++        await source.read(offset * MiB, 256 * 1024);
++      }
++    });
++    await demuxer.seek(600);
++    const probes = requests.slice(firstRequest).filter(r => r.start >= 180 * MiB);
++    expect(probes).toHaveLength(3);
++    expect(probes.every(r => r.end - r.start + 1 === 256 * 1024)).toBe(true);
++  });
++
++  it("keeps probe mode until every overlapping native seek has settled", async () => {
++    const { source } = virtualFile();
++    const probe = vi.spyOn(source, "setProbeMode");
++    const hint = vi.spyOn(source, "hintSeek");
++    const settle: Array<() => void> = [];
++    const demuxer = openedDemuxer(source, () => new Promise<void>(resolve => settle.push(resolve)));
++    const first = demuxer.seek(60);
++    const second = demuxer.seek(120);
++    settle[0]();
++    await first;
++    expect(probe).toHaveBeenLastCalledWith(true);
++    expect(hint).not.toHaveBeenCalled();
++    settle[1]();
++    await second;
++    expect(probe).toHaveBeenLastCalledWith(false);
++    expect(hint.mock.calls).toEqual([[]]);
++  });
++
++  it("keeps cached backward seeks local", async () => {
++    const { source, requests } = virtualFile(50);
++    await source.getSize();
++    await source.read(8 * MiB, 256 * 1024);
++    const before = requests.length;
++    source.hintSeek(9 * MiB);
++    await openedDemuxer(source).seek(10);
++    await source.read(8 * MiB, 256 * 1024);
++    expect(requests.slice(before).filter(r => r.start < 8 * MiB + 256 * 1024 && r.end >= 8 * MiB)).toHaveLength(0);
++  });
++
++  it("supports sources without advisory HTTP hooks", async () => {
++    const source = {
++      read: async () => new ArrayBuffer(0),
++      getSize: async () => 1,
++      getPosition: () => 0,
++      seek: (n: number) => n,
++      close: () => {},
++      getKey: () => "local",
++    };
++    const nativeSeek = vi.fn(async () => {});
++    await openedDemuxer(source, nativeSeek).seek(15);
++    expect(nativeSeek).toHaveBeenCalledWith(15, -1, 1);
++  });
++});
+diff --git a/src/demux/Demuxer.ts b/src/demux/Demuxer.ts
+index 27e21c8..26b2e4f 100644
+--- a/src/demux/Demuxer.ts
++++ b/src/demux/Demuxer.ts
+@@ -86,6 +86,7 @@ export class Demuxer {
+   /** This demuxer holds the shared main-playback module — see claimSharedModule. */
+   private _holdsSharedModule = false;
+   private isOpened: boolean = false;
++  private activeSeeks = 0;
+   private wasmBinary?: Uint8Array;
+   private useNewWasmInstance: boolean = false;
+ 
+@@ -659,7 +660,25 @@ export class Demuxer {
+       throw new Error("Demuxer not opened");
+     }
+ 
+-    await this.bindings.seek(timestamp, -1, flags);
++    // The source must know the lifetime of the whole seek, including native
++    // Cues reads. WASM's optional onProbeMode callback goes through a
++    // SourceDataAdapter, which does not expose HttpSource's advisory hooks.
++    const seekSource = this.source as SourceAdapter & {
++      setProbeMode?: (on: boolean) => void;
++      hintSeek?: (nearOffset?: number) => void;
++    };
++    this.activeSeeks++;
++    seekSource.setProbeMode?.(true);
++    try {
++      await this.bindings.seek(timestamp, -1, flags);
++    } finally {
++      if (--this.activeSeeks === 0) seekSource.setProbeMode?.(false);
++    }
++
++    // Search is over. The next uncached read belongs to the actual landing,
++    // even when VBR puts it far from the player's time/size estimate. Re-arm
++    // after native reads, which may have consumed the original seek hint.
++    if (this.activeSeeks === 0) seekSource.hintSeek?.();
+   }
+ 
+   /**
