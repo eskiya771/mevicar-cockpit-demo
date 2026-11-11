@@ -27,3 +27,30 @@
  .mg-my-location{width:39px;height:39px;font-size:22px;bottom:7px;right:7px}
  .mg-map-state{font-size:10px;padding:5px;max-width:35%}
 }
+
+/* Keep controls readable if Google rejects the key and shows a light error map. */
+.mg-navigation .nav-browse,
+.mg-navigation .nav-search,
+.mg-navigation .nav-preview{
+ background:linear-gradient(140deg,#142e43f5,#1a3453f4);
+ color:#f3fbff;
+ border:1px solid #6da5c65e;
+ box-shadow:0 9px 25px #08132269;
+}
+.mg-navigation .nav-search-trigger,
+.mg-navigation .nav-search-field{color:#f3fbff;background:#203d53ee}
+.mg-navigation .nav-search-text,
+.mg-navigation .sectiontitle{color:#eaf9ff}
+.mg-map-state{pointer-events:auto;display:flex;flex-direction:column;gap:7px;z-index:5}
+.mg-map-state[hidden]{display:none!important}
+.mg-change-key{
+ align-self:flex-start;
+ border:1px solid #83efff70;
+ border-radius:9px;
+ background:#1b657d;
+ color:#f3fbff;
+ font-size:12px;font-weight:700;
+ padding:7px 10px;
+ cursor:pointer;
+}
+.mg-change-key[hidden]{display:none}
