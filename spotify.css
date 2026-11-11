@@ -442,3 +442,21 @@ html[data-theme="liquidglass"] .sp-voice-button{background:#c2eeff26;border-colo
 html[data-theme="cyberpunk"] .sp-web-action{background:#4a1744;border-color:#ee67d9;color:#ffe0fa}
 html[data-theme="liquidglass"] .sp-web-player{background:#ffffff12;border-color:#ffffff33}
 html[data-theme="liquidglass"] .sp-web-action{background:#d9fff42d;border-color:#d9fff499;color:#eafffa}
+
+/* Integrated volume control beside the main Spotify transport tools. */
+.sp-main-volume{
+ display:flex;align-items:center;justify-content:center;gap:7px;
+ min-width:140px;max-width:260px;flex:1 1 170px;
+ min-height:38px;padding:5px 9px;
+ border:1px solid #557c9b42;border-radius:10px;
+ background:#14243399;color:#c4dceb;
+}
+.sp-main-volume .sp-icon{width:18px;height:18px;flex:none}
+.sp-main-volume input{flex:1;min-width:55px;accent-color:var(--sp-green);cursor:pointer}
+.sp-main-volume span{flex:none;min-width:36px;text-align:right;font-size:clamp(10px,1.3vh,13px);font-variant-numeric:tabular-nums}
+.sp-shell.is-compact .sp-main-volume{min-width:110px;max-width:none;flex:1 1 130px;min-height:34px;padding:3px 6px}
+@media(max-height:480px){
+ .sp-main-volume{min-width:115px;min-height:32px;padding:3px 6px}
+ .sp-main-volume .sp-icon{width:15px;height:15px}
+ .sp-main-volume span{font-size:10px}
+}
