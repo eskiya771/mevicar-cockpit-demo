@@ -120,7 +120,7 @@ async function startXtMedia(api,a,type,id,extension,name){
  };
  try{
   if(type!=='live'||!a.credentials.bridge){
-   const convert=type!=='live'&&a.credentials.bridge&&String(extension||'').toLowerCase()==='mkv';
+   const convert=type!=='live'&&a.credentials.bridge&&['mkv','avi'].includes(String(extension||'').replace(/^\./,'').toLowerCase());
    const url=await api.playbackURL(a.credentials,type,id,extension,'default');
    if(!stillCurrent())return;
    if(convert)await playMoviVod(url,name,stillCurrent);
@@ -305,7 +305,7 @@ async function moviNetworkCheck(url,valid){
     const reason=await moviBridgeReason(response);if(!valid())return false;
     const detail='HTTP '+response.status+(reason?' · '+reason:' · Bridge/Provider liefert keine erreichbare Filmdatei');
     moviReport('Bridge-Fehler: '+detail,'error','bridge-error');
-    status('MKV nicht erreichbar: '+detail);
+    status('Videodatei nicht erreichbar: '+detail);
     return false;
    }
    await response.body?.cancel?.();return true;
@@ -490,9 +490,10 @@ async function playMoviVod(url,name,stillCurrent){
  moviLog=[];moviSessionInfo.clear();
  const diagnostic=root.querySelector('.tv-movi-diagnostics');
  if(diagnostic){diagnostic.hidden=false;diagnostic.open=true;}
- moviReport('MKV-Test gestartet: '+name);
+ const vodFormat=String(xtPlayback?.extension||'mkv').replace(/^\./,'').toUpperCase();
+ moviReport(vodFormat+'-Wiedergabe gestartet: '+name);
  const moviBufferMB=moviDesktopBufferMB();
- status('MKV wird clientseitig geladen (Movi Player, '+moviBufferMB+' MB Hintergrundpuffer) …');
+ status(vodFormat+' wird clientseitig geladen (Movi Player, '+moviBufferMB+' MB Hintergrundpuffer) …');
  moviReport('Pufferlimit: '+moviBufferMB+' MB · Startschwelle unverändert','info','buffer-limit');
  global.meviMediaStopForSource?.('tv');global.meviSpotifyPauseForSource?.('tv');
  try{
@@ -541,7 +542,7 @@ async function playMoviVod(url,name,stillCurrent){
   element.addEventListener('waiting',()=>{if(valid())moviReport('Warten auf Videodaten / Decoder');});
   element.addEventListener('canplay',()=>{if(valid()){if(seekStartedAt!==null)seekReadyAt=performance.now();moviReport('Wiedergabepuffer bereit');}});
   element.addEventListener('smoothwarning',e=>{if(valid()){const d=e.detail||{};moviReport('Leistungswarnung: '+String(d.message||'Decoder oder Datenrate').slice(0,100)+(d.software?' · Softwaredecoder':'')+(d.link?' · Netzwerkdatenrate':'')+(d.neededBps?' · benötigt '+Math.round(d.neededBps/1000)+' kbit/s':'')+(d.measuredBps?' · gemessen '+Math.round(d.measuredBps/1000)+' kbit/s':''),'error');}});
-  element.addEventListener('error',e=>{if(valid()){const message=String(e.detail?.message||e.detail?.error||e.detail||'unbekannter Fehler');moviReport('Player-Fehler: '+message,'error');status('MKV-Fehler: '+message.slice(0,100)+'');}});
+  element.addEventListener('error',e=>{if(valid()){const message=String(e.detail?.message||e.detail?.error||e.detail||'unbekannter Fehler');moviReport('Player-Fehler: '+message,'error');status(vodFormat+'-Fehler: '+message.slice(0,100)+'');}});
   element.addEventListener('errordisplay',e=>{if(valid()){const d=e.detail||{};moviReport('Decoder/Codec: '+String(d.title||'Fehler')+' · '+String(d.message||''),'error');}});
   const stage=root.querySelector('.tv-stage');
   stage.appendChild(element);moviElement=element;video.hidden=true;
