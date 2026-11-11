@@ -668,20 +668,21 @@
       '</div>';
   }
 
+  // Share the exact source-switcher markup and CSS classes with Radio/MeviMedia.
   function sourceMarkup() {
-    return '<div class="sp-sources" role="group" aria-label="Audioquelle">' +
-      [['radio', 'Radio', 'music'], ['spotify', 'Spotify', 'spotify'], ['media', 'Medien', 'folder']].map(([id, label, glyph]) =>
-        '<button type="button" class="sp-source' + (id === 'spotify' ? ' active' : '') + '" data-source="' + id + '" aria-label="' + esc(label) + '" aria-pressed="' + (id === 'spotify') + '" title="' + esc(label) + '" onclick="selectAudioSource(\'' + id + '\')">' + icon(glyph) + '<span>' + esc(label) + '</span></button>'
-      ).join('') + '</div>';
+    return [['radio','Radio','music'],['spotify','Spotify','disc'],['media','Medien','folder']]
+      .map(([id,label,glyph]) =>
+        '<button type="button" data-source="'+id+'" class="mm-mode-button '+(id==='spotify'?'active':'')+
+        '" aria-label="'+esc(label)+'" aria-pressed="'+(id==='spotify')+
+        '" onclick="selectAudioSource(\''+id+'\')">'+icon(glyph)+esc(label)+'</button>'
+      ).join('');
   }
   function topMarkup() {
-    const account = st.profile?.display_name || st.profile?.id || 'Verbunden';
-    return '<div class="sp-top">' +
-      '<div class="sp-identity"><span class="sp-eyebrow">SPOTIFY CONNECT</span><span class="sp-heading">SPOTIFY <em>PREMIUM</em></span></div>' +
-      '<div class="sp-top-actions">' + sourceMarkup() +
-      (st.token ? '<span class="sp-account" title="Verbundenes Spotify-Konto"><span class="sp-dot"></span><span id="sp-account-name">' + esc(account) + '</span></span>' : '') +
-      (st.token ? '<button type="button" class="sp-icon-button" aria-label="Spotify aktualisieren" title="Aktualisieren" onclick="meviSpotifyRefresh()">' + icon('refresh') + '</button>' : '') +
-      '<button type="button" class="sp-icon-button" aria-label="' + (st.accountOpen ? 'Zurück zur Wiedergabe' : 'Spotify-Konto und Einrichtung') + '" title="' + (st.accountOpen ? 'Zurück' : 'Konto') + '" onclick="meviSpotifyAccount()">' + icon(st.accountOpen ? 'back' : 'settings') + '</button>' +
+    return '<div class="mm-top sp-unified-top">' +
+      '<div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">SPOTIFY</span></div>' +
+      '<div class="mm-top-actions">' + sourceMarkup() +
+      (st.token ? '<button type="button" class="sp-icon-button sp-refresh-button" aria-label="Spotify aktualisieren" title="Aktualisieren" onclick="meviSpotifyRefresh()">' + icon('refresh') + '</button>' : '') +
+      '<button type="button" class="sp-icon-button sp-settings-button" aria-label="Spotify-Konto und Einrichtung" title="Konto" onclick="meviSpotifyAccount()">' + icon(st.accountOpen ? 'back' : 'settings') + '</button>' +
       '</div></div>';
   }
   function bannerMarkup() {
@@ -742,7 +743,7 @@
       '<section class="sp-pane sp-browse-pane" aria-label="Spotify durchsuchen"><div id="sp-browse-region">' + browseMarkup() + '</div></section>' +
       '<section class="sp-pane sp-search-pane" aria-label="Spotify suchen"><div id="sp-search-region">' + searchMarkup() + '</div></section>' +
       '</div>';
-    return '<section class="sp-shell' + (compact ? ' is-compact' : '') + '" data-tab="' + st.tab + '" data-state="' + (connected ? (st.accountOpen ? 'account' : 'ready') : 'setup') + '" aria-label="Spotify Fernsteuerung">' +
+    return '<section class="sp-shell' + (compact ? ' is-compact' : '') + '" data-tab="' + st.tab + '" data-state="' + (connected ? (st.accountOpen ? 'account' : 'ready') : 'setup') + '" aria-label="Spotify Player in MeviCar">' +
       topMarkup() + (connected && !st.accountOpen ? bannerMarkup() + webPlayerMarkup() + tabsMarkup() : '') + content + '</section>';
   }
 
