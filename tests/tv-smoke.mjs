@@ -10,6 +10,10 @@ assert(tvSource.includes("if(convert)await playMoviVod(url,name,stillCurrent)"))
 assert(tvSource.includes("const vodFormat=String(xtPlayback?.extension||'mkv')"));
 assert(tvSource.includes("element.setAttribute('buffersize',String(moviBufferMB))"));
 assert(tvSource.includes("element.setAttribute('wasmurl'"));
+assert(tvSource.includes("if(vodFormat==='AVI')"));
+assert(tvSource.includes("element.setAttribute('sw','')"));
+assert(tvSource.includes('FFmpeg/WASM-Softwaredecoder erzwungen'));
+assert(tvSource.includes("const vodFormat=String(xtPlayback?.extension||'mkv')"));
 assert(tvSource.includes("moviElement.destroy?.()"));
 assert(tvSource.includes("element.addEventListener('trackschange'"));
 assert(tvSource.includes("element.addEventListener('errordisplay'"));
