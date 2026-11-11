@@ -99,7 +99,7 @@ let xtreamView=false,xtreamSelected=null;
 const XT_FILTER_KEY='mevicar-xtream-live-filters-v1';
 const COUNTRY_NAMES={DE:'Deutschland',TR:'Türkei',AT:'Österreich',CH:'Schweiz',GB:'Großbritannien',UK:'Großbritannien',US:'USA',FR:'Frankreich',IT:'Italien',ES:'Spanien',NL:'Niederlande',BE:'Belgien',PL:'Polen',GR:'Griechenland',PT:'Portugal',RO:'Rumänien',BG:'Bulgarien',RU:'Russland',UA:'Ukraine',AL:'Albanien',BA:'Bosnien',HR:'Kroatien',RS:'Serbien',XK:'Kosovo',MK:'Nordmazedonien',AR:'Argentinien',BR:'Brasilien',IN:'Indien',PK:'Pakistan'};
 let xtCountry='ALL',xtFavoritesOnly=false,xtFavorites=[];
-try{const stored=JSON.parse(localStorage.getItem(XT_FILTER_KEY)||'{}');xtCountry=typeof stored.country==='string'&&/^(ALL|[A-Z]{2})$/.test(stored.country)?stored.country:'ALL';xtFavoritesOnly=stored.favoritesOnly===true;xtFavorites=Array.isArray(stored.favorites)?stored.favorites.filter(x=>typeof x==='string'&&x.length<220).slice(0,5000):[];}catch{}
+try{const stored=JSON.parse(localStorage.getItem(XT_FILTER_KEY)||'{}');xtCountry=typeof stored.country==='string'&&/^(ALL|OTHER|[A-Z]{2})$/.test(stored.country)?stored.country:'ALL';xtFavoritesOnly=stored.favoritesOnly===true;xtFavorites=Array.isArray(stored.favorites)?stored.favorites.filter(x=>typeof x==='string'&&x.length<220).slice(0,5000):[];}catch{}
 function saveXtFilters(){try{localStorage.setItem(XT_FILTER_KEY,JSON.stringify({country:xtCountry,favoritesOnly:xtFavoritesOnly,favorites:xtFavorites}));}catch{}}
 function xtFavoriteKey(account,item){return account.credentials.host+'|'+item.id;}
 function xtCountryCode(item,categoryNames){
