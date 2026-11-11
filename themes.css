@@ -477,3 +477,45 @@ html .cockpit .dock button:not(.active){
  }
  .app-home-surface .app-home-label{flex:0 0 auto;font-size:clamp(11px,1.8vh,15px);line-height:1.2}
 }
+
+/* The launcher scrolls only its app grid; shell, dock and header remain fixed.
+   Auto-sized rows retain usable icon/label space as the app count grows. */
+.app-home-surface .app-home-grid,
+.app-home-side .app-home-grid{
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  touch-action:pan-y;
+  align-content:stretch;
+  scrollbar-width:thin;
+  scrollbar-color:#85aecd55 transparent;
+}
+.app-home-surface .app-home-grid{
+  grid-template-rows:none;
+  grid-auto-rows:minmax(108px,1fr);
+}
+.app-home-side .app-home-grid{
+  grid-template-rows:none;
+  grid-auto-rows:minmax(82px,1fr);
+}
+@media (min-width:760px) and (min-height:530px){
+ .app-home-surface .app-home-grid{
+   grid-template-rows:none;
+   grid-auto-rows:minmax(135px,1fr);
+ }
+}
+@media (min-width:1100px) and (min-height:620px){
+ .app-home-surface .app-home-grid{
+   grid-template-rows:none;
+   grid-auto-rows:minmax(180px,1fr);
+ }
+}
+@media (orientation:landscape) and (max-height:529px){
+ .app-home-surface .app-home-grid{
+   grid-auto-rows:minmax(100px,1fr);
+ }
+ .app-home-side .app-home-grid{
+   grid-auto-rows:minmax(76px,1fr);
+ }
+}
