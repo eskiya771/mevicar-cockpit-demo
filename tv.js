@@ -505,6 +505,12 @@ async function playMoviVod(url,name,stillCurrent){
   element.setAttribute('playsinline','');
   element.setAttribute('aria-label',name);
   element.setAttribute('buffersize',String(moviBufferMB));
+  // AVI commonly contains legacy MPEG-4 Part 2 (DivX/Xvid), which WebCodecs does not decode reliably.
+  // Movi already bundles FFmpeg/WASM's MPEG-4 decoder; explicitly select it for AVI only.
+  if(vodFormat==='AVI'){
+   element.setAttribute('sw','');
+   moviReport('AVI: FFmpeg/WASM-Softwaredecoder erzwungen (MPEG-4 Part 2 / DivX / Xvid)');
+  }
   element.setAttribute('wasmurl',new URL(moviAssetBase()+'movi.wasm',document.baseURI).href);
   element.addEventListener('playing',()=>{if(valid()){moviEverPlayed=true;moviSeekBusy=false;status('▶ '+name+' · Movi Player');moviReport('Wiedergabe läuft');}});
   element.addEventListener('loadedmetadata',()=>{if(valid()){moviReport('Metadaten empfangen · Dauer '+(Number(element.duration)||0).toFixed(0)+' s');moviSourceReport(element);}});
