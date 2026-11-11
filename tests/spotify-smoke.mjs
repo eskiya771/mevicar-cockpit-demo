@@ -1,4 +1,4 @@
-/* Spotify Connect remote integration regression tests.
+/* Spotify browser-only integration regression tests.
    Run: node tests/spotify-smoke.mjs
    Tests static wiring, PKCE safety, link parsing, setup/connected UI and lifecycle.
    Live OAuth and real playback still require a registered Client ID and Premium. */
@@ -25,14 +25,14 @@ assert.doesNotMatch(source,/client_secret|clientSecret/,'SPA must never send a c
 assert.doesNotMatch(source,/accounts\.spotify\.com\/api\/token[\s\S]{0,200}secret/i);
 assert.match(source,/mevicar-spotify-client-v1/);
 assert.match(source,/mevicar-spotify-token-v1/);
-assert.match(source,/mevicar-spotify-device-v1/);
+assert.doesNotMatch(source,/mevicar-spotify-device-v1/);
 assert.match(source,/localStorage/);
 assert.match(source,/sessionStorage/);
 
 for(const endpoint of [
   '/me/player', '/me/player/play', '/me/player/pause',
   '/me/player/seek', '/me/player/shuffle', '/me/player/repeat', '/me/player/queue',
-  '/me/player/devices', '/me/player/volume', '/me/player/recently-played',
+  '/me/player/volume', '/me/player/recently-played',
   '/search', '/me/playlists', '/me/tracks', '/me/albums', '/me/shows', '/me/library'
 ]) assert.ok(source.includes(endpoint),'Missing Spotify Web API endpoint '+endpoint);
 assert.match(source,/api\('\/me\/player\/' \+ direction/);
@@ -150,14 +150,17 @@ assert.match(markup,/is-compact/);
 const connected=createEnv({connected:true,shell:{}});
 markup=connected.win.meviSpotifyHTML(false);
 assert.match(markup,/data-state="ready"/);
-assert.match(markup,/SPOTIFY <em>PREMIUM<\/em>/);
+assert.match(markup,/class="mm-top sp-unified-top"/);
+assert.match(markup,/class="mm-mode-button active"/);
+assert.match(markup,/class="sp-library-column"/);
+assert.match(markup,/data-source="spotify"/);
 assert.match(markup,/id="sp-now-region"/);
 assert.match(markup,/id="sp-browse-region"/);
 assert.match(markup,/id="sp-search-region"/);
 assert.match(markup,/Sprachsuche im Browser nicht verfügbar/);
 assert.match(markup,/class="sp-voice-button/);
 assert.match(markup,/disabled/);
-assert.match(markup,/Wiedergabestatus wird geladen/);
+assert.match(markup,/MeviCar Player starten/);
 assert.match(markup,/role="tablist"/);
 assert.equal(connected.win.meviSpotifyDebug().connected,true);
 
@@ -237,55 +240,27 @@ await new Promise(resolve=>setTimeout(resolve,15));
 assert.match(premium.win.meviSpotifyDebug().error,/Premium/);
 premium.win.meviSpotifyUnmount();
 
-/* No active device: a requested item waits for an explicit device choice, then plays there. */
+/* Only the browser player can receive audio; no arbitrary Spotify Connect target. */
 const calls=[];
-const devices=[
-  {id:'devA',name:'R1000PC',type:'Computer',is_active:false,volume_percent:80},
-  {id:'devB',name:'Web Player',type:'Computer',is_active:false,volume_percent:100}
-];
 const idle=createEnv({connected:true,shell:{},fetchImpl:(url,options)=>{
-  const method=options?.method||'GET';
-  const text=String(url);
-  calls.push({url:text,method,body:options?.body});
-  if(text.endsWith('/me/player')&&method==='GET')return json(null,204);
-  if(text.endsWith('/me/player/devices'))return json({devices});
+  calls.push({url:String(url),method:options?.method||'GET'});
   return json(null,204);
 }});
-idle.doc.getElementById('sp-link').value='https://open.spotify.com/track/4cOdK2wGLETKBW3PvgPWqT';
+idle.doc.getElementById('sp-link').value='spotify:track:4cOdK2wGLETKBW3PvgPWqT';
 idle.win.meviSpotifyPlayLink(false);
-await new Promise(resolve=>setTimeout(resolve,30));
-assert.equal(idle.win.meviSpotifyDebug().pendingPlay,true,'Play without an active device must ask for a device');
-assert.equal(calls.some(call=>call.url.includes('/me/player/play')),false,'No playback may start before a device is chosen');
-await idle.win.meviSpotifyTransfer('devA');
-assert.equal(idle.saved['mevicar-spotify-device-v1'],'devA','The chosen device must be remembered');
-const transfer=calls.find(call=>call.method==='PUT'&&/\/me\/player$/.test(call.url));
-assert.ok(transfer,'Choosing a device must transfer playback');
-assert.equal(JSON.parse(transfer.body).play,true,'Transfer must start playback when nothing runs');
-const started=calls.filter(call=>call.url.includes('/me/player/play?device_id=devA'));
-assert.equal(started.length,1,'The waiting item must start on the chosen device');
-assert.deepEqual(JSON.parse(started[0].body),{uris:['spotify:track:4cOdK2wGLETKBW3PvgPWqT']});
+await new Promise(resolve=>setTimeout(resolve,25));
+assert.equal(idle.win.meviSpotifyDebug().pendingPlay,true,'Selection is held for the MeviCar browser player');
+assert.equal(calls.some(call=>call.url.includes('/me/player/play')),false,'Never start playback on a remote Spotify device');
+assert.doesNotMatch(idle.win.meviSpotifyHTML(false),/Hierher wechseln|Geräte suchen|Spotify-Geräte/);
+assert.equal(typeof idle.win.meviSpotifyTransfer,'undefined','Remote transfer API must not be exposed');
+assert.ok(!source.includes('function transferDevice('),'Remove remote device transfer implementation');
+assert.ok(!source.includes('/me/player/devices'),'Do not enumerate remote Spotify devices');
+assert.match(css,/\.sp-library-column/,'Spotify library must be the left column');
+assert.match(css,/grid-template-columns:minmax\(0,44%\) minmax\(0,56%\)/,'Library and player must match MeviMedia layout');
 idle.win.meviSpotifyUnmount();
-
-/* With a single available device the cockpit targets it directly. */
-const singleCalls=[];
-const single=createEnv({connected:true,shell:{},fetchImpl:(url,options)=>{
-  const method=options?.method||'GET';
-  const text=String(url);
-  singleCalls.push({url:text,method,body:options?.body});
-  if(text.endsWith('/me/player')&&method==='GET')return json(null,204);
-  if(text.endsWith('/me/player/devices'))return json({devices:[devices[0]]});
-  return json(null,204);
-}});
-single.doc.getElementById('sp-link').value='spotify:album:4cOdK2wGLETKBW3PvgPWqT';
-single.win.meviSpotifyPlayLink(false);
-await new Promise(resolve=>setTimeout(resolve,30));
-const direct=singleCalls.find(call=>call.method==='PUT'&&call.url.includes('/me/player/play?device_id=devA'));
-assert.ok(direct,'A single device must be used without an extra prompt');
-assert.deepEqual(JSON.parse(direct.body),{context_uri:'spotify:album:4cOdK2wGLETKBW3PvgPWqT'});
-assert.equal(single.win.meviSpotifyDebug().pendingPlay,false);
 
 /* Rate limits are respected through Retry-After. */
 assert.match(source,/error\.retryAfter\s*=\s*retry/);
 assert.match(source,/st\.pollBlockedUntil\s*=\s*Date\.now\(\)\s*\+\s*retry\s*\*\s*1000/);
 
-console.log('Spotify smoke checks passed: PKCE, no secret, endpoints, migration safety, UI states, link validation, lifecycle, Premium state.');
+console.log('Spotify smoke checks passed: PKCE, native browser playback only, shared media UI, no remote transfers.');
