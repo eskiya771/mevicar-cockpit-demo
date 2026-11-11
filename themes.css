@@ -592,3 +592,13 @@ html .cockpit .dock button:not(.active){
  .app-home-surface .app-home-label{font-size:clamp(10px,2.3vh,13px)}
  .app-home-side .app-home-grid{grid-auto-rows:80px}
 }
+
+/* Settings gear has artwork extending beyond its SVG viewBox: give the caption air. */
+.app-home-surface .app-settings .app-home-icon{
+  transform:translateY(-9px) scale(.82);
+  transform-origin:center center;
+}
+.app-home-side .app-settings .app-home-icon{
+  transform:translateY(-3px) scale(.84);
+  transform-origin:center center;
+}
