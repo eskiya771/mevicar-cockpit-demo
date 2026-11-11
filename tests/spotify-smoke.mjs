@@ -162,6 +162,9 @@ assert.match(markup,/class="sp-voice-button/);
 assert.match(markup,/disabled/);
 assert.match(markup,/MeviCar Player starten/);
 assert.match(markup,/role="tablist"/);
+assert.match(markup,/Bibliothek/);
+assert.match(markup,/class="sp-library-column"/);
+assert.ok(markup.indexOf('sp-library-column') < markup.indexOf('sp-now-pane'),'Library must precede player, as in MeviMedia');
 assert.equal(connected.win.meviSpotifyDebug().connected,true);
 
 /* Mount starts polling, unmount stops it. */
@@ -231,7 +234,7 @@ assert.ok(source.includes('activateElement()'),'Browser playback must support us
 assert.ok(source.includes('meviSpotifyWebPlayer'),'Local player control must be bound');
 assert.ok(source.includes('device_ids:[id]'),'Local player must use Spotify Connect transfer');
 assert.ok(source.includes('webTransferBusy'),'Device transfer must be guarded against duplicate requests');
-assert.match(css,/data-tab="now"\] \.sp-body/,'Desktop Now tab must have a dedicated layout');
+assert.match(css,/\.sp-library-column/,'Library and search share the left media column');
 
 /* Premium errors surface as a readable state instead of fake playback. */
 const premium=createEnv({connected:true,shell:{},fetchImpl:url=>url.includes('/me/player')?json({error:{status:403,message:'Player command failed: Premium required'}},403):json({})});
