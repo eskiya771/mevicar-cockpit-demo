@@ -727,6 +727,7 @@
       '<div class="sp-account-profile"><span class="sp-account-avatar">' + icon('spotify') + '</span><div><strong id="sp-account-display">' + esc(name) + '</strong><small id="sp-account-id">' + esc(profile.id || 'Spotify Connect') + '</small></div></div>' +
       '<div class="sp-account-row"><span>Client ID</span><code>' + esc(maskClient(st.clientId)) + '</code></div>' +
       '<div class="sp-account-row"><span>Redirect-URI</span><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirectUri()) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div></div>' +
+      (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
       (st.confirmReset ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>Client ID und Spotify-Token wirklich aus diesem Browser löschen?</span></div>' : '') +
       '<div class="sp-account-actions">' +
       (st.confirmReset
