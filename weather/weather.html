@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="de">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Mevicar – Wetter in Adelsdorf</title><link rel="stylesheet" href="css/weather.css?v=5"></head>
+<body data-weather="loading">
+    <canvas id="weather-scene" aria-hidden="true"></canvas>
+    <header class="topbar"><div class="title"><span class="brand">MEVICAR NEXT / WETTER</span><h1>Adelsdorf<span>.</span></h1></div><nav aria-label="Wetteransicht"><button type="button" data-view="overview" aria-pressed="true">Heute</button><button type="button" data-view="week" aria-pressed="false">7 Tage</button><button type="button" data-view="map" aria-pressed="false">Karte</button><button id="fullscreen" type="button" hidden>Vollbild</button></nav><time id="clock"></time></header>
+    <main data-view="overview">
+        <section class="current card" aria-label="Aktuelles Wetter">
+            <div class="temperature-row"><span id="weather-symbol" aria-hidden="true">◌</span><strong id="temperature">—</strong><div><span class="eyebrow">JETZT IN ADELSDORF</span><h2 id="condition">Wetter wird geladen …</h2><p id="feels">—</p></div></div>
+            <div class="current-metric"><span>HEUTE</span><strong><b id="maximum">—</b> <small id="minimum">—</small></strong><small>Höchst- / Tiefstwert</small></div>
+            <div class="current-metric"><span>REGENRISIKO</span><strong id="today-risk">—</strong><small>Tagesmaximum</small></div>
+            <div class="current-metric"><span>WIND</span><strong id="wind">—</strong><small id="gusts">Böen —</small></div>
+            <button id="refresh" type="button" aria-label="Wetter aktualisieren">↻</button>
+            <div class="hourly" aria-label="Heute im Verlauf"><div class="hourly-heading"><span class="eyebrow" id="hourly-title">HEUTE IM VERLAUF</span><small id="sun">—</small></div><div id="hourly" class="hourly-strip"><p>Stundenverlauf wird geladen …</p></div></div>
+        </section>
+        <section class="rain-planning" aria-labelledby="rain-heading"><div class="section-heading"><h2 id="rain-heading">Wann regnet es?</h2><p>Heute und die nächsten 2 Tage · stündliche Prognose</p></div><div id="rain-days" class="rain-days"><article class="card rain-day"><p>Regenplanung wird geladen …</p></article></div></section>
+        <section class="week card" aria-labelledby="days-heading"><div class="section-heading"><h2 id="days-heading">Die ganze Woche</h2><p>Temperatur max. / min. · Regenwahrscheinlichkeit</p></div><div id="daily" class="daily"><p>Wochenvorhersage wird geladen …</p></div></section>
+        <section class="map-card card" aria-label="Wetterkarte der Region"><div class="section-heading"><h2>Adelsdorf &amp; Region</h2><div class="map-tabs" role="group" aria-label="Kartenebene"><button type="button" data-layer="wind" aria-pressed="true">Wind</button><button type="button" data-layer="rain" aria-pressed="false">Niederschlag</button><button type="button" data-layer="temp" aria-pressed="false">Temperatur</button></div></div><div class="map-container"><iframe id="weather-map" title="Windy Wetterkarte für Adelsdorf" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div><p class="map-caption">Windy-Vorhersagekarte mit eigener Modell-/Zeitwahl. <a href="https://www.windy.com/?49.712,10.895,9" target="_blank" rel="noopener noreferrer">Karte separat öffnen ↗</a></p></section>
+        <footer><div><p id="status" role="status">Verbinde mit Open-Meteo …</p><p class="attribution">Zeiten ungefähr · Europe/Berlin · Niederschlag inkl. Schnee · <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> / <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">CC BY 4.0</a></p></div><button id="motion" type="button" aria-pressed="false">Animation pausieren</button></footer>
+    </main>
+    <script src="js/weather-scene.js?v=1"></script><script src="js/weather-rain.js?v=1"></script><script src="js/weather.js?v=5"></script>
+</body></html>
+
