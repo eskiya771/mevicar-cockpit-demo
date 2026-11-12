@@ -273,7 +273,9 @@ jobs:
           npm install --no-audit --no-fund
           npx cap add android
           npx cap sync android
-      - name: Compile unsigned-for-release, debug-signed test APK
+      - name: Set MeviCar icon, landscape and product version
+        run: python3 scripts/prepare-android-project.py
+      - name: Compile installable debug-signed APK
         run: |
           chmod +x android/gradlew
           cd android
