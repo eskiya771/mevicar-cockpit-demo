@@ -25,6 +25,7 @@ jobs:
           node --check tv.js
           node --check xtream.js
           node tests/display-profiles-smoke.mjs
+          node tests/launcher-landscape-smoke.mjs
           node tests/tv-smoke.mjs
           node tests/xtream-smoke.mjs
       - name: Test Google Maps navigation and GPS fallback
