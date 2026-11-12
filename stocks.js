@@ -4,6 +4,7 @@
 'use strict';
 const STORAGE='mevicar-stocks-ui-v2';
 const periods=[1,7,30];
+let refreshTimer=null;
 const state={favorites:[],hidden:[],onlyFavorites:false,query:'',sort:'name',detail:'',
  days:7,history:{},loading:false,historyLoading:false,historyError:'',
  message:'',mounted:false,requestId:0,historyId:0,historyAt:0,snapshot:null};
@@ -151,7 +152,7 @@ function favoritesOnly(){state.onlyFavorites=!state.onlyFavorites;update()}
 function toggleHidden(){state.hiddenOpen=!state.hiddenOpen;update()}
 function hide(id){if(!valid(id))return;state.hidden=[...new Set([...state.hidden,id])];save();update()}
 function show(id){state.hidden=state.hidden.filter(x=>x!==id);save();update()}
-function open(id){if(!valid(id)||!all().some(s=>s.id===id))return;state.detail=id;update();loadHistory()}
+function open(id){if(!valid(id)||!all().some(s=>s.id===id))return;state.detail=id;update();const root=document.getElementById('mevi-fin-main');if(root)root.scrollTop=0;loadHistory()}
 function close(){state.detail='';update()}
 function period(days){if(!periods.includes(days))return;state.days=days;state.history={};state.historyAt=0;save();update();loadHistory()}
 async function loadHistory(){
@@ -178,8 +179,8 @@ async function refresh(){
  }catch(e){if(run===state.requestId)state.message='Aktualisierung fehlgeschlagen: '+String(e?.message||e).slice(0,100)}
  finally{if(run===state.requestId){state.loading=false;update()}}
 }
-function mount(){state.mounted=!!document.querySelector('.mevi-fin');if(state.mounted){update();loadHistory()}}
-function unmount(){state.mounted=false;state.requestId++;state.historyId++;state.loading=false;state.historyLoading=false}
+function mount(){state.mounted=!!document.querySelector('.mevi-fin');if(state.mounted){update();loadHistory();if(refreshTimer!==null)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(!state.loading&&state.mounted&&snapshot().connected)refresh()},60000)}}
+function unmount(){state.mounted=false;state.requestId++;state.historyId++;state.loading=false;state.historyLoading=false;if(refreshTimer!==null){clearInterval(refreshTimer);refreshTimer=null}}
 window.MeviStocks={html,mount,unmount,refresh,search,sort,favorite,favoritesOnly,toggleHidden,hide,show,open,close,period,
  parseSensor,chartPath,debug:()=>({mounted:state.mounted,days:state.days,detail:state.detail,historyLoading:state.historyLoading,auto:!state.hidden.length})};
 })();
