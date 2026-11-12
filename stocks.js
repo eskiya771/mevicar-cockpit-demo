@@ -105,26 +105,31 @@ function updateList(){
  const link=element('link');if(link)link.href=symbolURL(state.symbol);
 }
 function quoteConfig(symbol){
- return {symbol,width:'100%',locale:'de',colorTheme:'dark',isTransparent:true};
+ return {symbol,theme:'dark',locale:'de'};
 }
 function buildQuote(){
  if(!state.mounted||state.compact)return;
  const target=element('quote'),item=current();
  if(!target||!item)return;
  target.replaceChildren();
- const outer=document.createElement('div');outer.className='tradingview-widget-container';
- const inner=document.createElement('div');inner.className='tradingview-widget-container__widget';
- outer.appendChild(inner);
- const script=document.createElement('script');
- script.type='text/javascript';
- script.src='https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js';
- script.async=true;
- script.textContent=JSON.stringify(quoteConfig(item.symbol));
- script.onerror=()=>{if(target.isConnected){
-  target.textContent='Kurs momentan nicht verfügbar · im Chart ansehen';
- }};
- target.appendChild(outer);
- outer.appendChild(script);
+ // TradingView Single Ticker Web Component renders only price and daily change.
+ // It adapts to its container instead of forcing a large company-info iframe.
+ const ticker=document.createElement('tv-single-ticker');
+ ticker.setAttribute('symbol',item.symbol);
+ ticker.setAttribute('theme','dark');
+ ticker.setAttribute('locale','de');
+ target.appendChild(ticker);
+ if(!document.querySelector('script[data-mevi-single-ticker]')){
+  const script=document.createElement('script');
+  script.type='module';
+  script.src='https://www.tradingview-widget.com/w/en/tv-single-ticker.js';
+  script.setAttribute('data-mevi-single-ticker','');
+  script.onerror=()=>{
+   const active=element('quote');
+   if(active)active.textContent='Kurs im Chart rechts ansehen';
+  };
+  document.head.appendChild(script);
+ }
 }
 function chartConfig(symbol,period,compact){
  const range=PERIODS.find(x=>x.key===period)||PERIODS[3];
