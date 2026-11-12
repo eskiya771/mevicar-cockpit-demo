@@ -139,3 +139,21 @@
 }
 html[data-theme="liquidglass"] .mevi-cal-shell{background:linear-gradient(130deg,#1d374d,#102e45)}
 html[data-theme="cyberpunk"] .calendar-host{border-color:#e468c58f}
+
+
+/* Calendar cockpit refinement: clear appointments, discreet settings, compact split view. */
+.mevi-cal-header-actions{display:flex;gap:6px;align-items:center}
+.mevi-cal-header-actions button{width:clamp(33px,5vh,44px);height:clamp(33px,5vh,44px);display:grid;place-items:center;border:1px solid #a0d9eb80;background:#2b5168;border-radius:10px;padding:2px;font-size:clamp(17px,2.8vh,24px)}
+.mevi-cal-event{border-left-color:var(--cal-accent,#4ad5eb)}
+.mevi-cal-compact-list{height:100%;overflow-y:auto;padding:9px;display:flex;flex-direction:column;gap:7px;overscroll-behavior:contain}
+.mevi-cal-compact-title{color:#9aebf4;font-weight:800;font-size:clamp(12px,1.8vh,16px)}
+.mevi-cal-compact-item{border:1px solid #85c9df63;border-radius:10px;background:#213752;padding:8px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.mevi-cal-compact-item span{font-size:clamp(10px,1.4vh,13px);color:#9aebf4;font-variant-numeric:tabular-nums}
+.mevi-cal-compact-item strong{font-size:clamp(12px,1.7vh,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mevi-cal-shell.compact .mevi-cal-header{padding:5px 7px}
+.mevi-cal-shell.compact .mevi-cal-header-actions button{width:30px;height:30px;font-size:17px}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-cal-header-actions button{width:31px;height:31px;font-size:17px}
+ .mevi-cal-compact-list{padding:6px;gap:5px}
+ .mevi-cal-compact-item{padding:6px}
+}
