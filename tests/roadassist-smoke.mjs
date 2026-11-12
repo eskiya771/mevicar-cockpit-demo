@@ -35,7 +35,8 @@ function harness(cameras=[],options={}){
  const elements=new Map();
  const document={getElementById:id=>elements.get(id)||null};
  runInNewContext(js,{window,document,localStorage,Intl,Date:FakeDate,AbortController,
-  setTimeout:(cb)=>{queueMicrotask(cb);return 1},clearTimeout(){},console,Number,Math,Map,Set});
+  setTimeout:(cb)=>{queueMicrotask(cb);return 1},clearTimeout(){},
+  setInterval:()=>37,clearInterval(){},console,Number,Math,Map,Set,document});
  return{app:window.MeviRoadAssist,ha:fakeHA,services,announcements,elements,stores,
   setConnected:v=>{connected=v},setCameras:v=>{latest=v;updatedAt=now}};
 }
