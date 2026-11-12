@@ -20,6 +20,8 @@ jobs:
         run: node tests/lightshow-smoke.mjs
       - name: Test navigation and UX quality
         run: node tests/ui-quality-smoke.mjs
+      - name: Test Google Maps route and GPS fallback
+        run: node tests/navigation-google-smoke.mjs
       - name: Test five supported display profiles
         run: node tests/display-profiles-smoke.mjs
       - name: Test premium speedometer
