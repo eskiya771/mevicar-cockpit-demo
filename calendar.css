@@ -1,0 +1,141 @@
+/* MeviCar Next Calendar — adaptive native landscape cockpit.
+   Scroll only inside calendar content; fixed car dock remains untouched. */
+.full.calendar-host,.side.calendar-host{display:flex!important;flex-direction:column;
+ min-height:0;min-width:0;overflow:hidden!important;padding:0!important;
+ border-radius:14px;border:1px solid #72c9de63;background:#091b2e!important}
+.calendar-host>.mevi-cal-shell{flex:1}
+.mevi-cal-shell{color:#eaf7ff;background:linear-gradient(135deg,#1c354f,#0c1e33 74%);
+ display:flex;flex-direction:column;width:100%;height:100%;min-width:0;min-height:0;
+ overflow:hidden;border-radius:13px;font-family:inherit}
+.mevi-cal-shell button{min-width:0;touch-action:manipulation;color:inherit}
+.mevi-cal-header{display:flex;align-items:center;justify-content:space-between;gap:10px;
+ padding:clamp(7px,1.2vh,12px) clamp(11px,1.6vw,19px);background:#193d56;
+ border-bottom:1px solid #80c9e73f;flex:none}
+.mevi-cal-header>div{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mevi-cal-header small{font-size:clamp(9px,1.25vh,12px);letter-spacing:.12em;color:#84e8ed;font-weight:750}
+.mevi-cal-header strong{font-size:clamp(17px,2.7vh,25px)}
+.mevi-cal-header button{width:clamp(33px,5vh,44px);height:clamp(33px,5vh,44px);
+ display:grid;place-items:center;border:1px solid #a0d9eb80;background:#2b5168;
+ font-size:clamp(19px,2.8vh,25px);border-radius:10px;padding:2px}
+.mevi-cal-tabs{flex:none;display:flex;gap:6px;padding:7px clamp(9px,1.2vw,14px);
+ background:#11283b;border-bottom:1px solid #a1d2eb32;overflow-x:auto;scrollbar-width:none}
+.mevi-cal-tabs>button{flex:1;min-height:clamp(32px,4.8vh,43px);padding:6px 10px;
+ font-size:clamp(11px,1.6vh,15px);font-weight:770;border-radius:10px;
+ border:1px solid #6da7bd83;background:#314c66;color:#cfe8f5;white-space:nowrap}
+.mevi-cal-tabs>button.active{color:#fff;background:linear-gradient(120deg,#13798f,#255c7c);
+ border-color:#70e3f0;box-shadow:0 0 10px #67d7e429}
+.mevi-cal-status{flex:none;padding:4px clamp(10px,1.2vw,16px);font-size:clamp(10px,1.3vh,13px);
+ color:#a8cfdd;background:#0a1e2e;min-height:22px;border-bottom:1px solid #85bdd128;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mevi-cal-error{color:#ffb7bd}
+.mevi-cal-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;min-width:0}
+.mevi-cal-agenda,.mevi-cal-sources,.mevi-cal-month-view{height:100%;width:100%;min-height:0;min-width:0;
+ overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;padding:clamp(9px,1.3vw,18px)}
+.mevi-cal-highlight{display:flex;align-items:center;justify-content:space-between;gap:12px;
+ border:1px solid #75dcf37d;border-radius:15px;background:linear-gradient(126deg,#1a556b,#27425e);
+ padding:clamp(10px,1.7vw,19px);margin-bottom:clamp(9px,1.4vh,16px)}
+.mevi-cal-highlight>div:first-child{min-width:0}
+.mevi-cal-highlight small{letter-spacing:.12em;color:#90f7ef;font-weight:820;font-size:clamp(9px,1.3vh,12px)}
+.mevi-cal-highlight h2{font-size:clamp(18px,3.1vh,29px);line-height:1.15;margin:4px 0;
+ overflow-wrap:anywhere}
+.mevi-cal-highlight span{color:#bde0e8;font-size:clamp(11px,1.55vh,14px)}
+.mevi-cal-count{display:flex;flex-direction:column;align-items:center;gap:1px;flex:none;
+ min-width:clamp(67px,8vw,110px);border:1px solid #9bd9e740;border-radius:13px;
+ padding:8px;background:#0e344b}
+.mevi-cal-count strong{font-size:clamp(25px,4.3vh,43px);font-variant-numeric:tabular-nums}
+.mevi-cal-count span{font-size:clamp(10px,1.4vh,12px)}
+.mevi-cal-day{display:flex;flex-direction:column;gap:7px;margin-bottom:clamp(11px,2.2vh,21px)}
+.mevi-cal-day h3{font-size:clamp(13px,1.85vh,17px);font-weight:820;line-height:1.2;
+ margin:0;padding:2px 3px;color:#9aebf4;text-transform:capitalize}
+.mevi-cal-event{display:grid;grid-template-columns:clamp(90px,13%,150px) minmax(0,1fr);gap:10px;
+ border:1px solid #85c9df63;border-left:4px solid #4ad5eb;background:linear-gradient(110deg,#29445e,#213752);
+ border-radius:12px;padding:clamp(8px,1.2vh,13px);min-width:0;align-items:center}
+.mevi-cal-event-time{font-size:clamp(11px,1.6vh,15px);font-weight:770;
+ color:#e1fbff;white-space:normal;font-variant-numeric:tabular-nums}
+.mevi-cal-event-copy{min-width:0;display:flex;flex-direction:column;gap:4px}
+.mevi-cal-event-copy strong{font-size:clamp(13px,1.9vh,18px);line-height:1.22;overflow-wrap:anywhere}
+.mevi-cal-event-copy>span,.mevi-cal-event-copy small{font-size:clamp(10px,1.4vh,13px);
+ color:#bbd3df;overflow-wrap:anywhere}
+.mevi-cal-no-events{font-size:clamp(12px,1.7vh,15px);color:#bad3df;
+ margin:2px 0 8px;padding:6px 3px}
+.mevi-cal-welcome{display:flex;flex-direction:column;align-items:start;gap:10px;
+ border:1px dashed #7bc1e27b;padding:clamp(14px,2vw,28px);
+ border-radius:15px;background:#102f46}
+.mevi-cal-welcome strong{font-size:clamp(18px,2.6vh,25px)}
+.mevi-cal-welcome p{max-width:620px;color:#c1dbe7;line-height:1.45;margin:0}
+.mevi-cal-welcome button{min-height:40px;padding:7px 14px;border:1px solid #72e1e4;
+ background:#176b80;color:#f5fcff;font-weight:780;border-radius:10px}
+.mevi-cal-month-view{display:flex;flex-direction:column;gap:8px}
+.mevi-cal-month-controls{display:flex;align-items:center;gap:8px;flex:none}
+.mevi-cal-month-controls strong{flex:1;font-size:clamp(17px,2.5vh,24px);text-align:center}
+.mevi-cal-month-controls button{min-height:35px;min-width:36px;padding:4px 10px;
+ border-radius:10px;border:1px solid #80cade91;background:#294d63;
+ font-size:clamp(13px,2vh,19px);font-weight:780}
+.mevi-cal-weekdays,.mevi-cal-month-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:clamp(3px,.55vw,7px)}
+.mevi-cal-weekdays>span{font-size:clamp(10px,1.5vh,13px);text-align:center;color:#9ecddd;
+ font-weight:800;padding:5px}
+.mevi-cal-month-grid{flex:none}
+.mevi-cal-month-day{min-height:clamp(31px,5.3vh,57px);background:#234057;color:#e5f6ff;
+ border:1px solid #70aabd69;border-radius:8px;padding:3px;
+ display:flex;align-items:flex-start;justify-content:space-between;gap:3px;
+ font-size:clamp(12px,1.7vh,16px);font-weight:750}
+.mevi-cal-month-day.outside{opacity:.42}
+.mevi-cal-month-day.today{border-color:#a6f5c9}
+.mevi-cal-month-day.selected{background:#117d90;border-color:#6ef3e9;box-shadow:inset 0 0 0 1px #b3f8ff}
+.mevi-cal-month-day i{font-style:normal;font-size:clamp(9px,1.2vh,12px);
+ border-radius:8px;background:#3f6781;padding:1px 5px}
+.mevi-cal-selected-day{border-top:1px solid #88c8d03d;padding-top:10px;margin-top:6px;flex:1;min-height:0}
+.mevi-cal-selected-day .mevi-cal-day{margin:0}
+.mevi-cal-sources{display:flex;flex-direction:column;gap:clamp(10px,1.8vh,18px)}
+.mevi-cal-panel{display:flex;flex-direction:column;gap:9px;min-width:0;padding:clamp(10px,1.4vw,18px);
+ border:1px solid #8acfe54c;border-radius:13px;background:#17354ee0}
+.mevi-cal-panel h2{font-size:clamp(17px,2.4vh,23px);margin:0}
+.mevi-cal-panel p,.mevi-cal-panel small{color:#bfd7e5;font-size:clamp(11px,1.5vh,14px);margin:0;line-height:1.5}
+.mevi-cal-panel>label{font-weight:760;font-size:clamp(11px,1.5vh,14px)}
+.mevi-cal-panel>input[type=text]{width:100%;min-height:39px;background:#0b253a;
+ color:#eaf9ff;border:1px solid #8fc9da99;border-radius:10px;padding:8px 11px;
+ font-size:clamp(11px,1.6vh,14px)}
+.mevi-cal-source-list{display:flex;flex-direction:column;gap:6px}
+.mevi-cal-source{display:flex;align-items:center;gap:8px;justify-content:space-between;min-width:0;
+ padding:9px 10px;border-radius:10px;border:1px solid #79b9ce48;background:#233f5a}
+.mevi-cal-source>label{display:flex;align-items:center;gap:8px;flex:1;min-width:0}
+.mevi-cal-source input{width:19px;height:19px;accent-color:#17b6a0;flex:none}
+.mevi-cal-source-name{font-weight:760;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mevi-cal-source-type{font-size:clamp(10px,1.35vh,12px);color:#b5d2de;flex:none}
+.mevi-cal-source>button,.mevi-cal-actions button{min-height:35px;padding:6px 11px;border:1px solid #7ccadf80;
+ border-radius:9px;background:#25536b;color:#ecfaff;font-size:clamp(11px,1.5vh,13px);font-weight:750}
+.mevi-cal-actions{display:flex;flex-wrap:wrap;gap:8px}
+.mevi-cal-actions button:first-child{background:#116d80;border-color:#68e0e4}
+.mevi-cal-hidden{display:none}
+.mevi-cal-shell.compact .mevi-cal-header{padding:4px 7px}
+.mevi-cal-shell.compact .mevi-cal-header strong{font-size:15px}
+.mevi-cal-shell.compact .mevi-cal-header small{font-size:9px}
+.mevi-cal-shell.compact .mevi-cal-tabs{padding:3px 5px}
+.mevi-cal-shell.compact .mevi-cal-tabs button{min-height:30px;font-size:10px;padding:3px 5px}
+.mevi-cal-shell.compact .mevi-cal-agenda,.mevi-cal-shell.compact .mevi-cal-sources,.mevi-cal-shell.compact .mevi-cal-month-view{padding:7px}
+.mevi-cal-shell.compact .mevi-cal-highlight{padding:8px}
+.mevi-cal-shell.compact .mevi-cal-highlight h2{font-size:16px}
+.mevi-cal-shell.compact .mevi-cal-count strong{font-size:21px}
+.mevi-cal-shell.compact .mevi-cal-event{grid-template-columns:75px minmax(0,1fr);padding:6px;gap:7px}
+.mevi-cal-shell.compact .mevi-cal-event-copy strong{font-size:11px}
+.mevi-cal-shell.compact .mevi-cal-event-time{font-size:10px}
+.mevi-cal-shell.compact .mevi-cal-month-day{min-height:30px;padding:2px;font-size:11px}
+.mevi-cal-shell.compact .mevi-cal-source-type{display:none}
+.mevi-cal-shell.compact .mevi-cal-month-controls strong{font-size:14px}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-cal-header{padding:4px 8px}
+ .mevi-cal-header strong{font-size:15px}
+ .mevi-cal-tabs{padding:3px 5px;gap:4px}
+ .mevi-cal-tabs button{min-height:30px;font-size:10px}
+ .mevi-cal-agenda,.mevi-cal-month-view,.mevi-cal-sources{padding:6px}
+ .mevi-cal-highlight{padding:7px;margin-bottom:7px}
+ .mevi-cal-highlight h2{font-size:16px}
+ .mevi-cal-count strong{font-size:21px}
+ .mevi-cal-day{gap:5px;margin-bottom:9px}
+ .mevi-cal-event{padding:6px;grid-template-columns:75px minmax(0,1fr)}
+ .mevi-cal-month-day{min-height:29px;font-size:11px}
+ .mevi-cal-weekdays>span{padding:3px}
+ .mevi-cal-panel{padding:7px;gap:5px}
+}
+html[data-theme="liquidglass"] .mevi-cal-shell{background:linear-gradient(130deg,#1d374d,#102e45)}
+html[data-theme="cyberpunk"] .calendar-host{border-color:#e468c58f}
