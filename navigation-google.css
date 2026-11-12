@@ -54,3 +54,60 @@
  cursor:pointer;
 }
 .mg-change-key[hidden]{display:none}
+
+/* The Google map is often bright, so target the navigation card directly.
+   In Liquid Glass this must be stronger than the generic translucent theme. */
+html[data-theme="liquidglass"] .mg-navigation .nav-preview,
+html[data-theme="liquidglass"] .mg-navigation .nav-browse,
+html[data-theme="liquidglass"] .mg-navigation .nav-search{
+ background:linear-gradient(145deg,rgba(14,36,54,.97),rgba(22,48,70,.96));
+ border:1px solid rgba(135,211,238,.63);
+ box-shadow:0 12px 32px rgba(4,17,30,.55),inset 0 1px rgba(255,255,255,.15);
+ color:#f2fcff;
+ backdrop-filter:blur(12px);
+}
+html[data-theme="liquidglass"] .mg-navigation .nav-preview .small,
+html[data-theme="liquidglass"] .mg-navigation .nav-preview-address,
+html[data-theme="liquidglass"] .mg-navigation .nav-browse .sectiontitle{
+ color:#d1e8f5;
+}
+html[data-theme="liquidglass"] .mg-navigation .nav-preview button,
+html[data-theme="liquidglass"] .mg-navigation .nav-browse .nav-search-trigger{
+ background:#24475e;
+ border:1px solid #8acbe080;
+ color:#f1fbff;
+}
+.mg-navigation .mg-manual-origin-actions{margin-top:5px}
+.mg-navigation .mg-origin-button{
+ width:100%;
+ min-height:40px;
+ border-radius:11px;
+ color:#dff8ff;
+ background:rgba(18,80,104,.85);
+ border:1px solid rgba(93,216,240,.65);
+ font-weight:750;
+}
+.mg-navigation.mg-selecting-origin .mg-map{cursor:crosshair!important}
+.mg-origin-instruction{
+ position:absolute;z-index:6;left:50%;top:12px;
+ transform:translateX(-50%);
+ display:flex;align-items:center;justify-content:center;gap:10px;
+ max-width:min(580px,90%);width:max-content;
+ padding:10px 13px;border:1px solid #71daf7;
+ border-radius:12px;background:#102d45f5;
+ box-shadow:0 9px 30px #041423aa;
+ color:#f1fdff;font-size:clamp(12px,1.65vh,16px);font-weight:650;
+}
+.mg-origin-instruction button,.mg-manual-action{
+ padding:6px 10px;border-radius:9px;
+ border:1px solid #81dcee8c;
+ background:#16475f;color:#f0fbff;font-weight:750;
+ cursor:pointer;
+}
+.mg-map-state .mg-manual-action[hidden]{display:none}
+@media(max-height:500px){
+ .mg-navigation .mg-origin-button{min-height:32px;padding:4px 8px;font-size:11px}
+ .mg-origin-instruction{max-width:83%;font-size:11px;padding:6px 8px;gap:4px}
+ .mg-origin-instruction button{padding:4px 7px}
+ .mg-navigation .nav-preview .mg-manual-origin-actions{margin-top:2px}
+}
