@@ -102,6 +102,7 @@ assert.match(js,/https:\/\/ha\.mtankurt\.synology\.me/,'Classic HA hostname');
 assert.match(js,/\/dashboard-familie\/0/,'Classic FamilyPanel path');
 assert.match(js,/api\/states/,'REST API for Road Assist');
 assert.match(js,/api\/services/,'Service calls rather than writing raw states');
+assert.match(js,/const canToggle=clickable\.has\(domain\)&&\/\^\(\[a-z_\]\+\)\\\./,'Only valid Home Assistant entity IDs may create control actions');
 assert.doesNotMatch(js,/localStorage\.setItem\([^;\n]*token/i,'Tokens must not be written to localStorage');
 assert.match(css,/\.ha-shell/);
 assert.match(css,/\.ha-device-row/);
