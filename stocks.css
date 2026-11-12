@@ -80,3 +80,41 @@ html[data-theme="cyberpunk"] .mevi-tv-item.is-selected{background:#54204b}
 html[data-theme="cyberpunk"] .mevi-tv-periods button.active{border-color:#ee55d4;color:#ffb4ed}
 html[data-theme="liquidglass"] .mevi-tv{background:#142a3d}
 html[data-theme="liquidglass"] .mevi-tv-item.is-selected{background:#295c76}
+
+/* Compact chart-first layout: controls live within the watchlist column.
+   Preserve the original dock and the independent split-screen container. */
+.mevi-tv-layout{gap:5px;padding:4px;grid-template-columns:clamp(148px,22%,270px) minmax(0,1fr)}
+.mevi-tv-sidebar{min-width:0;min-height:0;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.mevi-tv-sidebar .mevi-tv-actions{background:transparent;padding:0;gap:4px;min-height:30px}
+.mevi-tv-sidebar .mevi-tv-actions input{min-height:30px;min-width:0;padding:4px 6px;font-size:12px}
+.mevi-tv-sidebar .mevi-tv-actions button{min-width:30px;min-height:30px;padding:2px 5px;font-size:16px;line-height:1}
+.mevi-tv-sidebar .mevi-tv-add{padding:3px;flex-wrap:wrap;border-radius:8px}
+.mevi-tv-sidebar .mevi-tv-add input{flex-basis:100%;min-height:28px;font-size:11px}
+.mevi-tv-sidebar .mevi-tv-list{flex:1;min-height:0;padding:3px}
+.mevi-tv-sidebar .mevi-tv-external{color:#87d5e7;text-decoration:none;font-size:10px;text-align:right;flex:none;padding:0 5px 2px}
+.mevi-tv-right{border-radius:8px}
+.mevi-tv-charttools{min-height:29px;padding:2px 7px}
+.mevi-tv-charttools>strong{font-size:clamp(12px,1.7vh,15px)}
+.mevi-tv-periods button{min-height:25px;padding:2px 7px;font-size:11px}
+.mevi-tv-chart{min-height:0}
+.mevi-tv-feedback:empty{display:none}
+.mevi-tv.is-compact .mevi-tv-layout{display:flex;flex-direction:column;gap:3px;padding:3px}
+.mevi-tv.is-compact .mevi-tv-sidebar{flex:none;gap:2px}
+.mevi-tv.is-compact .mevi-tv-actions{padding:0 2px}
+.mevi-tv.is-compact .mevi-tv-actions input{min-height:25px}
+.mevi-tv.is-compact .mevi-tv-actions button{min-height:25px;min-width:26px}
+.mevi-tv.is-compact .mevi-tv-list{flex:none;display:flex;overflow-x:auto;overflow-y:hidden;min-height:44px;max-height:44px;gap:4px;touch-action:pan-x}
+.mevi-tv.is-compact .mevi-tv-external{display:none}
+.mevi-tv.is-compact .mevi-tv-charttools{padding:2px 4px;min-height:26px;flex-wrap:nowrap}
+.mevi-tv.is-compact .mevi-tv-charttools>strong{max-width:42%}
+.mevi-tv.is-compact .mevi-tv-periods{gap:2px}
+.mevi-tv.is-compact .mevi-tv-periods button{padding:2px 4px;min-height:23px}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-layout{padding:3px;gap:3px}
+ .mevi-tv-sidebar{gap:2px}
+ .mevi-tv-sidebar .mevi-tv-actions input,.mevi-tv-sidebar .mevi-tv-actions button{min-height:26px}
+ .mevi-tv-sidebar .mevi-tv-actions button{min-width:27px}
+ .mevi-tv-sidebar .mevi-tv-item{min-height:42px}
+ .mevi-tv-charttools{padding:1px 5px;min-height:25px}
+ .mevi-tv-periods button{min-height:22px;padding:1px 5px}
+}
