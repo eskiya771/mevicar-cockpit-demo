@@ -118,7 +118,7 @@ async function pick(kind,index){
   }catch(e){status('Ziel konnte nicht geladen werden: '+(e.message||e));return}
  }else d=kind==='stored'?unique([...cache.favorites,...cache.recent],12)[index]:list(kind)[index];
  if(!valid(d))return;
- selected=d;stopGuidance();routeData=null;clearLines();mark(d);
+ stopGuidance();selected=d;routeData=null;clearLines();mark(d);
  window.meviGoogleDestination?.(d.name,d.address);
 }
 function favoritesHTML(){return '<div class="favs mg-favorites">'+cache.favorites.map((d,i)=>'<button type="button" class="fav" onclick="MeviGoogleNav.pick(\'favorites\','+i+')" aria-label="'+text(d.name)+' auswählen"><span class="bubble">⌖</span><span>'+text(d.name)+'</span></button>').join('')+'</div>'}
@@ -157,7 +157,7 @@ function chooseOriginPoint(point){
  manualOrigin={lat:point.lat,lng:point.lng};
  cancelOriginSelection();
  clearStatus();
- stopGuidance();routeData=null;clearLines();markOrigin();
+ stopGuidance({keepRoute:true});routeData=null;routeSummary='';guidanceSteps=[];clearLines();markOrigin();
  window.meviGoogleRerender?.();
 }
 function originDescription(){return manualOrigin?'Manueller Startpunkt auf Karte gesetzt':'Startpunkt ist dein aktueller GPS-Standort'}
