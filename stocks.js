@@ -31,9 +31,10 @@ function quoteRow(item){
  const q=state.quotes[item.symbol],error=state.errors[item.symbol];
  const change=q&&Number.isFinite(q.change)?q.change:null;
  const style=change===null?'':change>=0?' up':' down';
+ const delta=change===null?'Tagesänderung unbekannt':(change>=0?'+':'')+amount(change)+' ('+(q.percent===null?'–':(q.percent>=0?'+':'')+amount(q.percent,'%'))+')';
  return '<article class="mevi-stocks-row"><div class="mevi-stocks-identity"><strong>'+esc(item.name)+'</strong><small>'+esc(item.symbol)+'</small></div>'+
  '<div class="mevi-stocks-values"><strong>'+ (q?esc(price(q.close,q.currency)):'–')+'</strong>'+
- '<small class="'+style+'">'+(q?esc((change>=0?'+':'')+amount(change)+' ('+(q.percent>=0?'+':'')+amount(q.percent,'%')+')'):esc(error||'Noch keine Daten'))+'</small></div>'+
+ '<small class="'+style+'">'+(error?esc(error):q?esc(delta):'Noch keine Daten')+'</small></div>'+
  '<button class="mevi-stocks-remove" type="button" aria-label="'+esc(item.symbol)+' entfernen" onclick="MeviStocks.remove(\''+esc(item.symbol)+'\')">×</button></article>';
 }
 function rows(){return state.items.map(quoteRow).join('')||'<div class="mevi-stocks-empty">Watchlist leer. Symbol hinzufügen.</div>'}
@@ -84,7 +85,7 @@ async function refresh(){
     }finally{if(timeout!==null)clearTimeout(timeout)}
     if(!response.ok)throw Error('HTTP '+response.status);
     quote[item.symbol]=parseQuote(await response.json(),item.symbol);done++;
-   }catch(e){errors[item.symbol]=e?.name==='AbortError'?'Zeitüberschreitung':String(e?.message||'Abruf fehlgeschlagen').slice(0,120)}
+   }catch(e){delete state.quotes[item.symbol];errors[item.symbol]=e?.name==='AbortError'?'Zeitüberschreitung':String(e?.message||'Abruf fehlgeschlagen').slice(0,120)}
    if(run!==state.requestId||!state.mounted)return;
    state.quotes={...state.quotes,...quote};state.errors={...state.errors,...errors};update();
   }
