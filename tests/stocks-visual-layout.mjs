@@ -45,6 +45,16 @@ try{
    window.MeviStocks.mount();
   },compact);
   await page.locator('.qa-tradingview').waitFor({timeout:8000});
+  if(!compact){
+   await page.locator('.qa-quote').waitFor({timeout:8000});
+  }
+  const positions=await page.evaluate(()=>{
+   const sidebar=document.querySelector('.mevi-tv-sidebar').getBoundingClientRect();
+   const ranges=document.querySelector('.mevi-tv-periods').getBoundingClientRect();
+   return {sidebarRight:sidebar.right,rangesRight:ranges.right,buttons:document.querySelectorAll('.mevi-tv-periods button').length};
+  });
+  if(positions.buttons!==5||positions.rangesRight>positions.sidebarRight+2)
+   issues.push(name+': chart periods are outside reachable sidebar');
   const measure=async()=>page.evaluate(()=>{
    const host=document.getElementById('host'),panel=host.querySelector('.mevi-tv'),r=host.getBoundingClientRect();
    const layout=panel.querySelector('.mevi-tv-layout').getBoundingClientRect();
