@@ -1,0 +1,288 @@
+name: Build MeviCar Next Android Debug APK
+on:
+  push:
+    branches: [feature/android-first-apk]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: mevicar-android-first-apk
+  cancel-in-progress: true
+jobs:
+  android:
+    name: Build current cockpit into installable Android APK
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Quick JavaScript and configuration smoke tests
+        run: |
+          node --check tv.js
+          node --check xtream.js
+          node tests/display-profiles-smoke.mjs
+          node tests/launcher-landscape-smoke.mjs
+          node tests/tv-smoke.mjs
+          node tests/xtream-smoke.mjs
+      - name: Test Google Maps navigation and GPS fallback
+        run: node tests/navigation-google-smoke.mjs
+      - name: Test Home Assistant dashboard and REST access
+        run: node tests/homeassistant-smoke.mjs
+      - name: Test route-matched Road Assist camera safety
+        run: node tests/roadassist-smoke.mjs
+      - name: Test Classic weather and rain planner
+        run: node tests/weather-smoke.mjs
+      - name: Test live calendar, ICS and readonly Google connection
+        run: node tests/calendar-smoke.mjs
+      - name: Test WhatsApp direct chats, contacts and privacy
+        run: node tests/whatsapp-smoke.mjs
+      - name: Test real YouTube videos, playlists and stationary guard
+        run: node tests/youtube-smoke.mjs
+      - name: Test TradingView finance view and watchlist
+        run: node tests/stocks-smoke.mjs
+      - name: Generate versioned site
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          BUILD_SHA: ${{ github.sha }}
+        run: |
+          mkdir -p dist
+          python3 - <<'PY'
+          import os, json, pathlib
+          build = int(os.environ['BUILD_NUMBER'])
+          version = pathlib.Path('VERSION').read_text().strip()
+          info = {'version': version, 'build': build, 'commit': os.environ['BUILD_SHA']}
+          html = pathlib.Path('index.html').read_text()
+          assert '__MEVICAR_BUILD__' in html, 'Build placeholder missing'
+          html = html.replace('__MEVICAR_BUILD__', json.dumps(info, ensure_ascii=False))
+          # Critical: bundle theme CSS into the versioned HTML. An installed PWA may
+          # otherwise receive a fresh HTML shell with an outdated, cache-first CSS
+          # asset, collapsing the SVG launcher into small black default buttons.
+          css_link = '<link rel="stylesheet" href="./themes.css">'
+          assert css_link in html, 'Theme CSS link missing'
+          theme_css = pathlib.Path('themes.css').read_text()
+          assert '.app-home-grid' in theme_css and '.app-illustration' in theme_css
+          html = html.replace(css_link, '<style id="mevicar-versioned-themes">' + theme_css + '</style>')
+          saver_css_link = '<link rel="stylesheet" href="./screensaver.css">'
+          saver_js_tag = '<script src="./screensaver.js"></script>'
+          assert saver_css_link in html and saver_js_tag in html, 'Screensaver assets missing'
+          saver_css = pathlib.Path('screensaver.css').read_text()
+          saver_js = pathlib.Path('screensaver.js').read_text()
+          assert '#mevi-saver' in saver_css and 'meviSaverPreview' in saver_js
+          html = html.replace(saver_css_link, '<style id="mevicar-screensaver-styles">' + saver_css + '</style>')
+          # Keep the media player JS/CSS in the same versioned HTML as the cockpit.
+          media_css_link = '<link rel="stylesheet" href="./mevimedia.css">'
+          media_script_tag = '<script src="./mevimedia.js"></script>'
+          assert media_css_link in html and media_script_tag in html, 'MeviMedia files missing'
+          media_css = pathlib.Path('mevimedia.css').read_text()
+          media_js = pathlib.Path('mevimedia.js').read_text()
+          assert '.mm-shell' in media_css and 'meviMediaHTML' in media_js
+          html = html.replace(media_css_link, '<style id="mevicar-media-styles">' + media_css + '</style>')
+          html = html.replace(media_script_tag, '<script id="mevicar-media-script">' + media_js + '</script>')
+          # Spotify remote control is part of the same versioned shell.
+          nav_css_link = '<link rel="stylesheet" href="./navigation-google.css">'
+          nav_script_tag = '<script src="./navigation-google.js"></script>'
+          assert nav_css_link in html and nav_script_tag in html, 'Navigation assets missing'
+          nav_css = pathlib.Path('navigation-google.css').read_text()
+          nav_js = pathlib.Path('navigation-google.js').read_text()
+          assert 'MeviGoogleNav' in nav_js and '.mg-map' in nav_css
+          html = html.replace(nav_css_link, '<style id="mevicar-navigation-styles">' + nav_css + '</style>')
+          html = html.replace(nav_script_tag, '<script id="mevicar-navigation-script">' + nav_js + '</script>')
+          # Home Assistant: bundle the dashboard and REST client in the same versioned shell.
+          weather_css_link = '<link rel="stylesheet" href="./weather-next.css">'
+          assert weather_css_link in html, 'Weather wrapper stylesheet missing'
+          weather_css = pathlib.Path('weather-next.css').read_text()
+          assert '.weather-host' in weather_css
+          assert 'weather/weather.html' in html, 'Live Classic weather iframe missing'
+          html = html.replace(weather_css_link, '<style id="mevicar-weather-styles">' + weather_css + '</style>')
+          # Road Assist is part of the live route view, with HA camera state in-memory.
+          ra_css_link = '<link rel="stylesheet" href="./roadassist.css">'
+          ra_script_tag = '<script src="./roadassist.js"></script>'
+          assert ra_css_link in html and ra_script_tag in html, 'Road Assist assets missing'
+          ra_css = pathlib.Path('roadassist.css').read_text()
+          ra_js = pathlib.Path('roadassist.js').read_text()
+          assert '.mevi-ra-overlay' in ra_css and 'MeviRoadAssist' in ra_js
+          html = html.replace(ra_css_link, '<style id="mevicar-roadassist-styles">' + ra_css + '</style>')
+          html = html.replace(ra_script_tag, '<script id="mevicar-roadassist-script">' + ra_js + '</script>')
+          youtube_css_link = '<link rel="stylesheet" href="./youtube.css">'
+          youtube_script_tag = '<script src="./youtube.js"></script>'
+          assert youtube_css_link in html and youtube_script_tag in html, 'YouTube assets missing'
+          youtube_css = pathlib.Path('youtube.css').read_text()
+          youtube_js = pathlib.Path('youtube.js').read_text()
+          assert '.mevi-youtube-shell' in youtube_css and 'MeviYouTube' in youtube_js
+          html = html.replace(youtube_css_link, '<style id="mevicar-youtube-styles">' + youtube_css + '</style>')
+          html = html.replace(youtube_script_tag, '<script id="mevicar-youtube-script">' + youtube_js + '</script>')
+          stocks_css_link = '<link rel="stylesheet" href="./stocks.css">'
+          stocks_script_tag = '<script src="./stocks.js"></script>'
+          assert stocks_css_link in html and stocks_script_tag in html, 'Stocks assets missing'
+          stocks_css = pathlib.Path('stocks.css').read_text()
+          stocks_js = pathlib.Path('stocks.js').read_text()
+          assert '.mevi-stocks' in stocks_css and 'MeviStocks' in stocks_js
+          html = html.replace(stocks_css_link, '<style id="mevicar-stocks-styles">' + stocks_css + '</style>')
+          html = html.replace(stocks_script_tag, '<script id="mevicar-stocks-script">' + stocks_js + '</script>')
+          whatsapp_css_link = '<link rel="stylesheet" href="./whatsapp.css">'
+          whatsapp_script_tag = '<script src="./whatsapp.js"></script>'
+          assert whatsapp_css_link in html and whatsapp_script_tag in html, 'WhatsApp assets missing'
+          whatsapp_css = pathlib.Path('whatsapp.css').read_text()
+          whatsapp_js = pathlib.Path('whatsapp.js').read_text()
+          assert '.mevi-wa-shell' in whatsapp_css and 'MeviWhatsApp' in whatsapp_js
+          html = html.replace(whatsapp_css_link, '<style id="mevicar-whatsapp-styles">' + whatsapp_css + '</style>')
+          html = html.replace(whatsapp_script_tag, '<script id="mevicar-whatsapp-script">' + whatsapp_js + '</script>')
+          calendar_css_link = '<link rel="stylesheet" href="./calendar.css">'
+          calendar_script_tag = '<script src="./calendar.js"></script>'
+          assert calendar_css_link in html and calendar_script_tag in html, 'Calendar assets missing'
+          cal_css = pathlib.Path('calendar.css').read_text()
+          cal_js = pathlib.Path('calendar.js').read_text()
+          assert '.mevi-cal-shell' in cal_css and 'MeviCalendar' in cal_js
+          html = html.replace(calendar_css_link, '<style id="mevicar-calendar-styles">' + cal_css + '</style>')
+          html = html.replace(calendar_script_tag, '<script id="mevicar-calendar-script">' + cal_js + '</script>')
+          ha_css_link = '<link rel="stylesheet" href="./homeassistant.css">'
+          ha_script_tag = '<script src="./homeassistant.js"></script>'
+          assert ha_css_link in html and ha_script_tag in html, 'Home Assistant assets missing'
+          ha_css = pathlib.Path('homeassistant.css').read_text()
+          ha_js = pathlib.Path('homeassistant.js').read_text()
+          assert '.ha-shell' in ha_css and 'MeviHA' in ha_js
+          html = html.replace(ha_css_link, '<style id="mevicar-homeassistant-styles">' + ha_css + '</style>')
+          html = html.replace(ha_script_tag, '<script id="mevicar-homeassistant-script">' + ha_js + '</script>')
+          spotify_css_link = '<link rel="stylesheet" href="./spotify.css">'
+          spotify_script_tag = '<script src="./spotify.js"></script>'
+          assert spotify_css_link in html and spotify_script_tag in html, 'Spotify assets missing'
+          spotify_css = pathlib.Path('spotify.css').read_text()
+          spotify_js = pathlib.Path('spotify.js').read_text()
+          assert '.sp-shell' in spotify_css and 'meviSpotifyHTML' in spotify_js
+          html = html.replace(spotify_css_link, '<style id="mevicar-spotify-styles">' + spotify_css + '</style>')
+          html = html.replace(spotify_script_tag, '<script id="mevicar-spotify-script">' + spotify_js + '</script>')
+          # Lichtshow is an independent live app using the already bundled MeviDarts renderer.
+          lightshow_css_link = '<link rel="stylesheet" href="./lightshow.css">'
+          lightshow_script_tag = '<script src="./lightshow.js"></script>'
+          assert lightshow_css_link in html and lightshow_script_tag in html, 'Lichtshow assets missing'
+          lightshow_css = pathlib.Path('lightshow.css').read_text()
+          lightshow_js = pathlib.Path('lightshow.js').read_text()
+          assert '.lightshow-app' in lightshow_css and 'meviLightshowMount' in lightshow_js
+          html = html.replace(lightshow_css_link, '<style id="mevicar-lightshow-styles">' + lightshow_css + '</style>')
+          html = html.replace(lightshow_script_tag, '<script id="mevicar-lightshow-script">' + lightshow_js + '</script>')
+          speed_css_link = '<link rel="stylesheet" href="./speedometer.css">'
+          speed_script_tag = '<script src="./speedometer.js"></script>'
+          assert speed_css_link in html and speed_script_tag in html, 'Speedometer assets missing'
+          speed_css = pathlib.Path('speedometer.css').read_text()
+          speed_js = pathlib.Path('speedometer.js').read_text()
+          assert '.tacho-app' in speed_css and 'meviSpeedHTML' in speed_js and 'meviSpeedIngest' in speed_js
+          html = html.replace(speed_css_link, '<style id="mevicar-speedometer-styles">' + speed_css + '</style>')
+          html = html.replace(speed_script_tag, '<script id="mevicar-speedometer-script">' + speed_js + '</script>')
+          # Keep all five responsive viewport profiles within the atomic HTML build.
+          profiles_css_link = '<link rel="stylesheet" href="./display-profiles.css">'
+          assert profiles_css_link in html, 'Display profile link missing'
+          profiles_css = pathlib.Path('display-profiles.css').read_text()
+          assert 'DeX 1920x1200' in profiles_css and '1920x720' in profiles_css
+          html = html.replace(profiles_css_link, '<style id="mevicar-display-profiles">' + profiles_css + '</style>')
+          html = html.replace(saver_js_tag, '<script id="mevicar-screensaver-script">' + saver_js + '</script>')
+          # Bundle the full original MeviDarts library in dependency order.
+          # Inlining prevents the PWA from mixing mismatched cached JS versions.
+          for name in ('mevidarts-parallax', 'mevidarts-showcase', 'mevidarts-light-renderer'):
+              script_tag = '<script src="./' + name + '.js"></script>'
+              assert script_tag in html, 'Missing MeviDarts dependency: ' + name
+              source = pathlib.Path(name + '.js').read_text()
+              assert len(source) > 2000, 'MeviDarts source incomplete: ' + name
+              html = html.replace(script_tag, '<script id="' + name + '">' + source + '</script>')
+          # Native Tacho Next is bundled into the versioned shell like the other apps.
+          tn_css_link = '<link rel="stylesheet" href="./tacho-next.css">'
+          tn_js_tag = '<script src="./tacho-next.js"></script>'
+          assert tn_css_link in html and tn_js_tag in html, 'Native Tacho Next assets missing'
+          tn_css = pathlib.Path('tacho-next.css').read_text()
+          tn_js = pathlib.Path('tacho-next.js').read_text()
+          assert '.tn-gauges' in tn_css and 'meviTachoNextMount' in tn_js
+          html = html.replace(tn_css_link, '<style id="mevicar-tacho-next-styles">' + tn_css + '</style>')
+          html = html.replace(tn_js_tag, '<script id="mevicar-tacho-next-script">' + tn_js + '</script>')
+          sudoku_css_link = '<link rel="stylesheet" href="./sudoku.css">'
+          sudoku_js_tag = '<script src="./sudoku.js"></script>'
+          assert sudoku_css_link in html and sudoku_js_tag in html, 'Sudoku assets missing'
+          sudoku_css = pathlib.Path('sudoku.css').read_text()
+          sudoku_js = pathlib.Path('sudoku.js').read_text()
+          assert '.sdk-board' in sudoku_css and 'meviSudokuMount' in sudoku_js
+          html = html.replace(sudoku_css_link, '<style id="mevicar-sudoku-styles">' + sudoku_css + '</style>')
+          html = html.replace(sudoku_js_tag, '<script id="mevicar-sudoku-script">' + sudoku_js + '</script>')
+          html = html.replace('<link rel="stylesheet" href="./tetris.css">', '<style>' + pathlib.Path('tetris.css').read_text() + '</style>')
+          html = html.replace('<script src="./tetris.js"></script>', '<script>' + pathlib.Path('tetris.js').read_text() + '</script>')
+          html = html.replace('<link rel="stylesheet" href="./tv.css">', '<style>' + pathlib.Path('tv.css').read_text() + '</style>')
+          html = html.replace('<script src="./xtream.js"></script>', '<script>' + pathlib.Path('xtream.js').read_text() + '</script>')
+          html = html.replace('<script src="./tv.js"></script>', '<script>' + pathlib.Path('tv.js').read_text() + '</script>')
+          pathlib.Path('dist/index.html').write_text(html)
+          pathlib.Path('dist/build-info.json').write_text(json.dumps(info))
+          # Public proxy release manifest: no anonymous GitHub API requests needed
+          # by Synology clients (which otherwise hit the 60 requests/hour limit).
+          proxy = json.loads(pathlib.Path('bridge/release.json').read_text())
+          assert isinstance(proxy['build'], int) and proxy['build'] > 0
+          assert isinstance(proxy['version'], str)
+          pathlib.Path('dist/proxy-release.json').write_text(json.dumps({
+              'version': proxy['version'], 'build': proxy['build'], 'sha': os.environ['BUILD_SHA']
+          }))
+          PY
+      - name: Generate PWA icons and copy assets
+        run: |
+          mkdir -p dist/vendor
+          # Ship the exact JS/WASM pair accepted in the real MKV seek test.
+          node tests/movi-official-smoke.mjs
+          cp -R vendor/movi-mevitv-mkv-size-2 dist/vendor/
+          cp vendor/movi-mevitv-mkv-size-2/movi-build.json dist/vendor/movi-build.json
+          cp vendor/movi-mevitv-mkv-size-2/LICENSE.txt dist/vendor/movi-player-LICENSE.txt
+          # Compatibility URLs for tabs opened before the official promotion.
+          cp vendor/movi-mevitv-mkv-size-2/element.slim.global.js dist/vendor/movi-player-0.4.1.slim.global.js
+          cp vendor/movi-mevitv-mkv-size-2/movi.wasm dist/vendor/movi.wasm
+          mkdir -p dist/vendor/experimental
+          cp vendor/movi-mevitv-mkv-size-2/element.slim.global.js vendor/movi-mevitv-mkv-size-2/movi.wasm dist/vendor/experimental/
+          # Download the pinned browser bundle directly; the npm package
+          # installation does not reliably expose this artifact at the expected path.
+          curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/mpegts.js@1.8.2/dist/mpegts.min.js -o dist/vendor/mpegts-1.8.2.min.js
+          test "$(wc -c < dist/vendor/mpegts-1.8.2.min.js)" -gt 100000
+          curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js -o dist/vendor/hls-1.6.15.min.js
+          (cd dist && sha256sum -c ../vendor/hls.sha256)
+          cp vendor/hls-LICENSE.txt dist/vendor/
+          mkdir -p dist/weather
+          cp -R weather/. dist/weather/
+          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          python3 -m pip install --quiet --break-system-packages pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageDraw, ImageFont
+          for n in (192, 512):
+              im=Image.new('RGB',(n,n),'#08111b')
+              d=ImageDraw.Draw(im)
+              d.rounded_rectangle((n*.09,n*.09,n*.91,n*.91),radius=n*.2,fill='#102c42',outline='#18d7ed',width=max(3,n//70))
+              d.arc((n*.23,n*.23,n*.77,n*.77),145,395,fill='#24e2f7',width=max(6,n//24))
+              d.line((n*.5,n*.5,n*.68,n*.33),fill='#e8fbff',width=max(4,n//35))
+              d.ellipse((n*.46,n*.46,n*.54,n*.54),fill='#e8fbff')
+              im.save(f'dist/icon-{n}.png')
+          PY
+      - name: Check Android platform abstraction
+        run: |
+          node --check meviplatform.js
+          node tests/meviplatform-smoke.mjs
+          python3 scripts/prepare-android-assets.py
+          test -s dist/index.html
+          test -s dist/meviplatform.js
+          test ! -e dist/sw.js
+          grep -q 'src="./meviplatform.js"' dist/index.html
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Prepare Android API level
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
+      - name: Install Capacitor and generate Android project
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+      - name: Compile unsigned-for-release, debug-signed test APK
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew --no-daemon assembleDebug
+          test -s app/build/outputs/apk/debug/app-debug.apk
+      - name: Save Android Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeviCar-Next-Android-Debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
