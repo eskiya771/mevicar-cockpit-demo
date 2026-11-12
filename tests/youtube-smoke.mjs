@@ -163,7 +163,7 @@ assert.match(html,/youtube\.js/);
 assert.match(html,/youtube\.css/);
 assert.match(html,/s\.app==='youtube'\)return window\.MeviYouTube\?\.html/);
 assert.match(html,/class="full youtube-host"/);
-assert.match(html,/mevi-youtube/);
+assert.match(html,/MeviYouTube\.mount\(\)/);
 assert.match(pages,/mevicar-youtube-script/);
 assert.match(pages,/youtube\.js youtube\.css/);
 assert.match(sw,/youtube\.js/);
