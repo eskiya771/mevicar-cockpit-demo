@@ -557,3 +557,47 @@ html .cockpit .dock button:not(.active){
  .app-home-side .app-home-icon{width:48px;height:48px}
  .app-home-side .app-home-label{font-size:12px}
 }
+
+
+/* App launcher: touch-first, large icons and independent vertical scrolling.
+   Keep the dock and all non-launcher screens untouched. */
+.app-home-surface{min-height:0;overflow:hidden}
+.app-home-surface .app-home{display:flex;flex-direction:column;flex:1;min-height:0;height:100%;overflow:hidden}
+.app-home-surface .app-home-heading{flex:0 0 auto}
+.app-home-surface .app-home-grid{
+ flex:1 1 auto;min-height:0;max-height:100%;overflow-y:auto!important;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ grid-template-rows:none!important;grid-auto-rows:clamp(180px,24vh,235px);
+ gap:clamp(8px,1.4vh,16px);padding:4px 8px 16px;
+ scroll-behavior:smooth;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+}
+.app-home-surface .app-home-tile{
+ grid-template-rows:minmax(0,1fr) 26px!important;
+ padding:8px 5px!important;gap:3px!important;
+}
+.app-home-surface .app-home-icon{
+ width:clamp(108px,16vh,160px)!important;
+ height:clamp(108px,16vh,160px)!important;
+ max-width:100%;max-height:100%;
+}
+.app-home-surface .app-home-label{
+ font-size:clamp(11px,1.7vh,15px)!important;
+ line-height:1.15;font-weight:650;
+}
+@media (orientation:landscape) and (max-height:529px){
+ .app-home-surface .app-home-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-auto-rows:178px;row-gap:10px;
+ }
+ .app-home-surface .app-home-tile{
+  grid-template-rows:minmax(0,1fr) 24px!important;
+  padding:5px 4px!important;gap:2px!important;
+ }
+ .app-home-surface .app-home-icon{
+  width:126px!important;height:126px!important;
+ }
+ .app-home-surface .app-home-label{font-size:12px!important}
+}
+@media (orientation:landscape) and (max-width:700px){
+ .app-home-surface .app-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
