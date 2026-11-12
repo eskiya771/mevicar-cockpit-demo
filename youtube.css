@@ -1,0 +1,80 @@
+/* MeviCar Next YouTube — compact, car-friendly interface with an official iframe.
+   The iframe is created only after stationary GPS confirmation. */
+.full.youtube-host,.side.youtube-host{padding:0!important;min-width:0;min-height:0;overflow:hidden!important;
+ display:flex;flex-direction:column;border-radius:14px;background:#0b1829!important;
+ border:1px solid #478ba460}
+.youtube-host>.mevi-youtube-shell{flex:1}
+.mevi-youtube-shell{display:flex;flex-direction:column;width:100%;height:100%;min-height:0;min-width:0;
+ overflow:hidden;background:linear-gradient(128deg,#122e46,#091a31 60%,#11293b);
+ color:#eaf8ff;border-radius:13px;font-family:inherit}
+.mevi-youtube-shell button{min-width:0;flex:none;font-size:clamp(11px,1.55vh,14px);font-weight:750;
+ padding:6px 10px;min-height:clamp(32px,5vh,44px);border:1px solid #78c6dc83;
+ border-radius:11px;background:#21455e;color:#eefbff}
+.mevi-youtube-shell button:disabled{opacity:.45;cursor:not-allowed}
+.mevi-youtube-header{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
+ padding:clamp(7px,1.2vh,12px) clamp(9px,1.3vw,17px);background:#143752;
+ border-bottom:1px solid #a1d5ea45}
+.mevi-youtube-heading{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mevi-youtube-heading small{font-size:clamp(9px,1.2vh,12px);letter-spacing:.13em;font-weight:800;color:#80dfeb}
+.mevi-youtube-heading strong{font-size:clamp(18px,2.7vh,25px);line-height:1.15}
+.mevi-youtube-guard{color:#9cf6d7;border:1px solid #5ecbad88;background:#0d5646a3;
+ border-radius:9px;padding:5px 9px;font-size:clamp(9px,1.25vh,12px);font-weight:800;white-space:nowrap}
+.mevi-youtube-controls{flex:none;display:flex;align-items:end;gap:6px;padding:clamp(6px,1vh,11px) clamp(8px,1.2vw,15px);
+ background:#10253bc9;min-width:0}
+.mevi-youtube-input-wrap{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.mevi-youtube-input-wrap span{font-size:clamp(9px,1.2vh,11px);font-weight:800;letter-spacing:.07em;color:#abc8dc}
+.mevi-youtube-input-wrap input{border:1px solid #7ed7ed89;border-radius:10px;background:#071c30;
+ width:100%;height:clamp(32px,5vh,44px);min-width:0;color:#f2fbff;padding:6px 10px;
+ font-size:clamp(11px,1.6vh,15px);outline-offset:1px}
+.mevi-youtube-input-wrap input:focus-visible{outline:2px solid #67e8fa}
+.mevi-youtube-controls .mevi-youtube-load{background:linear-gradient(135deg,#0a8a96,#0f657f);color:#fff;border-color:#6bd8ef}
+.mevi-youtube-controls .mevi-youtube-stop{background:#5a2c43;border-color:#ed9aaf76}
+.mevi-youtube-feedback{flex:none;display:flex;align-items:center;justify-content:space-between;gap:8px;
+ min-width:0;padding:5px clamp(8px,1.2vw,15px);color:#e4f9ff;font-size:clamp(10px,1.35vh,13px);
+ border-bottom:1px solid #8cbcd032;background:#0c253a}
+.mevi-youtube-feedback span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mevi-youtube-feedback small{color:#a4d5e4;font-size:clamp(9px,1.2vh,12px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mevi-youtube-stage{flex:1;min-width:0;min-height:0;position:relative;background:#080d19;
+ display:flex;align-items:center;justify-content:center;overflow:hidden}
+.mevi-youtube-iframe{height:100%;width:100%;min-width:0;min-height:0;border:0;display:block;
+ background:#080d19}
+.mevi-youtube-idle{display:flex;flex-direction:column;gap:clamp(6px,1.2vh,12px);align-items:center;
+ justify-content:center;text-align:center;max-width:min(520px,100%);padding:12px 20px;color:#d3e9f7}
+.mevi-youtube-playmark{display:grid;place-items:center;width:clamp(46px,8vh,72px);
+ height:clamp(40px,7vh,64px);border-radius:16px;background:#dc3449;
+ color:white;font-size:clamp(20px,4vh,32px);font-weight:850}
+.mevi-youtube-idle strong{font-size:clamp(13px,2.1vh,21px)}
+.mevi-youtube-idle p{font-size:clamp(10px,1.5vh,14px);line-height:1.35;margin:0}
+.mevi-youtube-footer{flex:none;padding:5px 10px;text-align:center;color:#8cadc3;
+ font-size:clamp(9px,1.12vh,12px);background:#0e2235;border-top:1px solid #80a7bb37;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mevi-youtube-shell.is-compact .mevi-youtube-header{padding:4px 7px}
+.mevi-youtube-shell.is-compact .mevi-youtube-heading small{font-size:9px}
+.mevi-youtube-shell.is-compact .mevi-youtube-heading strong{font-size:15px}
+.mevi-youtube-shell.is-compact .mevi-youtube-guard{font-size:9px;padding:3px 5px}
+.mevi-youtube-shell.is-compact .mevi-youtube-controls{padding:4px 6px;gap:4px;flex-wrap:wrap}
+.mevi-youtube-shell.is-compact .mevi-youtube-input-wrap{flex-basis:100%}
+.mevi-youtube-shell.is-compact .mevi-youtube-input-wrap span{display:none}
+.mevi-youtube-shell.is-compact .mevi-youtube-input-wrap input{height:33px}
+.mevi-youtube-shell.is-compact button{flex:1;min-height:30px;padding:3px 5px;font-size:10px}
+.mevi-youtube-shell.is-compact .mevi-youtube-feedback{padding:4px 6px}
+.mevi-youtube-shell.is-compact .mevi-youtube-feedback small{display:none}
+.mevi-youtube-shell.is-compact .mevi-youtube-footer{padding:3px 6px;font-size:9px}
+.mevi-youtube-shell.is-compact .mevi-youtube-idle{padding:7px;gap:6px}
+.mevi-youtube-shell.is-compact .mevi-youtube-idle p{font-size:10px}
+@media (orientation:landscape) and (max-height:510px){
+ .mevi-youtube-header{padding:4px 7px}
+ .mevi-youtube-heading small{font-size:9px}
+ .mevi-youtube-heading strong{font-size:16px}
+ .mevi-youtube-controls{padding:3px 6px;gap:4px}
+ .mevi-youtube-input-wrap span{display:none}
+ .mevi-youtube-input-wrap input{height:32px}
+ .mevi-youtube-shell button{min-height:32px;padding:3px 6px;font-size:10px}
+ .mevi-youtube-feedback{padding:3px 6px;font-size:10px}
+ .mevi-youtube-feedback small{display:none}
+ .mevi-youtube-idle{padding:7px;gap:6px}
+ .mevi-youtube-idle p{font-size:10px}
+ .mevi-youtube-footer{font-size:9px;padding:3px 6px}
+}
+html[data-theme="liquidglass"] .mevi-youtube-shell{background:linear-gradient(130deg,#1a3448,#13283b)}
+html[data-theme="cyberpunk"] .youtube-host{border-color:#f15bd383}
