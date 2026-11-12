@@ -17,5 +17,5 @@ assert.match(override,/\.app-home-surface \.app-home-label/);
 assert.doesNotMatch(override,/\.dock\b|\.app-home-side\b/,'Dock and side launcher must stay untouched');
 assert.match(html,/function appLauncherHTML\(\)/);
 assert.match(workflow,/node tests\/launcher-landscape-smoke\.mjs/);
-assert.match(sw,/mevicar-next-shell-v40/);
+assert.match(sw,/const CACHE=['\"]mevicar-next-shell-v\\d+['\"]/,'Service-worker cache must have a numeric version');
 console.log('Launcher: 5x4 compact phone grid, scoped icon sizes, no dock/split changes passed.');
