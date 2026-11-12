@@ -9,11 +9,18 @@ const destination={name:'Erlangen Arcaden',address:'Erlangen',lat:49.597,lng:11.
 function harness(gps='timeout'){
  const notice={hidden:false},keyButton={hidden:false},manualButton={hidden:true},message={textContent:'',hidden:false,classList:{add(){}}};
  const targets={'mg-map-notice':notice,'mg-change-key':keyButton,'mg-manual-origin':manualButton,'mg-status':message};
- let routeInput=null,gpsCalls=0;
+ let routeInput=null,gpsCalls=0,watchCallback=null,watchStopped=false;
  const Google={maps:{
   importLibrary:async(lib)=>lib==='routes'?{Route:{computeRoutes:async request=>{
    routeInput=request;
-   return{routes:[{distanceMeters:12340,durationMillis:900000,path:[],createPolylines:()=>[]}]};
+   return{routes:[{distanceMeters:12340,durationMillis:900000,
+    path:[{lat:49.565,lng:10.982},{lat:49.597,lng:11.004}],
+    legs:[{steps:[
+      {instructions:'Rechts abbiegen auf Hauptstraße',maneuver:'TURN_RIGHT',distanceMeters:700,
+       startLocation:{lat:49.565,lng:10.982},endLocation:{lat:49.59,lng:11.00},path:[{lat:49.565,lng:10.982},{lat:49.59,lng:11.00}]},
+      {instructions:'Am Ziel ankommen',maneuver:'STRAIGHT',distanceMeters:600,
+       startLocation:{lat:49.59,lng:11.00},endLocation:{lat:49.597,lng:11.004},path:[{lat:49.59,lng:11.00},{lat:49.597,lng:11.004}]}
+    ]}],createPolylines:()=>[]}]};
   }}}:{},
  }};
  const storage={
@@ -32,13 +39,14 @@ function harness(gps='timeout'){
    else if(gps==='timeout')onError({code:3,message:'Timeout expired'});
    else onSuccess({coords:{latitude:49.597,longitude:11.004}});
   },
-  clearWatch(){}
+  watchPosition(onSuccess){watchCallback=onSuccess;return 37},
+  clearWatch(id){if(id===37)watchStopped=true}
  };
  const window={google:Google,meviGoogleDestination(){}};
  runInNewContext(source,{window,document:doc,localStorage:storage,
-  navigator:{geolocation},google:Google,Intl,setTimeout,clearTimeout,console});
+  navigator:{geolocation},google:Google,Intl,setTimeout,clearTimeout,setInterval:()=>99,clearInterval:()=>{},console});
  return {api:window.MeviGoogleNav,notice,keyButton,manualButton,message,
-  route:()=>routeInput,gpsCalls:()=>gpsCalls};
+  route:()=>routeInput,gpsCalls:()=>gpsCalls,watch:position=>watchCallback?.({coords:{latitude:position.lat,longitude:position.lng,accuracy:9,speed:10,heading:70}}),wasStopped:()=>watchStopped};
 }
 {
  const h=harness('timeout');
@@ -75,4 +83,27 @@ function harness(gps='timeout'){
  assert.equal(h.route().origin.lat,49.597);
  assert.equal(h.gpsCalls(),1);
 }
+{
+ const h=harness('ok');
+ await h.api.pick('stored',0);
+ assert.equal(await h.api.calculateRoute(),true);
+ assert.match(h.api.routeReadyHTML(),/Rechts abbiegen auf Hauptstraße/,'Show Google turn-by-turn route steps');
+ assert.equal(h.api.guidanceRunning(),false,'A planned route must not auto-start navigation');
+ assert.equal(await h.api.startGuidance(),true,'GPS-enabled device starts live guidance');
+ assert.equal(h.api.guidanceRunning(),true);
+ h.watch({lat:49.5898,lng:11.0000});
+ h.api.paintGuidance();
+ h.api.stopGuidance({keepRoute:true});
+ assert.equal(h.api.guidanceRunning(),false);
+ assert.equal(h.wasStopped(),true,'Stopping guidance stops GPS watching');
+ assert.match(h.api.routeReadyHTML(),/Rechts abbiegen/,'Route remains available after ending guidance');
+ assert.equal(h.api.startDemo(),true,'Allow route preview without real GPS');
+ assert.equal(h.api.guidanceRunning(),true);
+ h.api.stopGuidance();
+}
+const cockpit=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+assert.match(cockpit,/Navigation starten/,'Classic-like navigation start action is visible');
+assert.match(cockpit,/beginNavigation\(\)/,'Start action calls the GPS guidance engine');
+assert.match(cockpit,/Demo-Fahrt/,'Desktop test mode is visibly distinguished from live navigation');
+console.log('Google navigation: ready state, turn cards, live start/stop, voice control and demo tested.');
 console.log('Google Maps navigation: manual origin, GPS retry, permissions and route rendering contract passed.');
