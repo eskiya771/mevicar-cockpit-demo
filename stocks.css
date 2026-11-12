@@ -118,3 +118,25 @@ html[data-theme="liquidglass"] .mevi-tv-item.is-selected{background:#295c76}
  .mevi-tv-charttools{padding:1px 5px;min-height:25px}
  .mevi-tv-periods button{min-height:22px;padding:1px 5px}
 }
+
+/* Finance usability: reach-friendly ranges in the left column and live selected quote. */
+.mevi-tv-sidebar>.mevi-tv-periods{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;flex:none;width:100%}
+.mevi-tv-sidebar>.mevi-tv-periods button{min-width:0;min-height:37px;padding:3px 1px;text-align:center;font-size:12px;touch-action:manipulation}
+.mevi-tv-item.is-selected{flex-wrap:wrap;border:1px solid #7cf0ec;border-radius:10px;background:#17465d}
+.mevi-tv-item.is-selected .mevi-tv-pick{flex:1}
+.mevi-tv-quote{flex:0 0 100%;width:100%;min-width:0;min-height:112px;overflow:hidden;background:#0b2131;border-top:1px solid #4e899f5c;border-radius:0 0 8px 8px}
+.mevi-tv-quote>.tradingview-widget-container{width:100%;min-height:112px}
+.mevi-tv-quote .tradingview-widget-container__widget{width:100%}
+.mevi-tv-quote>span{display:block;padding:14px 8px;font-size:12px;color:#a0cad9}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-periods{order:3}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-list{order:2}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-actions{order:1}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-external{order:4}
+.mevi-tv.is-compact .mevi-tv-item.is-selected{flex-wrap:nowrap}
+.mevi-tv.is-compact .mevi-tv-quote{display:none}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-periods button{min-height:30px}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-sidebar>.mevi-tv-periods button{min-height:33px;font-size:11px}
+ .mevi-tv-quote{min-height:102px}
+ .mevi-tv-quote>.tradingview-widget-container{min-height:102px}
+}
