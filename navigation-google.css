@@ -111,3 +111,83 @@ html[data-theme="liquidglass"] .mg-navigation .nav-browse .nav-search-trigger{
  .mg-origin-instruction button{padding:4px 7px}
  .mg-navigation .nav-preview .mg-manual-origin-actions{margin-top:2px}
 }
+
+/* Classic-like Web Guidance: route ready -> navigation start -> live turn cards.
+   Scoped to Next's nav only so radio, media and other split apps stay untouched. */
+.mg-navigation .mg-route-banner,
+.mg-navigation .mg-guidance-banner{
+ z-index:5;left:clamp(9px,1.2vw,20px);top:clamp(9px,1.2vh,18px);
+ width:min(510px,49%);max-width:calc(100% - 24px);min-width:0;
+ padding:clamp(12px,1.8vh,20px);
+ border-radius:clamp(15px,1.5vw,23px);
+ background:linear-gradient(130deg,rgba(12,33,55,.97),rgba(20,53,75,.97));
+ border:1px solid rgba(109,209,234,.78);
+ box-shadow:0 12px 32px rgba(0,10,24,.56);
+ color:#f4fbff;backdrop-filter:blur(14px);
+ display:flex;flex-direction:column;gap:clamp(6px,1.1vh,13px);
+}
+.mg-route-eyebrow,.mg-guidance-header{
+ text-transform:uppercase;color:#83e8f5;letter-spacing:.1em;font-size:clamp(10px,1.3vh,13px);
+ font-weight:800;
+}
+.mg-route-destination{font-size:clamp(20px,3.2vh,30px);line-height:1.15;overflow-wrap:anywhere}
+.mg-ready-meta{font-size:clamp(13px,2.1vh,19px);font-weight:750}
+.mg-ready-summary{display:flex;flex-direction:column;gap:8px}
+.mg-ready-summary>strong{font-size:clamp(13px,2vh,18px)}
+.mg-ready-steps{display:flex;flex-direction:column;gap:3px;max-height:min(36vh,240px);overflow-y:auto;scrollbar-width:thin}
+.mg-step-item{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;align-items:center;padding:6px 3px;border-bottom:1px solid #9bdaf331;font-size:clamp(11px,1.65vh,15px)}
+.mg-step-icon{color:#82edff;font-size:clamp(21px,3.4vh,29px);font-weight:800}
+.mg-step-item small{color:#bdd6e5;white-space:nowrap}
+.mg-guidance-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.mg-guidance-actions button{
+ border:1px solid #77b9d38a;border-radius:12px;min-height:clamp(38px,5vh,50px);
+ padding:7px clamp(9px,1.1vw,16px);background:#23425a;color:#e8fbff;
+ font-weight:800;cursor:pointer;font-size:clamp(11px,1.65vh,15px);
+}
+.mg-guidance-actions .mg-start-navigation{flex:1;background:linear-gradient(125deg,#10b78a,#0f869c);color:#071b26;border:1px solid #a2ffe3}
+.mg-guidance-actions .mg-stop-navigation{background:#6c2c3d;color:#ffeaf1;border-color:#f7a8bc7e}
+.mg-route-hint{color:#bad0de;font-size:clamp(10px,1.4vh,13px);line-height:1.35}
+.mg-guidance-header{display:flex;justify-content:space-between;gap:9px;align-items:center}
+.mg-guidance-header #mg-remaining{color:#d5e9f7;letter-spacing:0;text-transform:none;font-size:clamp(12px,1.6vh,16px);text-align:right}
+.mg-guidance-turn{display:grid;grid-template-columns:clamp(55px,7vw,94px) minmax(0,1fr);gap:12px;align-items:center}
+.mg-guidance-turn #mg-next-arrow{font-size:clamp(48px,10vh,88px);font-weight:850;color:#64edff;line-height:1;text-align:center}
+.mg-guidance-instruction{min-width:0;display:flex;flex-direction:column;gap:3px}
+.mg-guidance-instruction #mg-next-distance{font-size:clamp(24px,4.1vh,37px);color:#fff}
+.mg-guidance-instruction #mg-next-turn{font-size:clamp(16px,2.5vh,23px);line-height:1.2;overflow-wrap:anywhere}
+.mg-guidance-footer{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
+ font-size:clamp(11px,1.45vh,14px);color:#c1dbea}
+.mg-guidance-target{max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html[data-theme="liquidglass"] .mg-navigation .mg-route-banner,
+html[data-theme="liquidglass"] .mg-navigation .mg-guidance-banner{
+ background:linear-gradient(135deg,rgba(12,30,46,.96),rgba(20,42,60,.96));border:1px solid #79dbeaab;
+ color:#f3fcff;box-shadow:0 12px 33px #03121c91;
+}
+.mg-navigation .mg-guidance-compact{width:min(350px,40%);padding:8px;gap:5px}
+.mg-guidance-compact .mg-guidance-turn{grid-template-columns:44px minmax(0,1fr);gap:5px}
+.mg-guidance-compact #mg-next-arrow{font-size:36px}
+.mg-guidance-compact .mg-guidance-instruction #mg-next-distance{font-size:18px}
+.mg-guidance-compact .mg-guidance-instruction #mg-next-turn{font-size:12px}
+.mg-guidance-compact .mg-guidance-header{font-size:9px}
+.mg-guidance-compact .mg-guidance-footer{font-size:10px}
+@media (orientation:landscape) and (max-height:540px){
+ .mg-navigation .mg-route-banner,.mg-navigation .mg-guidance-banner{
+  padding:7px 9px;gap:5px;width:min(470px,56%);top:6px;left:7px;border-radius:12px;
+ }
+ .mg-route-destination{font-size:17px}
+ .mg-ready-steps{max-height:22vh}
+ .mg-step-item{padding:3px 2px;font-size:10px;grid-template-columns:21px minmax(0,1fr) auto}
+ .mg-step-icon{font-size:18px}
+ .mg-guidance-actions button{min-height:30px;padding:4px 8px;font-size:10px}
+ .mg-route-hint{font-size:10px}
+ .mg-guidance-turn{grid-template-columns:45px minmax(0,1fr);gap:5px}
+ .mg-guidance-turn #mg-next-arrow{font-size:41px}
+ .mg-guidance-instruction #mg-next-distance{font-size:21px}
+ .mg-guidance-instruction #mg-next-turn{font-size:13px}
+ .mg-guidance-header{font-size:10px}
+ .mg-guidance-header #mg-remaining{font-size:11px}
+ .mg-navigation .mg-guidance-compact{width:min(220px,44%)}
+ .mg-guidance-compact .mg-guidance-turn{grid-template-columns:32px minmax(0,1fr)}
+ .mg-guidance-compact #mg-next-arrow{font-size:27px}
+ .mg-guidance-compact .mg-guidance-instruction #mg-next-distance{font-size:13px}
+ .mg-guidance-compact .mg-guidance-instruction #mg-next-turn{font-size:10px}
+}
