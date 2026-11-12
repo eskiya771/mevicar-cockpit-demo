@@ -116,7 +116,7 @@
  }
  function deviceRow(entity){
   const domain=entity.entity_id.split('.')[0];
-  const canToggle=clickable.has(domain);
+  const canToggle=clickable.has(domain)&&/^([a-z_]+)\.[a-z0-9_]+$/i.test(entity.entity_id);
   const busy=state.busyIds.has(entity.entity_id);
   const active=entity.state==='on';
   const values=['unavailable','unknown'].includes(entity.state)?' ha-unavailable':'';
