@@ -3,6 +3,9 @@
 (function(){
 'use strict';
 const STORAGE='mevicar-stocks-tradingview-v1';
+// Explicitly dated reference values from user-supplied screenshots, never live quotes.
+const REFERENCE_QUOTES={'XETR:SIE':{price:281.70,currency:'EUR',date:'2026-11-12'},'NASDAQ:TSLA':{price:397.45,currency:'USD',date:'2026-11-12'}};
+const CURRENCIES={'XETR:SIE':'EUR','NASDAQ:TSLA':'USD','NASDAQ:NVDA':'USD','NASDAQ:AAPL':'USD','TVC:DEU40':'EUR'};
 const DEFAULTS=[
  {symbol:'XETR:SIE',name:'Siemens'},
  {symbol:'NASDAQ:TSLA',name:'Tesla'},
@@ -18,7 +21,7 @@ const PERIODS=[
  {key:'60M',label:'5J',interval:'W',range:'60M'}
 ];
 const state={items:DEFAULTS.map(x=>({...x})),favorites:[],symbol:'XETR:SIE',
- period:'12M',query:'',onlyFavorites:false,compact:false,mounted:false,generation:0,status:''};
+ period:'12M',query:'',onlyFavorites:false,compact:false,mounted:false,generation:0,status:'',manualQuotes:{}};
 const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const validSymbol=value=>/^[A-Z0-9^][A-Z0-9^._-]{0,29}:[A-Z0-9^][A-Z0-9^._-]{0,29}$/.test(String(value||''));
 function read(){
@@ -38,12 +41,17 @@ function read(){
   const selected=raw.symbol==='INDEX:DEU40'?'TVC:DEU40':raw.symbol;
   if(state.items.some(x=>x.symbol===selected))state.symbol=selected;
   if(PERIODS.some(p=>p.key===raw.period))state.period=raw.period;
+  if(raw.manualQuotes&&typeof raw.manualQuotes==='object')for(const [symbol,q] of Object.entries(raw.manualQuotes)){
+   if(!validSymbol(symbol)||!q||typeof q!=='object')continue;
+   const n=Number(q.price),currency=String(q.currency||'').toUpperCase(),date=String(q.date||'');
+   if(Number.isFinite(n)&&n>0&&n<1e9&&/^[A-Z]{3}$/.test(currency)&&/^\d{4}-\d{2}-\d{2}$/.test(date))state.manualQuotes[symbol]={price:n,currency,date};
+  }
  }catch{}
  if(!state.items.some(x=>x.symbol===state.symbol))state.symbol=state.items[0]?.symbol||'XETR:SIE';
 }
 read();
 function save(){try{localStorage.setItem(STORAGE,JSON.stringify({
- items:state.items,favorites:state.favorites,symbol:state.symbol,period:state.period
+ items:state.items,favorites:state.favorites,symbol:state.symbol,period:state.period,manualQuotes:state.manualQuotes
 }))}catch{}}
 function current(){return state.items.find(x=>x.symbol===state.symbol)||state.items[0]}
 function element(id){return document.getElementById('mevi-tv-'+id)}
@@ -55,6 +63,25 @@ function filtered(){
 function symbolURL(symbol){
  if(!validSymbol(symbol))return 'https://www.tradingview.com/';
  return 'https://www.tradingview.com/symbols/'+symbol.replace(':','-')+'/';
+}
+function quoteFor(symbol){return state.manualQuotes[symbol]||REFERENCE_QUOTES[symbol]||null}
+function quoteHTML(symbol){
+ const q=quoteFor(symbol),currency=q?.currency||CURRENCIES[symbol]||'USD';
+ const formatted=q?new Intl.NumberFormat('de-DE',{style:'currency',currency,minimumFractionDigits:2,maximumFractionDigits:2}).format(q.price):'–';
+ return '<div class="mevi-tv-manual-quote" aria-label="Manuell eingetragener Referenzkurs">'+
+  '<strong>'+escapeHTML(formatted)+'</strong><small>'+escapeHTML(q?'Stand '+q.date+' · nicht live':'Kein Kurs hinterlegt')+'</small>'+
+  '<button type="button" aria-label="Referenzkurs bearbeiten" onclick="MeviStocks.editQuote(\''+escapeHTML(symbol)+'\')">✎</button></div>';
+}
+function editQuote(symbol){
+ if(!validSymbol(symbol)||!state.items.some(i=>i.symbol===symbol))return;
+ const old=quoteFor(symbol);
+ const input=window.prompt?.('Referenzkurs für '+symbol+' eingeben (kein Live-Kurs):',old?String(old.price).replace('.',','):'');
+ if(input===null||input===undefined)return;
+ const n=Number(String(input).trim().replace(',','.'));
+ if(!Number.isFinite(n)||n<=0||n>=1e9){feedback('Ungültiger Referenzkurs.');return}
+ const date=new Date().toISOString().slice(0,10);
+ state.manualQuotes[symbol]={price:n,currency:old?.currency||CURRENCIES[symbol]||'USD',date};
+ save();updateList();feedback('Referenzkurs manuell gespeichert · nicht live.');
 }
 function listHTML(){
  const items=filtered();
@@ -68,7 +95,8 @@ function listHTML(){
    '" onclick="MeviStocks.select(\''+escapeHTML(item.symbol)+'\')"><strong>'+escapeHTML(item.name)+
    '</strong><small>'+escapeHTML(item.symbol)+'</small></button>'+
    '<button type="button" class="mevi-tv-remove" aria-label="'+escapeHTML(item.name)+
-   ' entfernen" onclick="MeviStocks.remove(\''+escapeHTML(item.symbol)+'\')">×</button></div>';
+   ' entfernen" onclick="MeviStocks.remove(\''+escapeHTML(item.symbol)+'\')">×</button>'+
+   (selected?quoteHTML(item.symbol):'')+'</div>';
  }).join(''):'<div class="mevi-tv-empty">Keine passenden Werte. Filter ändern oder Aktie hinzufügen.</div>';
 }
 function periodsHTML(){
@@ -160,6 +188,6 @@ function remove(symbol){
 }
 function mount(){state.mounted=!!document.querySelector('.mevi-tv');if(state.mounted){updateList();buildChart()}}
 function unmount(){state.mounted=false;state.generation++}
-window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,validSymbol,chartConfig,
+window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,editQuote,validSymbol,chartConfig,
  debug:()=>({mounted:state.mounted,symbol:state.symbol,period:state.period,items:state.items.map(x=>x.symbol),favorites:[...state.favorites]})};
 })();
