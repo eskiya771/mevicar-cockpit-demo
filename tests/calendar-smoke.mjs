@@ -52,7 +52,7 @@ const day=(s)=>new Date(s).getTime();
  assert.equal(parsed[0].location,'Halle, Erlangen');
  const expanded=api.expandICS(parsed,day('2026-11-09T00:00:00Z'),day('2026-11-16T00:00:00Z'),'ics-a');
  assert.equal(expanded.length,3,'Weekly recurring events on Monday, Wednesday, Friday');
- assert.deepEqual(expanded.map(e=>new Date(e.start).toISOString().slice(0,10)),['2026-11-09','2026-11-11','2026-11-13']);
+ assert.deepEqual(Array.from(expanded,e=>new Date(e.start).toISOString().slice(0,10)),['2026-11-09','2026-11-11','2026-11-13']);
 }
 {
  const {api}=fixture();
@@ -61,7 +61,7 @@ const day=(s)=>new Date(s).getTime();
   'RRULE:FREQ=DAILY;COUNT=3\r\nSUMMARY:Frühstück\r\nEND:VEVENT'));
  const events=api.expandICS(parsed,day('2026-03-28T00:00:00Z'),day('2026-04-01T00:00:00Z'),'ics-b');
  assert.equal(events.length,3);
- assert.deepEqual(events.map(e=>new Date(e.start).toISOString()),[
+ assert.deepEqual(Array.from(events,e=>new Date(e.start).toISOString()),[
   '2026-03-28T09:00:00.000Z','2026-03-29T08:00:00.000Z','2026-03-30T08:00:00.000Z'
  ],'A weekly or daily event must remain at 10:00 during Berlin DST switch');
 }
