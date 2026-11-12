@@ -34,6 +34,8 @@ jobs:
         run: node tests/whatsapp-smoke.mjs
       - name: Test real YouTube videos, playlists and stationary guard
         run: node tests/youtube-smoke.mjs
+      - name: Test Stocks 2.0, Easy Stock and recorder charts
+        run: node tests/stocks-smoke.mjs
       - name: Test five supported display profiles
         run: node tests/display-profiles-smoke.mjs
       - name: Test premium speedometer
@@ -137,6 +139,14 @@ jobs:
           assert '.mevi-youtube-shell' in youtube_css and 'MeviYouTube' in youtube_js
           html = html.replace(youtube_css_link, '<style id="mevicar-youtube-styles">' + youtube_css + '</style>')
           html = html.replace(youtube_script_tag, '<script id="mevicar-youtube-script">' + youtube_js + '</script>')
+          stocks_css_link = '<link rel="stylesheet" href="./stocks.css">'
+          stocks_script_tag = '<script src="./stocks.js"></script>'
+          assert stocks_css_link in html and stocks_script_tag in html
+          stocks_css = pathlib.Path('stocks.css').read_text()
+          stocks_js = pathlib.Path('stocks.js').read_text()
+          assert '.mevi-fin' in stocks_css and 'MeviStocks' in stocks_js
+          html = html.replace(stocks_css_link, '<style id="mevicar-stocks-styles">' + stocks_css + '</style>')
+          html = html.replace(stocks_script_tag, '<script id="mevicar-stocks-script">' + stocks_js + '</script>')
           whatsapp_css_link = '<link rel="stylesheet" href="./whatsapp.css">'
           whatsapp_script_tag = '<script src="./whatsapp.js"></script>'
           assert whatsapp_css_link in html and whatsapp_script_tag in html, 'WhatsApp assets missing'
@@ -256,7 +266,7 @@ jobs:
           cp vendor/hls-LICENSE.txt dist/vendor/
           mkdir -p dist/weather
           cp -R weather/. dist/weather/
-          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
@@ -313,6 +323,16 @@ jobs:
         with:
           name: youtube-browser-qa
           path: visual-results/youtube/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Verify Stocks 2.0 across five landscapes and two splits
+        run: node tests/stocks-visual-layout.mjs
+      - name: Archive Stocks 2.0 browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: stocks-browser-qa
+          path: visual-results/stocks/
           if-no-files-found: warn
           retention-days: 14
       - name: Test MeviTV in five display profiles and three themes
