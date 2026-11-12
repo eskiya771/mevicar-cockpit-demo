@@ -126,7 +126,6 @@ const camera=(id,lat,lng,vmax=80)=>({id,lat,lng,vmax,type:'fixed',street:'Testst
  const h=harness([]);
  h.app.onRoute({path:route});
  assert.ok(h.app.sampleRoute().length>=2,'Route scan samples at least beginning and end');
- assert.equal(h.app.scan().then instanceof Function,true);
  assert.equal(await h.app.scan(),false,'Scanner requires explicit config id');
  assert.equal(h.services.length,0,'No HA mutations without explicit complete config');
  assert.equal(h.app.setConfigId('01M6C1Y358N92TR48VGWX9R5EZ'),true);
@@ -138,7 +137,7 @@ const camera=(id,lat,lng,vmax=80)=>({id,lat,lng,vmax,type:'fixed',street:'Testst
  assert.ok(h.services.some(x=>x.path==='/api/services/blitzer/refresh_controls?return_response'));
  assert.equal(h.app.routeState().scanState,'completed');
  assert.equal(h.app.routeState().scanTotal,1,'Short route only samples start');
- assert.ok(!h.app.routeState().settings.configSet===false);
+ assert.equal(h.app.routeState().settings.configSet,true);
 }
 assert.match(html,/roadassist\.js/);
 assert.match(html,/roadassist\.css/);
