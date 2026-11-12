@@ -14,7 +14,7 @@ const document={getElementById:()=>null,querySelector:()=>null};
 runInNewContext(js,{window,document,localStorage:{getItem:key=>store[key]||null,setItem:(key,value)=>store[key]=value},Intl,Date,Number,String,JSON,console});
 const api=window.MeviStocks;
 assert.equal(api.debug().mounted,false);
-for(const ticker of ['XETR:SIE','NASDAQ:TSLA','NASDAQ:NVDA','NASDAQ:AAPL','INDEX:DEU40'])
+for(const ticker of ['XETR:SIE','NASDAQ:TSLA','NASDAQ:NVDA','NASDAQ:AAPL','TVC:DEU40'])
  assert.ok(api.debug().items.includes(ticker),'Default watchlist includes '+ticker);
 assert.equal(api.validSymbol('NASDAQ:MSFT'),true);
 for(const bad of ['', 'AAPL', '<script>', 'NASDAQ:AAPL?token=xxx','NASDAQ:AAPL&apikey=x'])assert.equal(api.validSymbol(bad),false);
@@ -46,6 +46,17 @@ assert.match(api.html(false),/Siemens/);
 api.remove('NASDAQ:TSLA');
 assert.ok(!api.debug().items.includes('NASDAQ:TSLA'));
 assert.ok(store['mevicar-stocks-tradingview-v1'],'Watchlist persisted');
+const legacyStore={'mevicar-stocks-tradingview-v1':JSON.stringify({
+ items:[{symbol:'INDEX:DEU40',name:'DAX'}],
+ favorites:['INDEX:DEU40'],symbol:'INDEX:DEU40',period:'12M'
+})};
+const legacyWindow={};
+runInNewContext(js,{window:legacyWindow,document,localStorage:{
+ getItem:key=>legacyStore[key]||null,setItem:(key,value)=>legacyStore[key]=value
+},Intl,Date,Number,String,JSON,console});
+assert.ok(legacyWindow.MeviStocks.debug().items.includes('TVC:DEU40'),'Legacy DAX symbol migrated');
+assert.equal(legacyWindow.MeviStocks.debug().symbol,'TVC:DEU40','Selected legacy DAX migrated');
+assert.ok(legacyWindow.MeviStocks.debug().favorites.includes('TVC:DEU40'),'Legacy DAX favorite migrated');
 assert.match(css,/\.mevi-tv\.is-compact/);
 assert.match(css,/\.mevi-tv-chart/);
 for(const token of ['window.MeviStocks?.html','window.MeviStocks.mount()','window.MeviStocks.unmount()','stocks-host','./stocks.js','./stocks.css'])assert.ok(html.includes(token),'Index integration: '+token);
