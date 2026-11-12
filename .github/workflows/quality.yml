@@ -265,6 +265,16 @@ jobs:
           path: visual-results/weather/
           if-no-files-found: warn
           retention-days: 14
+      - name: Verify calendar layouts in five landscape and two split profiles
+        run: node tests/calendar-visual-layout.mjs
+      - name: Archive calendar browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: calendar-browser-qa
+          path: visual-results/calendar/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Test MeviTV in five display profiles and three themes
         run: |
           mkdir -p tests/fixtures
