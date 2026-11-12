@@ -33,6 +33,10 @@ try{
   }));
   await page.route('https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',route=>
    route.fulfill({status:200,contentType:'application/javascript',body:fakeWidget}));
+  await page.route('https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js',route=>
+   route.fulfill({status:200,contentType:'application/javascript',body:
+    "(function(){const sc=document.currentScript;const c=JSON.parse(sc.textContent);const t=sc.parentElement.querySelector('.tradingview-widget-container__widget');"+
+    "t.innerHTML='<div class=\\\"qa-quote\\\" style=\\\"font:16px system-ui;color:#9de5d2;padding:10px\\\">'+c.symbol+' · 281,70 € · +1,7 %</div>';})();"}));
   await page.goto('https://mevi-stocks-qa.invalid/test');
   await page.addStyleTag({path:'stocks.css'});
   await page.addScriptTag({path:'stocks.js'});
