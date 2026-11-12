@@ -52,17 +52,20 @@ try{
   for(const tab of ['agenda','month','sources']){
    await page.evaluate(key=>window.MeviCalendar.tab(key),tab);
    const selector=tab==='agenda'?'.mevi-cal-agenda':tab==='month'?'.mevi-cal-month-view':'.mevi-cal-sources';
-   await page.locator(selector).waitFor({timeout:6000});
-   const metrics=await page.evaluate(()=>{
+   await page.locator(selector).waitFor({state:'attached',timeout:10000});
+   const metrics=await page.evaluate(selector=>{
     const host=document.getElementById('calendar-root'),panel=host.querySelector('.mevi-cal-shell');
     const tabs=[...panel.querySelectorAll('.mevi-cal-tabs button')];
     const rect=host.getBoundingClientRect();
+    const view=panel.querySelector(selector)?.getBoundingClientRect();
     const tabBounds=tabs.map(t=>{const b=t.getBoundingClientRect();return{left:b.left,right:b.right}});
     return{hostLeft:rect.left,hostRight:rect.right,hostTop:rect.top,hostBottom:rect.bottom,
      panelWidth:panel.clientWidth,panelScrollWidth:panel.scrollWidth,
+     viewWidth:view?.width||0,viewHeight:view?.height||0,
      tabs:tabBounds,selected:tabs.filter(t=>t.getAttribute('aria-pressed')==='true').length,
      browserScrollX:document.documentElement.scrollWidth-document.documentElement.clientWidth};
-   });
+   },selector);
+   if(metrics.viewWidth<50||metrics.viewHeight<30)errors.push(p.id+' '+tab+': calendar view collapsed');
    if(metrics.selected!==1)errors.push(p.id+' '+tab+': tab selection invalid');
    if(metrics.panelScrollWidth>metrics.panelWidth+4)errors.push(p.id+' '+tab+': panel horizontal overflow');
    if(metrics.browserScrollX>3)errors.push(p.id+' '+tab+': page horizontal scrolling');
