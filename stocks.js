@@ -108,7 +108,7 @@ function quoteConfig(symbol){
  return {symbol,width:'100%',locale:'de',colorTheme:'dark',isTransparent:true};
 }
 function buildQuote(){
- if(!state.mounted)return;
+ if(!state.mounted||state.compact)return;
  const target=element('quote'),item=current();
  if(!target||!item)return;
  target.replaceChildren();
