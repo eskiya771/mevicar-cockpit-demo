@@ -140,3 +140,14 @@ html[data-theme="liquidglass"] .mevi-tv-item.is-selected{background:#295c76}
  .mevi-tv-quote{min-height:102px}
  .mevi-tv-quote>.tradingview-widget-container{min-height:102px}
 }
+
+/* The modern Single Ticker is responsive; never reserve the tall Symbol Info card. */
+.mevi-tv-item.is-selected .mevi-tv-quote{height:64px;min-height:64px;max-height:64px;padding:2px 4px;overflow:hidden}
+.mevi-tv-item.is-selected .mevi-tv-quote tv-single-ticker{display:block;width:100%;height:58px;max-width:100%;overflow:hidden}
+.mevi-tv-item.is-selected .mevi-tv-quote>span{padding:10px 6px;font-size:11px}
+.mevi-tv-list{overflow-x:hidden}
+.mevi-tv.is-compact .mevi-tv-quote{display:none}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-item.is-selected .mevi-tv-quote{height:58px;min-height:58px;max-height:58px}
+ .mevi-tv-item.is-selected .mevi-tv-quote tv-single-ticker{height:52px}
+}
