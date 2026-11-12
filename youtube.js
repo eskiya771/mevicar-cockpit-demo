@@ -4,11 +4,11 @@
 (function(){
 'use strict';
 const STORE='mevicar-next-youtube-v1', FRESH_MS=10000, MAX_ACCURACY=30, MAX_SPEED=0.5;
-const state={input:'',parsed:null,watchId:null,timer:null,fix:null,loading:false,
+const state={input:'',parsed:null,recent:[],favorites:[],watchId:null,timer:null,fix:null,loading:false,
   playing:false,status:'YouTube · Wiedergabe nur im Stand mit aktuellem GPS-Signal.',
   detail:'',mounted:false,checking:false,checkingSerial:0,iframe:null};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
-try{const s=JSON.parse(localStorage.getItem(STORE)||'{}');if(typeof s.link==='string'&&s.link.length<1500)state.input=s.link}catch{}
+try{const s=JSON.parse(localStorage.getItem(STORE)||'{}');if(typeof s.link==='string'&&s.link.length<1500)state.input=s.link;if(Array.isArray(s.recent))state.recent=s.recent.filter(x=>typeof x==='string'&&x.length<1500).slice(0,12);if(Array.isArray(s.favorites))state.favorites=s.favorites.filter(x=>typeof x==='string'&&x.length<1500).slice(0,20)}catch{}
 function parseLink(raw){
  const value=String(raw||'').trim();
  if(!value||value.length>1500)return null;
@@ -47,7 +47,36 @@ function readInput(){
  return String(el?.value??state.input).trim();
 }
 function saveLink(){
- try{localStorage.setItem(STORE,JSON.stringify({link:state.input}))}catch{}
+ try{localStorage.setItem(STORE,JSON.stringify({link:state.input,recent:state.recent,favorites:state.favorites}))}catch{}
+}
+function remember(value){
+ state.recent=[value,...state.recent.filter(x=>x!==value)].slice(0,12);saveLink();
+}
+function bookmark(){
+ const value=readInput(),item=parseLink(value);
+ if(!item){showStatus('Bitte zuerst einen gültigen YouTube-Link eingeben.');return}
+ const canonical=publicUrl(item);state.input=canonical;
+ if(state.favorites.includes(canonical))state.favorites=state.favorites.filter(x=>x!==canonical);
+ else state.favorites=[canonical,...state.favorites].slice(0,20);
+ saveLink();refreshLibrary();
+ showStatus(state.favorites.includes(canonical)?'Favorit gespeichert.':'Favorit entfernt.');
+}
+function chooseLink(type,index){
+ const items=type==='favorite'?state.favorites:state.recent;
+ const value=items[index];if(!value||!parseLink(value))return;
+ state.input=value;const input=document.getElementById('mevi-youtube-input');if(input)input.value=value;
+ refreshLibrary();showStatus('Video ausgewählt. Auf „Laden“ tippen.');
+}
+function libraryHTML(){
+ const row=(items,type)=>items.length?'<div class="mevi-youtube-chips">'+items.map((value,i)=>{
+  const item=parseLink(value);if(!item)return '';
+  const name=item.video?'▶ '+item.video:'☷ Playlist '+item.playlist.slice(0,12);
+  return '<button type="button" class="mevi-youtube-chip" title="'+esc(value)+'" onclick="MeviYouTube.chooseLink(\''+type+'\','+i+')">'+esc(name)+'</button>';
+ }).join('')+'</div>':'<small>Noch keine Einträge</small>';
+ return '<div class="mevi-youtube-library"><div><strong>Favoriten</strong>'+row(state.favorites,'favorite')+'</div><div><strong>Zuletzt</strong>'+row(state.recent,'recent')+'</div></div>';
+}
+function refreshLibrary(){const el=document.getElementById('mevi-youtube-library');if(el)el.innerHTML=libraryHTML();
+ const btn=document.getElementById('mevi-youtube-favorite');if(btn){const item=parseLink(readInput());btn.textContent=item&&state.favorites.includes(publicUrl(item))?'★ Favorit':'☆ Favorit'}
 }
 function showStatus(message,detail=''){
  state.status=message;state.detail=detail;
@@ -128,7 +157,7 @@ function mount(){
  beginWatching();
  if(state.timer!==null)clearInterval(state.timer);
  state.timer=setInterval(verifyContinuously,1000);
- feedback();
+ feedback();refreshLibrary();
 }
 function unmount(){
  state.checkingSerial++;
@@ -139,14 +168,14 @@ function unmount(){
  state.fix=null;
 }
 function setInput(v){
- state.input=String(v||'').slice(0,1500);
+ state.input=String(v||'').slice(0,1500);refreshLibrary();
 }
 function load(){
  if(!state.mounted)return false;
  const value=readInput();
  const item=parseLink(value);
  if(!item){showStatus('Ungültiger YouTube-Link oder Video-/Playlist-ID.');return false}
- state.input=value;state.parsed=item;saveLink();
+ state.input=value;state.parsed=item;remember(publicUrl(item));refreshLibrary();
  const gate=currentFix();
  if(!gate.ok){showStatus('Nicht geladen · '+gate.text,'Für Desktop ohne GPS: „In YouTube öffnen“ verwenden.');return false}
  const holder=document.getElementById('mevi-youtube-frame');
@@ -182,7 +211,7 @@ function load(){
 function openExternal(){
  const item=parseLink(readInput())||state.parsed;
  if(!item){showStatus('Bitte zuerst einen gültigen YouTube-Link eingeben.');return}
- state.input=readInput()||state.input;state.parsed=item;saveLink();
+ state.input=readInput()||state.input;state.parsed=item;remember(publicUrl(item));refreshLibrary();
  const url=publicUrl(item);
  window.open?.(url,'_blank','noopener,noreferrer');
 }
@@ -195,11 +224,13 @@ function html(compact=false){
  '<span>VIDEO ODER PLAYLIST</span><input id="mevi-youtube-input" type="url" inputmode="url" autocomplete="off" '+
  'placeholder="YouTube-Link oder Video-ID" value="'+source+'" oninput="MeviYouTube.setInput(this.value)" /></label>'+
  '<button type="button" class="mevi-youtube-load" onclick="MeviYouTube.load()">▶ Laden</button>'+
- '<button type="button" class="mevi-youtube-external" onclick="MeviYouTube.openExternal()">Extern ↗</button>'+
+ '<button type="button" class="mevi-youtube-external" onclick="MeviYouTube.openExternal()">Extern ↗</button>'+ 
+ '<button type="button" class="mevi-youtube-favorite" id="mevi-youtube-favorite" onclick="MeviYouTube.bookmark()">☆ Favorit</button>'+
  '<button type="button" class="mevi-youtube-stop" id="mevi-youtube-stop" onclick="MeviYouTube.stop(\'Video gestoppt.\')"'+
  (state.playing?'':' disabled')+'>■ Stopp</button></div>'+
  '<div class="mevi-youtube-feedback" role="status"><span id="mevi-youtube-status">'+esc(state.status)+
  '</span><small id="mevi-youtube-detail">'+esc(state.detail)+'</small></div>'+
+ '<div class="mevi-youtube-library-host" id="mevi-youtube-library">'+libraryHTML()+'</div>'+ 
  '<div class="mevi-youtube-stage" id="mevi-youtube-frame">'+idleHTML()+'</div>'+
  '<footer class="mevi-youtube-footer">Offizieller YouTube-Player · keine Wiedergabe im Hintergrund · '+ 
  'Videos mit Einbettungssperre können nicht angezeigt werden</footer></section>';
@@ -210,7 +241,7 @@ document.addEventListener('visibilitychange',()=>{
 window.addEventListener('pagehide',()=>{
  if(state.playing)stop('Video gestoppt · MeviCar wurde verlassen.');
 });
-window.MeviYouTube={html,mount,unmount,load,stop,setInput,openExternal,
+window.MeviYouTube={html,mount,unmount,load,stop,setInput,openExternal,bookmark,chooseLink,
  parseLink,embedUrl,publicUrl,currentFix,
  debug:()=>({mounted:state.mounted,playing:state.playing,hasFix:!!state.fix,
     status:state.status,source:state.input,watchActive:state.watchId!==null})};
