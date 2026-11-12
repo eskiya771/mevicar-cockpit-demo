@@ -418,6 +418,40 @@
   }):[];
   return {connected:state.connected,updatedAt:state.lastUpdate,sensors};
  }
+ async function stockHistory(entityIds,days=7){
+  // HA Recorder history is read-only. Restrict the request to existing Easy Stock sensors.
+  if(!state.connected||!state.token)throw new Error('Home Assistant ist nicht verbunden.');
+  if(![1,7,30].includes(days))throw new Error('Ungültiger Zeitraum.');
+  const known=new Set(stockSnapshot().sensors.map(s=>s.entity_id));
+  const ids=[...new Set(Array.isArray(entityIds)?entityIds:[])];
+  if(!ids.length||ids.length>25||ids.some(id=>!/^sensor\\.[a-z0-9_]+$/i.test(id)||!known.has(id)))
+   throw new Error('Nur bekannte Easy-Stock-Sensoren dürfen abgefragt werden.');
+  const end=new Date(),start=new Date(end.getTime()-days*86400000);
+  const path='/api/history/period/'+encodeURIComponent(start.toISOString())+
+   '?filter_entity_id='+encodeURIComponent(ids.join(','))+
+   '&end_time='+encodeURIComponent(end.toISOString())+'&minimal_response&no_attributes';
+  const groups=await request(path);
+  if(!Array.isArray(groups))throw new Error('Ungültige Home-Assistant-Historie.');
+  const result={};
+  for(let i=0;i<ids.length;i++){
+   const group=Array.isArray(groups[i])?groups[i]:[];
+   const firstId=group.find(e=>typeof e?.entity_id==='string')?.entity_id;
+   const id=firstId&&known.has(firstId)?firstId:ids[i];
+   if(!known.has(id))continue;
+   const samples=[];
+   for(const e of group){
+    const value=Number(e?.state),time=Date.parse(e?.last_changed||e?.last_updated||'');
+    if(e?.state===null||e?.state===undefined||String(e.state).trim()===''||
+       !Number.isFinite(value)||value<=0||!Number.isFinite(time))continue;
+    samples.push({time,value});
+   }
+   samples.sort((a,b)=>a.time-b.time);
+   // Keep timestamps and values only; never pass raw HA objects or credentials.
+   const stride=Math.max(1,Math.ceil(samples.length/140));
+   result[id]=samples.filter((_,index)=>index%stride===0||index===samples.length-1).slice(-141);
+  }
+  return result;
+ }
  function cameraSnapshot(){
   return{connected:state.connected,updatedAt:state.lastUpdate,
    cameras:state.connected?state.radar.map(c=>({...c})):[]};
@@ -431,7 +465,7 @@
   if(path.startsWith('/api/services/')&&options.method!=='POST')throw new Error('POST für HA-Service erforderlich.');
   return request(path,{method:options.method||'GET',body:options.body});
  }
- window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,requestService,favoriteEntity,toggleFromDashboard,
+ window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,stockHistory,requestService,favoriteEntity,toggleFromDashboard,
   debug:()=>({tab:state.tab,connected:state.connected,count:state.states.length,cameras:state.radar.length,
    origin:state.origin,dashboard:dashboardUrl(),tokenPresent:!!state.token,tokenStored:false}),
   // Helpers for node-only contract tests; no token or credentials exposed.
