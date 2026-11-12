@@ -115,9 +115,9 @@ function mainHTML(){
  if(!snap.connected)return '<div class="mevi-fin-empty">Home Assistant ist nicht verbunden. Bitte im Home-Assistant-Tab die API-Verbindung herstellen.</div>';
  if(!snap.sensors.length)return '<div class="mevi-fin-empty">Keine Easy-Stock-Sensoren vorhanden. Füge Aktien einmalig in Home Assistant hinzu; MeviCar übernimmt sie automatisch.</div>';
  return summary()+toolbar()+hiddenHTML()+
+ (state.detail?detailHTML():'')+
  '<div class="mevi-fin-results">'+(rows.length?rows.map(tickerRow).join(''):
- '<div class="mevi-fin-empty">Keine passenden Aktien. Suche oder Favoritenfilter ändern.</div>')+'</div>'+
- (state.detail?detailHTML():'');
+ '<div class="mevi-fin-empty">Keine passenden Aktien. Suche oder Favoritenfilter ändern.</div>')+'</div>';
 }
 function html(compact=false){
  state.snapshot=snapshot();
