@@ -424,7 +424,7 @@
   if(![1,7,30].includes(days))throw new Error('Ungültiger Zeitraum.');
   const known=new Set(stockSnapshot().sensors.map(s=>s.entity_id));
   const ids=[...new Set(Array.isArray(entityIds)?entityIds:[])];
-  if(!ids.length||ids.length>25||ids.some(id=>!/^sensor\\.[a-z0-9_]+$/i.test(id)||!known.has(id)))
+  if(!ids.length||ids.length>25||ids.some(id=>!/^sensor\.[a-z0-9_]+$/i.test(id)||!known.has(id)))
    throw new Error('Nur bekannte Easy-Stock-Sensoren dürfen abgefragt werden.');
   const end=new Date(),start=new Date(end.getTime()-days*86400000);
   const path='/api/history/period/'+encodeURIComponent(start.toISOString())+
