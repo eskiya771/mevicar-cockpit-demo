@@ -17,6 +17,13 @@ assert.equal(api.debug().mounted,false);
 for(const ticker of ['XETR:SIE','NASDAQ:TSLA','NASDAQ:NVDA','NASDAQ:AAPL','TVC:DEU40'])
  assert.ok(api.debug().items.includes(ticker),'Default watchlist includes '+ticker);
 assert.equal(api.validSymbol('NASDAQ:MSFT'),true);
+assert.equal(api.resolveSymbol('SIE'),'XETR:SIE');
+assert.equal(api.resolveSymbol('SIE.DE'),'XETR:SIE');
+assert.equal(api.resolveSymbol('Siemens'),'XETR:SIE');
+assert.equal(api.resolveSymbol('NVDA'),'NASDAQ:NVDA');
+assert.equal(api.resolveSymbol('AAPL'),'NASDAQ:AAPL');
+assert.equal(api.resolveSymbol('NASDAQ:MSFT'),'NASDAQ:MSFT');
+
 for(const bad of ['', 'AAPL', '<script>', 'NASDAQ:AAPL?token=xxx','NASDAQ:AAPL&apikey=x'])assert.equal(api.validSymbol(bad),false);
 assert.match(api.html(false),/Aktienkurse mit TradingView/);
 assert.match(api.html(false),/Siemens/);
@@ -39,7 +46,7 @@ assert.equal(config.hide_legend,true);
 assert.match(api.html(false),/mevi-tv-sidebar/);
 assert.match(api.html(false),/Manuell eingetragener Referenzkurs/);
 assert.match(api.html(false),/281,70/);
-assert.match(api.html(false),/nicht live/);
+assert.match(api.html(false),/Manuell/);
 assert.match(api.html(false),/id="mevi-tv-periods"/);
 assert.ok(api.html(false).indexOf('mevi-tv-periods')<api.html(false).indexOf('mevi-tv-list'),'Periods must be near watchlist');
 assert.doesNotMatch(js,/tv-single-ticker\.js|embed-widget-symbol-info\.js/);
@@ -56,6 +63,41 @@ api.favoritesOnly();
 assert.doesNotMatch(api.html(false),/Siemens/);
 api.favoritesOnly();
 assert.match(api.html(false),/Siemens/);
+// Mimic the form on an iPhone: entering just SIE must select Siemens
+// even if it already exists and was previously filtered out.
+const mockInputs={
+ 'mevi-tv-symbol':{value:'SIE'},
+ 'mevi-tv-name':{value:'Siemens'},
+ 'mevi-tv-add':{hidden:false},
+ 'mevi-tv-search':{value:'tes'},
+ 'mevi-tv-feedback':{textContent:''},
+ 'mevi-tv-list':{innerHTML:''},
+ 'mevi-tv-selected':{textContent:''},
+ 'mevi-tv-link':{href:''},
+ 'mevi-tv-chart':null,
+ 'mevi-tv-periods':null
+};
+const button={classList:{remove(){}},setAttribute(){}};
+const formDocument={getElementById:key=>mockInputs[key]||null,querySelector:selector=>selector==='.mevi-tv-fav-filter'?button:null};
+const formWindow={};
+runInNewContext(js,{window:formWindow,document:formDocument,localStorage:{getItem:()=>null,setItem(){}},Intl,Date,Number,String,JSON,console});
+const formAPI=formWindow.MeviStocks;
+formAPI.select('NASDAQ:NVDA');
+formAPI.search('tes');
+formAPI.favoritesOnly();
+formAPI.add();
+assert.equal(formAPI.debug().symbol,'XETR:SIE','SIE must select existing Siemens');
+assert.equal(mockInputs['mevi-tv-add'].hidden,true,'Add form must close');
+assert.equal(mockInputs['mevi-tv-search'].value,'','Search field must clear');
+assert.match(mockInputs['mevi-tv-list'].innerHTML,/Siemens/,'Siemens visible after add');
+assert.equal(mockInputs['mevi-tv-feedback'].textContent,'Aktie bereits vorhanden – ausgewählt.');
+// Adding SIE again after Siemens was removed must recreate the correct XETR ticker.
+formAPI.remove('XETR:SIE');
+mockInputs['mevi-tv-add'].hidden=false;
+mockInputs['mevi-tv-symbol'].value='SIE';
+formAPI.add();
+assert.equal(formAPI.debug().symbol,'XETR:SIE');
+assert.equal(formAPI.debug().items.filter(x=>x==='XETR:SIE').length,1);
 api.remove('NASDAQ:TSLA');
 assert.ok(!api.debug().items.includes('NASDAQ:TSLA'));
 assert.ok(store['mevicar-stocks-tradingview-v1'],'Watchlist persisted');
