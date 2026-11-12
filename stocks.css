@@ -162,3 +162,18 @@ html[data-theme="liquidglass"] .mevi-tv-item.is-selected{background:#295c76}
 @media (orientation:landscape) and (max-height:480px){
  .mevi-tv-manual-quote{max-height:51px;padding:3px 6px}
 }
+
+/* iPhone landscape: selected quote remains in its own narrow column, no clipped date. */
+.mevi-tv-item.is-selected .mevi-tv-manual-quote{
+ width:100%;max-width:100%;height:auto;min-height:46px;max-height:none;
+ display:grid;grid-template-columns:minmax(0,1fr) 32px;grid-template-rows:auto auto;
+ padding:4px 5px;column-gap:4px;overflow:hidden;
+}
+.mevi-tv-manual-quote strong,.mevi-tv-manual-quote small{
+ min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+}
+.mevi-tv-manual-quote strong{font-size:clamp(13px,1.9vh,18px);line-height:1.18;}
+.mevi-tv-manual-quote small{font-size:10px;line-height:1.1;letter-spacing:0;white-space:nowrap;}
+.mevi-tv .mevi-tv-manual-quote button{width:30px;height:30px;align-self:center;justify-self:end}
+.mevi-tv-add{max-width:100%;min-width:0}
+.mevi-tv-add[hidden]{display:none!important}
