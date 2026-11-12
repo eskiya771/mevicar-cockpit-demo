@@ -601,3 +601,57 @@ html .cockpit .dock button:not(.active){
 @media (orientation:landscape) and (max-width:700px){
  .app-home-surface .app-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
+
+/* 2026-11-12: phone landscape launcher – 17 apps in one compact 5×4 grid.
+   Scoped to the full app launcher; dock, split launcher and desktop stay untouched.
+   This override comes after the historic small-height app launcher rules. */
+@media (orientation:landscape) and (min-width:701px) and (max-width:1100px) and (max-height:480px){
+ .app-home-surface .app-home{
+  gap:3px;
+ }
+ .app-home-surface .app-home-heading{
+  padding:0 6px;
+  font-size:clamp(10px,1.5vh,13px);
+  line-height:1.1;
+ }
+ .app-home-surface .app-home-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-rows:repeat(4,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(0,1fr);
+  align-content:stretch;
+  gap:clamp(2px,.8vh,5px);
+  padding:2px 5px 5px;
+  overflow:hidden!important;
+  min-height:0;
+  scroll-behavior:auto;
+ }
+ .app-home-surface .app-home-tile{
+  grid-template-rows:minmax(0,1fr) minmax(17px,auto)!important;
+  gap:2px!important;
+  padding:2px 3px!important;
+  border-radius:12px!important;
+  min-width:0;
+  min-height:0;
+ }
+ .app-home-surface .app-home-icon{
+  width:clamp(38px,12vh,54px)!important;
+  height:clamp(38px,12vh,54px)!important;
+  min-width:0;
+  min-height:0;
+  max-width:100%;
+  max-height:100%;
+ }
+ .app-home-surface .app-home-icon .app-illustration{
+  width:100%;
+  height:100%;
+ }
+ .app-home-surface .app-home-label{
+  font-size:clamp(11px,3.4vh,14px)!important;
+  font-weight:650;
+  line-height:1.1;
+  padding:0 2px!important;
+  white-space:normal;
+  overflow-wrap:anywhere;
+ }
+}
