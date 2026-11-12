@@ -68,7 +68,8 @@ function listHTML(){
    '" onclick="MeviStocks.select(\''+escapeHTML(item.symbol)+'\')"><strong>'+escapeHTML(item.name)+
    '</strong><small>'+escapeHTML(item.symbol)+'</small></button>'+
    '<button type="button" class="mevi-tv-remove" aria-label="'+escapeHTML(item.name)+
-   ' entfernen" onclick="MeviStocks.remove(\''+escapeHTML(item.symbol)+'\')">×</button></div>';
+   ' entfernen" onclick="MeviStocks.remove(\''+escapeHTML(item.symbol)+'\')">×</button>'+
+   (selected?'<div class="mevi-tv-quote" id="mevi-tv-quote" aria-label="Aktueller Kurs '+escapeHTML(item.name)+'"><span>Kurs wird geladen …</span></div>':'')+'</div>';
  }).join(''):'<div class="mevi-tv-empty">Keine passenden Werte. Filter ändern oder Aktie hinzufügen.</div>';
 }
 function periodsHTML(){
@@ -86,11 +87,12 @@ function html(compact=false){
   '<div id="mevi-tv-add" class="mevi-tv-add" hidden><input id="mevi-tv-symbol" aria-label="TradingView-Börsensymbol" placeholder="NASDAQ:MSFT" maxlength="60" autocapitalize="characters"/>'+
   '<input id="mevi-tv-name" aria-label="Anzeigename" placeholder="Name (optional)" maxlength="50"/>'+
   '<button type="button" onclick="MeviStocks.add()">OK</button></div>'+
+  '<div class="mevi-tv-periods" id="mevi-tv-periods" aria-label="Chart-Zeitraum">'+periodsHTML()+'</div>'+
   '<div class="mevi-tv-list" id="mevi-tv-list">'+listHTML()+'</div>'+
   '<a class="mevi-tv-external" id="mevi-tv-link" href="'+symbolURL(state.symbol)+
   '" target="_blank" rel="noopener noreferrer">TradingView ↗</a></nav>'+
   '<div class="mevi-tv-right"><div class="mevi-tv-charttools"><strong id="mevi-tv-selected">'+escapeHTML(current()?.name||'Aktie wählen')+'</strong>'+
-  '<div class="mevi-tv-periods" id="mevi-tv-periods">'+periodsHTML()+'</div></div>'+
+  '</div>'+
   '<div class="mevi-tv-chart" id="mevi-tv-chart" aria-label="TradingView Kurschart">'+
   '<div class="mevi-tv-loading">TradingView-Chart wird geladen …</div></div></div></div>'+
   '<div class="mevi-tv-feedback" id="mevi-tv-feedback" role="status">'+escapeHTML(state.status)+'</div></section>';
@@ -98,8 +100,31 @@ function html(compact=false){
 function feedback(msg){state.status=msg;const n=element('feedback');if(n)n.textContent=msg}
 function updateList(){
  const n=element('list');if(n)n.innerHTML=listHTML();
+ if(state.mounted)buildQuote();
  const label=element('selected');if(label)label.textContent=current()?.name||'Aktie wählen';
  const link=element('link');if(link)link.href=symbolURL(state.symbol);
+}
+function quoteConfig(symbol){
+ return {symbol,width:'100%',locale:'de',colorTheme:'dark',isTransparent:true};
+}
+function buildQuote(){
+ if(!state.mounted)return;
+ const target=element('quote'),item=current();
+ if(!target||!item)return;
+ target.replaceChildren();
+ const outer=document.createElement('div');outer.className='tradingview-widget-container';
+ const inner=document.createElement('div');inner.className='tradingview-widget-container__widget';
+ outer.appendChild(inner);
+ const script=document.createElement('script');
+ script.type='text/javascript';
+ script.src='https://s3.tradingview.com/external-embedding/embed-widget-symbol-info.js';
+ script.async=true;
+ script.textContent=JSON.stringify(quoteConfig(item.symbol));
+ script.onerror=()=>{if(target.isConnected){
+  target.textContent='Kurs momentan nicht verfügbar · im Chart ansehen';
+ }};
+ target.appendChild(outer);
+ outer.appendChild(script);
 }
 function chartConfig(symbol,period,compact){
  const range=PERIODS.find(x=>x.key===period)||PERIODS[3];
@@ -159,6 +184,6 @@ function remove(symbol){
 }
 function mount(){state.mounted=!!document.querySelector('.mevi-tv');if(state.mounted){updateList();buildChart()}}
 function unmount(){state.mounted=false;state.generation++}
-window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,validSymbol,chartConfig,
+window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,validSymbol,chartConfig,quoteConfig,
  debug:()=>({mounted:state.mounted,symbol:state.symbol,period:state.period,items:state.items.map(x=>x.symbol),favorites:[...state.favorites]})};
 })();
