@@ -42,7 +42,7 @@ jobs:
         run: node tests/whatsapp-smoke.mjs
       - name: Test real YouTube videos, playlists and stationary guard
         run: node tests/youtube-smoke.mjs
-      - name: Test live stock quote integration
+      - name: Test TradingView finance view and watchlist
         run: node tests/stocks-smoke.mjs
       - name: Generate versioned site
         env:
