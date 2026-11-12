@@ -305,6 +305,16 @@ jobs:
           path: visual-results/whatsapp/
           if-no-files-found: warn
           retention-days: 14
+      - name: Verify YouTube in five landscape and two split profiles
+        run: node tests/youtube-visual-layout.mjs
+      - name: Save YouTube browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: youtube-browser-qa
+          path: visual-results/youtube/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Test MeviTV in five display profiles and three themes
         run: |
           mkdir -p tests/fixtures
