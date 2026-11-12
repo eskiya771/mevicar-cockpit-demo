@@ -78,3 +78,20 @@
 }
 html[data-theme="liquidglass"] .mevi-youtube-shell{background:linear-gradient(130deg,#1a3448,#13283b)}
 html[data-theme="cyberpunk"] .youtube-host{border-color:#f15bd383}
+
+/* Official YouTube minimum player size is 200 x 200. On the smaller
+   right-side split, the actual video replaces the composer chrome while active;
+   Stop stays accessible. The permanent MeviCar dock remains untouched. */
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-header,
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-feedback,
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-footer,
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-input-wrap,
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-load,
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-external{display:none}
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-controls{
+ flex:none;display:flex;justify-content:flex-end;min-height:32px;
+ padding:2px 6px;background:#102939}
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-stop{
+ flex:0 0 auto;min-height:28px;padding:3px 12px}
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-stage{
+ flex:1;min-height:0;min-width:0}
