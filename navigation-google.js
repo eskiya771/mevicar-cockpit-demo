@@ -309,6 +309,17 @@ function paintGuidance(){
  if(voice){voice.textContent=voiceMuted?'Ton einschalten':'Ton ausschalten';voice.setAttribute('aria-pressed',String(!voiceMuted))}
  if(state)state.textContent=simulation?'SIMULATION':guidanceActive?'NAVIGATION AKTIV':'ROUTENVORSCHAU';
 }
+function showOverview(){
+ if(!map||!routeData?.path?.length)return;
+ followCamera=false;
+ const bounds=new google.maps.LatLngBounds();
+ for(const p of routeData.path){const point=geoPoint(p);if(point)bounds.extend(point)}
+ map.fitBounds(bounds,60);
+}
+function followMyLocation(){
+ followCamera=true;
+ if(current){followPosition(current);markCurrent(current)}
+}
 function followPosition(point,heading){
  if(!map||!followCamera)return;
  map.panTo(point);map.setZoom(17);
@@ -388,7 +399,7 @@ async function startGuidance(){
   if(manualOrigin&&distanceBetween(manualOrigin,actual)>150){
    await computeRouteFrom(actual);
   }
-  manualOrigin=null;guidanceActive=true;simulation=false;guidanceGeneration++;
+  manualOrigin=null;guidanceActive=true;simulation=false;followCamera=true;guidanceGeneration++;
   stepIndex=0;spokenThresholds.clear();offRouteCount=0;
   clearStatus();
   const geo=navigator.geolocation;
@@ -402,13 +413,13 @@ async function startGuidance(){
 function startDemo(){
  if(!routeData||!guidanceSteps.length){status('Keine Abbiegeschritte für Demo vorhanden.','route');return false}
  stopGuidance({keepRoute:true});
- guidanceActive=true;simulation=true;stepIndex=0;spokenThresholds.clear();guidanceGeneration++;
+ guidanceActive=true;simulation=true;stepIndex=0;spokenThresholds.clear();guidanceGeneration++;current=manualOrigin||geoPoint(routeData.path?.[0])||current;
  clearStatus();
  if(simulationTimer!==null)clearInterval(simulationTimer);
  simulationTimer=setInterval(()=>{
   if(!simulation)return;
   const step=guidanceSteps[stepIndex];
-  if(step?.end){markCurrent(step.end);followPosition(step.end)}
+  if(step?.end){current=step.end;markCurrent(step.end);followPosition(step.end)}
   if(stepIndex<guidanceSteps.length-1)stepIndex++;
   else{stopGuidance({keepRoute:true});window.meviGoogleNavigationFinished?.();return}
   paintGuidance();
@@ -428,9 +439,9 @@ function routeInfo(){return routeSummary}
 function hasPlannedRoute(){return !!routeData}
 function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
-function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.myLocation()" aria-label="Meinen Standort anzeigen" title="Meinen Standort anzeigen">◎</button>'}
+function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.followMyLocation()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={mount,mapBackdrop,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={mount,mapBackdrop,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,showOverview,followMyLocation,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
