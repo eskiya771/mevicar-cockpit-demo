@@ -71,7 +71,7 @@ function quoteHTML(symbol){
  const q=quoteFor(symbol),currency=q?.currency||CURRENCIES[symbol]||'USD';
  const formatted=q?new Intl.NumberFormat('de-DE',{style:'currency',currency,minimumFractionDigits:2,maximumFractionDigits:2}).format(q.price):'–';
  return '<div class="mevi-tv-manual-quote" aria-label="Manuell eingetragener Referenzkurs">'+
-  '<strong>'+escapeHTML(formatted)+'</strong><small>'+escapeHTML(q?'Stand '+q.date+' · nicht live':'Kein Kurs hinterlegt')+'</small>'+
+  '<strong>'+escapeHTML(formatted)+'</strong><small>'+escapeHTML(q?'Manuell · '+q.date.slice(8,10)+'.'+q.date.slice(5,7)+'.'+q.date.slice(2,4):'Kein Kurs hinterlegt')+'</small>'+
   '<button type="button" aria-label="Referenzkurs bearbeiten" onclick="MeviStocks.editQuote(\''+escapeHTML(symbol)+'\')">✎</button></div>';
 }
 function editQuote(symbol){
