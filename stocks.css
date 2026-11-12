@@ -1,0 +1,45 @@
+/* MeviCar Next stocks – separate scrolling content, usable on landscape phones and DeX. */
+.full.stocks-host,.side.stocks-host{padding:0!important;overflow:hidden!important;display:flex;min-width:0;min-height:0}
+.stocks-host>.mevi-stocks{flex:1;min-width:0;min-height:0}
+.mevi-stocks{display:flex;flex-direction:column;height:100%;min-height:0;min-width:0;background:#081724;color:#effaff;border-radius:13px;overflow:hidden;font:inherit}
+.mevi-stocks button,.mevi-stocks input{font:inherit;min-width:0;border-radius:9px}
+.mevi-stocks button{background:#1e4258;color:#effaff;border:1px solid #66bacb80;min-height:35px;padding:5px 10px}
+.mevi-stocks button:disabled{opacity:.5}
+.mevi-stocks-header{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 13px;background:#123149;flex:none}
+.mevi-stocks-header>div{display:flex;flex-direction:column;gap:3px}
+.mevi-stocks-header small{font-size:10px;color:#88cfe0;letter-spacing:.08em}
+.mevi-stocks-header strong{font-size:clamp(15px,2.3vh,24px)}
+.mevi-stocks-config,.mevi-stocks-add{display:flex;gap:6px;align-items:end;padding:6px 12px;flex:none;background:#0d2539}
+.mevi-stocks-config label{flex:1;min-width:0;color:#a7d8e7;font-size:10px;display:flex;flex-direction:column;gap:3px}
+.mevi-stocks input{width:100%;min-height:35px;padding:6px 9px;background:#071524;color:#fff;border:1px solid #588397}
+.mevi-stocks-add input{flex:1}
+.mevi-stocks-status{font-size:clamp(10px,1.4vh,13px);padding:4px 12px;background:#102b3f;flex:none;color:#b8dce8}
+.mevi-stocks-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:6px 12px}
+.mevi-stocks-row{display:flex;gap:9px;align-items:center;border-bottom:1px solid #4e80953d;padding:8px 4px;min-height:62px}
+.mevi-stocks-identity{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.mevi-stocks-identity strong{font-size:clamp(13px,2vh,19px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mevi-stocks-identity small{font-size:11px;color:#a1c7dc}
+.mevi-stocks-values{text-align:right;min-width:0;display:flex;flex-direction:column;gap:3px}
+.mevi-stocks-values strong{font-size:clamp(13px,2.3vh,21px);white-space:nowrap}
+.mevi-stocks-values small{font-size:11px;color:#afc4d3;white-space:nowrap;max-width:175px;overflow:hidden;text-overflow:ellipsis}
+.mevi-stocks-values small.up{color:#5cf0a2}.mevi-stocks-values small.down{color:#ff8b9f}
+.mevi-stocks button.mevi-stocks-remove{font-size:22px;width:34px;min-height:34px;padding:0;background:#402b41}
+.mevi-stocks-footer{flex:none;padding:5px 12px;color:#a4bdce;font-size:10px;background:#0b2032}
+.mevi-stocks-footer a{color:#86e2ef}
+.mevi-stocks.is-compact .mevi-stocks-header{padding:4px 7px}
+.mevi-stocks.is-compact .mevi-stocks-config,.mevi-stocks.is-compact .mevi-stocks-add{padding:3px 6px}
+.mevi-stocks.is-compact .mevi-stocks-config{flex-wrap:wrap}
+.mevi-stocks.is-compact .mevi-stocks-config label{flex-basis:100%}
+.mevi-stocks.is-compact .mevi-stocks-list{padding:3px 6px}
+.mevi-stocks.is-compact .mevi-stocks-row{min-height:50px;padding:4px 2px}
+.mevi-stocks.is-compact .mevi-stocks-footer{padding:3px 6px}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-stocks-header{padding:3px 7px}
+ .mevi-stocks-header small,.mevi-stocks-config label{font-size:9px}
+ .mevi-stocks-config,.mevi-stocks-add{padding:3px 7px}
+ .mevi-stocks input,.mevi-stocks button{min-height:30px}
+ .mevi-stocks-row{min-height:49px;padding:4px 3px}
+ .mevi-stocks-footer{padding:3px 7px}
+}
+html[data-theme="cyberpunk"] .mevi-stocks{background:#0b0915}
+html[data-theme="liquidglass"] .mevi-stocks{background:#14283a}
