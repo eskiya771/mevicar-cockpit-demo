@@ -20,7 +20,7 @@ try{
 let route=[],segments=[],routeLength=0,matched=[],connected=false,haCount=0,haUpdated=0,scanCameras=[];
 let routeSerial=0,guiding=false,demo=false,fix=null,fixAt=0,fixAccuracy=null,positionOnRoute=null;
 let currentMatch=null,scanState='idle',scanNote='',scanProgress=0,scanTotal=0,scanCoverage='nicht geprüft',scanCancel=null;
-let notified=new Set(),scanSerial=0,lastAudioAt=0,lastCameraId='',lastHARefresh=0;
+let notified=new Set(),scanSerial=0,lastAudioAt=0,lastCameraId='',lastHARefresh=0,pollTimer=null;
 const point=p=>{
  if(!p)return null;
  const q=typeof p.toJSON==='function'?p.toJSON():p;
@@ -121,7 +121,7 @@ function onRoute(raw){
  const path=raw?.path||raw||[];
  const built=buildRoute(path);
  route=built.points;segments=built.segments;routeLength=built.length;routeSerial++;
- guiding=false;demo=false;fix=null;fixAt=0;positionOnRoute=null;currentMatch=null;notified.clear();
+ guiding=false;demo=false;fix=null;fixAt=0;positionOnRoute=null;currentMatch=null;notified.clear();lastAudioAt=0;
  scanCameras=[];scanState='idle';scanNote='';scanProgress=0;scanTotal=0;scanCoverage='nicht geprüft';
  cancelScan();updateFromHA();
  // Home Assistant is never contacted if not connected. Refresh stale camera data once.
@@ -133,10 +133,20 @@ function onRoute(raw){
 }
 function onGuidanceStart(isDemo=false){
  guiding=true;demo=!!isDemo;fix=null;fixAt=0;fixAccuracy=null;positionOnRoute=null;
- currentMatch=null;notified.clear();paint();
+ currentMatch=null;notified.clear();lastAudioAt=0;
+ if(pollTimer!==null){clearInterval(pollTimer);pollTimer=null}
+ if(!demo){
+  pollTimer=setInterval(()=>{
+   if(document?.hidden||!window.MeviHA?.debug?.().connected)return;
+   refresh().catch(()=>{});
+  },30000);
+  if(Date.now()-haUpdated>=30000&&window.MeviHA?.debug?.().connected)refresh().catch(()=>{});
+ }
+ paint();
 }
 function onGuidanceStop(){
  guiding=false;demo=false;fix=null;positionOnRoute=null;currentMatch=null;lastCameraId='';
+ if(pollTimer!==null){clearInterval(pollTimer);pollTimer=null}
  cancelScan();paint();
 }
 function onPosition(p,options={}){
@@ -279,7 +289,7 @@ function sampleRoute(spacing=SCAN_STEP,maxSamples=MAX_SAMPLES){
   }
   traveled+=len;
  }
- if(distance(samples[samples.length-1],route[route.length-1])>1000&&samples.length<maxCount)
+ if(distance(samples[samples.length-1],route[route.length-1])>100&&samples.length<maxCount)
   samples.push(route[route.length-1]);
  return samples;
 }
