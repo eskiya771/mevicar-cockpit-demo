@@ -123,3 +123,92 @@
  .ha-settings-content button{min-height:29px;padding:4px 8px}
  .ha-embed-help{bottom:2px;padding:3px 5px;font-size:9px}
 }
+
+/* Native HA dashboard for Next: iframe-free, driven by the authenticated HA API.
+   Keeps the Android Classic dashboard available as an external tab. */
+.ha-dashboard-native{flex:1;min-height:0;min-width:0;width:100%;height:100%;overflow-y:auto;
+ overscroll-behavior:contain;padding:clamp(10px,1.6vw,20px);
+ display:flex;flex-direction:column;gap:clamp(12px,1.7vh,18px);scrollbar-width:thin}
+.ha-dashboard-overview{border:1px solid #73d2ec52;border-radius:16px;padding:clamp(10px,1.6vw,18px);
+ background:linear-gradient(125deg,#1a475e,#132b44);box-shadow:inset 0 1px #a7e9ed13}
+.ha-dashboard-intro{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.ha-dashboard-intro small{color:#66e8f4;letter-spacing:.17em;font-size:clamp(10px,1.35vh,12px);font-weight:800}
+.ha-dashboard-intro h3{margin:4px 0;font-size:clamp(21px,3.5vh,34px);color:#f5fcff;letter-spacing:-.02em}
+.ha-dashboard-intro p{margin:0;color:#b8d2e2;font-size:clamp(10px,1.5vh,14px)}
+.ha-dashboard-intro>button,.ha-dashboard-section-title button,.ha-dashboard-calltoaction button{
+ border:1px solid #84d7ed86;border-radius:11px;padding:8px 12px;background:#236079;color:#edfaff;
+ font-size:clamp(10px,1.5vh,14px);font-weight:800;min-height:38px}
+.ha-dashboard-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(5px,.8vw,12px);margin-top:clamp(10px,1.6vh,16px)}
+.ha-dashboard-stats>div{display:flex;flex-direction:column;gap:4px;border:1px solid #89d1e137;
+ border-radius:12px;padding:clamp(8px,1.2vw,15px);background:#0e293e9a;min-width:0}
+.ha-dashboard-stats strong{font-size:clamp(20px,3.6vh,35px);color:#effaff;font-variant-numeric:tabular-nums}
+.ha-dashboard-stats span{font-size:clamp(10px,1.4vh,13px);color:#b5d3e2;overflow-wrap:anywhere}
+.ha-dashboard-section{display:flex;flex-direction:column;gap:9px;min-width:0}
+.ha-dashboard-section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.ha-dashboard-section-title h4{margin:0;font-size:clamp(15px,2.25vh,21px);font-weight:820;color:#eafcff}
+.ha-dashboard-section-title>span{font-size:clamp(10px,1.35vh,13px);color:#9dc6d5}
+.ha-dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));
+ gap:clamp(6px,.9vw,12px);min-width:0}
+.ha-dashboard-tile{min-width:0;display:flex;flex-direction:column;gap:6px;min-height:clamp(130px,18vh,195px);
+ padding:clamp(10px,1.2vw,16px);border-radius:15px;background:linear-gradient(145deg,#254760,#1c324d);
+ border:1px solid #8ccce460;box-shadow:0 5px 14px #081a2b50}
+.ha-dashboard-tile.is-active{border-color:#63e6c79c;background:linear-gradient(140deg,#245569,#1b4056)}
+.ha-dashboard-tile.is-unavailable{opacity:.66}
+.ha-dashboard-tile-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ha-dashboard-glyph{font-size:clamp(24px,3.6vh,36px);line-height:1}
+.ha-dashboard-favorite{display:grid;place-items:center;min-width:34px;min-height:34px;
+ border:1px solid #83c6dd75;border-radius:10px;font-size:clamp(18px,2.4vh,23px);
+ color:#a6dce9;background:#163c55}
+.ha-dashboard-favorite[aria-pressed="true"]{color:#ffe49a;background:#53452d;border-color:#eec477bd}
+.ha-dashboard-tile-name{font-size:clamp(13px,1.8vh,17px);line-height:1.2;white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;color:#f4fcff}
+.ha-dashboard-tile-state{color:#c9e0eb;font-size:clamp(11px,1.5vh,14px);
+ overflow-wrap:anywhere;flex:1;min-height:0}
+.ha-dashboard-toggle{min-height:35px;border:1px solid #7acee097;border-radius:10px;
+ padding:6px 10px;background:#26536f;color:#e9fcff;font-weight:800;font-size:clamp(11px,1.4vh,13px)}
+.ha-dashboard-toggle.is-on{background:#0f8169;color:#f1fff9;border-color:#80eabc}
+.ha-dashboard-readonly{font-size:clamp(10px,1.3vh,12px);color:#8fb6c9;min-height:34px;
+ display:flex;align-items:center}
+.ha-dashboard-helper{font-size:clamp(11px,1.6vh,14px);margin:0;padding:17px;
+ border:1px dashed #91cbe36a;border-radius:12px;color:#b8d9e6;background:#102d41}
+.ha-dashboard-disclaimer{font-size:clamp(10px,1.3vh,13px);color:#a7c4d5;
+ border-top:1px solid #8ac0d033;padding:8px 1px}
+.ha-dashboard-unconnected{flex:1;min-height:0;display:flex;flex-direction:column;
+ gap:12px;align-items:center;justify-content:center;text-align:center;padding:clamp(14px,3vw,28px)}
+.ha-dashboard-unconnected h3{margin:0;font-size:clamp(19px,3.2vh,28px)}
+.ha-dashboard-unconnected p{color:#b9d5e2;font-size:clamp(12px,1.7vh,16px);line-height:1.5;
+ max-width:600px;margin:0}
+.ha-dashboard-icon{font-size:clamp(40px,7vh,70px);color:#77ebf2}
+.ha-dashboard-calltoaction{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
+.ha-shell.is-compact .ha-dashboard-native{padding:7px;gap:8px}
+.ha-shell.is-compact .ha-dashboard-overview{padding:9px}
+.ha-shell.is-compact .ha-dashboard-intro{align-items:flex-start}
+.ha-shell.is-compact .ha-dashboard-intro h3{font-size:17px}
+.ha-shell.is-compact .ha-dashboard-intro>button{min-height:30px;font-size:10px;padding:5px 6px}
+.ha-shell.is-compact .ha-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.ha-shell.is-compact .ha-dashboard-stats>div{padding:8px}
+.ha-shell.is-compact .ha-dashboard-stats strong{font-size:21px}
+.ha-shell.is-compact .ha-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.ha-shell.is-compact .ha-dashboard-tile{min-height:114px;padding:8px;gap:4px}
+.ha-shell.is-compact .ha-dashboard-tile-name{font-size:11px}
+.ha-shell.is-compact .ha-dashboard-tile-state{font-size:10px}
+.ha-shell.is-compact .ha-dashboard-glyph{font-size:21px}
+.ha-shell.is-compact .ha-dashboard-favorite{min-width:28px;min-height:28px;font-size:17px}
+.ha-shell.is-compact .ha-dashboard-toggle{min-height:30px;padding:4px 6px;font-size:10px}
+@media (orientation:landscape) and (max-height:460px){
+ .ha-dashboard-native{padding:7px;gap:8px}
+ .ha-dashboard-overview{padding:8px}
+ .ha-dashboard-intro h3{font-size:18px}
+ .ha-dashboard-intro>button{font-size:10px;min-height:30px;padding:4px 7px}
+ .ha-dashboard-stats{margin-top:6px}
+ .ha-dashboard-stats>div{padding:6px}
+ .ha-dashboard-stats strong{font-size:19px}
+ .ha-dashboard-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr));gap:6px}
+ .ha-dashboard-tile{min-height:102px;padding:7px;gap:3px}
+ .ha-dashboard-glyph{font-size:20px}
+ .ha-dashboard-favorite{min-height:25px;min-width:25px;font-size:16px}
+ .ha-dashboard-tile-name{font-size:11px}
+ .ha-dashboard-tile-state{font-size:10px}
+ .ha-dashboard-toggle{min-height:27px;font-size:10px;padding:4px 6px}
+ .ha-dashboard-readonly{min-height:27px}
+}
