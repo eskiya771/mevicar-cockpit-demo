@@ -18,7 +18,7 @@ for(const ticker of ['XETR:SIE','NASDAQ:TSLA','NASDAQ:NVDA','NASDAQ:AAPL','TVC:D
  assert.ok(api.debug().items.includes(ticker),'Default watchlist includes '+ticker);
 assert.equal(api.validSymbol('NASDAQ:MSFT'),true);
 for(const bad of ['', 'AAPL', '<script>', 'NASDAQ:AAPL?token=xxx','NASDAQ:AAPL&apikey=x'])assert.equal(api.validSymbol(bad),false);
-assert.match(api.html(false),/Aktien & Märkte/);
+assert.match(api.html(false),/Aktienkurse mit TradingView/);
 assert.match(api.html(false),/Siemens/);
 assert.match(api.html(false),/Tesla/);
 assert.match(api.html(true),/is-compact/);
