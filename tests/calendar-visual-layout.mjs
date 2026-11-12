@@ -51,7 +51,7 @@ try{
   },ics);
   for(const tab of ['agenda','month','sources']){
    await page.evaluate(key=>window.MeviCalendar.tab(key),tab);
-   const selector=tab==='agenda'?'.mevi-cal-agenda':tab==='month'?'.mevi-cal-month-view':'.mevi-cal-sources';
+   const selector=p.split&&tab!=='sources'?'.mevi-cal-compact-list':tab==='agenda'?'.mevi-cal-agenda':tab==='month'?'.mevi-cal-month-view':'.mevi-cal-sources';
    await page.locator(selector).waitFor({state:'attached',timeout:10000});
    const metrics=await page.evaluate(selector=>{
     const host=document.getElementById('calendar-root'),panel=host.querySelector('.mevi-cal-shell');
@@ -66,7 +66,7 @@ try{
      browserScrollX:document.documentElement.scrollWidth-document.documentElement.clientWidth};
    },selector);
    if(metrics.viewWidth<50||metrics.viewHeight<30)errors.push(p.id+' '+tab+': calendar view collapsed');
-   if(metrics.selected!==1)errors.push(p.id+' '+tab+': tab selection invalid');
+   if(metrics.selected!==(tab==='sources'?0:1))errors.push(p.id+' '+tab+': tab selection invalid');
    if(metrics.panelScrollWidth>metrics.panelWidth+4)errors.push(p.id+' '+tab+': panel horizontal overflow');
    if(metrics.browserScrollX>3)errors.push(p.id+' '+tab+': page horizontal scrolling');
    if(metrics.tabs.some(b=>b.left<metrics.hostLeft-1||b.right>metrics.hostRight+2))
