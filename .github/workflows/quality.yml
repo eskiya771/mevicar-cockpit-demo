@@ -144,7 +144,7 @@ jobs:
           assert stocks_css_link in html and stocks_script_tag in html
           stocks_css = pathlib.Path('stocks.css').read_text()
           stocks_js = pathlib.Path('stocks.js').read_text()
-          assert '.mevi-fin' in stocks_css and 'MeviStocks' in stocks_js
+          assert '.mevi-tv' in stocks_css and 'MeviStocks' in stocks_js
           html = html.replace(stocks_css_link, '<style id="mevicar-stocks-styles">' + stocks_css + '</style>')
           html = html.replace(stocks_script_tag, '<script id="mevicar-stocks-script">' + stocks_js + '</script>')
           whatsapp_css_link = '<link rel="stylesheet" href="./whatsapp.css">'
