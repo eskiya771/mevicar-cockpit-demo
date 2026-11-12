@@ -78,7 +78,8 @@ function tickerRow(q){
  '<button class="mevi-fin-open" type="button" onclick="MeviStocks.open(\''+stockId+'\')" aria-label="'+esc(q.name)+' Kursdetails öffnen">'+
  '<span class="mevi-fin-symbol"><strong>'+esc(q.name)+'</strong><small>'+esc(q.symbol)+(q.market?' · '+esc(q.market):'')+'</small></span>'+
  '<span class="mevi-fin-spark">'+spark+'</span>'+
- '<span class="mevi-fin-values"><strong>'+money(q.close,q.currency)+'</strong><small class="'+color(q)+'">'+esc(change(q))+'</small></span></button></article>';
+ '<span class="mevi-fin-values"><strong>'+money(q.close,q.currency)+'</strong><small class="'+color(q)+'">'+esc(change(q))+'</small></span></button>'+
+ '<button class="mevi-fin-hide" type="button" aria-label="'+esc(q.name)+' ausblenden" title="Ausblenden" onclick="MeviStocks.hide(\''+stockId+'\')">◌</button></article>';
 }
 function toolbar(){
  return '<div class="mevi-fin-toolbar"><input id="mevi-fin-search" aria-label="Aktien suchen" type="search" placeholder="Aktie suchen" value="'+esc(state.query)+'" oninput="MeviStocks.search(this.value)">'+
