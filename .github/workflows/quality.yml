@@ -24,6 +24,8 @@ jobs:
         run: node tests/navigation-google-smoke.mjs
       - name: Test Home Assistant dashboard and REST access
         run: node tests/homeassistant-smoke.mjs
+      - name: Test Classic weather and rain planner
+        run: node tests/weather-smoke.mjs
       - name: Test five supported display profiles
         run: node tests/display-profiles-smoke.mjs
       - name: Test premium speedometer
@@ -104,6 +106,12 @@ jobs:
           html = html.replace(nav_css_link, '<style id="mevicar-navigation-styles">' + nav_css + '</style>')
           html = html.replace(nav_script_tag, '<script id="mevicar-navigation-script">' + nav_js + '</script>')
           # Home Assistant: bundle the dashboard and REST client in the same versioned shell.
+          weather_css_link = '<link rel="stylesheet" href="./weather-next.css">'
+          assert weather_css_link in html, 'Weather wrapper stylesheet missing'
+          weather_css = pathlib.Path('weather-next.css').read_text()
+          assert '.weather-host' in weather_css
+          assert 'weather/weather.html' in html, 'Live Classic weather iframe missing'
+          html = html.replace(weather_css_link, '<style id="mevicar-weather-styles">' + weather_css + '</style>')
           ha_css_link = '<link rel="stylesheet" href="./homeassistant.css">'
           ha_script_tag = '<script src="./homeassistant.js"></script>'
           assert ha_css_link in html and ha_script_tag in html, 'Home Assistant assets missing'
@@ -205,7 +213,9 @@ jobs:
           curl --fail --location --retry 3 https://cdn.jsdelivr.net/npm/hls.js@1.6.15/dist/hls.min.js -o dist/vendor/hls-1.6.15.min.js
           (cd dist && sha256sum -c ../vendor/hls.sha256)
           cp vendor/hls-LICENSE.txt dist/vendor/
-          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          mkdir -p dist/weather
+          cp -R weather/. dist/weather/
+          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
