@@ -41,6 +41,10 @@ jobs:
         run: node tests/whatsapp-smoke.mjs
       - name: Test real YouTube videos, playlists and stationary guard
         run: node tests/youtube-smoke.mjs
+      - name: Verify platform adapter
+        run: |
+          node --check meviplatform.js
+          node tests/meviplatform-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
@@ -70,6 +74,11 @@ jobs:
           saver_js = pathlib.Path('screensaver.js').read_text()
           assert '#mevi-saver' in saver_css and 'meviSaverPreview' in saver_js
           html = html.replace(saver_css_link, '<style id="mevicar-screensaver-styles">' + saver_css + '</style>')
+          platform_tag = '<script src="./meviplatform.js"></script>'
+          assert platform_tag in html, 'Platform adapter missing from shell'
+          platform_js = pathlib.Path('meviplatform.js').read_text()
+          assert 'MeviPlatform' in platform_js
+          html = html.replace(platform_tag, '<script id="mevicar-platform-script">' + platform_js + '</script>')
           # Keep the media player JS/CSS in the same versioned HTML as the cockpit.
           media_css_link = '<link rel="stylesheet" href="./mevimedia.css">'
           media_script_tag = '<script src="./mevimedia.js"></script>'
@@ -231,7 +240,7 @@ jobs:
           cp vendor/hls-LICENSE.txt dist/vendor/
           mkdir -p dist/weather
           cp -R weather/. dist/weather/
-          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css meviplatform.js roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
@@ -244,8 +253,59 @@ jobs:
               d.ellipse((n*.46,n*.46,n*.54,n*.54),fill='#e8fbff')
               im.save(f'dist/icon-{n}.png')
           PY
+      - name: Share the exact web bundle with Android build
+        uses: actions/upload-artifact@v4
+        with:
+          name: mevicar-web-dist
+          path: dist/
+          retention-days: 7
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  android-debug:
+    name: Capacitor Android Debug APK
+    needs: deploy
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: mevicar-web-dist
+          path: dist/
+      - name: Validate bundled assets and native packaging
+        run: |
+          test -s dist/index.html
+          test -s dist/meviplatform.js
+          grep -q 'mevicar-platform-script' dist/index.html
+          python3 scripts/prepare-android-assets.py
+          test ! -e dist/sw.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Create Android wrapper from local web bundle
+        run: |
+          npm install --no-audit --no-fund
+          npx cap add android
+          npx cap sync android
+      - name: Compile first installable test APK
+        run: |
+          chmod +x android/gradlew
+          cd android
+          ./gradlew --no-daemon assembleDebug
+      - name: Publish debug APK as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MeviCar-Next-Android-Debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
