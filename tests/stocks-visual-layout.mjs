@@ -33,9 +33,6 @@ try{
   }));
   await page.route('https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js',route=>
    route.fulfill({status:200,contentType:'application/javascript',body:fakeWidget}));
-  await page.route('https://www.tradingview-widget.com/w/en/tv-single-ticker.js',route=>
-   route.fulfill({status:200,contentType:'application/javascript',body:
-    "customElements.define('tv-single-ticker',class extends HTMLElement{connectedCallback(){this.classList.add('qa-quote');this.textContent=this.getAttribute('symbol')+' · 281,70 € · +1,7 %'}});"}));
   await page.goto('https://mevi-stocks-qa.invalid/test');
   await page.addStyleTag({path:'stocks.css'});
   await page.addScriptTag({path:'stocks.js'});
@@ -45,7 +42,9 @@ try{
   },compact);
   await page.locator('.qa-tradingview').waitFor({timeout:8000});
   if(!compact){
-   await page.locator('.qa-quote').waitFor({timeout:8000});
+   await page.locator('.mevi-tv-manual-quote').waitFor({timeout:8000});
+   const quoteBox=await page.locator('.mevi-tv-manual-quote').boundingBox();
+   if(!quoteBox||quoteBox.height>60)issues.push(name+': manually entered quote is too tall');
   }
   const positions=await page.evaluate(()=>{
    const sidebar=document.querySelector('.mevi-tv-sidebar').getBoundingClientRect();
