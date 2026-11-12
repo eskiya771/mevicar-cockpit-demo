@@ -75,13 +75,21 @@ function currentFix(){
  if(p.speed>MAX_SPEED)return{ok:false,text:'Video gesperrt · Fahrzeug in Bewegung ('+Math.round(p.speed*3.6)+' km/h).'};
  return{ok:true,text:'Stand erkannt · GPS ±'+Math.round(p.accuracy)+' m · '+Math.round(p.speed*3.6*10)/10+' km/h.'};
 }
+function idleHTML(){
+ return '<div class="mevi-youtube-idle"><span class="mevi-youtube-playmark">▶</span>'+
+ '<strong>Video oder Playlist laden</strong>'+
+ '<p>Für die Wiedergabe sind ein aktuelles GPS-Signal, eine Genauigkeit von maximal 30 m und Stillstand erforderlich.</p>'+
+ '<p>Ohne GPS lässt sich der Link über „Extern“ in YouTube öffnen.</p></div>';
+}
 function stop(reason){
+ const root=document.querySelector('.mevi-youtube-shell');
+ root?.classList.remove('mevi-youtube-focus');
  if(state.iframe){
   try{state.iframe.removeAttribute('src');state.iframe.remove()}catch{}
   state.iframe=null;
  }
  const holder=document.getElementById('mevi-youtube-frame');
- if(holder)holder.replaceChildren();
+ if(holder)holder.innerHTML=idleHTML();
  state.playing=false;state.loading=false;
  if(reason)showStatus(reason);
  feedback();
@@ -101,6 +109,7 @@ function onGpsError(error){
 }
 function verifyContinuously(){
  if(!state.mounted)return;
+ if(document.hidden){if(state.playing)stop('Video gestoppt · MeviCar ist im Hintergrund.');return}
  const gate=currentFix();
  if(state.playing&&!gate.ok)stop(gate.text);
  if(!state.playing&&state.fix&&!gate.ok&&state.status.startsWith('Stand erkannt'))showStatus(gate.text);
@@ -142,14 +151,19 @@ function load(){
  if(!gate.ok){showStatus('Nicht geladen · '+gate.text,'Für Desktop ohne GPS: „In YouTube öffnen“ verwenden.');return false}
  const holder=document.getElementById('mevi-youtube-frame');
  if(!holder){showStatus('Playerbereich nicht verfügbar.');return false}
+ const root=document.querySelector('.mevi-youtube-shell');
+ if(root?.classList.contains('is-compact'))root.classList.add('mevi-youtube-focus');
  const bounds=holder.getBoundingClientRect();
  if(bounds.width<200||bounds.height<200){
+  root?.classList.remove('mevi-youtube-focus');
   showStatus('Zu wenig Platz für den YouTube-Player (mindestens 200 × 200).','YouTube-Symbol erneut antippen, um die App im Vollbild zu öffnen.');
   return false;
  }
  stop();
+ if(root?.classList.contains('is-compact'))root.classList.add('mevi-youtube-focus');
  // Like Classic, other cockpit audio stops before YouTube starts, but the YouTube
  // player itself never automatically starts playback: user presses its official Play.
+ window.meviSpotifyPauseForSource?.('youtube');
  window.meviMediaStopForSource?.('youtube');
  const frame=document.createElement('iframe');
  frame.className='mevi-youtube-iframe';
@@ -158,6 +172,7 @@ function load(){
  frame.allowFullscreen=true;
  frame.setAttribute('referrerpolicy','strict-origin-when-cross-origin');
  frame.setAttribute('loading','eager');
+ frame.addEventListener('error',()=>stop('YouTube nicht erreichbar. Internet prüfen und erneut laden.'));
  frame.src=embedUrl(item);
  holder.replaceChildren(frame);
  state.iframe=frame;state.playing=true;
@@ -185,13 +200,16 @@ function html(compact=false){
  (state.playing?'':' disabled')+'>■ Stopp</button></div>'+
  '<div class="mevi-youtube-feedback" role="status"><span id="mevi-youtube-status">'+esc(state.status)+
  '</span><small id="mevi-youtube-detail">'+esc(state.detail)+'</small></div>'+
- '<div class="mevi-youtube-stage" id="mevi-youtube-frame">'+
- '<div class="mevi-youtube-idle"><span class="mevi-youtube-playmark">▶</span>'+
- '<strong>Video oder Playlist laden</strong><p>Einbetten funktioniert nur mit aktuellem GPS-Signal: Standortgenauigkeit ≤30 m, Geschwindigkeit unter 0,5 m/s.</p>'+
- '<p>Auf einem PC ohne GPS kannst du den Link über „Extern“ direkt in YouTube öffnen.</p></div></div>'+
+ '<div class="mevi-youtube-stage" id="mevi-youtube-frame">'+idleHTML()+'</div>'+
  '<footer class="mevi-youtube-footer">Offizieller YouTube-Player · keine Wiedergabe im Hintergrund · '+ 
  'Videos mit Einbettungssperre können nicht angezeigt werden</footer></section>';
 }
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden&&state.playing)stop('Video gestoppt · MeviCar ist im Hintergrund.');
+});
+window.addEventListener('pagehide',()=>{
+ if(state.playing)stop('Video gestoppt · MeviCar wurde verlassen.');
+});
 window.MeviYouTube={html,mount,unmount,load,stop,setInput,openExternal,
  parseLink,embedUrl,publicUrl,currentFix,
  debug:()=>({mounted:state.mounted,playing:state.playing,hasFix:!!state.fix,
