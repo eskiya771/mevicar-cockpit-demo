@@ -196,7 +196,7 @@ function drawRoute(){
   map.fitBounds(bounds,55);
  }
 }
-let routeSummary='';
+let routeSummary='',liveSummary='';
 function geoPoint(input){
  if(!input)return null;
  const p=typeof input.toJSON==='function'?input.toJSON():input;
@@ -226,6 +226,28 @@ function guidanceSymbol(step){
  if(v.includes('MERGE'))return '⇢';
  return '↑';
 }
+// Progress along the returned route polyline is estimated from each GPS fix.
+// This avoids showing the original full-route ETA after the vehicle has moved.
+function remainingAlongRoute(point,path){
+ const polyline=(path||[]).map(geoPoint).filter(Boolean);
+ if(!point||polyline.length<2)return null;
+ let bestDistance=Infinity,bestAlong=0,acc=0;
+ const totals=[];
+ for(let i=0;i<polyline.length-1;i++){
+  const a=polyline[i],b=polyline[i+1];
+  const len=distanceBetween(a,b);
+  totals.push(len);
+  const k=Math.cos(point.lat*Math.PI/180),dx=(b.lng-a.lng)*k,dy=b.lat-a.lat;
+  const x=(point.lng-a.lng)*k,y=point.lat-a.lat;
+  const t=dx*dx+dy*dy>0?Math.max(0,Math.min(1,(x*dx+y*dy)/(dx*dx+dy*dy))):0;
+  const foot={lat:a.lat+(b.lat-a.lat)*t,lng:a.lng+(b.lng-a.lng)*t};
+  const off=distanceBetween(point,foot);
+  if(off<bestDistance){bestDistance=off;bestAlong=acc+len*t}
+  acc+=len;
+ }
+ if(!acc)return null;
+ return{remaining:Math.max(0,(routeData?.distanceMeters||acc)*(1-bestAlong/acc)),offRouteMeters:bestDistance};
+}
 function stepsFromRoute(route){
  return (route?.legs||[]).flatMap(leg=>leg.steps||[]).map(step=>({
   instructions:guidanceInstruction(step),maneuver:step.maneuver||'',
@@ -248,7 +270,7 @@ async function computeRouteFrom(from){
   fields:['path','distanceMeters','durationMillis','legs']
  });
  if(!routes?.length)throw new Error('Keine Fahrroute gefunden.');
- routeData=routes[0];guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;
+ routeData=routes[0];guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';
  const km=(routeData.distanceMeters||0)/1000;
  const minutes=Math.round((routeData.durationMillis||0)/60000);
  routeSummary=new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(km)+' km · '+minutes+' Min.';
@@ -304,7 +326,7 @@ function paintGuidance(){
  if(next)next.textContent=step?.instructions||'Der Route folgen';
  if(arrow)arrow.textContent=guidanceSymbol(step);
  if(distance)distance.textContent=metersLabel(step?.end&&current?distanceBetween(current,step.end):step?.distanceMeters);
- if(remaining)remaining.textContent=routeSummary;
+ if(remaining)remaining.textContent=liveSummary||routeSummary;
  if(speed)speed.textContent=simulation?'DEMO – simulierte Fahrt':currentSpeed===null?'GPS aktiv · Tempo –':Math.round(currentSpeed)+' km/h · GPS ±'+Math.round(lastGpsAccuracy||0)+' m';
  if(voice){voice.textContent=voiceMuted?'Ton einschalten':'Ton ausschalten';voice.setAttribute('aria-pressed',String(!voiceMuted))}
  if(state)state.textContent=simulation?'SIMULATION':guidanceActive?'NAVIGATION AKTIV':'ROUTENVORSCHAU';
@@ -385,7 +407,12 @@ function updatePosition(p){
  currentSpeed=Number.isFinite(p.coords.speed)&&p.coords.speed>=0?p.coords.speed*3.6:null;
  markCurrent(point,p.coords.heading);followPosition(point,p.coords.heading);
  if(lastGpsAccuracy===null||lastGpsAccuracy<75)maybeAdvanceStep(point,lastGpsAccuracy);
- const nearest=nearestDistanceToPath(point,routeData?.path);
+ const progress=remainingAlongRoute(point,routeData?.path);
+ if(progress){
+  const mins=Math.max(0,Math.round((routeData.durationMillis||0)/60000*(progress.remaining/Math.max(1,routeData.distanceMeters||1))));
+  liveSummary=metersLabel(progress.remaining)+' · '+mins+' Min. verbleibend';
+ }
+ const nearest=progress?.offRouteMeters??nearestDistanceToPath(point,routeData?.path);
  if(lastGpsAccuracy!==null&&lastGpsAccuracy<50&&nearest>110)offRouteCount++;
  else offRouteCount=0;
  if(offRouteCount>=3)reroute(point);
@@ -419,7 +446,7 @@ function startDemo(){
  simulationTimer=setInterval(()=>{
   if(!simulation)return;
   const step=guidanceSteps[stepIndex];
-  if(step?.end){current=step.end;markCurrent(step.end);followPosition(step.end)}
+  if(step?.end){current=step.end;markCurrent(step.end);followPosition(step.end);const p=remainingAlongRoute(current,routeData?.path);if(p)liveSummary='DEMO · '+metersLabel(p.remaining)+' verbleibend'}
   if(stepIndex<guidanceSteps.length-1)stepIndex++;
   else{stopGuidance({keepRoute:true});window.meviGoogleNavigationFinished?.();return}
   paintGuidance();
@@ -433,7 +460,7 @@ function stopGuidance(options={}){
  try{window.speechSynthesis?.cancel()}catch{}
  guidanceActive=false;simulation=false;currentSpeed=null;offRouteCount=0;
  if(positionMarker){positionMarker.setMap(null);positionMarker=null}
- if(!options.keepRoute){routeData=null;routeSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null}
+ if(!options.keepRoute){routeData=null;routeSummary='';liveSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null}
 }
 function routeInfo(){return routeSummary}
 function hasPlannedRoute(){return !!routeData}
