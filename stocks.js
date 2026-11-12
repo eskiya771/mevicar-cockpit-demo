@@ -68,8 +68,7 @@ function listHTML(){
    '" onclick="MeviStocks.select(\''+escapeHTML(item.symbol)+'\')"><strong>'+escapeHTML(item.name)+
    '</strong><small>'+escapeHTML(item.symbol)+'</small></button>'+
    '<button type="button" class="mevi-tv-remove" aria-label="'+escapeHTML(item.name)+
-   ' entfernen" onclick="MeviStocks.remove(\''+escapeHTML(item.symbol)+'\')">×</button>'+
-   (selected?'<div class="mevi-tv-quote" id="mevi-tv-quote" aria-label="Aktueller Kurs '+escapeHTML(item.name)+'"><span>Kurs wird geladen …</span></div>':'')+'</div>';
+   ' entfernen" onclick="MeviStocks.remove(\''+escapeHTML(item.symbol)+'\')">×</button></div>';
  }).join(''):'<div class="mevi-tv-empty">Keine passenden Werte. Filter ändern oder Aktie hinzufügen.</div>';
 }
 function periodsHTML(){
@@ -100,36 +99,8 @@ function html(compact=false){
 function feedback(msg){state.status=msg;const n=element('feedback');if(n)n.textContent=msg}
 function updateList(){
  const n=element('list');if(n)n.innerHTML=listHTML();
- if(state.mounted)buildQuote();
  const label=element('selected');if(label)label.textContent=current()?.name||'Aktie wählen';
  const link=element('link');if(link)link.href=symbolURL(state.symbol);
-}
-function quoteConfig(symbol){
- return {symbol,theme:'dark',locale:'de'};
-}
-function buildQuote(){
- if(!state.mounted||state.compact)return;
- const target=element('quote'),item=current();
- if(!target||!item)return;
- target.replaceChildren();
- // TradingView Single Ticker Web Component renders only price and daily change.
- // It adapts to its container instead of forcing a large company-info iframe.
- const ticker=document.createElement('tv-single-ticker');
- ticker.setAttribute('symbol',item.symbol);
- ticker.setAttribute('theme','dark');
- ticker.setAttribute('locale','de');
- target.appendChild(ticker);
- if(!document.querySelector('script[data-mevi-single-ticker]')){
-  const script=document.createElement('script');
-  script.type='module';
-  script.src='https://www.tradingview-widget.com/w/en/tv-single-ticker.js';
-  script.setAttribute('data-mevi-single-ticker','');
-  script.onerror=()=>{
-   const active=element('quote');
-   if(active)active.textContent='Kurs im Chart rechts ansehen';
-  };
-  document.head.appendChild(script);
- }
 }
 function chartConfig(symbol,period,compact){
  const range=PERIODS.find(x=>x.key===period)||PERIODS[3];
@@ -189,6 +160,6 @@ function remove(symbol){
 }
 function mount(){state.mounted=!!document.querySelector('.mevi-tv');if(state.mounted){updateList();buildChart()}}
 function unmount(){state.mounted=false;state.generation++}
-window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,validSymbol,chartConfig,quoteConfig,
+window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,validSymbol,chartConfig,
  debug:()=>({mounted:state.mounted,symbol:state.symbol,period:state.period,items:state.items.map(x=>x.symbol),favorites:[...state.favorites]})};
 })();
