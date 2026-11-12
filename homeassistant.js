@@ -145,7 +145,7 @@
   const items=state.radar;
   return '<div class="ha-radar-view">'+
    '<div class="ha-radar-title"><b>'+items.length+' Blitzer-Meldungen</b><span>Read-only · Quelle: Home Assistant / Blitzer.de</span></div>'+
-   '<div class="ha-radar-list">'+(items.map(c=>'<div class="ha-radar-item"><span class="ha-radar-pin">⌖</span>'+
+   '<div class="ha-radar-list">'+(window.MeviRoadAssist?.infoHTML()||'')+(items.map(c=>'<div class="ha-radar-item"><span class="ha-radar-pin">⌖</span>'+
     '<div><strong>'+esc(c.name)+'</strong><span>'+esc([c.street,c.city].filter(Boolean).join(' · ')||c.id)+
     '</span></div><span class="ha-radar-badge">'+(c.vmax?c.vmax+' km/h':esc(c.type))+'</span></div>').join('')||
     '<div class="ha-empty">Keine Blitzer.de-Kamera-Entitäten gefunden. Classic filtert auf attributes.source = blitzer_* mit gültigen GPS-Koordinaten.</div>')+
@@ -261,7 +261,7 @@
   state.token='';state.connected=false;state.states=[];state.radar=[];state.query='';
   state.busyIds.clear();state.requestId++;
   state.error='';state.message=options.quiet?'':'API-Token aus dieser Sitzung entfernt.';
-  repaint();
+  window.MeviRoadAssist?.onHAChange?.();repaint();
  }
  async function refresh(options={}){
   if(!state.token)return;
@@ -270,11 +270,11 @@
   try{
    const data=await request('/api/states');
    if(generation!==state.requestId)return;
-   derive(data);state.connected=true;state.error='';
+   derive(data);state.connected=true;state.error='';window.MeviRoadAssist?.onHAChange?.();
    if(state.mounted&&['devices','radar'].includes(state.tab))repaint();
    else repaint(false);
   }catch(e){
-   if(generation===state.requestId){state.error=errorText(e);state.connected=false;repaint(false)}
+   if(generation===state.requestId){state.error=errorText(e);state.connected=false;window.MeviRoadAssist?.onHAChange?.();repaint(false)}
    throw e;
   }finally{if(generation===state.requestId)state.refreshing=false}
  }
@@ -311,7 +311,20 @@
   state.mounted=false;
   if(refreshTimer!==null){clearInterval(refreshTimer);refreshTimer=null}
  }
- window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,
+ function cameraSnapshot(){
+  return{connected:state.connected,updatedAt:state.lastUpdate,
+   cameras:state.connected?state.radar.map(c=>({...c})):[]};
+ }
+ // Only these 3 HA endpoints are needed for Classic's optional on-route scan.
+ async function requestService(path,options={}){
+  if(!['/api/services/device_tracker/see','/api/states/device_tracker.mevicar_route_scan',
+    '/api/services/blitzer/refresh_controls?return_response'].includes(path))
+    throw new Error('Road Assist API-Pfad nicht zugelassen.');
+  if(!state.connected||!state.token)throw new Error('Home Assistant ist nicht verbunden.');
+  if(path.startsWith('/api/services/')&&options.method!=='POST')throw new Error('POST für HA-Service erforderlich.');
+  return request(path,{method:options.method||'GET',body:options.body});
+ }
+ window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,requestService,
   debug:()=>({tab:state.tab,connected:state.connected,count:state.states.length,cameras:state.radar.length,
    origin:state.origin,dashboard:dashboardUrl(),tokenPresent:!!state.token,tokenStored:false}),
   // Helpers for node-only contract tests; no token or credentials exposed.
