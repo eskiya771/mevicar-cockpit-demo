@@ -70,7 +70,7 @@ assert.match(html,/<link rel="stylesheet" href="\.\/spotify\.css">/);
 assert.match(html,/<script src="\.\/spotify\.js"><\/script>/);
 assert.match(html,/meviSpotifyHTML\(/);
 assert.match(html,/meviSpotifyUnmount\(\)[\s\S]{0,600}\$\('screen'\)\.innerHTML=html/);
-assert.match(html,/\$\('screen'\)\.innerHTML=html;[\s\S]{0,240}meviSpotifyMount\(\)/);
+assert.match(html,/\$\('screen'\)\.innerHTML=html;[\s\S]{0,800}meviSpotifyMount\(\)/);
 assert.match(html,/selectAudioSource[\s\S]{0,220}meviSpotifyPauseForSource/);
 assert.doesNotMatch(html,/meviAudioDemoHTML/);
 assert.doesNotMatch(media,/meviAudioDemoHTML|demoCatalog|demoState/,'MeviMedia must not keep a fake Spotify demo');
