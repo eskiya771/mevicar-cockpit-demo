@@ -1,0 +1,21 @@
+/* Keep the mobile launcher adjustments isolated from dock and split layouts. */
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const css=readFileSync(new URL('../themes.css',import.meta.url),'utf8');
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const workflow=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');
+const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
+const start=css.indexOf('/* 2026-11-12: phone landscape launcher');
+assert.ok(start>=0,'Phone launcher override must exist');
+const override=css.slice(start);
+assert.match(override,/@media \(orientation:landscape\) and \(min-width:701px\) and \(max-width:1100px\) and \(max-height:480px\)/);
+assert.match(override,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+assert.match(override,/grid-template-rows:repeat\(4,minmax\(0,1fr\)\)!important/);
+assert.match(override,/overflow:hidden!important/);
+assert.match(override,/\.app-home-surface \.app-home-icon/);
+assert.match(override,/\.app-home-surface \.app-home-label/);
+assert.doesNotMatch(override,/\.dock\b|\.app-home-side\b/,'Dock and side launcher must stay untouched');
+assert.match(html,/function appLauncherHTML\(\)/);
+assert.match(workflow,/node tests\/launcher-landscape-smoke\.mjs/);
+assert.match(sw,/mevicar-next-shell-v40/);
+console.log('Launcher: 5x4 compact phone grid, scoped icon sizes, no dock/split changes passed.');
