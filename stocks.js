@@ -30,9 +30,9 @@ function chosen(snapshot){
  return state.selected.map(id=>all.find(s=>s.entity_id===id)||{entity_id:id,name:id,state:'unavailable',symbol:'',currency:''});
 }
 function displayRow(sensor){
- const quote=parseSensor(sensor),down=quote?.change!==null&&quote?.change<0;
- const up=quote?.change!==null&&quote?.change>=0;
- const delta=quote?.change===null?'Tagesänderung unbekannt':
+ const quote=parseSensor(sensor),down=quote!==null&&quote.change!==null&&quote.change<0;
+ const up=quote!==null&&quote.change!==null&&quote.change>=0;
+ const delta=!quote||quote.change===null?'Tagesänderung unbekannt':
   (down?'−':'+')+amount(quote.change)+(quote.percent===null?'':' · '+(quote.percent<0?'−':'+')+amount(quote.percent)+' %');
  const fresh=quote?.updated?new Date(quote.updated):null;
  const time=fresh&&!Number.isNaN(fresh.getTime())?fresh.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):null;
