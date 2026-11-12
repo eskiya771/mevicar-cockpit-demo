@@ -29,6 +29,8 @@ jobs:
           node tests/xtream-smoke.mjs
       - name: Test Google Maps navigation and GPS fallback
         run: node tests/navigation-google-smoke.mjs
+      - name: Test Home Assistant dashboard and REST access
+        run: node tests/homeassistant-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
