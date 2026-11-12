@@ -176,6 +176,9 @@ function resetAdd(){
  const name=element('name');if(name)name.value='';
  const search=element('search');if(search)search.value='';
  state.query='';
+ state.onlyFavorites=false;
+ const favoriteButton=document.querySelector('.mevi-tv-fav-filter');
+ if(favoriteButton){favoriteButton.classList.remove('active');favoriteButton.setAttribute('aria-pressed','false')}
 }
 function add(){
  const raw=String(element('symbol')?.value||'').toUpperCase().trim();
