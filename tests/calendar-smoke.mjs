@@ -48,7 +48,7 @@ const day=(s)=>new Date(s).getTime();
   'SUMMARY:Sport und\r\n  Schule\r\nLOCATION:Halle\\, Erlangen\r\nEND:VEVENT');
  const parsed=api.parseICS(input);
  assert.equal(parsed.length,1);
- assert.equal(parsed[0].title,'Sport undSchule','Folded ICS lines are assembled');
+ assert.equal(parsed[0].title,'Sport und Schule','Folded ICS lines preserve literal whitespace');
  assert.equal(parsed[0].location,'Halle, Erlangen');
  const expanded=api.expandICS(parsed,day('2026-11-09T00:00:00Z'),day('2026-11-16T00:00:00Z'),'ics-a');
  assert.equal(expanded.length,3,'Weekly recurring events on Monday, Wednesday, Friday');
