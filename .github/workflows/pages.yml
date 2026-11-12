@@ -35,6 +35,8 @@ jobs:
         run: node tests/roadassist-smoke.mjs
       - name: Test Classic weather and rain planner
         run: node tests/weather-smoke.mjs
+      - name: Test live calendar, ICS and readonly Google connection
+        run: node tests/calendar-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
@@ -98,6 +100,14 @@ jobs:
           assert '.mevi-ra-overlay' in ra_css and 'MeviRoadAssist' in ra_js
           html = html.replace(ra_css_link, '<style id="mevicar-roadassist-styles">' + ra_css + '</style>')
           html = html.replace(ra_script_tag, '<script id="mevicar-roadassist-script">' + ra_js + '</script>')
+          calendar_css_link = '<link rel="stylesheet" href="./calendar.css">'
+          calendar_script_tag = '<script src="./calendar.js"></script>'
+          assert calendar_css_link in html and calendar_script_tag in html, 'Calendar assets missing'
+          cal_css = pathlib.Path('calendar.css').read_text()
+          cal_js = pathlib.Path('calendar.js').read_text()
+          assert '.mevi-cal-shell' in cal_css and 'MeviCalendar' in cal_js
+          html = html.replace(calendar_css_link, '<style id="mevicar-calendar-styles">' + cal_css + '</style>')
+          html = html.replace(calendar_script_tag, '<script id="mevicar-calendar-script">' + cal_js + '</script>')
           ha_css_link = '<link rel="stylesheet" href="./homeassistant.css">'
           ha_script_tag = '<script src="./homeassistant.js"></script>'
           assert ha_css_link in html and ha_script_tag in html, 'Home Assistant assets missing'
@@ -201,7 +211,7 @@ jobs:
           cp vendor/hls-LICENSE.txt dist/vendor/
           mkdir -p dist/weather
           cp -R weather/. dist/weather/
-          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
