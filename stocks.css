@@ -151,3 +151,14 @@ html[data-theme="liquidglass"] .mevi-tv-item.is-selected{background:#295c76}
  .mevi-tv-item.is-selected .mevi-tv-quote{height:58px;min-height:58px;max-height:58px}
  .mevi-tv-item.is-selected .mevi-tv-quote tv-single-ticker{height:52px}
 }
+
+/* Compact, manually entered reference price; not an automatically updating quote. */
+.mevi-tv-item.is-selected{flex-wrap:wrap}
+.mevi-tv-manual-quote{flex:0 0 100%;width:100%;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 34px;grid-template-rows:auto auto;align-items:center;column-gap:5px;padding:4px 7px;border-top:1px solid #54859a4d;background:#0b2332;border-radius:0 0 8px 8px;max-height:58px}
+.mevi-tv-manual-quote strong{grid-column:1;font-size:clamp(15px,2.2vh,20px);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mevi-tv-manual-quote small{grid-column:1;white-space:nowrap;font-size:10px;color:#95b9ca}
+.mevi-tv .mevi-tv-manual-quote button{grid-column:2;grid-row:1/3;min-width:30px;min-height:30px;padding:2px;font-size:17px}
+.mevi-tv.is-compact .mevi-tv-manual-quote{display:none}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-manual-quote{max-height:51px;padding:3px 6px}
+}
