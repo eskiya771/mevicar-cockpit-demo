@@ -96,3 +96,7 @@ html[data-theme="cyberpunk"] .mevi-fin-row{background:linear-gradient(105deg,#17
 html[data-theme="cyberpunk"] .mevi-fin button.active{border-color:#f158d3;color:#ff9ce4}
 html[data-theme="liquidglass"] .mevi-fin{background:#122739}
 html[data-theme="liquidglass"] .mevi-fin-row{background:linear-gradient(110deg,#24475b,#162f45)}
+
+.mevi-fin button.mevi-fin-hide{flex:none;background:transparent;border:0;color:#829cac;font-size:23px;min-width:35px;padding:2px 6px}
+.mevi-fin button.mevi-fin-hide:hover{color:#ffcb86}
+.mevi-fin.is-compact button.mevi-fin-hide{min-width:27px;padding:2px}
