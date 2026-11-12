@@ -9,21 +9,31 @@ const valid=d=>d&&typeof d.name==='string'&&Number.isFinite(d.lat)&&Number.isFin
 const keyOf=d=>d.lat.toFixed(5)+','+d.lng.toFixed(5);
 const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!valid(x))return false;let k=keyOf(x);if(keys.has(k))return false;keys.add(k);return true}).slice(0,max)};
 let cache={favorites:[],recent:[]};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],100),recent:unique(d.recent||[],20)}}catch{}
-let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,suggestions=[],query='',timer=null,requestSerial=0,token=null,error='',state='browse',mounted=false,stage='setup';
+let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,suggestions=[],query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup';
 function persist(){try{localStorage.setItem(DATA,JSON.stringify(cache))}catch{}}
 function key(){try{return localStorage.getItem(KEY)||''}catch{return ''}}
 function setKey(){const input=document.getElementById('mg-key');const k=(input?.value||'').trim();if(!/^[A-Za-z0-9_-]{20,}$/.test(k)){status('Ungültiger Google Maps API-Key.');return}try{localStorage.setItem(KEY,k)}catch{status('Browser-Speicher nicht verfügbar.');return}location.reload()}
 function removeKey(){try{localStorage.removeItem(KEY)}catch{}location.reload()}
-function status(message){
- error=message;
+function status(message,kind='info'){
+ error=message;errorKind=kind;
  const e=document.getElementById('mg-status');
  if(e){e.textContent=message;e.hidden=false;e.classList.add('mg-diagnostic')}
  const notice=document.getElementById('mg-map-notice');if(notice)notice.hidden=false;
- const change=document.getElementById('mg-change-key');
- if(change)change.hidden=false;
+ const change=document.getElementById('mg-change-key');if(change)change.hidden=kind!=='maps-auth';
+ const manual=document.getElementById('mg-manual-origin');if(manual)manual.hidden=kind!=='gps';
+}
+function clearStatus(){
+ error='';errorKind='';
+ const notice=document.getElementById('mg-map-notice');if(notice)notice.hidden=true;
 }
 function setupHTML(){return '<div class="mg-setup"><strong>Google Maps aktivieren</strong><p>Für die Web-App benötigst du einen Browser-API-Key. Als zugelassene Website füge <code>https://eskiya771.github.io/*</code> hinzu (manche Browser übertragen nur die Domain als Referrer).</p><input id="mg-key" type="text" spellcheck="false" autocomplete="off" placeholder="Browser-API-Key" aria-label="Google Maps Browser-API-Key"><button type="button" onclick="MeviGoogleNav.setKey()">Google Maps verbinden</button><small>Google Maps JavaScript API, Places API (New) und Routes API aktivieren. Der Key wird ausschließlich in diesem Browser gespeichert.</small><span id="mg-status" role="status">'+text(error)+'</span></div>'}
-function mapBackdrop(){return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+(!key()?setupHTML():'<div class="mg-map-state" id="mg-map-notice" role="status"><span id="mg-status">'+text(error||'Google Maps wird geladen …')+'</span><button type="button" id="mg-change-key" class="mg-change-key" onclick="MeviGoogleNav.removeKey()"'+(error?'':' hidden')+'>API-Schlüssel erneut einrichten</button></div>')}
+function mapBackdrop(){
+ const message='<div class="mg-map-state" id="mg-map-notice" role="status"><span id="mg-status">'+text(error||'Google Maps wird geladen …')+'</span>'+
+  '<button type="button" id="mg-change-key" class="mg-change-key" onclick="MeviGoogleNav.removeKey()"'+(errorKind==='maps-auth'?'':' hidden')+'>API-Schlüssel erneut einrichten</button>'+
+  '<button type="button" id="mg-manual-origin" class="mg-manual-action" onclick="MeviGoogleNav.selectOriginOnMap()"'+(errorKind==='gps'?'':' hidden')+'>Startpunkt auf Karte wählen</button></div>';
+ const picking=choosingOrigin?'<div class="mg-origin-instruction" role="status">Startpunkt wählen: Auf eine Stelle der Karte tippen oder klicken. <button type="button" onclick="MeviGoogleNav.cancelOriginSelection()">Abbrechen</button></div>':'';
+ return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+(!key()?setupHTML():message+picking);
+}
 function load(){
  if(!key())return Promise.reject(new Error('Google Maps Browser-Key fehlt.'));
  if(window.google?.maps?.importLibrary)return Promise.resolve(window.google.maps);
@@ -32,7 +42,7 @@ function load(){
    const cb='__meviMapsReady';
    const script=document.createElement('script');
    // Google's callback also fires when the script loads but authorization fails.
-   window.gm_authFailure=()=>status('Google Maps verweigert die Berechtigung. Prüfe Abrechnung, Maps JavaScript API und die Website-Freigabe https://eskiya771.github.io/* in Google Cloud.');
+   window.gm_authFailure=()=>status('Google Maps verweigert die Berechtigung. Prüfe Abrechnung, Maps JavaScript API und die Website-Freigabe https://eskiya771.github.io/* in Google Cloud.','maps-auth');
    const timeout=setTimeout(()=>{cleanup();reject(new Error('Google Maps konnte nicht geladen werden. API-Key und Cloud-Freigaben prüfen.'))},15000);
    function cleanup(){clearTimeout(timeout);delete window[cb]}
    window[cb]=()=>{cleanup();resolve(window.google.maps)};
@@ -52,8 +62,13 @@ async function mount(nextState){
    if(mapElement!==el){
      mapElement=el;
      map=new google.maps.Map(el,{center:current||FALLBACK_CENTER,zoom:12,disableDefaultUI:true,zoomControl:true,clickableIcons:false,gestureHandling:'greedy',backgroundColor:'#152536'});
-     marker=null;routeLines=[];
+     map.addListener('click',event=>{
+       if(!choosingOrigin||!event.latLng)return;
+       chooseOriginPoint(event.latLng.toJSON());
+     });
+     marker=null;originMarker=null;routeLines=[];
      if(selected)mark(selected);
+     if(manualOrigin)markOrigin();
      if(routeData)drawRoute();
    }
    const hint=document.querySelector('.mg-map-state');if(hint)hint.hidden=!error;
@@ -109,8 +124,64 @@ function saveFavorite(){if(!selected)return;cache.favorites=unique([selected,...
 function removeFavorite(){if(!selected)return;cache.favorites=cache.favorites.filter(x=>keyOf(x)!==keyOf(selected));persist();window.meviGoogleRerender?.()}
 function isFavorite(){return !!selected&&cache.favorites.some(x=>keyOf(x)===keyOf(selected))}
 function selectedAddress(){return selected?.address||'Bitte gültige Adresse auswählen'}
-function position(){return new Promise((resolve,reject)=>{if(!navigator.geolocation){reject(new Error('Standortfunktion nicht verfügbar'));return}navigator.geolocation.getCurrentPosition(p=>{current={lat:p.coords.latitude,lng:p.coords.longitude};resolve(current)},e=>reject(new Error('Standort nicht verfügbar: '+e.message)),{enableHighAccuracy:true,timeout:12000,maximumAge:5000})})}
-async function myLocation(){try{const p=await position();if(map){map.panTo(p);map.setZoom(16)}status('Aktueller Standort gefunden.')}catch(e){status(e.message)}}
+function markOrigin(){
+ if(!map||!manualOrigin)return;
+ if(originMarker)originMarker.setMap(null);
+ originMarker=new google.maps.Marker({
+  map,position:manualOrigin,title:'Manueller Startpunkt',
+  icon:{path:google.maps.SymbolPath.CIRCLE,scale:9,fillColor:'#13c5ea',fillOpacity:1,strokeColor:'#fff',strokeWeight:3}
+ });
+}
+function selectOriginOnMap(){
+ if(!key()){status('Bitte zuerst Google Maps einrichten.','maps-auth');return}
+ choosingOrigin=true;clearStatus();
+ const e=document.querySelector('.mg-navigation');if(e)e.classList.add('mg-selecting-origin');
+ const parent=document.querySelector('.mg-navigation');
+ if(parent&&!document.querySelector('.mg-origin-instruction')){
+  const tip=document.createElement('div');
+  tip.className='mg-origin-instruction';
+  tip.setAttribute('role','status');
+  tip.innerHTML='Startpunkt wählen: Auf eine Stelle der Karte tippen oder klicken. <button type="button" onclick="MeviGoogleNav.cancelOriginSelection()">Abbrechen</button>';
+  parent.appendChild(tip);
+ }
+}
+function cancelOriginSelection(){
+ choosingOrigin=false;
+ document.querySelector('.mg-navigation')?.classList.remove('mg-selecting-origin');
+ document.querySelector('.mg-origin-instruction')?.remove();
+}
+function chooseOriginPoint(point){
+ if(!point||!Number.isFinite(point.lat)||!Number.isFinite(point.lng))return;
+ manualOrigin={lat:point.lat,lng:point.lng};
+ cancelOriginSelection();
+ clearStatus();
+ routeData=null;clearLines();markOrigin();
+ window.meviGoogleRerender?.();
+}
+function originDescription(){return manualOrigin?'Manueller Startpunkt auf Karte gesetzt':'Startpunkt ist dein aktueller GPS-Standort'}
+async function position(){
+ if(!navigator.geolocation)throw new Error('Standortfunktion in diesem Browser nicht verfügbar.');
+ const locate=options=>new Promise((resolve,reject)=>{
+  navigator.geolocation.getCurrentPosition(p=>{
+   const coords={lat:p.coords.latitude,lng:p.coords.longitude};
+   if(!Number.isFinite(coords.lat)||!Number.isFinite(coords.lng))reject(new Error('Ungültige GPS-Koordinaten.'));
+   else{current=coords;resolve(coords)}
+  },reject,options);
+ });
+ try{
+  return await locate({enableHighAccuracy:true,timeout:9500,maximumAge:20000});
+ }catch(first){
+  if(first.code===1)throw new Error('Standortzugriff verweigert. Bitte Standortberechtigung für MeviCar im Browser erlauben.');
+  try{
+   return await locate({enableHighAccuracy:false,timeout:6500,maximumAge:60000});
+  }catch(second){
+   if(second.code===1)throw new Error('Standortzugriff verweigert. Bitte Standortberechtigung im Browser erlauben.');
+   if(second.code===3||first.code===3)throw new Error('Standort-Zeitüberschreitung: Auf diesem Gerät konnte kein GPS-Standort ermittelt werden.');
+   throw new Error('Standort nicht verfügbar. Prüfe die Windows- oder Browser-Standortfreigabe.');
+  }
+ }
+}
+async function myLocation(){try{const p=await position();clearStatus();if(map){map.panTo(p);map.setZoom(16)}}catch(e){status(e.message,'gps')}}
 function clearLines(){for(const l of routeLines)l.setMap(null);routeLines=[]}
 function drawRoute(){
  clearLines();if(!map||!routeData)return;
@@ -128,7 +199,12 @@ async function calculateRoute(){
  if(!selected){status('Bitte zuerst ein Ziel auswählen.');return false}
  try{
    await load();
-   const from=await position();
+   let from;
+   if(manualOrigin)from=manualOrigin;
+   else{
+    try{from=await position()}
+    catch(e){status(e.message+' Wähle alternativ den Startpunkt auf der Karte.','gps');return false}
+   }
    const {Route}=await google.maps.importLibrary('routes');
    const {routes}=await Route.computeRoutes({
      origin:from,destination:{lat:selected.lat,lng:selected.lng},
@@ -136,13 +212,13 @@ async function calculateRoute(){
      fields:['path','distanceMeters','durationMillis']
    });
    if(!routes?.length)throw new Error('Keine Fahrroute gefunden.');
-   routeData=routes[0];drawRoute();
+   routeData=routes[0];clearStatus();drawRoute();
    const km=(routeData.distanceMeters||0)/1000;
    const minutes=Math.round((routeData.durationMillis||0)/60000);
    routeSummary=new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(km)+' km · '+minutes+' Min.';
    window.meviGoogleRouteReady?.(routeSummary);
    return true;
- }catch(e){status('Routenberechnung fehlgeschlagen: '+(e.message||e));return false}
+ }catch(e){status('Routenberechnung fehlgeschlagen: '+(e.message||e),'route');return false}
 }
 function startGuidance(){
  if(!routeData){status('Bitte zunächst eine Route berechnen.');return}
@@ -153,12 +229,12 @@ function startGuidance(){
   if(map){map.panTo(current);map.setZoom(17)}
   const el=document.getElementById('mg-live-gps');
   if(el)el.textContent='GPS '+Math.round(p.coords.accuracy)+' m · '+(p.coords.speed===null?'–':Math.round(p.coords.speed*3.6))+' km/h';
- },e=>status('GPS-Signal: '+e.message),{enableHighAccuracy:true,maximumAge:1500,timeout:12000});
+ },e=>status('GPS-Signal nicht verfügbar: '+(e.code===3?'Zeitüberschreitung':e.message),'gps'),{enableHighAccuracy:true,maximumAge:1500,timeout:12000});
 }
 function stopGuidance(){if(geoWatch!==null){navigator.geolocation.clearWatch(geoWatch);geoWatch=null}routeData=null;routeSummary='';clearLines();selected=null}
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.myLocation()" aria-label="Meinen Standort anzeigen" title="Meinen Standort anzeigen">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={mount,mapBackdrop,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,setKey,removeKey,hasKey:()=>!!key(),calculateRoute,startGuidance,stopGuidance,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={mount,mapBackdrop,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>!!key(),calculateRoute,startGuidance,stopGuidance,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
