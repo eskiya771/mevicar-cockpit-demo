@@ -397,6 +397,27 @@
   state.mounted=false;
   if(refreshTimer!==null){clearInterval(refreshTimer);refreshTimer=null}
  }
+ function stockSnapshot(){
+  // Read-only, sanitized sensor data for other cockpit modules.
+  // Credentials and the full HA entity list are intentionally not exposed.
+  const sensors=state.connected?state.states.filter(e=>{
+   const a=e?.attributes||{};
+   return /^sensor\.[a-z0-9_]+$/i.test(e?.entity_id||'')&&
+    typeof a.symbol==='string'&&a.symbol.trim().length>0&&
+    (a.change_pct!==undefined||a.change!==undefined||a.previous_close!==undefined);
+  }).map(e=>{
+   const a=e.attributes||{};
+   return {entity_id:e.entity_id,state:String(e.state??''),
+    name:String(a.long_name||a.friendly_name||a.symbol||e.entity_id).slice(0,100),
+    symbol:String(a.symbol||'').slice(0,50),
+    currency:String(a.currency||a.unit_of_measurement||'').slice(0,12),
+    change:a.change,change_pct:a.change_pct,
+    market_state:String(a.market_state||'').slice(0,24),
+    price_is_live:a.price_is_live===true,
+    updated:String(e.last_updated||e.last_changed||'')};
+  }):[];
+  return {connected:state.connected,updatedAt:state.lastUpdate,sensors};
+ }
  function cameraSnapshot(){
   return{connected:state.connected,updatedAt:state.lastUpdate,
    cameras:state.connected?state.radar.map(c=>({...c})):[]};
@@ -410,7 +431,7 @@
   if(path.startsWith('/api/services/')&&options.method!=='POST')throw new Error('POST für HA-Service erforderlich.');
   return request(path,{method:options.method||'GET',body:options.body});
  }
- window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,requestService,favoriteEntity,toggleFromDashboard,
+ window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,requestService,favoriteEntity,toggleFromDashboard,
   debug:()=>({tab:state.tab,connected:state.connected,count:state.states.length,cameras:state.radar.length,
    origin:state.origin,dashboard:dashboardUrl(),tokenPresent:!!state.token,tokenStored:false}),
   // Helpers for node-only contract tests; no token or credentials exposed.
