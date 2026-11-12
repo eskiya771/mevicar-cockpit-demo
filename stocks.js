@@ -8,7 +8,7 @@ const DEFAULTS=[
  {symbol:'NASDAQ:TSLA',name:'Tesla'},
  {symbol:'NASDAQ:NVDA',name:'NVIDIA'},
  {symbol:'NASDAQ:AAPL',name:'Apple'},
- {symbol:'INDEX:DEU40',name:'DAX'}
+ {symbol:'TVC:DEU40',name:'DAX'}
 ];
 const PERIODS=[
  {key:'1D',label:'1T',interval:'15',range:'1D'},
@@ -27,14 +27,16 @@ function read(){
   if(Array.isArray(raw.items)){
    const seen=new Set(),items=[];
    for(const item of raw.items){
-    const symbol=String(item?.symbol||'').toUpperCase().trim();
+    const original=String(item?.symbol||'').toUpperCase().trim();
+    const symbol=original==='INDEX:DEU40'?'TVC:DEU40':original;
     if(!validSymbol(symbol)||seen.has(symbol)||items.length>=25)continue;
     seen.add(symbol);items.push({symbol,name:String(item?.name||symbol).trim().slice(0,50)||symbol});
    }
    if(items.length)state.items=items;
   }
-  if(Array.isArray(raw.favorites))state.favorites=[...new Set(raw.favorites.filter(validSymbol))].slice(0,25);
-  if(state.items.some(x=>x.symbol===raw.symbol))state.symbol=raw.symbol;
+  if(Array.isArray(raw.favorites))state.favorites=[...new Set(raw.favorites.map(x=>x==='INDEX:DEU40'?'TVC:DEU40':x).filter(validSymbol))].slice(0,25);
+  const selected=raw.symbol==='INDEX:DEU40'?'TVC:DEU40':raw.symbol;
+  if(state.items.some(x=>x.symbol===selected))state.symbol=selected;
   if(PERIODS.some(p=>p.key===raw.period))state.period=raw.period;
  }catch{}
  if(!state.items.some(x=>x.symbol===state.symbol))state.symbol=state.items[0]?.symbol||'XETR:SIE';
