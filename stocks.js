@@ -1,113 +1,184 @@
-/* MeviCar Next – Home Assistant Easy Stock sensor viewer.
-   Reuses MeviHA's in-memory token; no direct finance API, proxy or credentials. */
+/* MeviCar Next – Aktienkurse 2.0. Real Easy Stock snapshots and HA Recorder history.
+   No external finance API, no shared secrets, no simulated history. */
 (function(){
 'use strict';
-const STORAGE='mevicar-stocks-ha-v1';
-const state={selected:[],hasSelection:false,mounted:false,loading:false,status:'Home Assistant verbinden, um Aktienkurse anzuzeigen.',snapshot:null,requestId:0};
-const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'" :'&#39;'}[c]));
-const validEntity=id=>/^sensor\.[a-z0-9_]+$/i.test(String(id||''));
-function restore(){try{const data=JSON.parse(localStorage.getItem(STORAGE)||'{}');if(Array.isArray(data.selected)){state.selected=[...new Set(data.selected.filter(validEntity))].slice(0,25);state.hasSelection=true}}catch{}}
+const STORAGE='mevicar-stocks-ui-v2';
+const periods=[1,7,30];
+const state={favorites:[],hidden:[],onlyFavorites:false,query:'',sort:'name',detail:'',
+ days:7,history:{},loading:false,historyLoading:false,historyError:'',
+ message:'',mounted:false,requestId:0,historyId:0,historyAt:0,snapshot:null};
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const valid=id=>/^sensor\.[a-z0-9_]+$/i.test(String(id||''));
+const num=v=>v===null||v===undefined||v===''||typeof v==='boolean'?null:(Number.isFinite(Number(v))?Number(v):null);
+function restore(){try{const p=JSON.parse(localStorage.getItem(STORAGE)||'{}');
+ if(Array.isArray(p.favorites))state.favorites=[...new Set(p.favorites.filter(valid))].slice(0,100);
+ if(Array.isArray(p.hidden))state.hidden=[...new Set(p.hidden.filter(valid))].slice(0,100);
+ if(['name','change','price'].includes(p.sort))state.sort=p.sort;
+ if(periods.includes(p.days))state.days=p.days;
+}catch{}}
 restore();
-function save(){try{localStorage.setItem(STORAGE,JSON.stringify({selected:state.selected}))}catch{}}
-function read(){const src=window.MeviHA?.stockSnapshot?.();return src&&Array.isArray(src.sensors)?src:{connected:false,sensors:[],updatedAt:0}}
-function numeric(value){if(value===null||value===undefined||value===''||typeof value==='boolean')return null;const n=Number(value);return Number.isFinite(n)?n:null}
-function parseSensor(sensor){
- if(!sensor||!validEntity(sensor.entity_id))return null;
- const close=numeric(sensor.state),change=numeric(sensor.change),percent=numeric(sensor.change_pct);
- if(close===null||close<=0)return null;
- const currency=/^[A-Z]{3}$/.test(String(sensor.currency||'').toUpperCase())?String(sensor.currency).toUpperCase():null;
- return {id:sensor.entity_id,name:String(sensor.name||sensor.symbol||sensor.entity_id),symbol:String(sensor.symbol||''),
- close,change,percent,currency,updated:String(sensor.updated||''),
- live:sensor.price_is_live===true,market:String(sensor.market_state||'')};
+function save(){try{localStorage.setItem(STORAGE,JSON.stringify({favorites:state.favorites,hidden:state.hidden,sort:state.sort,days:state.days}))}catch{}}
+function snapshot(){const v=window.MeviHA?.stockSnapshot?.();return v&&Array.isArray(v.sensors)?v:{connected:false,updatedAt:0,sensors:[]}}
+function parseSensor(s){
+ if(!s||!valid(s.entity_id))return null;
+ const close=num(s.state),change=num(s.change),percent=num(s.change_pct);
+ const currency=String(s.currency||'').toUpperCase();
+ return {id:s.entity_id,name:String(s.name||s.symbol||s.entity_id).slice(0,100),symbol:String(s.symbol||s.entity_id).slice(0,60),
+ close:close!==null&&close>0?close:null,change,percent,
+ currency:/^[A-Z]{3}$/.test(currency)?currency:null,market:String(s.market_state||''),
+ updated:String(s.updated||''),live:s.price_is_live===true};
 }
-function price(n,c){return new Intl.NumberFormat('de-DE',{minimumFractionDigits:2,maximumFractionDigits:4,...(c?{style:'currency',currency:c}:{})}).format(n)+(c?'':' · Einheit unbekannt')}
-function amount(n){return new Intl.NumberFormat('de-DE',{maximumFractionDigits:2}).format(Math.abs(n))}
-function current(){state.snapshot=read();return state.snapshot}
-function available(snapshot){return snapshot.sensors.filter(s=>validEntity(s?.entity_id))}
-function chosen(snapshot){
- const all=available(snapshot);
- if(!state.hasSelection)return all;
- return state.selected.map(id=>all.find(s=>s.entity_id===id)||{entity_id:id,name:id,state:'unavailable',symbol:'',currency:''});
+function all(){state.snapshot=snapshot();return state.snapshot.sensors.map(parseSensor).filter(Boolean)}
+function money(v,c){if(v===null)return '–';return new Intl.NumberFormat('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2,...(c?{style:'currency',currency:c}:{})}).format(v)+(c?'':'');}
+function fmt(v,max=2){return v===null?'–':new Intl.NumberFormat('de-DE',{maximumFractionDigits:max}).format(Math.abs(v))}
+function change(q){if(!q||q.change===null)return 'Tagesänderung unbekannt';return (q.change>=0?'+':'−')+fmt(q.change)+' '+(q.currency||'')+(q.percent===null?'':' · '+(q.percent>=0?'+':'−')+fmt(q.percent)+' %')}
+function color(q){return q?.change===null?'neutral':q.change>=0?'up':'down'}
+function recency(value){const d=new Date(value);return Number.isFinite(d.getTime())?d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'–'}
+function series(id){return Array.isArray(state.history[id])?state.history[id]:[]}
+function chartPath(points,width,height,pad=7){
+ const validPoints=points.filter(p=>Number.isFinite(p?.value)&&Number.isFinite(p?.time)&&p.value>0).sort((a,b)=>a.time-b.time);
+ if(validPoints.length<2)return '';
+ const t0=validPoints[0].time,t1=validPoints[validPoints.length-1].time;
+ const values=validPoints.map(p=>p.value),min=Math.min(...values),max=Math.max(...values);
+ const range=Math.max(max-min,Math.abs(max)*.003,0.001),from=min-(range-(max-min))/2;
+ return validPoints.map((p,i)=>{
+  const x=pad+((t1===t0?i/(validPoints.length-1):(p.time-t0)/(t1-t0))*(width-pad*2));
+  const y=height-pad-((p.value-from)/range)*(height-pad*2);
+  return (i?'L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+ }).join(' ');
 }
-function displayRow(sensor){
- const quote=parseSensor(sensor),down=quote!==null&&quote.change!==null&&quote.change<0;
- const up=quote!==null&&quote.change!==null&&quote.change>=0;
- const delta=!quote||quote.change===null?'Tagesänderung unbekannt':
-  (down?'−':'+')+amount(quote.change)+(quote.percent===null?'':' · '+(quote.percent<0?'−':'+')+amount(quote.percent)+' %');
- const fresh=quote?.updated?new Date(quote.updated):null;
- const time=fresh&&!Number.isNaN(fresh.getTime())?fresh.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}):null;
- return '<article class="mevi-stocks-row"><div class="mevi-stocks-identity"><strong>'+esc(sensor.name||sensor.symbol||sensor.entity_id)+'</strong><small>'+
- esc(sensor.symbol||sensor.entity_id)+(time?' · Stand '+esc(time):'')+'</small></div><div class="mevi-stocks-values"><strong>'+
- (quote?esc(price(quote.close,quote.currency)):'–')+'</strong><small class="'+(up?'up':down?'down':'')+'">'+
- esc(quote?delta:'Kein gültiger Kurs / Sensor nicht verfügbar')+'</small></div>'+
- '<button type="button" class="mevi-stocks-remove" aria-label="Aktie entfernen" onclick="MeviStocks.remove(\''+esc(sensor.entity_id)+'\')">×</button></article>';
+function graph(points,w,h,cls){
+ const path=chartPath(points,w,h);
+ if(!path)return '<div class="mevi-fin-nochart">Noch keine Verlaufsdaten</div>';
+ const rising=points[points.length-1].value>=points[0].value;
+ return '<svg class="mevi-fin-chart '+cls+(rising?' is-up':' is-down')+'" viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" role="img" aria-label="Kursverlauf mit '+points.length+' Messpunkten">'+
+ '<path class="mevi-fin-gridline" d="M0 '+(h/2)+' H'+w+'"/><path class="mevi-fin-line" d="'+path+'"/></svg>';
 }
-function status(snapshot){
- if(!window.MeviHA?.stockSnapshot)return 'Home-Assistant-Modul ist nicht verfügbar.';
- if(!snapshot.connected)return 'Home Assistant nicht verbunden. Bitte in Home Assistant → Verbindung einen API-Token eingeben.';
- if(!snapshot.sensors.length)return 'Keine Easy-Stock-Sensoren gefunden. Easy Stock in Home Assistant installieren und Aktien hinzufügen.';
- if(state.hasSelection&&!state.selected.length)return 'Watchlist ist leer. Bitte eine Aktie auswählen.';
- return state.status;
+function filtered(){
+ let rows=all().filter(q=>!state.hidden.includes(q.id));
+ if(state.onlyFavorites)rows=rows.filter(q=>state.favorites.includes(q.id));
+ if(state.query){const q=state.query.toLocaleLowerCase('de');rows=rows.filter(s=>(s.name+' '+s.symbol).toLocaleLowerCase('de').includes(q))}
+ rows.sort((a,b)=>state.sort==='change'?(b.percent??-1e10)-(a.percent??-1e10)||a.name.localeCompare(b.name,'de'):
+  state.sort==='price'?(b.close??-1e10)-(a.close??-1e10)||a.name.localeCompare(b.name,'de'):
+  a.name.localeCompare(b.name,'de'));
+ return rows;
 }
-function list(snapshot){const items=chosen(snapshot);return items.length?items.map(displayRow).join(''):
- '<div class="mevi-stocks-empty">Noch keine Aktien ausgewählt.</div>'}
+function summary(){
+ const a=all(),known=a.filter(x=>x.percent!==null),winners=known.filter(x=>x.percent>0).length,
+ losers=known.filter(x=>x.percent<0).length;
+ return '<div class="mevi-fin-summary"><div><small>Aktien</small><strong>'+a.length+'</strong></div>'+
+ '<div><small>Im Plus</small><strong class="up">'+winners+'</strong></div>'+
+ '<div><small>Im Minus</small><strong class="down">'+losers+'</strong></div>'+
+ '<div><small>Favoriten</small><strong>'+a.filter(q=>state.favorites.includes(q.id)).length+'</strong></div></div>';
+}
+function tickerRow(q){
+ const liked=state.favorites.includes(q.id),stockId=esc(q.id),spark=graph(series(q.id),150,45,'spark');
+ return '<article class="mevi-fin-row"><button class="mevi-fin-star'+(liked?' is-fav':'')+'" type="button" '+
+ 'aria-label="'+(liked?'Favorit entfernen':'Zu Favoriten')+'" aria-pressed="'+liked+'" onclick="MeviStocks.favorite(\''+stockId+'\')">'+(liked?'★':'☆')+'</button>'+
+ '<button class="mevi-fin-open" type="button" onclick="MeviStocks.open(\''+stockId+'\')" aria-label="'+esc(q.name)+' Kursdetails öffnen">'+
+ '<span class="mevi-fin-symbol"><strong>'+esc(q.name)+'</strong><small>'+esc(q.symbol)+(q.market?' · '+esc(q.market):'')+'</small></span>'+
+ '<span class="mevi-fin-spark">'+spark+'</span>'+
+ '<span class="mevi-fin-values"><strong>'+money(q.close,q.currency)+'</strong><small class="'+color(q)+'">'+esc(change(q))+'</small></span></button></article>';
+}
+function toolbar(){
+ return '<div class="mevi-fin-toolbar"><input id="mevi-fin-search" aria-label="Aktien suchen" type="search" placeholder="Aktie suchen" value="'+esc(state.query)+'" oninput="MeviStocks.search(this.value)">'+
+ '<select id="mevi-fin-sort" aria-label="Sortierung" onchange="MeviStocks.sort(this.value)">'+
+ [['name','Name A–Z'],['change','Tagesperformance'],['price','Kurs absteigend']].map(([id,name])=>'<option value="'+id+'"'+(id===state.sort?' selected':'')+'>'+name+'</option>').join('')+'</select>'+
+ '<button class="'+(state.onlyFavorites?'active':'')+'" type="button" onclick="MeviStocks.favoritesOnly()" aria-pressed="'+state.onlyFavorites+'">★ Favoriten</button>'+
+ '<button type="button" onclick="MeviStocks.toggleHidden()">Ausgeblendet ('+state.hidden.length+')</button></div>';
+}
+function detailHTML(){
+ if(!state.detail)return '';
+ const q=all().find(x=>x.id===state.detail);
+ if(!q){state.detail='';return ''}
+ const points=series(q.id);
+ const min=points.length?Math.min(...points.map(x=>x.value)):null,max=points.length?Math.max(...points.map(x=>x.value)):null;
+ return '<section class="mevi-fin-detail" aria-label="Kursdetails"><div class="mevi-fin-detailhead"><div><small>'+esc(q.symbol)+'</small><h3>'+esc(q.name)+'</h3></div>'+
+ '<button type="button" onclick="MeviStocks.close()" aria-label="Details schließen">×</button></div>'+
+ '<div class="mevi-fin-detailprice"><strong>'+money(q.close,q.currency)+'</strong><span class="'+color(q)+'">'+esc(change(q))+'</span></div>'+
+ '<div class="mevi-fin-period">'+periods.map(d=>'<button type="button" class="'+(state.days===d?'active':'')+'" onclick="MeviStocks.period('+d+')">'+(d===1?'1T':d===7?'7T':'30T')+'</button>').join('')+'</div>'+
+ '<div class="mevi-fin-detailchart">'+(state.historyLoading?'<div class="mevi-fin-nochart">Historie wird geladen …</div>':graph(points,800,225,'big'))+'</div>'+
+ '<div class="mevi-fin-detailstats"><span>Tief <b>'+(min===null?'–':money(min,q.currency))+'</b></span><span>Hoch <b>'+(max===null?'–':money(max,q.currency))+'</b></span>'+
+ '<span>Messpunkte <b>'+points.length+'</b></span><span>Aktualisiert <b>'+esc(recency(q.updated))+'</b></span></div>'+
+ (state.historyError?'<p class="mevi-fin-error">'+esc(state.historyError)+'</p>':'')+
+ '<p class="mevi-fin-hint">Verlauf aus Home Assistant Recorder, keine Börsen-Tickdaten. Zeitraum hängt von der gespeicherten Historie ab.</p></section>';
+}
+function hiddenHTML(){
+ if(!state.hiddenOpen)return '';
+ const available=all().filter(q=>state.hidden.includes(q.id));
+ return '<div class="mevi-fin-hidden">'+(available.length?available.map(q=>'<button type="button" onclick="MeviStocks.show(\''+esc(q.id)+'\')">+ '+esc(q.name)+'</button>').join(''):
+ '<span>Keine ausgeblendeten Aktien</span>')+'</div>';
+}
+function mainHTML(){
+ const snap=state.snapshot||snapshot(),rows=filtered();
+ if(!snap.connected)return '<div class="mevi-fin-empty">Home Assistant ist nicht verbunden. Bitte im Home-Assistant-Tab die API-Verbindung herstellen.</div>';
+ if(!snap.sensors.length)return '<div class="mevi-fin-empty">Keine Easy-Stock-Sensoren vorhanden. Füge Aktien einmalig in Home Assistant hinzu; MeviCar übernimmt sie automatisch.</div>';
+ return summary()+toolbar()+hiddenHTML()+
+ '<div class="mevi-fin-results">'+(rows.length?rows.map(tickerRow).join(''):
+ '<div class="mevi-fin-empty">Keine passenden Aktien. Suche oder Favoritenfilter ändern.</div>')+'</div>'+
+ (state.detail?detailHTML():'');
+}
 function html(compact=false){
- const snap=current(),options=available(snap),selected=new Set(state.hasSelection?state.selected:options.map(x=>x.entity_id));
- return '<section class="mevi-stocks'+(compact?' is-compact':'')+'" aria-label="Aktienkurse">'+
- '<header class="mevi-stocks-header"><div><small>MEVICAR NEXT · HOME ASSISTANT</small><strong>Aktienkurse</strong></div>'+
- '<button id="mevi-stocks-refresh" type="button" onclick="MeviStocks.refresh()">↻ Aktualisieren</button></header>'+
- '<div class="mevi-stocks-add"><select id="mevi-stocks-entity" aria-label="Easy-Stock-Sensor auswählen">'+
- '<option value="">Aktie aus Home Assistant auswählen …</option>'+
- options.filter(s=>!selected.has(s.entity_id)).map(s=>'<option value="'+esc(s.entity_id)+'">'+esc((s.name||s.symbol||s.entity_id)+' · '+(s.symbol||s.entity_id))+'</option>').join('')+
- '</select><button type="button" onclick="MeviStocks.add()">+ Hinzufügen</button></div>'+
- '<div id="mevi-stocks-status" class="mevi-stocks-status" role="status">'+esc(status(snap))+'</div>'+
- '<div id="mevi-stocks-list" class="mevi-stocks-list">'+list(snap)+'</div>'+
- '<footer class="mevi-stocks-footer">Quelle: Home Assistant · Easy Stock (Yahoo Finance). Kurse können verzögert sein. '+
- '<a href="https://github.com/derspe/ha-easy-stock" target="_blank" rel="noopener noreferrer">Easy Stock einrichten</a></footer></section>';
+ state.snapshot=snapshot();
+ return '<section class="mevi-stocks mevi-fin'+(compact?' is-compact':'')+'" aria-label="Aktienkurse">'+
+ '<header class="mevi-fin-header"><div><small>MEVICAR NEXT · HOME ASSISTANT</small><strong>Aktienkurse</strong></div>'+
+ '<button type="button" id="mevi-fin-refresh" onclick="MeviStocks.refresh()">↻ Aktualisieren</button></header>'+
+ '<div class="mevi-fin-message" id="mevi-fin-message" role="status">'+esc(state.message||(!state.snapshot.connected?'HA-Verbindung benötigt':'Automatisch aus Home Assistant synchronisiert'))+'</div>'+
+ '<div class="mevi-fin-main" id="mevi-fin-main">'+mainHTML()+'</div>'+
+ '<footer class="mevi-fin-footer">Daten: Easy Stock / Home Assistant · verzögerte Kurse möglich · keine Anlageberatung</footer></section>';
 }
-function el(id){return document.getElementById('mevi-stocks-'+id)}
-function redraw(){
+function update(){
  if(!state.mounted)return;
- const snap=current(),root=document.querySelector('.mevi-stocks');if(!root)return;
- // Update only the data and selector; preserve the user's active view.
- const options=available(snap),selected=new Set(state.hasSelection?state.selected:options.map(x=>x.entity_id));
- const selector=el('entity');
- if(selector){const previous=selector.value;selector.innerHTML='<option value="">Aktie aus Home Assistant auswählen …</option>'+
-  options.filter(s=>!selected.has(s.entity_id)).map(s=>'<option value="'+esc(s.entity_id)+'">'+esc((s.name||s.symbol||s.entity_id)+' · '+(s.symbol||s.entity_id))+'</option>').join('');
-  if([...selector.options].some(o=>o.value===previous))selector.value=previous;}
- const listEl=el('list');if(listEl)listEl.innerHTML=list(snap);
- const statusEl=el('status');if(statusEl)statusEl.textContent=status(snap);
- const button=el('refresh');if(button)button.disabled=state.loading;
+ state.snapshot=snapshot();
+ const target=document.getElementById('mevi-fin-main');
+ if(target)target.innerHTML=mainHTML();
+ const msg=document.getElementById('mevi-fin-message');
+ if(msg)msg.textContent=state.message||(!state.snapshot.connected?'HA-Verbindung benötigt':'Automatisch aus Home Assistant synchronisiert');
+ const button=document.getElementById('mevi-fin-refresh');
+ if(button)button.disabled=state.loading;
 }
-function add(){
- const id=el('entity')?.value||'';
- if(!validEntity(id)){state.status='Bitte zuerst eine verfügbare Aktie auswählen.';redraw();return}
- const snap=current();if(!available(snap).some(s=>s.entity_id===id)){state.status='Sensor nicht gefunden.';redraw();return}
- const visible=state.hasSelection?state.selected:available(snap).map(s=>s.entity_id);
- if(visible.includes(id)){state.status='Aktie ist bereits enthalten.';redraw();return}
- if(visible.length>=25){state.status='Maximal 25 Aktien in der Watchlist.';redraw();return}
- state.selected=[...visible,id];state.hasSelection=true;save();state.status='Aktie hinzugefügt.';redraw();
+function search(v){
+ state.query=String(v||'').slice(0,80);
+ // Avoid replacing the focused search input on every keystroke.
+ const root=document.getElementById('mevi-fin-main');if(!root)return;
+ const results=root.querySelector('.mevi-fin-results');
+ if(results){const rows=filtered();results.innerHTML=rows.length?rows.map(tickerRow).join(''):'<div class="mevi-fin-empty">Keine passenden Aktien.</div>'}
 }
-function remove(id){
- if(!validEntity(id))return;
- const snap=current();const visible=state.hasSelection?state.selected:available(snap).map(s=>s.entity_id);
- state.selected=visible.filter(x=>x!==id);state.hasSelection=true;save();state.status='Aktie aus Watchlist entfernt.';redraw();
+function sort(v){if(!['name','change','price'].includes(v))return;state.sort=v;save();update()}
+function favorite(id){if(!valid(id))return;const found=new Set(state.favorites);if(found.has(id))found.delete(id);else found.add(id);state.favorites=[...found];save();update()}
+function favoritesOnly(){state.onlyFavorites=!state.onlyFavorites;update()}
+function toggleHidden(){state.hiddenOpen=!state.hiddenOpen;update()}
+function hide(id){if(!valid(id))return;state.hidden=[...new Set([...state.hidden,id])];save();update()}
+function show(id){state.hidden=state.hidden.filter(x=>x!==id);save();update()}
+function open(id){if(!valid(id)||!all().some(s=>s.id===id))return;state.detail=id;update();loadHistory()}
+function close(){state.detail='';update()}
+function period(days){if(!periods.includes(days))return;state.days=days;state.history={};state.historyAt=0;save();update();loadHistory()}
+async function loadHistory(){
+ if(!state.mounted||!state.snapshot?.connected||!window.MeviHA?.stockHistory)return;
+ const run=++state.historyId;
+ // One bounded request for visible stocks; the detail stock is always included.
+ const ids=[...new Set([...filtered().map(x=>x.id),state.detail].filter(valid))].slice(0,25);
+ if(!ids.length)return;
+ state.historyLoading=true;state.historyError='';update();
+ try{
+  const history=await window.MeviHA.stockHistory(ids,state.days);
+  if(run!==state.historyId||!state.mounted)return;
+  state.history=history||{};state.historyAt=Date.now();
+ }catch(error){if(run===state.historyId){state.historyError='Verlauf nicht verfügbar: '+String(error?.message||error).slice(0,110);state.history={}}}
+ finally{if(run===state.historyId){state.historyLoading=false;update()}}
 }
 async function refresh(){
- if(!state.mounted||state.loading)return;
- if(!window.MeviHA?.stockSnapshot){state.status='Home-Assistant-Modul fehlt.';redraw();return}
- const snap=read();
- if(!snap.connected){state.status='Home Assistant zuerst im Home-Assistant-Tab verbinden.';redraw();return}
- const run=++state.requestId;state.loading=true;state.status='Home Assistant aktualisiert die Sensordaten …';redraw();
- try{
-  await window.MeviHA.refresh({force:true});
-  if(run!==state.requestId||!state.mounted)return;
-  const next=read();state.status=next.connected?'Sensoren aktualisiert · '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})+
-   ' (HA-Kursintervall kann länger sein).':'Home Assistant ist nicht verbunden.';
- }catch(e){if(run===state.requestId)state.status='Aktualisierung fehlgeschlagen: '+String(e?.message||'Verbindung').slice(0,120)}
- finally{if(run===state.requestId){state.loading=false;redraw()}}
+ if(state.loading||!state.mounted)return;
+ if(!state.snapshot?.connected){state.message='Bitte zuerst Home Assistant verbinden.';update();return}
+ const run=++state.requestId;state.loading=true;state.message='Home Assistant wird aktualisiert …';update();
+ try{await window.MeviHA.refresh({force:true});if(run!==state.requestId||!state.mounted)return;
+  state.message='Aktualisiert · '+new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+  update();await loadHistory();
+ }catch(e){if(run===state.requestId)state.message='Aktualisierung fehlgeschlagen: '+String(e?.message||e).slice(0,100)}
+ finally{if(run===state.requestId){state.loading=false;update()}}
 }
-function mount(){state.mounted=!!document.querySelector('.mevi-stocks');if(state.mounted)redraw()}
-function unmount(){state.mounted=false;state.requestId++;state.loading=false}
-window.MeviStocks={html,mount,unmount,refresh,add,remove,parseSensor,debug:()=>({mounted:state.mounted,selected:[...state.selected],hasSelection:state.hasSelection})};
+function mount(){state.mounted=!!document.querySelector('.mevi-fin');if(state.mounted){update();loadHistory()}}
+function unmount(){state.mounted=false;state.requestId++;state.historyId++;state.loading=false;state.historyLoading=false}
+window.MeviStocks={html,mount,unmount,refresh,search,sort,favorite,favoritesOnly,toggleHidden,hide,show,open,close,period,
+ parseSensor,chartPath,debug:()=>({mounted:state.mounted,days:state.days,detail:state.detail,historyLoading:state.historyLoading,auto:!state.hidden.length})};
 })();
