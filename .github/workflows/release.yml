@@ -24,6 +24,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Check production web regression gates before tagging
+        run: |
+          node --check stocks.js
+          node --check homeassistant.js
+          node tests/stocks-smoke.mjs
+          node tests/launcher-landscape-smoke.mjs
+          node tests/display-profiles-smoke.mjs
+          node tests/navigation-google-smoke.mjs
+          node tests/homeassistant-smoke.mjs
+          node tests/youtube-smoke.mjs
+          node tests/tv-smoke.mjs
       - name: Validate version, create tag and GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
