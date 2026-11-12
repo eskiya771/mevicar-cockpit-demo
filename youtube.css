@@ -95,3 +95,24 @@ html[data-theme="cyberpunk"] .youtube-host{border-color:#f15bd383}
  flex:0 0 auto;min-height:28px;padding:3px 12px}
 .mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-stage{
  flex:1;min-height:0;min-width:0}
+
+/* Local quick access: scrolls within the YouTube module, never over the dock. */
+.mevi-youtube-library-host{flex:none;max-height:clamp(50px,13vh,102px);overflow-y:auto;overscroll-behavior:contain;
+ background:#10263a;border-bottom:1px solid #8cbcd032;padding:5px 10px}
+.mevi-youtube-library{display:flex;gap:10px;min-width:0}
+.mevi-youtube-library>div{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.mevi-youtube-library strong{font-size:10px;color:#9bd9e6}
+.mevi-youtube-library small{font-size:10px;color:#8eafc5}
+.mevi-youtube-chips{display:flex;overflow-x:auto;gap:5px;scrollbar-width:thin;min-width:0}
+.mevi-youtube-shell .mevi-youtube-chip{font-size:10px;min-height:27px;white-space:nowrap;
+ flex:none;padding:3px 7px;border-radius:8px;max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.mevi-youtube-shell.is-compact .mevi-youtube-library-host{max-height:48px;padding:3px 6px}
+.mevi-youtube-shell.is-compact .mevi-youtube-library{gap:5px}
+.mevi-youtube-shell.is-compact .mevi-youtube-chip{min-height:23px}
+.mevi-youtube-shell.is-compact.mevi-youtube-focus .mevi-youtube-library-host{display:none}
+@media (orientation:landscape) and (max-height:510px){
+ .mevi-youtube-library-host{max-height:48px;padding:3px 6px}
+ .mevi-youtube-library strong{font-size:9px}
+ .mevi-youtube-shell .mevi-youtube-chip{min-height:23px}
+ .mevi-youtube-shell .mevi-youtube-favorite{padding-left:5px;padding-right:5px}
+}
