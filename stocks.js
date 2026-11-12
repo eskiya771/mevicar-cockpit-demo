@@ -77,25 +77,22 @@ function periodsHTML(){
 }
 function html(compact=false){
  state.compact=!!compact;
- const item=current();
  return '<section class="mevi-stocks mevi-tv'+(compact?' is-compact':'')+'" aria-label="Aktienkurse mit TradingView">'+
-  '<header class="mevi-tv-heading"><div><small>MEVICAR NEXT · FINANZEN</small><strong>Aktien & Märkte</strong></div>'+
-  '<span>Historische Charts von TradingView</span></header>'+
+  '<div class="mevi-tv-layout"><nav class="mevi-tv-sidebar" aria-label="Meine Watchlist">'+
   '<div class="mevi-tv-actions"><input id="mevi-tv-search" aria-label="Aktien suchen" type="search" placeholder="Aktie suchen…" value="'+escapeHTML(state.query)+
-  '" oninput="MeviStocks.search(this.value)"/><button type="button" class="'+(state.onlyFavorites?'active':'')+
-  '" onclick="MeviStocks.favoritesOnly()" aria-pressed="'+state.onlyFavorites+'">★ Favoriten</button>'+
-  '<button type="button" onclick="MeviStocks.toggleAdd()" aria-label="Aktie hinzufügen">+ Aktie</button></div>'+
+  '" oninput="MeviStocks.search(this.value)"/><button type="button" class="mevi-tv-fav-filter '+(state.onlyFavorites?'active':'')+
+  '" onclick="MeviStocks.favoritesOnly()" aria-label="Nur Favoriten" title="Favoriten filtern" aria-pressed="'+state.onlyFavorites+'">★</button>'+
+  '<button type="button" onclick="MeviStocks.toggleAdd()" aria-label="Aktie hinzufügen" title="Aktie hinzufügen">+</button></div>'+
   '<div id="mevi-tv-add" class="mevi-tv-add" hidden><input id="mevi-tv-symbol" aria-label="TradingView-Börsensymbol" placeholder="NASDAQ:MSFT" maxlength="60" autocapitalize="characters"/>'+
   '<input id="mevi-tv-name" aria-label="Anzeigename" placeholder="Name (optional)" maxlength="50"/>'+
-  '<button type="button" onclick="MeviStocks.add()">Hinzufügen</button></div>'+
-  '<div class="mevi-tv-layout"><nav class="mevi-tv-list" aria-label="Meine Watchlist" id="mevi-tv-list">'+listHTML()+'</nav>'+
-  '<div class="mevi-tv-right"><div class="mevi-tv-charttools"><strong id="mevi-tv-selected">'+escapeHTML(item?.name||'Aktie wählen')+'</strong>'+
+  '<button type="button" onclick="MeviStocks.add()">OK</button></div>'+
+  '<div class="mevi-tv-list" id="mevi-tv-list">'+listHTML()+'</div>'+
+  '<a class="mevi-tv-external" id="mevi-tv-link" href="'+symbolURL(state.symbol)+
+  '" target="_blank" rel="noopener noreferrer">TradingView ↗</a></nav>'+
+  '<div class="mevi-tv-right"><div class="mevi-tv-charttools"><strong id="mevi-tv-selected">'+escapeHTML(current()?.name||'Aktie wählen')+'</strong>'+
   '<div class="mevi-tv-periods" id="mevi-tv-periods">'+periodsHTML()+'</div></div>'+
   '<div class="mevi-tv-chart" id="mevi-tv-chart" aria-label="TradingView Kurschart">'+
-  '<div class="mevi-tv-loading">TradingView-Chart wird geladen …</div></div>'+
-  '<div class="mevi-tv-source"><a id="mevi-tv-link" href="'+symbolURL(item?.symbol||'')+
-  '" target="_blank" rel="noopener noreferrer">Chart auf TradingView öffnen</a>'+
-  '<span>Charts und Kurse von TradingView · Börsendaten können verzögert sein</span></div></div></div>'+
+  '<div class="mevi-tv-loading">TradingView-Chart wird geladen …</div></div></div></div>'+
   '<div class="mevi-tv-feedback" id="mevi-tv-feedback" role="status">'+escapeHTML(state.status)+'</div></section>';
 }
 function feedback(msg){state.status=msg;const n=element('feedback');if(n)n.textContent=msg}
@@ -108,8 +105,8 @@ function chartConfig(symbol,period,compact){
  const range=PERIODS.find(x=>x.key===period)||PERIODS[3];
  return {autosize:true,symbol,interval:range.interval,range:range.range,timezone:'Europe/Berlin',theme:'dark',style:'3',locale:'de',
   backgroundColor:'#081622',gridColor:'rgba(109,153,174,0.12)',allow_symbol_change:true,calendar:false,details:false,
-  hide_side_toolbar:true,hide_top_toolbar:compact,hide_legend:compact,hide_volume:compact,
-  withdateranges:!compact,save_image:false,watchlist:[],compareSymbols:[],studies:[],support_host:'https://www.tradingview.com'};
+  hide_side_toolbar:true,hide_top_toolbar:true,hide_legend:true,hide_volume:true,
+  withdateranges:false,save_image:false,watchlist:[],compareSymbols:[],studies:[],support_host:'https://www.tradingview.com'};
 }
 function buildChart(){
  if(!state.mounted)return;
