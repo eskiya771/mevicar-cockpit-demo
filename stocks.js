@@ -6,6 +6,7 @@ const STORAGE='mevicar-stocks-tradingview-v1';
 // Explicitly dated reference values from user-supplied screenshots, never live quotes.
 const REFERENCE_QUOTES={'XETR:SIE':{price:281.70,currency:'EUR',date:'2026-11-12'},'NASDAQ:TSLA':{price:397.45,currency:'USD',date:'2026-11-12'}};
 const CURRENCIES={'XETR:SIE':'EUR','NASDAQ:TSLA':'USD','NASDAQ:NVDA':'USD','NASDAQ:AAPL':'USD','TVC:DEU40':'EUR'};
+const KNOWN_SYMBOLS={'SIE':'XETR:SIE','SIE.DE':'XETR:SIE','SIEMENS':'XETR:SIE','TSLA':'NASDAQ:TSLA','TESLA':'NASDAQ:TSLA','NVDA':'NASDAQ:NVDA','NVIDIA':'NASDAQ:NVDA','AAPL':'NASDAQ:AAPL','APPLE':'NASDAQ:AAPL','DAX':'TVC:DEU40','DEU40':'TVC:DEU40','BMW':'XETR:BMW','BMW.DE':'XETR:BMW'};
 const DEFAULTS=[
  {symbol:'XETR:SIE',name:'Siemens'},
  {symbol:'NASDAQ:TSLA',name:'Tesla'},
@@ -24,6 +25,7 @@ const state={items:DEFAULTS.map(x=>({...x})),favorites:[],symbol:'XETR:SIE',
  period:'12M',query:'',onlyFavorites:false,compact:false,mounted:false,generation:0,status:'',manualQuotes:{}};
 const escapeHTML=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 const validSymbol=value=>/^[A-Z0-9^][A-Z0-9^._-]{0,29}:[A-Z0-9^][A-Z0-9^._-]{0,29}$/.test(String(value||''));
+function resolveSymbol(value){const raw=String(value||'').toUpperCase().trim();return KNOWN_SYMBOLS[raw]||raw}
 function read(){
  try{
   const raw=JSON.parse(localStorage.getItem(STORAGE)||'{}');
@@ -167,16 +169,26 @@ function favorite(symbol){if(!state.items.some(x=>x.symbol===symbol))return;
  state.favorites=state.favorites.includes(symbol)?state.favorites.filter(x=>x!==symbol):[...state.favorites,symbol];save();updateList()}
 function favoritesOnly(){state.onlyFavorites=!state.onlyFavorites;const n=document.querySelector('.mevi-tv-actions button');if(n){n.classList.toggle('active',state.onlyFavorites);n.setAttribute('aria-pressed',String(state.onlyFavorites))}updateList()}
 function search(query){state.query=String(query||'').slice(0,60);updateList()}
-function toggleAdd(){const panel=element('add');if(panel){panel.hidden=!panel.hidden;if(!panel.hidden)element('symbol')?.focus()}}
-function add(){
- const raw=String(element('symbol')?.value||'').toUpperCase().trim(),name=String(element('name')?.value||'').trim().slice(0,50);
- if(!validSymbol(raw)){feedback('Bitte Börse:Symbol eingeben, z. B. NASDAQ:MSFT oder XETR:BMW.');return}
- if(state.items.some(x=>x.symbol===raw)){select(raw);feedback('Wert ist bereits vorhanden.');return}
- if(state.items.length>=25){feedback('Maximal 25 Werte in der Watchlist.');return}
- state.items.push({symbol:raw,name:name||raw});state.symbol=raw;state.query='';save();
- const searchBox=element('search');if(searchBox)searchBox.value='';
+function toggleAdd(){const panel=element('add');if(panel){panel.hidden=!panel.hidden;if(!panel.hidden){feedback('');element('symbol')?.focus()}else feedback('')}}
+function resetAdd(){
  const panel=element('add');if(panel)panel.hidden=true;
- updateList();updateChart();feedback(raw+' hinzugefügt.');
+ const symbol=element('symbol');if(symbol)symbol.value='';
+ const name=element('name');if(name)name.value='';
+ const search=element('search');if(search)search.value='';
+ state.query='';
+}
+function add(){
+ const raw=String(element('symbol')?.value||'').toUpperCase().trim();
+ const symbol=resolveSymbol(raw),name=String(element('name')?.value||'').trim().slice(0,50);
+ if(!validSymbol(symbol)){feedback('Bitte Börse:Symbol angeben, z. B. XETR:SIE. SIE, TSLA, NVDA oder AAPL funktionieren direkt.');return}
+ if(state.items.some(x=>x.symbol===symbol)){
+  resetAdd();select(symbol);feedback('Aktie bereits vorhanden – ausgewählt.');return
+ }
+ if(state.items.length>=25){feedback('Maximal 25 Werte in der Watchlist.');return}
+ const defaultName=DEFAULTS.find(x=>x.symbol===symbol)?.name;
+ state.items.push({symbol,name:name||defaultName||symbol});
+ state.symbol=symbol;
+ resetAdd();save();updateList();updateChart();feedback('Aktie hinzugefügt: '+(name||defaultName||symbol)+'.');
 }
 function remove(symbol){
  if(!validSymbol(symbol))return;
@@ -188,6 +200,6 @@ function remove(symbol){
 }
 function mount(){state.mounted=!!document.querySelector('.mevi-tv');if(state.mounted){updateList();buildChart()}}
 function unmount(){state.mounted=false;state.generation++}
-window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,editQuote,validSymbol,chartConfig,
+window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,editQuote,validSymbol,resolveSymbol,chartConfig,
  debug:()=>({mounted:state.mounted,symbol:state.symbol,period:state.period,items:state.items.map(x=>x.symbol),favorites:[...state.favorites]})};
 })();
