@@ -13,7 +13,7 @@ const DEFAULT_TZ=Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Berli
 const state={tab:'agenda',month:new Date().getMonth(),year:new Date().getFullYear(),selectedDay:'',
   sources:[],hidden:[],clientId:'',googleToken:'',googleExpiry:0,googleClient:null,
   googleCalendars:[],googleEvents:[],imports:[],loading:false,message:'',error:'',
-  mounted:false,timer:null,requestId:0,googlePending:false};
+  mounted:false,timer:null,requestId:0,googlePending:false,lastRefresh:0};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
 const $$=id=>document.getElementById(id);
 function saveSettings(){
@@ -247,8 +247,9 @@ function eventTile(event){
  const begin=new Date(event.start),finish=new Date(event.end);
  const allDay=event.allDay;
  let when=allDay?'Ganztägig':fmtDate(begin,{hour:'2-digit',minute:'2-digit'})+' – '+fmtDate(finish,{hour:'2-digit',minute:'2-digit'});
- const source=sourceList().find(x=>x.id===event.sourceId)?.name||'Kalender';
- return '<article class="mevi-cal-event" aria-label="'+esc(event.title)+'">'+
+ const meta=sourceList().find(x=>x.id===event.sourceId);const source=meta?.name||'Kalender';
+ const color=/^#[0-9a-f]{6}$/i.test(meta?.color||'')?meta.color:'#4ad5eb';
+ return '<article class="mevi-cal-event" style="--cal-accent:'+color+'" aria-label="'+esc(event.title)+'">'+
  '<span class="mevi-cal-event-time">'+esc(when)+'</span>'+
  '<div class="mevi-cal-event-copy"><strong>'+esc(event.title)+'</strong>'+
  (event.location?'<span>⌖ '+esc(event.location)+'</span>':'')+
@@ -259,7 +260,7 @@ function eventGroup(date,items){
  '</h3>'+(items.map(eventTile).join('')||'<p class="mevi-cal-no-events">Keine Termine</p>')+'</section>';
 }
 function agendaHTML(){
- const today=dayStart(new Date()),end=dayStart(new Date(today+9*DAY));
+ const today=dayStart(new Date()),end=dayStart(new Date(today+7*DAY));
  const list=eventsWindow(today,end);
  const columns=[];
  for(let d=0;d<7;d++){
@@ -267,7 +268,7 @@ function agendaHTML(){
   const after=new Date(current);after.setDate(after.getDate()+1);
   const start=current.getTime(),stop=after.getTime();
   const day=list.filter(e=>e.start<stop&&e.end>start);
-  if(day.length||d===0)columns.push(eventGroup(current,day));
+  columns.push(eventGroup(current,day));
  }
  const date=fmtDate(new Date(),{weekday:'long',day:'numeric',month:'long',year:'numeric'});
  return '<div class="mevi-cal-agenda"><div class="mevi-cal-highlight">'+
@@ -337,6 +338,13 @@ function sourcesHTML(){
  '<small>OAuth-Herkunft in Google Cloud: https://eskiya771.github.io · Kalender-API aktivieren · Scope calendar.readonly.</small>'+
  '<small>Google-Zugriffstoken und Google-Termine werden nicht dauerhaft gespeichert. Nach einem Neustart ist eine Anmeldung nötig.</small></section></div>';
 }
+function compactHTML(){
+ const now=Date.now(),until=dayStart(new Date(now+8*DAY));
+ const upcoming=eventsWindow(now,until).slice(0,7);
+ return '<div class="mevi-cal-compact-list"><div class="mevi-cal-compact-title">Nächste Termine</div>'+
+ (upcoming.length?upcoming.map(e=>'<div class="mevi-cal-compact-item"><span>'+esc(fmtDate(new Date(e.start),{weekday:'short',day:'2-digit',month:'2-digit'}))+' · '+esc(formatTime(e.start,e.allDay))+'</span><strong>'+esc(e.title)+'</strong></div>').join(''):
+ '<p class="mevi-cal-no-events">Keine anstehenden Termine</p>')+'</div>';
+}
 function contentHTML(){
  return state.tab==='month'?monthHTML():state.tab==='sources'?sourcesHTML():agendaHTML();
 }
@@ -348,17 +356,17 @@ function statusHTML(){
 function html(compact=false){
  return '<section class="mevi-cal-shell'+(compact?' compact':'')+'" aria-label="Kalender">'+
  '<header class="mevi-cal-header"><div><small>MEVICAR NEXT · KALENDER</small><strong>Kalender & Termine</strong></div>'+
- '<button type="button" title="Aktualisieren" onclick="MeviCalendar.refresh()">↻</button></header>'+
+ '<div class="mevi-cal-header-actions"><button type="button" title="Kalender-Einstellungen" aria-label="Kalender-Einstellungen" onclick="MeviCalendar.tab(\'sources\')">⚙</button><button type="button" title="Aktualisieren" aria-label="Aktualisieren" onclick="MeviCalendar.refresh()">↻</button></div></header>'+
  '<nav class="mevi-cal-tabs" aria-label="Kalenderansichten">'+
- [['agenda','7 Tage'],['month','Monat'],['sources','Kalender']].map(([tab,label])=>
+ [['agenda','7 Tage'],['month','Monat']].map(([tab,label])=>
  '<button type="button" class="'+(state.tab===tab?'active':'')+'" aria-pressed="'+(state.tab===tab)+
  '" onclick="MeviCalendar.tab(\''+tab+'\')">'+label+'</button>').join('')+'</nav>'+
  '<div class="mevi-cal-status" id="mevi-cal-status" role="status">'+statusHTML()+'</div>'+
- '<main class="mevi-cal-main" id="mevi-cal-content">'+contentHTML()+'</main></section>';
+ '<main class="mevi-cal-main" id="mevi-cal-content">'+(compact&&state.tab!=='sources'?compactHTML():contentHTML())+'</main></section>';
 }
 function paint(){
  const root=document.querySelector('.mevi-cal-shell');if(!root)return;
- const content=$$('mevi-cal-content');if(content)content.innerHTML=contentHTML();
+ const content=$$('mevi-cal-content');if(content)content.innerHTML=root.classList.contains('compact')&&state.tab!=='sources'?compactHTML():contentHTML();
  const status=$$('mevi-cal-status');if(status)status.innerHTML=statusHTML();
  for(const button of root.querySelectorAll('.mevi-cal-tabs button')){
   const key=button.textContent==='7 Tage'?'agenda':button.textContent==='Monat'?'month':'sources';
@@ -478,14 +486,15 @@ async function refreshGoogle(){
    for(const event of events){const normalized=normalizeGoogleEvent(event,'g:'+cal.id);if(normalized)all.push(normalized)}
   }
   if(serial!==state.requestId)return;
-  state.googleEvents=all;state.message='Google Kalender: '+all.length+' Termine aktualisiert.';
+  state.googleEvents=all;state.lastRefresh=Date.now();state.message='Google Kalender: '+all.length+' Termine aktualisiert.';
  }catch(e){if(serial===state.requestId)state.error=e.message||'Google Kalender nicht verfügbar.'}
  finally{if(serial===state.requestId){state.loading=false;paint()}}
 }
 function disconnectGoogle(redraw=true){
  state.requestId++;state.googleToken='';state.googleExpiry=0;state.googleClient=null;
  state.googleEvents=[];state.googleCalendars=[];state.loading=false;
- if(redraw){state.message='Google-Zugriff für diese Sitzung getrennt.';paint()}
+ state.lastRefresh=0;
+  if(redraw){state.message='Google-Zugriff für diese Sitzung getrennt.';paint()}
 }
 function refresh(){
  state.error='';if(state.googleToken)return refreshGoogle();
@@ -497,10 +506,11 @@ function mount(){
  if(!state.mounted)return;
  if(state.timer!==null)clearInterval(state.timer);
  state.timer=setInterval(()=>{
-  if(state.mounted&&state.googleToken&&Date.now()<state.googleExpiry-45000&&state.tab!=='sources')refreshGoogle();
+  if(state.mounted&&state.googleToken&&Date.now()<state.googleExpiry-45000&&state.tab!=='sources'&&Date.now()-state.lastRefresh>=5*60000)refreshGoogle();
   else if(state.mounted)paint();
  },5*60000);
  if(state.tab==='sources')prepareGSI().catch(()=>{});
+ if(state.googleToken&&!state.loading&&Date.now()-state.lastRefresh>60000)refreshGoogle();
 }
 function unmount(){
  state.mounted=false;if(state.timer!==null){clearInterval(state.timer);state.timer=null}
