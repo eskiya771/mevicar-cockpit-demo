@@ -1,0 +1,64 @@
+/* Road Assist from Classic: route-only HA detection and live warning overlay.
+   Overlay is placed within the Google map; the permanent cockpit dock stays untouched. */
+.mevi-ra-summary{padding:8px 10px;border:1px solid #6cc5de7a;border-radius:10px;background:rgba(5,31,48,.9);
+ display:flex;flex-direction:column;gap:5px;min-width:0;font-size:clamp(10px,1.45vh,13px)}
+.mevi-ra-summary-line{display:flex;gap:7px;align-items:center;flex-wrap:wrap;color:#ebfdff}
+.mevi-ra-summary-line b{white-space:nowrap;letter-spacing:.08em;color:#63eaf5}
+.mevi-ra-summary-line span{color:#e9f6ff;overflow-wrap:anywhere}
+.mevi-ra-summary-actions{display:flex;gap:5px;flex-wrap:wrap}
+.mevi-ra-summary-actions button{min-height:31px;border-radius:8px;border:1px solid #6ad9e08c;
+ padding:4px 8px;background:#205063;color:#eafaff;font-weight:760;font-size:clamp(10px,1.4vh,13px)}
+.mevi-ra-summary small{font-size:clamp(9px,1.2vh,11px);color:#bcd6e4}
+.mg-navigation .mg-route-ready{max-height:calc(100% - 12px);overflow-y:auto;overscroll-behavior:contain}
+.mevi-ra-overlay-shell{position:absolute;z-index:5;right:clamp(8px,1.2vw,20px);bottom:clamp(8px,1.2vh,18px);
+ pointer-events:none;width:min(350px,43%);max-width:calc(100% - 18px)}
+.mevi-ra-overlay{background:linear-gradient(120deg,#11283ef5,#203b54f7);color:#effbff;
+ border:1px solid #68dcf2bd;border-radius:16px;padding:clamp(8px,1.3vh,14px);
+ box-shadow:0 10px 26px #071320c9;display:flex;flex-direction:column;gap:5px}
+.mevi-ra-overlay.mevi-ra-diagnostic{font-size:clamp(10px,1.5vh,13px);background:#112a3eea;
+ border-color:#5faabc9c}
+.mevi-ra-diagnostic strong{font-size:clamp(11px,1.5vh,14px);color:#74e5f0;letter-spacing:.04em}
+.mevi-ra-diagnostic button{pointer-events:auto;min-height:30px;padding:5px;background:#165e77}
+.mevi-ra-alerthead{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#ffb7b7;
+ font-size:clamp(11px,1.45vh,14px);font-weight:850;letter-spacing:.035em}
+.mevi-ra-alerthead span{color:#fff;font-size:clamp(19px,3.3vh,27px);white-space:nowrap;font-variant-numeric:tabular-nums}
+.mevi-ra-alertbody{display:flex;gap:clamp(8px,1vw,12px);align-items:center}
+.mevi-ra-speed{flex:none;width:clamp(47px,6.7vh,74px);height:clamp(47px,6.7vh,74px);
+ border-radius:50%;display:grid;place-items:center;background:white;border:5px solid #fc4153;
+ color:#101826;font-size:clamp(22px,3.2vh,31px);font-weight:900;font-variant-numeric:tabular-nums}
+.mevi-ra-alerttext{display:flex;flex-direction:column;gap:4px;min-width:0}
+.mevi-ra-alerttext strong{font-size:clamp(13px,1.8vh,19px);line-height:1.15}
+.mevi-ra-alerttext small{color:#d4dfe9;font-size:clamp(10px,1.4vh,13px);overflow-wrap:anywhere}
+.mevi-ra-overlay>small{color:#b1cbd8;font-size:clamp(9px,1.1vh,11px)}
+.mevi-ra-overlay.mevi-ra-urgent{border-color:#ff385c;border-width:2px;
+ background:linear-gradient(130deg,#611c37fb,#261930f9);
+ box-shadow:0 0 12px #ff305577,0 10px 35px #120d19bb}
+.mevi-ra-urgent .mevi-ra-alerthead{color:#fff}
+.mevi-ra-tools{padding:clamp(8px,1.3vw,15px);background:#0d2336;border:1px solid #72cddd55;
+ border-radius:12px;display:flex;flex-direction:column;gap:8px;color:#eafaff;min-width:0}
+.mevi-ra-tools h3{margin:0;font-size:clamp(15px,2.1vh,19px)}
+.mevi-ra-tools p{margin:0;color:#bbd4df;font-size:clamp(10px,1.5vh,13px);line-height:1.4}
+.mevi-ra-tools dl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px;font-size:clamp(10px,1.5vh,13px);margin:0}
+.mevi-ra-tools dt{color:#a8cadb}.mevi-ra-tools dd{margin:0;font-weight:750}
+.mevi-ra-tools label{font-size:clamp(10px,1.5vh,13px);font-weight:750}
+.mevi-ra-tools input{height:36px;width:100%;min-width:0;border-radius:8px;background:#081d2e;
+ border:1px solid #7bd0e67a;padding:6px 10px;color:#f8fcff;font:inherit}
+.mevi-ra-tools .mevi-ra-hint{color:#c6d7dc;line-height:1.4}
+.mevi-ra-tool-actions{display:flex;flex-wrap:wrap;gap:6px}
+.mevi-ra-tool-actions button{min-height:36px;padding:6px 9px;background:#1d536c;
+ border:1px solid #6fceec91;border-radius:9px;color:#edfaff;font-size:clamp(10px,1.4vh,13px);font-weight:730}
+.mevi-ra-tool-actions button:disabled{opacity:.45;cursor:not-allowed}
+.mevi-ra-scan-status{min-height:16px;color:#9ee6ee;font-size:clamp(10px,1.4vh,13px)}
+html[data-theme="liquidglass"] .mevi-ra-overlay,
+html[data-theme="liquidglass"] .mevi-ra-summary{backdrop-filter:blur(14px)}
+@media(orientation:landscape) and (max-height:480px){
+ .mevi-ra-overlay-shell{right:5px;bottom:5px;width:min(226px,39%)}
+ .mevi-ra-overlay{padding:6px;gap:3px;border-radius:11px}
+ .mevi-ra-alerthead{font-size:9px}.mevi-ra-alerthead span{font-size:17px}
+ .mevi-ra-speed{height:41px;width:41px;border-width:3px;font-size:17px}
+ .mevi-ra-alerttext strong{font-size:11px}.mevi-ra-alerttext small{font-size:9px}
+ .mevi-ra-overlay>small{font-size:8px}
+ .mevi-ra-summary{padding:5px;gap:3px;font-size:9px}
+ .mevi-ra-summary-actions button{min-height:27px;padding:3px 5px;font-size:9px}
+ .mevi-ra-summary small{display:none}
+}
