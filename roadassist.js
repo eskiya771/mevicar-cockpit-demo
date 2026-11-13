@@ -364,7 +364,7 @@ function routeState(){
   currentMatch:currentMatch?{id:currentMatch.camera.id,ahead:currentMatch.ahead}:null,
   positionValid:!!positionOnRoute,scanState,scanProgress,scanTotal,scanNote,guiding,demo,settings:{enabled:settings.enabled,voice:settings.voice,configSet:!!settings.configId}};
 }
-window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,paint,
+window.MeviRoadAssist={nativeConfig:()=>({configId:settings.configId,enabled:settings.enabled,voice:settings.voice}),onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,paint,
  refresh,setEnabled,setVoice,setConfigId,storeConfig,openScan,infoHTML,scan,cancelScan,
  routeState,project,buildRoute,cameraMatches,sampleRoute,responseCameras,formatMeters};
 })();
