@@ -31,7 +31,7 @@
     navigation:Object.freeze({nativeRoute:async(destination,haSession=null)=>{
       if(!native()||!root.Capacitor?.Plugins?.MeviNativeNavigation)return unsupported('native-navigation');
       if(!Number.isFinite(destination?.lat)||!Number.isFinite(destination?.lng))throw Error('Ungültiges Navigationsziel');
-      return root.Capacitor.Plugins.MeviNativeNavigation.start({lat:destination.lat,lng:destination.lng,title:String(destination.title||destination.name||'Ziel'),haOrigin:haSession?.origin||'',haToken:haSession?.token||''});
+      return root.Capacitor.Plugins.MeviNativeNavigation.start({lat:destination.lat,lng:destination.lng,title:String(destination.title||destination.name||'Ziel'),haOrigin:haSession?.origin||'',haToken:haSession?.token||'',haConfigId:haSession?.configId||'',radarEnabled:haSession?.enabled===false?'false':'true',radarVoice:haSession?.voice===false?'false':'true'});
     }})
   });
   root.MeviPlatform=api;
