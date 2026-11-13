@@ -22,13 +22,14 @@ assert.match(source,/mm-mode-button/,'Same media source buttons as Radio and Mev
 assert.match(settings,/meviSpotifySaveClient/);
 // Simulate Chrome returning after Android has recreated the WebView. The old
 // sessionStorage is empty, but the short-lived PKCE verifier must still work.
-function runNativeCallback(pending) {
+function runNativeCallback(pending, {bridgeCallback = ''} = {}) {
   const saved={
     'mevicar-spotify-client-v1':'testclient1234',
     'mevicar-spotify-auth-v1':JSON.stringify(pending)
   };
   const session={};
   const requests=[];
+  const bridgeActions=[];
   const store=values=>({
     getItem:key=>values[key]??null,
     setItem(key,value){values[key]=String(value)},
@@ -36,7 +37,15 @@ function runNativeCallback(pending) {
   });
   const origin='https://eskiya771.github.io';
   const loc={href:origin+'/mevicar-cockpit-demo/',origin,pathname:'/mevicar-cockpit-demo/'};
-  const window={MeviNativeBridge:{postMessage(){}},render(){},addEventListener(){}};
+  const window={MeviNativeBridge:{postMessage(raw){
+    const req=JSON.parse(raw);
+    bridgeActions.push(req.action);
+    if(!bridgeCallback)return;
+    let reply=null;
+    if(req.action==='spotify.callback.pull')reply={id:req.id,ok:true,callback:bridgeCallback};
+    if(req.action==='spotify.callback.ack')reply={id:req.id,ok:true,acknowledged:true};
+    if(reply && typeof this.onmessage==='function')this.onmessage({data:JSON.stringify(reply)});
+  }},render(){},addEventListener(){}};
   const document={
     getElementById(){return null},
     querySelector(){return null},
@@ -61,7 +70,7 @@ function runNativeCallback(pending) {
       window,document,{},store(saved),store(session),loc,{replaceState(){}},
       fakeFetch,URL,TextEncoder,()=>1,()=>{},()=>1,()=>{},AbortController
     );
-  return {window,saved,session,requests};
+  return {window,saved,session,requests,bridgeActions};
 }
 const native=runNativeCallback({
   state:'state123456',verifier:'pkce-verifier',at:Date.now(),
@@ -80,6 +89,19 @@ assert.equal(await native.window.meviSpotifyAcceptNativeCallback(
   'mevicarnext://spotify-callback?code=spotify-authorization-code&state=state123456'),true);
 assert.equal(native.requests.filter(req=>req.url.endsWith('/api/token')).length,
   tokenExchangeCount,'Android retry must not invalidate an already completed Spotify login');
+// A WebView that never receives evaluateJavascript can now pull and acknowledge
+// the pending authorization code using the existing trusted WebMessage channel.
+const pulled=runNativeCallback({
+  state:'pull-state',verifier:'pull-verifier',at:Date.now(),
+  redirect:'mevicarnext://spotify-callback'
+}, {bridgeCallback:'mevicarnext://spotify-callback?code=pulled-code&state=pull-state'});
+await new Promise(resolve=>setTimeout(resolve,0));
+assert.equal(pulled.window.meviSpotifyDebug().connected,true,'WebView must pull pending native callback');
+assert.ok(pulled.bridgeActions.includes('spotify.callback.pull'));
+assert.ok(pulled.bridgeActions.includes('spotify.callback.ack'));
+assert.equal(pulled.requests.filter(q=>q.url.endsWith('/api/token')).length,1);
+assert.equal(pulled.saved['mevicar-spotify-auth-v1'],undefined);
+
 const stale=runNativeCallback({
   state:'state123456',verifier:'pkce-verifier',at:Date.now()-11*60*1000,
   redirect:'mevicarnext://spotify-callback'
