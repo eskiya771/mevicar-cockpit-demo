@@ -4,6 +4,60 @@
 (function () {
   'use strict';
 
+  // Android: Spotify Web API remains the UI; the installed Spotify app plays audio.
+  const NATIVE_REDIRECT = 'mevicarnext://spotify-callback';
+  const androidSpotify = () => !!window.MeviNativeBridge?.postMessage;
+  const nativePending = new Map();
+  let nativeCounter = 0;
+  function nativeRequest(action, fields={}) {
+    return new Promise((resolve,reject) => {
+      if (!androidSpotify()) { reject(new Error('Android-Spotify nicht verfügbar.')); return; }
+      const id='spotify-'+(++nativeCounter);
+      const timer=setTimeout(()=>{ nativePending.delete(id); reject(new Error('Spotify antwortet nicht.')); },
+        action==='spotify.connect'?90000:15000);
+      nativePending.set(id,{resolve,reject,timer});
+      try { window.MeviNativeBridge.postMessage(JSON.stringify({id,action,...fields})); }
+      catch (e) { clearTimeout(timer); nativePending.delete(id); reject(e); }
+    });
+  }
+  if (androidSpotify()) {
+    const previous=window.MeviNativeBridge.onmessage;
+    window.MeviNativeBridge.onmessage=function(event) {
+      if (typeof previous==='function') previous(event);
+      let obj; try { obj=JSON.parse(event.data); } catch { return; }
+      const item=nativePending.get(obj.id); if (!item) return;
+      clearTimeout(item.timer); nativePending.delete(obj.id);
+      if (obj.ok) item.resolve(obj);
+      else item.reject(new Error(obj.error||'Spotify-Befehl fehlgeschlagen.'));
+    };
+  }
+  async function connectNative() {
+    if (!st.token) return false;
+    if (st.nativeConnected) return true;
+    webPlayerStatus('Spotify-App verbinden …');
+    try {
+      const reply=await nativeRequest('spotify.connect',{clientId:st.clientId});
+      st.nativeConnected=!!reply.connected;
+      if (!st.nativeConnected) throw new Error('Nicht verbunden.');
+      webPlayerStatus('Spotify-App verbunden');
+      const pending=pendingPlayback();
+      if (pending) {
+        const uri=pending.body.context_uri||pending.body.uris?.[0];
+        if (uri) {
+          window.meviMediaStopForSource?.('spotify');
+          await nativeRequest('spotify.play',{uri});
+          st.pendingPlay=null;
+          setNotice('Wiedergabe: '+pending.title);
+        }
+      }
+      poll(true); return true;
+    } catch (error) {
+      st.nativeConnected=false;
+      webPlayerStatus('Spotify-App nicht verbunden',error.message||String(error));
+      return false;
+    }
+  }
+
   const API = 'https://api.spotify.com/v1';
   const ACCOUNTS = 'https://accounts.spotify.com';
   const SCOPES = [
@@ -144,6 +198,7 @@
     return text.slice(0, 4) + '…' + text.slice(-4);
   }
   function redirectUri() {
+    if (androidSpotify()) return NATIVE_REDIRECT;
     let path = location.pathname || '/';
     path = path.replace(/\/index\.html$/i, '/');
     if (!path.endsWith('/')) path += '/';
@@ -270,6 +325,7 @@
     mounted: false,
     webPlayer: null,
     webDeviceId: '',
+    nativeConnected: false,
     webTransferBusy: false,
     webStatus: 'Aus',
     webError: '',
@@ -466,15 +522,18 @@
     throw error;
   }
 
-  async function handleCallback() {
-    const url = new URL(location.href);
+  async function handleCallback(sourceUrl = location.href) {
+    const url = new URL(sourceUrl);
+    const nativeCallback=url.protocol==='mevicarnext:' && url.host==='spotify-callback';
+    if (sourceUrl !== location.href && !nativeCallback) return false;
+    if (nativeCallback && !androidSpotify()) return false;
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
     const oauthError = url.searchParams.get('error');
     const description = url.searchParams.get('error_description');
     if (!code && !oauthError) return false;
     const saved = readJson(sessionStorage, KEYS.auth, null);
-    cleanCallbackUrl(url);
+    if (!nativeCallback) cleanCallbackUrl(url);
     try { sessionStorage.removeItem(KEYS.auth); } catch { /* ignore */ }
     if (oauthError) {
       st.authError = oauthError === 'access_denied' ? 'Spotify-Verbindung wurde abgebrochen.' : ('Spotify: ' + (description || oauthError));
@@ -586,6 +645,7 @@
     if (st.mounted) rerender();
   }
   async function startWebPlayer() {
+    if (androidSpotify()) { await connectNative(); return; }
     if (!st.token) { setNotice('Bitte zunächst mit Spotify verbinden.'); return; }
     if (!(st.token.scope || '').split(' ').includes('streaming')) {
       st.accountOpen = true;
@@ -658,11 +718,12 @@
   }
   function webPlayerMarkup() {
     if (!st.token) return '';
-    const ready = !!st.webDeviceId;
+    const ready = androidSpotify()?st.nativeConnected:!!st.webDeviceId;
+    const label = androidSpotify()?(ready?'Spotify-App verbunden':'Spotify-App verbinden'):(ready?'MeviCar Player aktiv':'MeviCar Player starten');
     return '<div class="sp-web-player">' +
       '<button type="button" class="sp-web-action'+(ready?' is-on':'')+
       '" onclick="meviSpotifyWebPlayer()" aria-label="MeviCar Spotify Player aktivieren">'+icon('play')+
-      '<span>'+(ready?'MeviCar Player aktiv':'MeviCar Player starten')+'</span></button>'+
+      '<span>'+esc(label)+'</span></button>'+
       '<span class="sp-web-status">'+esc(st.webStatus)+'</span>'+
       (st.webError?'<span class="sp-web-error" role="status">'+esc(st.webError)+'</span>':'')+
       '</div>';
@@ -753,11 +814,11 @@
   }
 
   function nowMarkup() {
-    if (!st.webDeviceId) return noDeviceMarkup();
+    if (!st.webDeviceId && !st.nativeConnected) return noDeviceMarkup();
     if (!st.playerLoaded && !st.player && !st.error) {
       return '<div class="sp-empty"><span class="sp-spinner" aria-hidden="true"></span><strong>Wiedergabestatus wird geladen</strong><p>MeviCar Player wird abgefragt.</p><button type="button" onclick="meviSpotifyRefresh()">' + icon('refresh') + 'Aktualisieren</button></div>';
     }
-    if (!st.webDeviceId || !st.player || st.player.device?.id !== st.webDeviceId) return noDeviceMarkup();
+    if (!st.player || (!st.nativeConnected && st.player.device?.id !== st.webDeviceId)) return noDeviceMarkup();
     const player = st.player;
     const item = player.item;
     if (!item) return '<div class="sp-empty">' + icon('music') + '<strong>Bereit für Musik</strong><p>Wähle einen Titel, ein Album oder eine Playlist aus deiner Bibliothek.</p></div>';
@@ -1584,6 +1645,7 @@
       results: st.results ? Object.fromEntries(Object.entries(st.results).map(([key, value]) => [key, value.length])) : null,
       mounted: st.mounted,
       webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy },
+      nativeSpotify: { supported: androidSpotify(), connected: st.nativeConnected },
       polling: !!pollTimer,
       error: st.error,
       notice: st.notice
@@ -1592,6 +1654,7 @@
 
   Object.assign(window, {
     meviSpotifyHTML: html,
+    meviSpotifyAcceptNativeCallback: uri => handleCallback(uri),
     meviSpotifyWebPlayer: startWebPlayer,
     meviSpotifyMount: mount,
     meviSpotifyUnmount: unmount,
