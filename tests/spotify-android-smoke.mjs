@@ -20,4 +20,69 @@ assert.match(source,/action:'spotify.browser'/);
 assert.match(source,/meviSpotifyPauseForSource: pauseForSource/);
 assert.match(source,/mm-mode-button/,'Same media source buttons as Radio and MeviMedia');
 assert.match(settings,/meviSpotifySaveClient/);
-console.log('Spotify APK Web Playback: PKCE, shared UI, no App Remote dependency, browser fallback OK');
+// Simulate Chrome returning after Android has recreated the WebView. The old
+// sessionStorage is empty, but the short-lived PKCE verifier must still work.
+function runNativeCallback(pending) {
+  const saved={
+    'mevicar-spotify-client-v1':'testclient1234',
+    'mevicar-spotify-auth-v1':JSON.stringify(pending)
+  };
+  const session={};
+  const requests=[];
+  const store=values=>({
+    getItem:key=>values[key]??null,
+    setItem(key,value){values[key]=String(value)},
+    removeItem(key){delete values[key]}
+  });
+  const origin='https://eskiya771.github.io';
+  const loc={href:origin+'/mevicar-cockpit-demo/',origin,pathname:'/mevicar-cockpit-demo/'};
+  const window={MeviNativeBridge:{postMessage(){}},render(){},addEventListener(){}};
+  const document={
+    getElementById(){return null},
+    querySelector(){return null},
+    addEventListener(){}
+  };
+  const response=data=>({
+    ok:true,status:200,headers:{get(){return null}},
+    json:async()=>data,text:async()=>JSON.stringify(data)
+  });
+  const fakeFetch=(url,options)=>{
+    requests.push({url:String(url),body:String(options?.body||'')});
+    if(String(url).endsWith('/api/token')) return response({
+      access_token:'token-after-chrome',refresh_token:'refresh-from-chrome',
+      expires_in:3600,scope:'streaming user-read-playback-state'
+    });
+    if(String(url).endsWith('/v1/me')) return response({display_name:'Test'});
+    return response({});
+  };
+  new Function('window','document','navigator','localStorage','sessionStorage',
+    'location','history','fetch','URL','TextEncoder','setTimeout','clearTimeout',
+    'setInterval','clearInterval','AbortController',source)(
+      window,document,{},store(saved),store(session),loc,{replaceState(){}},
+      fakeFetch,URL,TextEncoder,()=>1,()=>{},()=>1,()=>{},AbortController
+    );
+  return {window,saved,session,requests};
+}
+const native=runNativeCallback({
+  state:'state123456',verifier:'pkce-verifier',at:Date.now(),
+  redirect:'mevicarnext://spotify-callback'
+});
+assert.equal(await native.window.meviSpotifyAcceptNativeCallback(
+  'mevicarnext://spotify-callback?code=spotify-authorization-code&state=state123456'),true);
+assert.equal(native.window.meviSpotifyDebug().connected,true,'Returning from Chrome must connect');
+assert.equal(JSON.parse(native.saved['mevicar-spotify-token-v1']).access_token,
+  'token-after-chrome');
+assert.equal(native.saved['mevicar-spotify-auth-v1'],undefined,'PKCE request consumed once');
+assert.equal(native.requests[0].body.includes('code_verifier=pkce-verifier'),true);
+assert.equal(native.requests[0].body.includes('redirect_uri=mevicarnext%3A%2F%2Fspotify-callback'),true);
+const stale=runNativeCallback({
+  state:'state123456',verifier:'pkce-verifier',at:Date.now()-11*60*1000,
+  redirect:'mevicarnext://spotify-callback'
+});
+await stale.window.meviSpotifyAcceptNativeCallback(
+  'mevicarnext://spotify-callback?code=spotify-authorization-code&state=state123456');
+assert.equal(stale.window.meviSpotifyDebug().connected,false,'Expired callback must be rejected');
+assert.equal(stale.requests.length,0,'Expired callback must not exchange token');
+assert.match(stale.window.meviSpotifyHTML(false),/Spotify-Sicherheitsprüfung fehlgeschlagen/);
+
+console.log('Spotify APK OAuth return: WebView restart, PKCE verification, token exchange, stale-state rejection OK');
