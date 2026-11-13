@@ -19,6 +19,21 @@ for(const term of [
 assert.match(activity,/roadAssist\.attach\(value\)/);
 assert.match(activity,/roadAssist\.setGuiding\(true\)/);
 assert.match(activity,/roadAssist\.stop\(\)/);
+assert.match(activity,/Blitzer-Routenscan/);
+assert.match(activity,/setPositiveButton\("Scan starten"/);
+assert.match(activity,/roadAssist\.scanOnDemand\(\)/);
+assert.match(activity,/roadAssist\.toggleVoice\(\)/);
+for(const term of [
+  'public void scanOnDemand()', 'sampleRoute', 'mevicar_route_scan',
+  'blitzer/refresh_controls?return_response', 'config_entry_id',
+  'version!=routeVersion', 'confirmed', 'MAX_CAMERAS',
+  'Thread.sleep(900)', 'apiObject('
+]) assert.ok(engine.includes(term),'Missing opt-in native scanner: '+term);
+assert.match(plugin,/haConfigId/);
+assert.match(plugin,/radarEnabled/);
+assert.match(plugin,/radarVoice/);
+assert.match(read('roadassist.js'),/nativeConfig:/);
+assert.match(platform,/haConfigId:haSession\?\.configId/);
 assert.match(installer,/MeviRoadAssistNative\.java/);
 assert.match(plugin,/takeRadarSession/);
 assert.match(plugin,/haOrigin/);
