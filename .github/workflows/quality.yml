@@ -19,6 +19,8 @@ jobs:
         run: node tests/version-smoke.mjs
       - name: Test centralized credentials Settings
         run: node tests/settings-smoke.mjs
+      - name: Test Maps first-run setup and clean status controls
+        run: node tests/first-run-maps-smoke.mjs
       - name: Test signed APK update Settings
         run: node tests/native-updates-smoke.mjs
       - name: Test centralized credentials and no secret persistence
