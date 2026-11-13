@@ -16,7 +16,7 @@
     nativeBluetooth:false,
     nativePhone:false,
     nativeAudio:false,
-    nativeNavigation:false
+    nativeNavigation:native()&&!!root.Capacitor?.Plugins?.MeviNativeNavigation
   });
   const api=Object.freeze({
     version:1,platform,capabilities,
@@ -28,7 +28,11 @@
     bluetooth:Object.freeze({connect:async()=>unsupported('bluetooth')}),
     phone:Object.freeze({dial:async()=>unsupported('phone')}),
     audio:Object.freeze({nativePlayer:async()=>unsupported('native-audio')}),
-    navigation:Object.freeze({nativeRoute:async()=>unsupported('native-navigation')})
+    navigation:Object.freeze({nativeRoute:async(destination)=>{
+      if(!native()||!root.Capacitor?.Plugins?.MeviNativeNavigation)return unsupported('native-navigation');
+      if(!Number.isFinite(destination?.lat)||!Number.isFinite(destination?.lng))throw Error('Ungültiges Navigationsziel');
+      return root.Capacitor.Plugins.MeviNativeNavigation.start({lat:destination.lat,lng:destination.lng,title:String(destination.title||destination.name||'Ziel')});
+    }})
   });
   root.MeviPlatform=api;
 })(window);
