@@ -275,6 +275,8 @@ jobs:
           npx cap sync android
       - name: Set MeviCar icon, landscape and product version
         run: python3 scripts/prepare-android-project.py
+      - name: Install native Google Navigation SDK integration
+        run: python3 scripts/install-native-navigation.py
       - name: Compile installable debug-signed APK
         run: |
           chmod +x android/gradlew
