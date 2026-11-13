@@ -43,9 +43,9 @@ function runNativeCallback(pending, {bridgeCallback = '', hidden = false} = {}) 
     const req=JSON.parse(raw);
     bridgeActions.push(req.action);
     bridgeRequests.push(req);
-    if(!activeBridgeCallback)return;
     let reply=null;
-    if(req.action==='spotify.callback.pull')reply={id:req.id,ok:true,callback:activeBridgeCallback};
+    if(req.action==='spotify.callback.pull')reply={id:req.id,ok:true,
+      ...(activeBridgeCallback?{callback:activeBridgeCallback}:{})};
     if(req.action==='spotify.callback.ack')reply={id:req.id,ok:true,acknowledged:true};
     if(reply && typeof this.onmessage==='function')this.onmessage({data:JSON.stringify(reply)});
   }},render(){},addEventListener(){}};
@@ -150,6 +150,7 @@ const stageTriggered=runNativeCallback({
   state:'stage-state',verifier:'stage-verifier',at:Date.now(),
   redirect:'mevicarnext://spotify-callback'
 });
+await new Promise(resolve=>setTimeout(resolve,0));
 stageTriggered.setBridgeCallback(
   'mevicarnext://spotify-callback?code=stage-code&state=stage-state'
 );
