@@ -470,7 +470,8 @@
  function launchNativeWithRadar(destination){
   if(!window.MeviPlatform?.navigation?.nativeRoute)
    return Promise.reject(new Error('Native Android-Navigation ist nicht verfuegbar.'));
-  const auth=state.connected&&state.token?{origin:state.origin,token:state.token}:null;
+  const prefs=window.MeviRoadAssist?.nativeConfig?.()||{};
+  const auth=state.connected&&state.token?{origin:state.origin,token:state.token,...prefs}:prefs;
   return window.MeviPlatform.navigation.nativeRoute(destination,auth);
  }
  window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,stockHistory,requestService,launchNativeWithRadar,favoriteEntity,toggleFromDashboard,
