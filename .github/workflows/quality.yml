@@ -16,6 +16,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test centralized credentials Settings
         run: node tests/settings-smoke.mjs
+      - name: Test centralized credentials and no secret persistence
+        run: node tests/credential-settings-smoke.mjs
       - name: Test MeviMedia playback and library
         run: node tests/mevimedia-smoke.mjs
       - name: Test split-screen Lichtshow effect app
