@@ -538,7 +538,18 @@
       url.searchParams.set('code_challenge_method', 'S256');
       url.searchParams.set('code_challenge', challenge);
       if (showDialog === true) url.searchParams.set('show_dialog', 'true');
-      location.assign(url.toString());
+      if (nativeOAuthBridge()) {
+        // Do not navigate the WebView away from the trusted MeviCar page.
+        // Android verifies the exact Spotify OAuth URL and opens Chrome.
+        window.MeviNativeBridge.postMessage(JSON.stringify({
+          id: 'spotify-authorize-' + (++oauthBridgeSerial),
+          action: 'spotify.authorize',
+          url: url.toString()
+        }));
+        setAuthDiagnostic('Spotify-Freigabe im externen Browser gestartet');
+      } else {
+        location.assign(url.toString());
+      }
     } catch (error) {
       setAuthDiagnostic('Spotify-Freigabe konnte nicht geöffnet werden');
       st.authError = 'Spotify-Anmeldung konnte nicht gestartet werden: ' + (error.message || error);
@@ -643,7 +654,20 @@
     const state = url.searchParams.get('state') || url.searchParams.get('error') || '';
     if (state && state === handledNativeCallbackState) return Promise.resolve(true);
     if (state) handledNativeCallbackState = state;
-    return handleCallback(uri);
+    return handleCallback(uri).then(handled => {
+      // Android must retain the one-time code until the asynchronous token
+      // exchange has finished; evaluateJavascript returning true is not enough.
+      if (handled && nativeOAuthBridge() && state) {
+        try {
+          window.MeviNativeBridge.postMessage(JSON.stringify({
+            id: 'spotify-callback-ack-' + (++oauthBridgeSerial),
+            action: 'spotify.callback.ack',
+            state
+          }));
+        } catch { /* Android can recover on the next callback pull */ }
+      }
+      return handled;
+    });
   }
 
   async function handleCallback(sourceUrl = location.href) {
