@@ -13,11 +13,16 @@ if not main.exists():
     raise SystemExit("Capacitor generated MainActivity not found")
 text=main.read_text()
 if "registerPlugin(MeviNativeNavigationPlugin.class)" not in text:
-    # Capacitor registers manually supplied custom native plugin before BridgeActivity.onCreate.
-    text=text.replace("super.onCreate(savedInstanceState);",
-       "registerPlugin(MeviNativeNavigationPlugin.class);\n        super.onCreate(savedInstanceState);")
-    if "registerPlugin(MeviNativeNavigationPlugin.class)" not in text:
-        raise SystemExit("Cannot register native navigation plugin")
+    # Capacitor's generated MainActivity normally has no onCreate override.
+    invocation="registerPlugin(MeviNativeNavigationPlugin.class);"
+    if "super.onCreate(savedInstanceState);" in text:
+        text=text.replace("super.onCreate(savedInstanceState);",invocation+"\\n        super.onCreate(savedInstanceState);")
+    else:
+        opening="public class MainActivity extends BridgeActivity {"
+        if opening not in text: raise SystemExit("Unexpected MainActivity")
+        insert=opening+"\\n    @Override public void onCreate(android.os.Bundle savedInstanceState) {\\n        "+invocation+"\\n        super.onCreate(savedInstanceState);\\n    }"
+        text=text.replace(opening,insert)
+    if invocation not in text: raise SystemExit("Cannot register native navigation plugin")
     main.write_text(text)
 gradle=root/"build.gradle"
 text=gradle.read_text()
