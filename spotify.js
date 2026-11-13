@@ -401,6 +401,20 @@
     } catch { /* ignore */ }
   }
 
+  // Android may recreate its WebView while Chrome handles Spotify OAuth.
+  // sessionStorage is then lost, so keep only the short-lived PKCE request in
+  // localStorage for the native callback; the client secret is never used.
+  function authStorage() { return nativeOAuthBridge() ? localStorage : sessionStorage; }
+  function pendingAuth() {
+    const native = nativeOAuthBridge() ? readJson(localStorage, KEYS.auth, null) : null;
+    return native || readJson(sessionStorage, KEYS.auth, null);
+  }
+  function clearPendingAuth() {
+    for (const store of [sessionStorage, localStorage]) {
+      try { store.removeItem(KEYS.auth); } catch { /* storage unavailable */ }
+    }
+  }
+
   async function connect(showDialog) {
     st.authError = '';
     const clientId = readClientId();
@@ -420,7 +434,7 @@
       const state = randomString(24);
       const redirect = redirectUri();
       const challenge = await codeChallenge(verifier);
-      writeJson(sessionStorage, KEYS.auth, { verifier, state, redirect, at: Date.now() });
+      writeJson(authStorage(), KEYS.auth, { verifier, state, redirect, at: Date.now() });
       const url = new URL(ACCOUNTS + '/authorize');
       url.searchParams.set('response_type', 'code');
       url.searchParams.set('client_id', clientId);
@@ -535,15 +549,17 @@
     const oauthError = url.searchParams.get('error');
     const description = url.searchParams.get('error_description');
     if (!code && !oauthError) return false;
-    const saved = readJson(sessionStorage, KEYS.auth, null);
+    const saved = pendingAuth();
     if (!nativeCallback) cleanCallbackUrl(url);
-    try { sessionStorage.removeItem(KEYS.auth); } catch { /* ignore */ }
+    clearPendingAuth();
     if (oauthError) {
       st.authError = oauthError === 'access_denied' ? 'Spotify-Verbindung wurde abgebrochen.' : ('Spotify: ' + (description || oauthError));
       returnToAudio();
       return true;
     }
-    if (!saved || !state || saved.state !== state || !saved.verifier) {
+    if (!saved || !state || saved.state !== state || !saved.verifier ||
+        !Number.isFinite(Number(saved.at)) || Date.now() - Number(saved.at) > 10 * 60 * 1000 ||
+        Date.now() < Number(saved.at)) {
       st.authError = 'Spotify-Sicherheitsprüfung fehlgeschlagen. Bitte erneut verbinden.';
       returnToAudio();
       return true;
@@ -783,6 +799,7 @@
       '<div class="sp-step"><span class="sp-step-num">2</span><div><strong>Redirect-URI hinterlegen</strong><p>Die URI muss im Spotify Developer Dashboard exakt eingetragen sein.'+(nativeOAuthBridge()?' Für die Anmeldung in der APK zusätzlich mevicarnext://spotify-callback erlauben.':'')+'</p><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirect) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div><a class="sp-linkbtn" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Developer Dashboard' + icon('external') + '</a></div></div>' +
       '<div class="sp-step"><span class="sp-step-num">3</span><div><strong>Client ID in Settings</strong><p>Spotify-Client-ID zentral unter Settings → Zugänge &amp; Schlüssel verwalten.</p><button type="button" class="sp-linkbtn" onclick="meviOpenCredentialSettings()">Settings öffnen</button></div></div>' +
       '</div>' +
+      (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
       '<div class="sp-onboard-actions"><button type="button" class="sp-primary" onclick="meviSpotifyConnect()" ' + (!hasClient || st.authLoading ? 'disabled' : '') + '>' + icon('spotify') + (st.authLoading ? 'Verbinde …' : 'Mit Spotify verbinden') + '</button>' +
       (hasClient ? '<span class="sp-fine">Client ID: ' + esc(maskClient(st.clientId)) + '</span>' : '') + '</div>' +
       '<p class="sp-fine">Kein Passwort und kein Client Secret. Access- und Refresh-Token bleiben lokal in diesem Browser. Dev Mode: maximal 5 Nutzer, der App-Inhaber braucht Premium. Auf iPhone kann die Anmeldung aus einer installierten PWA heraus in Safari landen; dann die Verbindung in Safari herstellen.</p>' +
