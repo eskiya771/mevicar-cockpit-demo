@@ -76,6 +76,13 @@ jobs:
           theme_css = pathlib.Path('themes.css').read_text()
           assert '.app-home-grid' in theme_css and '.app-illustration' in theme_css
           html = html.replace(css_link, '<style id="mevicar-versioned-themes">' + theme_css + '</style>')
+          # Bundle Settings typography atomically with the HTML build; otherwise
+          # Android's cache-first WebView can retain tiny settings controls.
+          settings_css_link = '<link rel="stylesheet" href="./credential-settings.css">'
+          assert settings_css_link in html, 'Credential settings stylesheet missing'
+          settings_css = pathlib.Path('credential-settings.css').read_text()
+          assert '.mevi-cred-form' in settings_css and '.settings-tabs button' in settings_css
+          html = html.replace(settings_css_link, '<style id="mevicar-versioned-credentials">' + settings_css + '</style>')
           saver_css_link = '<link rel="stylesheet" href="./screensaver.css">'
           saver_js_tag = '<script src="./screensaver.js"></script>'
           assert saver_css_link in html and saver_js_tag in html, 'Screensaver assets missing'
