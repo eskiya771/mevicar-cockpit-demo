@@ -6,7 +6,7 @@ root=Path("android/app")
 source=Path("native-navigation")
 dest=root/"src/main/java/de/mevicar/next"
 dest.mkdir(parents=True,exist_ok=True)
-for name in ("MeviNavigationActivity.java","MeviNativeNavigationPlugin.java"):
+for name in ("MeviNavigationActivity.java","MeviNativeNavigationPlugin.java","MeviRoadAssistNative.java"):
     (dest/name).write_text((source/name).read_text())
 main=root/"src/main/java/de/mevicar/next/MainActivity.java"
 if not main.exists():
