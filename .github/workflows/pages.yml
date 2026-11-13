@@ -258,6 +258,10 @@ jobs:
           mkdir -p dist/weather
           cp -R weather/. dist/weather/
           cp native-updates.js native-updates.css credential-settings.js credential-settings.css xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css weristschuld.js weristschuld.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          # Rotate the PWA cache with every deployed Web build.
+          # This prevents stale cached JS/CSS after an APK startup.
+          sed -i -E "s/mevicar-next-shell-v[0-9]+/mevicar-next-shell-build-${GITHUB_RUN_NUMBER}/" dist/sw.js
+          grep -q "mevicar-next-shell-build-${GITHUB_RUN_NUMBER}" dist/sw.js
           test -s dist/credential-settings.js && test -s dist/credential-settings.css
           test -s dist/native-updates.js && test -s dist/native-updates.css
           python3 -m pip install --quiet --break-system-packages pillow
