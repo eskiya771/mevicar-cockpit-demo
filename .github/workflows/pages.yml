@@ -20,6 +20,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Test separate Web and APK version indicators
+        run: node tests/version-smoke.mjs
       - name: Test centralized credentials and no secret persistence
         run: node tests/credential-settings-smoke.mjs
       - name: Quick JavaScript and configuration smoke tests

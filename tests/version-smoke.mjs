@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+const html=readFileSync('index.html','utf8');
+const inline=html.slice(html.indexOf('<script>')+'<script>'.length,html.indexOf('</script>'));
+assert(inline.includes('const CURRENT_BUILD=__MEVICAR_BUILD__'), 'Web build placeholder stays in template');
+assert(inline.includes('window.meviSetNativeBuild'), 'Native build callback missing');
+assert(inline.includes("NATIVE_BUILD?'Web '"), 'Android/Web status must distinguish builds');
+assert(inline.includes('Pages-Build ') && inline.includes('APK-Build '), 'Version title must distinguish sources');
+assert(inline.includes('versionStatus()'), 'Settings must show both sources');
+assert(readFileSync('VERSION','utf8').trim().match(/^\d+\.\d+\.\d+$/));
+new vm.Script(inline.replace('__MEVICAR_BUILD__',JSON.stringify({version:'0.5.3',build:53,commit:'abcdef123456'})),{filename:'index.html'});
+console.log('Separate Web and Android version labels: OK');
