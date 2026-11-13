@@ -1650,6 +1650,7 @@
     rerender();
   }
   function clearAuthState() {
+    clearPendingAuth();
     clearToken();
     st.player = null;
     st.playerLoaded = false;
