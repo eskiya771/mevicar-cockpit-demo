@@ -328,9 +328,8 @@ function sourcesHTML(){
  '<small>Kalenderänderungen nach dem Import werden erst durch erneuten Import übernommen.</small></section>'+
  '<section class="mevi-cal-panel"><h2>Google Kalender verbinden</h2>'+
  '<p>Lesender Zugriff auf deine Kalender mit Google OAuth. Dafür wird eine <b>OAuth 2.0 Web-Client-ID</b> benötigt; der Google-Maps-API-Key reicht nicht.</p>'+
- '<label for="mevi-cal-clientid">OAuth-Web-Client-ID</label>'+
- '<input id="mevi-cal-clientid" type="text" autocapitalize="none" autocomplete="off" spellcheck="false" value="'+esc(state.clientId)+'" '+
- 'placeholder="…apps.googleusercontent.com" onchange="MeviCalendar.setClientId(this.value)" />'+
+ '<p>Die OAuth-Web-Client-ID wird jetzt zentral unter Settings → Zugänge &amp; Schlüssel eingetragen.</p>'+
+ '<button type="button" onclick="meviOpenCredentialSettings()">OAuth-Client-ID in Settings öffnen</button>'+
  '<div class="mevi-cal-actions"><button type="button" onclick="MeviCalendar.connectGoogle()">'+
  (state.googleToken?'Erneut anmelden':'Mit Google verbinden')+'</button>'+
  '<button type="button" onclick="MeviCalendar.refresh()">Termine aktualisieren</button>'+
@@ -423,7 +422,7 @@ async function prepareGSI(){
  });
 }
 function connectGoogle(){
- const value=String($$('mevi-cal-clientid')?.value||state.clientId).trim();
+ const value=String(state.clientId||'').trim();
  if(!state.clientId||value!==state.clientId){
   if(!setClientId(value))return false;
  }

@@ -12,8 +12,8 @@ let cache={favorites:[],recent:[]};try{let d=JSON.parse(localStorage.getItem(DAT
 let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,suggestions=[],query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
 function persist(){try{localStorage.setItem(DATA,JSON.stringify(cache))}catch{}}
 function key(){try{return localStorage.getItem(KEY)||''}catch{return ''}}
-function setKey(){const input=document.getElementById('mg-key');const k=(input?.value||'').trim();if(!/^[A-Za-z0-9_-]{20,}$/.test(k)){status('Ungültiger Google Maps API-Key.');return}try{localStorage.setItem(KEY,k)}catch{status('Browser-Speicher nicht verfügbar.');return}location.reload()}
-function removeKey(){try{localStorage.removeItem(KEY)}catch{}location.reload()}
+function setKey(){window.meviOpenCredentialSettings?.()}
+function removeKey(){window.meviOpenCredentialSettings?.()}
 function status(message,kind='info'){
  error=message;errorKind=kind;
  const e=document.getElementById('mg-status');
@@ -26,10 +26,10 @@ function clearStatus(){
  error='';errorKind='';
  const notice=document.getElementById('mg-map-notice');if(notice)notice.hidden=true;
 }
-function setupHTML(){return '<div class="mg-setup"><strong>Google Maps aktivieren</strong><p>Für die Web-App benötigst du einen Browser-API-Key. Als zugelassene Website füge <code>https://eskiya771.github.io/*</code> hinzu (manche Browser übertragen nur die Domain als Referrer).</p><input id="mg-key" type="text" spellcheck="false" autocomplete="off" placeholder="Browser-API-Key" aria-label="Google Maps Browser-API-Key"><button type="button" onclick="MeviGoogleNav.setKey()">Google Maps verbinden</button><small>Google Maps JavaScript API, Places API (New) und Routes API aktivieren. Der Key wird ausschließlich in diesem Browser gespeichert.</small><span id="mg-status" role="status">'+text(error)+'</span></div>'}
+function setupHTML(){return '<div class="mg-setup"><strong>Google Maps noch nicht eingerichtet</strong><p>Den Web-API-Key findest du unter Settings → Zugänge &amp; Schlüssel.</p><button type="button" onclick="meviOpenCredentialSettings()">Google Maps in Settings einrichten</button><span id="mg-status" role="status">'+text(error)+'</span></div>'}
 function mapBackdrop(){
  const message='<div class="mg-map-state" id="mg-map-notice" role="status"><span id="mg-status">'+text(error||'Google Maps wird geladen …')+'</span>'+
-  '<button type="button" id="mg-change-key" class="mg-change-key" onclick="MeviGoogleNav.removeKey()"'+(errorKind==='maps-auth'?'':' hidden')+'>API-Schlüssel erneut einrichten</button>'+
+  '<button type="button" id="mg-change-key" class="mg-change-key" onclick="meviOpenCredentialSettings()"'+(errorKind==='maps-auth'?'':' hidden')+'>API-Schlüssel erneut einrichten</button>'+
   '<button type="button" id="mg-manual-origin" class="mg-manual-action" onclick="MeviGoogleNav.selectOriginOnMap()"'+(errorKind==='gps'?'':' hidden')+'>Startpunkt auf Karte wählen</button></div>';
  const picking=choosingOrigin?'<div class="mg-origin-instruction" role="status">Startpunkt wählen: Auf eine Stelle der Karte tippen oder klicken. <button type="button" onclick="MeviGoogleNav.cancelOriginSelection()">Abbrechen</button></div>':'';
  return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+(!key()?setupHTML():message+picking);

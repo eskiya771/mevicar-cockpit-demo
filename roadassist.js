@@ -252,12 +252,11 @@ function infoHTML(){
    '<dt>HA-Kameras</dt><dd>'+haCount+'</dd>'+
    '<dt>Routentreffer</dt><dd>'+matched.length+'</dd>'+
    '<dt>Abdeckung</dt><dd>'+esc(coverage)+'</dd></dl>'+
-   '<label for="mevi-ra-config">Blitzer.de Konfigurations-ID für optionalen Routenscan</label>'+
-   '<input id="mevi-ra-config" type="text" autocapitalize="characters" spellcheck="false" autocomplete="off" '+
-    'placeholder="26-stellige Konfigurations-ID" maxlength="26" value="'+esc(settings.configId)+'">'+
+   '<p class="mevi-ra-hint">Blitzer.de-Konfigurations-ID wird unter Settings → Zugänge &amp; Schlüssel verwaltet.</p>'+
+   '<button type="button" onclick="meviOpenCredentialSettings()">Blitzer-ID in Settings öffnen</button>'+
    '<p class="mevi-ra-hint">Der Routenscan setzt zeitweise den Home-Assistant-Tracker '+TRACKER+
    ' und ruft den Dienst blitzer.refresh_controls an mehreren Routenpunkten auf. Nur bewusst starten; keine automatische Aktivierung.</p>'+
-   '<div class="mevi-ra-tool-actions"><button onclick="MeviRoadAssist.storeConfig()">ID speichern</button>'+
+   '<div class="mevi-ra-tool-actions">'+
    '<button onclick="MeviRoadAssist.scan()" '+(!connected||!route.length||scanState==='running'?'disabled':'')+'>Routenscan starten</button>'+
    (scanState==='running'?'<button onclick="MeviRoadAssist.cancelScan()">Abbrechen</button>':'')+
    '<button onclick="MeviRoadAssist.setEnabled('+(!settings.enabled)+')">Warnung '+(settings.enabled?'ausschalten':'einschalten')+'</button>'+
