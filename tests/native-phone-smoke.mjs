@@ -27,6 +27,15 @@ for(const fragment of ['@CapacitorPlugin(name="MeviPhone"','@PermissionCallback'
  assert.ok(bridge.includes(fragment),'Native phone bridge missing '+fragment);
 }
 assert.match(installer,/registerPlugin\(MeviPhonePlugin\.class\)/);
+const nativeNav=read('native-navigation/MeviNavigationActivity.java');
+assert.match(bridge,/addCallObserver/);
+assert.match(bridge,/removeCallObserver/);
+assert.match(bridge,/respondNativeCall/);
+assert.match(nativeNav,/MeviPhonePlugin\.addCallObserver/);
+assert.match(nativeNav,/MeviPhonePlugin\.removeCallObserver/);
+assert.match(nativeNav,/MeviPhonePlugin\.respondNativeCall\(true\)/);
+assert.match(nativeNav,/MeviPhonePlugin\.respondNativeCall\(false\)/);
+assert.match(nativeNav,/phoneBanner\.setVisibility\(View\.VISIBLE\)/);
 assert.match(installer,/kotlin-gradle-plugin:2\.3\.0/);
 assert.match(installer,/AncsLink\.kt/);
 assert.match(installer,/BLUETOOTH_ADVERTISE/);
