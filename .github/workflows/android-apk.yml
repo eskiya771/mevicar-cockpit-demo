@@ -279,6 +279,8 @@ jobs:
         run: python3 scripts/prepare-android-project.py
       - name: Verify native Navigation SDK integration
         run: node tests/native-navigation-sdk-smoke.mjs
+      - name: Verify native route-matched Blitzer Road Assist
+        run: node tests/native-roadassist-smoke.mjs
       - name: Install native Google Navigation SDK integration
         run: python3 scripts/install-native-navigation.py
       - name: Compile installable debug-signed APK
