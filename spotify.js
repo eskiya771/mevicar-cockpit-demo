@@ -707,7 +707,7 @@
       '<div class="sp-setup">' +
       '<div class="sp-step"><span class="sp-step-num">1</span><div><strong>Spotify Premium</strong><p>Mit deinem Premium-Konto spielt der MeviCar Player die Musik direkt über dieses Gerät ab.</p><button type="button" class="sp-linkbtn" onclick="meviSpotifyOpen()">Spotify-Anmeldung' + icon('external') + '</button></div></div>' +
       '<div class="sp-step"><span class="sp-step-num">2</span><div><strong>Redirect-URI hinterlegen</strong><p>Im Spotify Developer Dashboard unter Edit Settings als Redirect URI eintragen. Sie muss exakt übereinstimmen.</p><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirect) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div><a class="sp-linkbtn" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Developer Dashboard' + icon('external') + '</a></div></div>' +
-      '<div class="sp-step"><span class="sp-step-num">3</span><div><strong>Client ID eintragen</strong><p>Die Client ID ist öffentlich. Ein Client Secret wird nicht benötigt und nicht gespeichert.</p><div class="sp-client"><input id="sp-client-id" type="text" inputmode="text" autocomplete="off" spellcheck="false" placeholder="Spotify Client ID" value="' + esc(st.clientId) + '" aria-label="Spotify Client ID" onkeydown="if(event.key===\'Enter\'){event.preventDefault();meviSpotifySaveClient(this.value)}"><button type="button" onclick="meviSpotifySaveClient(document.getElementById(\'sp-client-id\').value)">Speichern</button></div></div></div>' +
+      '<div class="sp-step"><span class="sp-step-num">3</span><div><strong>Client ID in Settings</strong><p>Spotify-Client-ID zentral unter Settings → Zugänge &amp; Schlüssel verwalten.</p><button type="button" class="sp-linkbtn" onclick="meviOpenCredentialSettings()">Settings öffnen</button></div></div>' +
       '</div>' +
       '<div class="sp-onboard-actions"><button type="button" class="sp-primary" onclick="meviSpotifyConnect()" ' + (!hasClient || st.authLoading ? 'disabled' : '') + '>' + icon('spotify') + (st.authLoading ? 'Verbinde …' : 'Mit Spotify verbinden') + '</button>' +
       (hasClient ? '<span class="sp-fine">Client ID: ' + esc(maskClient(st.clientId)) + '</span>' : '') + '</div>' +
@@ -728,7 +728,7 @@
       '<div class="sp-account-actions">' +
       (st.confirmReset
         ? '<button type="button" class="sp-primary" onclick="meviSpotifyResetClient(true)">Ja, löschen</button><button type="button" onclick="meviSpotifyResetClient(false)">Abbrechen</button>'
-        : '<button type="button" class="sp-primary" onclick="meviSpotifyConnect(true)">Neu verbinden</button><button type="button" onclick="meviSpotifyDisconnect()">Spotify trennen</button><button type="button" onclick="meviSpotifyResetClient()">Client ID ändern</button>') +
+        : '<button type="button" class="sp-primary" onclick="meviSpotifyConnect(true)">Neu verbinden</button><button type="button" onclick="meviSpotifyDisconnect()">Spotify trennen</button><button type="button" onclick="meviOpenCredentialSettings()">Client ID in Settings</button>') +
       '</div>' +
       '<p class="sp-fine">Die Verbindung nutzt OAuth PKCE ohne Backend. Access- und Refresh-Token liegen ausschließlich im lokalen Speicher dieses Browsers. Beim Trennen bleiben nur die Client ID und die Suchhistorie erhalten.</p>' +
       '</div></div>';

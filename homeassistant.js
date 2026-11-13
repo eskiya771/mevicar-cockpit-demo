@@ -244,29 +244,13 @@
     '<button type="button" onclick="MeviHA.tab(\'settings\')">API-Verbindung einrichten</button></div>';
  }
  function settingsHTML(){
-  return '<div class="ha-settings"><div class="ha-settings-content">'+
-   '<h3>Home Assistant verbinden</h3><p>Das Dashboard verwendet wie in Classic die eigene Web-Anmeldung. '+
-   'Für API-Geräte und Road Assist wird ein separater Long-Lived Access Token verwendet.</p>'+
-   '<label for="ha-origin">Home-Assistant-Adresse (HTTPS)</label>'+
-   '<input type="url" id="ha-origin" autocomplete="url" spellcheck="false" value="'+esc(state.origin)+'">'+
-   '<label for="ha-path">Dashboard-Pfad</label>'+
-   '<input type="text" id="ha-path" spellcheck="false" value="'+esc(state.path)+'">'+
-   '<button type="button" class="ha-save-config" onclick="MeviHA.saveConfig()">Dashboard-Adresse speichern</button>'+
-   '<label for="ha-token">Long-Lived Access Token · API und Road Assist</label>'+
-   '<input type="password" id="ha-token" autocomplete="off" spellcheck="false" placeholder="'+
-    (state.token?'API-Token für diese Sitzung vorhanden':'Token hier eingeben · wird nicht gespeichert')+'">'+
-   '<div class="ha-token-actions"><button type="button" class="ha-save-config" onclick="MeviHA.connect()"'+
-    (state.loading?' disabled':'')+'>Verbinden / testen</button>'+
-   '<button type="button" onclick="MeviHA.disconnect()">Token entfernen</button></div>'+
-   '<div class="ha-security-note">Aus Sicherheitsgründen bleibt der API-Token nur im laufenden Speicher dieser Seite. '+
-   'Er wird weder in GitHub noch in localStorage gespeichert. Nach einem Neuladen ist eine neue Eingabe nötig.</div>'+
-   '<div class="ha-cors-note">Falls die API im Browser wegen CORS blockiert wird: Home Assistant muss '+
-   '<code>https://eskiya771.github.io</code> in seinen erlaubten CORS-Ursprüngen führen. '+
-   'Keine allgemeine Freigabe und kein HTTP verwenden.</div>'+
+  return '<div class="ha-settings"><div class="ha-settings-content"><h3>Home Assistant</h3>'+
+   '<p>Adresse und API-Token werden zentral in Settings → Zugänge &amp; Schlüssel verwaltet.</p>'+
+   '<button type="button" class="ha-save-config" onclick="meviOpenCredentialSettings()">Zugänge in Settings öffnen</button>'+
    '<div class="ha-feedback" role="status">'+esc(state.error||state.message)+'</div>'+
    '</div></div>';
  }
- function viewHTML(){
+  function viewHTML(){
   switch(state.tab){
    case 'devices':return devicesHTML();
    case 'radar':return radarHTML();
@@ -317,33 +301,25 @@
   else if(state.connected)refresh().catch(()=>{});
   else repaint();
  }
- function saveConfig(){
-  try{
-   const origin=validateOrigin(get('ha-origin')?.value||'');
-   const path=validatePath(get('ha-path')?.value||'');
-   const changed=origin!==state.origin;
-   state.origin=origin;state.path=path;state.message='HTTPS-Adresse gespeichert.';
-   if(changed){disconnect({quiet:true});state.message='Adresse geändert: API-Token bitte erneut eingeben.'}
-   localStorage.setItem(CONFIG_KEY,JSON.stringify({origin,path}));
-   repaint();
-  }catch(e){state.error=errorText(e);repaint(false);const msg=document.querySelector('.ha-feedback');if(msg)msg.textContent=state.error}
+ function configureEndpoint(address,path){
+  const origin=validateOrigin(address),dash=validatePath(path);
+  const changed=origin!==state.origin;
+  state.origin=origin;state.path=dash;
+  localStorage.setItem(CONFIG_KEY,JSON.stringify({origin,path:dash}));
+  if(changed)disconnect({quiet:true});
+  state.message='Home-Assistant-Adresse gespeichert.';
+  repaint();return true;
  }
- async function connect(){
-  const input=get('ha-token');
-  const entered=(input?.value||'').trim();
-  if(!entered&&!state.token){state.error='Bitte einen Long-Lived Access Token eingeben.';repaint(false);const el=document.querySelector('.ha-feedback');if(el)el.textContent=state.error;return}
-  if(entered)state.token=entered;
-  if(input)input.value='';
-  state.error='';state.message='';state.loading=true;repaint(false);
-  try{
-   await refresh({force:true});
-   state.message='API-Verbindung erfolgreich.';
-  }catch(e){
-   state.connected=false;state.error=errorText(e);
-   state.token=''; // Do not retain a token after unsuccessful verification.
-  }finally{state.loading=false;repaint()}
+ function saveConfig(){return configureEndpoint(get('ha-origin')?.value||state.origin,get('ha-path')?.value||state.path)}
+ async function connectWithToken(token){
+  if(!token||!String(token).trim())throw new Error('Home-Assistant-Token fehlt.');
+  state.token=String(token).trim();state.error='';state.message='';state.loading=true;
+  try{await refresh({force:true});state.message='API-Verbindung erfolgreich.';return true}
+  catch(e){state.connected=false;state.error=errorText(e);state.token='';throw e}
+  finally{state.loading=false;repaint()}
  }
- function disconnect(options={}){
+ async function connect(){try{return await connectWithToken((get('ha-token')?.value||state.token))}catch{return false}}
+  function disconnect(options={}){
   state.token='';state.connected=false;state.states=[];state.radar=[];state.query='';
   state.busyIds.clear();state.requestId++;
   state.error='';state.message=options.quiet?'':'API-Token aus dieser Sitzung entfernt.';
@@ -465,7 +441,7 @@
   if(path.startsWith('/api/services/')&&options.method!=='POST')throw new Error('POST für HA-Service erforderlich.');
   return request(path,{method:options.method||'GET',body:options.body});
  }
- window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,stockHistory,requestService,favoriteEntity,toggleFromDashboard,
+ window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,configureEndpoint,connect,connectWithToken,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,stockHistory,requestService,favoriteEntity,toggleFromDashboard,
   debug:()=>({tab:state.tab,connected:state.connected,count:state.states.length,cameras:state.radar.length,
    origin:state.origin,dashboard:dashboardUrl(),tokenPresent:!!state.token,tokenStored:false}),
   // Helpers for node-only contract tests; no token or credentials exposed.

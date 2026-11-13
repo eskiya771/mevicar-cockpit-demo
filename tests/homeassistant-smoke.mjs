@@ -19,7 +19,6 @@ const states=[
 function makeEnvironment(options={}){
  const storage=[];
  const el={
-  'ha-token':{value:options.token??'TEST_SESSION_TOKEN'},
   'ha-origin':{value:'https://ha.mtankurt.synology.me'},
   'ha-path':{value:'/dashboard-familie/0'}
  };
@@ -49,7 +48,7 @@ function makeEnvironment(options={}){
  assert.match(app.html(false),/Original-Dashboard im Browser/);
  assert.match(app.html(true),/is-compact/);
  assert.equal(app.debug().connected,false);
- await app.connect();
+ await app.connectWithToken('TEST_SESSION_TOKEN');
  assert.equal(app.debug().connected,true);
  assert.equal(app.debug().count,states.length);
  assert.equal(app.debug().cameras,1,'Classic Blitzer filter excludes counters and unrelated sensors');
@@ -93,12 +92,12 @@ function makeEnvironment(options={}){
 }
 {
  const {app}=makeEnvironment({fail:true});
- await app.connect();
+ await assert.rejects(app.connectWithToken('TEST_SESSION_TOKEN'));
  assert.equal(app.debug().connected,false);
  assert.equal(app.debug().tokenPresent,false,'Failed token must be cleared');
  app.tab('settings');
- assert.match(app.html(false),/CORS/);
- assert.match(app.html(false),/https:\/\/eskiya771\.github\.io/);
+ assert.match(app.html(false),/Zugänge/);
+ assert.doesNotMatch(app.html(false),/id="ha-token"/,'Token input belongs only to central Settings');
 }
 {
  const {app,el,storage}=makeEnvironment();
@@ -109,7 +108,7 @@ function makeEnvironment(options={}){
  assert.throws(()=>app.validatePath('//evil.example'));
  assert.throws(()=>app.validatePath('/dashboard?token=secret'));
  el['ha-path'].value='/dashboard-familie/1';
- app.saveConfig();
+ app.configureEndpoint(el['ha-origin'].value,el['ha-path'].value);
  assert.equal(storage.length,1);
  assert.equal(JSON.parse(storage[0].value).path,'/dashboard-familie/1');
  assert.deepEqual(Object.keys(JSON.parse(storage[0].value)).sort(),['origin','path']);
