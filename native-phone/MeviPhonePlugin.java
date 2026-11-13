@@ -11,6 +11,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.getcapacitor.annotation.Permission;
 import com.getcapacitor.annotation.PermissionCallback;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 
 /** Native iPhone phone bridge: exact ANCS BLE protocol/transport from MeviCar Classic.
  * The iPhone retains the voice audio. ANCS exposes only incoming and missed
@@ -22,6 +24,31 @@ import java.util.ArrayDeque;
   @Permission(alias="bluetooth",strings={Manifest.permission.BLUETOOTH_CONNECT,Manifest.permission.BLUETOOTH_ADVERTISE})
 })
 public class MeviPhonePlugin extends Plugin {
+  // In-process observer for the separate full-screen Google Navigation Activity.
+  interface CallObserver {void onCallChanged(AncsLink.Call call);}
+  private static final List<CallObserver> nativeCallObservers=new ArrayList<>();
+  private static AncsLink.Call nativeActiveCall;
+  private static MeviPhonePlugin activePlugin;
+  static void addCallObserver(CallObserver observer){
+    synchronized(nativeCallObservers){nativeCallObservers.add(observer);}
+    observer.onCallChanged(nativeActiveCall);
+  }
+  static void removeCallObserver(CallObserver observer){
+    synchronized(nativeCallObservers){nativeCallObservers.remove(observer);}
+  }
+  private static void publishNativeCall(AncsLink.Call call){
+    nativeActiveCall=call;
+    List<CallObserver> listeners;
+    synchronized(nativeCallObservers){listeners=new ArrayList<>(nativeCallObservers);}
+    for(CallObserver observer:listeners)observer.onCallChanged(call);
+  }
+  static boolean respondNativeCall(boolean accept){
+    MeviPhonePlugin plugin=activePlugin;
+    AncsLink.Call call=nativeActiveCall;
+    if(plugin==null||plugin.link==null||call==null)return false;
+    if(accept)return call.getCanAnswer()&&plugin.link.answer(call.getUid());
+    return call.getCanDecline()&&plugin.link.decline(call.getUid());
+  }
   private AncsLink link;
   private AncsLink.Call incoming;
   private final ArrayDeque<AncsLink.Call> missed=new ArrayDeque<>();
@@ -30,6 +57,7 @@ public class MeviPhonePlugin extends Plugin {
 
   @Override public void load(){
     super.load();
+    activePlugin=this;
     link=new AncsLink(getContext(),new AncsLink.Listener(){
       @Override public void onStateChanged(AncsLink.State state,String detail){
         if(destroyed)return;
@@ -38,19 +66,20 @@ public class MeviPhonePlugin extends Plugin {
       @Override public void onIncomingCall(AncsLink.Call call){
         if(destroyed)return;
         incoming=call;
+        publishNativeCall(call);
         notifyListeners("incomingCall",callData(call),true);
         notifyListeners("phoneState",snapshot(),true);
       }
       @Override public void onCallEnded(long uid){
         if(destroyed)return;
-        if(incoming!=null&&incoming.getUid()==uid)incoming=null;
+        if(incoming!=null&&incoming.getUid()==uid){incoming=null;publishNativeCall(null);}
         JSObject event=new JSObject();event.put("uid",uid);
         notifyListeners("callEnded",event,true);
         notifyListeners("phoneState",snapshot(),true);
       }
       @Override public void onMissedCall(AncsLink.Call call){
         if(destroyed)return;
-        if(incoming!=null&&incoming.getUid()==call.getUid())incoming=null;
+        if(incoming!=null&&incoming.getUid()==call.getUid()){incoming=null;publishNativeCall(null);}
         missed.addFirst(call);
         while(missed.size()>MAX_RECENT)missed.removeLast();
         notifyListeners("missedCall",callData(call),true);
@@ -114,6 +143,7 @@ public class MeviPhonePlugin extends Plugin {
   @PluginMethod public void stop(PluginCall call){
     if(link!=null)link.stop();
     incoming=null;
+    publishNativeCall(null);
     call.resolve(snapshot());
   }
   @PluginMethod public void answer(PluginCall call){
@@ -134,6 +164,8 @@ public class MeviPhonePlugin extends Plugin {
     destroyed=true;
     if(link!=null){link.stop();link=null;}
     incoming=null;missed.clear();
+    publishNativeCall(null);
+    if(activePlugin==this)activePlugin=null;
     super.handleOnDestroy();
   }
 }
