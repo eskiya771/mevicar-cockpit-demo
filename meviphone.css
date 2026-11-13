@@ -1,0 +1,31 @@
+/* Android-only iPhone ANCS phone page, with landscape-safe tap targets. */
+.mevi-phone-panel{height:100%;max-height:100%;overflow-y:auto;box-sizing:border-box;padding:clamp(10px,2vh,22px);color:#eefaff;background:linear-gradient(130deg,#081321,#11263b);font-family:inherit}
+.mevi-phone-panel header{margin-bottom:10px}
+.mevi-phone-panel header small{font-size:11px;color:#83bed0;letter-spacing:.12em}
+.mevi-phone-panel h2{font-size:clamp(17px,3.7vh,28px);margin:3px 0 9px}
+.mevi-phone-panel h3{font-size:clamp(14px,2.8vh,19px);margin:11px 0 8px}
+.mevi-phone-state{padding:10px 13px;border-radius:12px;background:#102e44;border:1px solid #315a6a}
+.mevi-phone-state span{font-size:12px;font-weight:800;color:#ffcc8a;letter-spacing:.08em}
+.mevi-phone-state span.connected{color:#8ff3a9}
+.mevi-phone-state p{margin:5px 0 0;color:#d5eafa;font-size:14px}
+.mevi-phone-actions{display:flex;gap:10px;flex-wrap:wrap;margin:11px 0}
+.mevi-phone-actions button,.mevi-phone-banner-actions button{padding:10px 16px;min-height:42px;border:1px solid #64b8d1;border-radius:11px;color:#e9ffff;background:#124259;font:inherit;font-weight:750;cursor:pointer}
+.mevi-phone-actions button:disabled{opacity:.45}
+.mevi-phone-guide{background:#102032;border-left:3px solid #25cde9;border-radius:9px;padding:9px 12px;font-size:13px;line-height:1.4}
+.mevi-phone-call{display:flex;flex-direction:column;gap:4px;background:#173e47;border:1px solid #3ef0b7;border-radius:12px;padding:12px;margin:8px 0}
+.mevi-phone-call strong{font-size:clamp(17px,3.5vh,24px)}
+.mevi-phone-call small{color:#8cf1c0;letter-spacing:.09em}
+.mevi-phone-history{display:grid;gap:6px}
+.mevi-phone-history>div{display:flex;justify-content:space-between;gap:15px;border-bottom:1px solid #355466;padding:7px 0;font-size:13px}
+.mevi-phone-history small{color:#afcad1}
+.mevi-phone-subtle{color:#aec6d3;font-size:12px;margin:8px 0;line-height:1.4}
+.mevi-phone-error{color:#ffd1cb;padding:8px;background:#59242c;border-radius:8px;font-size:13px}
+#mevi-phone-incoming{position:fixed;z-index:6000;right:max(18px,env(safe-area-inset-right));top:max(14px,env(safe-area-inset-top));max-width:min(390px,55vw);background:#073c45;border:2px solid #7bf1d5;box-shadow:0 16px 55px #000b;border-radius:18px;padding:12px;color:white;display:flex;gap:12px;align-items:center;box-sizing:border-box}
+#mevi-phone-incoming[hidden]{display:none!important}
+.mevi-phone-banner-text{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.mevi-phone-banner-text strong{font-size:13px;color:#a8f6d5}
+.mevi-phone-banner-text span{font-size:17px;font-weight:750;overflow:hidden;text-overflow:ellipsis}
+.mevi-phone-banner-text small{font-size:12px;color:#bed9e7;overflow:hidden;text-overflow:ellipsis}
+.mevi-phone-banner-actions{display:flex;flex-direction:column;gap:6px}
+.mevi-phone-banner-actions button{padding:7px 11px;min-height:38px;font-size:12px}
+@media(max-height:450px){.mevi-phone-panel{padding:8px 12px}.mevi-phone-panel h2{font-size:18px;margin:2px 0}.mevi-phone-guide{font-size:12px;padding:7px 10px}.mevi-phone-actions button{padding:7px 12px;min-height:35px}}
