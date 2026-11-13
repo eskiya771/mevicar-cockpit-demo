@@ -78,7 +78,8 @@
     client: 'mevicar-spotify-client-v1',
     token: 'mevicar-spotify-token-v1',
     history: 'mevicar-spotify-history-v1',
-    auth: 'mevicar-spotify-auth-v1'
+    auth: 'mevicar-spotify-auth-v1',
+    diag: 'mevicar-spotify-auth-diag-v1'
   };
   const KINDS = new Set(['track', 'album', 'playlist', 'artist', 'show', 'episode']);
   const BROWSE_DEFS = {
@@ -409,6 +410,19 @@
     const native = nativeOAuthBridge() ? readJson(localStorage, KEYS.auth, null) : null;
     return native || readJson(sessionStorage, KEYS.auth, null);
   }
+  let nativeOAuthStage = '';
+  let oauthDiagnostic = readJson(localStorage, KEYS.diag, null)?.message || 'Noch keine Spotify-Anmeldung gestartet';
+  function setAuthDiagnostic(message) {
+    oauthDiagnostic = String(message || '').slice(0, 160);
+    writeJson(localStorage, KEYS.diag, { message: oauthDiagnostic, at: Date.now() });
+    const label = document.getElementById('sp-oauth-diagnostic');
+    if (label) label.textContent = oauthDiagnostic;
+  }
+  function acceptNativeStage(message) {
+    nativeOAuthStage = String(message || '').slice(0, 120);
+    const label = document.getElementById('sp-native-diagnostic');
+    if (label) label.textContent = nativeOAuthStage;
+  }
   function clearPendingAuth() {
     for (const store of [sessionStorage, localStorage]) {
       try { store.removeItem(KEYS.auth); } catch { /* storage unavailable */ }
@@ -417,6 +431,7 @@
 
   async function connect(showDialog) {
     st.authError = '';
+    setAuthDiagnostic('Anmeldung wird vorbereitet');
     const clientId = readClientId();
     if (!clientId) {
       st.accountOpen = false;
@@ -435,6 +450,7 @@
       const redirect = redirectUri();
       const challenge = await codeChallenge(verifier);
       writeJson(authStorage(), KEYS.auth, { verifier, state, redirect, at: Date.now() });
+      setAuthDiagnostic('PKCE vorbereitet · Spotify-Freigabe wird geöffnet');
       const url = new URL(ACCOUNTS + '/authorize');
       url.searchParams.set('response_type', 'code');
       url.searchParams.set('client_id', clientId);
@@ -446,6 +462,7 @@
       if (showDialog === true) url.searchParams.set('show_dialog', 'true');
       location.assign(url.toString());
     } catch (error) {
+      setAuthDiagnostic('Spotify-Freigabe konnte nicht geöffnet werden');
       st.authError = 'Spotify-Anmeldung konnte nicht gestartet werden: ' + (error.message || error);
       rerender();
     }
@@ -549,10 +566,12 @@
     const oauthError = url.searchParams.get('error');
     const description = url.searchParams.get('error_description');
     if (!code && !oauthError) return false;
+    setAuthDiagnostic(oauthError ? 'Spotify hat den Rückruf mit einem Fehler gesendet' : 'Spotify-Code in der Web-App angekommen');
     const saved = pendingAuth();
     if (!nativeCallback) cleanCallbackUrl(url);
     clearPendingAuth();
     if (oauthError) {
+      setAuthDiagnostic('Spotify-Freigabe fehlgeschlagen: ' + String(oauthError).slice(0, 60));
       st.authError = oauthError === 'access_denied' ? 'Spotify-Verbindung wurde abgebrochen.' : ('Spotify: ' + (description || oauthError));
       returnToAudio();
       return true;
@@ -560,11 +579,13 @@
     if (!saved || !state || saved.state !== state || !saved.verifier ||
         !Number.isFinite(Number(saved.at)) || Date.now() - Number(saved.at) > 10 * 60 * 1000 ||
         Date.now() < Number(saved.at)) {
+      setAuthDiagnostic('PKCE-Sicherheitsprüfung fehlgeschlagen (Status/Verifizierer fehlt oder abgelaufen)');
       st.authError = 'Spotify-Sicherheitsprüfung fehlgeschlagen. Bitte erneut verbinden.';
       returnToAudio();
       return true;
     }
     st.authLoading = true;
+    setAuthDiagnostic('PKCE gültig · Spotify-Token wird angefordert');
     returnToAudio();
     try {
       const response = await fetch(ACCOUNTS + '/api/token', {
@@ -579,8 +600,12 @@
         })
       });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.access_token) throw makeError(authErrorText(data), 'auth', response.status);
+      if (!response.ok || !data.access_token) {
+        setAuthDiagnostic('Token-Austausch fehlgeschlagen · HTTP ' + response.status + ' · ' + String(data.error || 'ohne Token').slice(0, 45));
+        throw makeError(authErrorText(data), 'auth', response.status);
+      }
       saveToken(data);
+      setAuthDiagnostic('Spotify-Token erfolgreich gespeichert');
       st.authError = '';
       st.accountOpen = false;
       st.tab = 'now';
@@ -589,6 +614,7 @@
       await Promise.allSettled([loadProfile(), poll(true)]);
       rerender();
     } catch (error) {
+      if (!oauthDiagnostic.startsWith('Token-Austausch fehlgeschlagen')) setAuthDiagnostic('Token-Austausch nicht abgeschlossen: ' + (error?.name || 'Netzwerkfehler'));
       st.authError = 'Anmeldung fehlgeschlagen: ' + errorText(error);
       rerender();
     } finally {
@@ -802,6 +828,7 @@
       (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
       '<div class="sp-onboard-actions"><button type="button" class="sp-primary" onclick="meviSpotifyConnect()" ' + (!hasClient || st.authLoading ? 'disabled' : '') + '>' + icon('spotify') + (st.authLoading ? 'Verbinde …' : 'Mit Spotify verbinden') + '</button>' +
       (hasClient ? '<span class="sp-fine">Client ID: ' + esc(maskClient(st.clientId)) + '</span>' : '') + '</div>' +
+      '<div class="sp-fine" style="border:1px solid #456477;border-radius:10px;padding:10px;margin-top:10px;font-size:14px;line-height:1.55" role="status"><strong>Spotify-Diagnose</strong><div>Web: <span id="sp-oauth-diagnostic">' + esc(oauthDiagnostic) + '</span></div>' + (nativeOAuthBridge() ? '<div>APK: <span id="sp-native-diagnostic">' + esc(nativeOAuthStage || 'Status wird geladen') + '</span></div>' : '') + '</div>' +
       '<p class="sp-fine">Kein Passwort und kein Client Secret. Access- und Refresh-Token bleiben lokal in diesem Browser. Dev Mode: maximal 5 Nutzer, der App-Inhaber braucht Premium. Auf iPhone kann die Anmeldung aus einer installierten PWA heraus in Safari landen; dann die Verbindung in Safari herstellen.</p>' +
       '</div>';
   }
@@ -1813,6 +1840,7 @@
   Object.assign(window, {
     meviSpotifyHTML: html,
     meviSpotifyAcceptNativeCallback: uri => handleCallback(uri),
+    meviSpotifyNativeStage: acceptNativeStage,
     meviSpotifyWebPlayer: startWebPlayer,
     meviSpotifyMount: mount,
     meviSpotifyUnmount: unmount,
@@ -1862,6 +1890,10 @@
     }
   });
 
+  if (nativeOAuthBridge()) {
+    try { window.MeviNativeBridge.postMessage(JSON.stringify({id:'spotify-ready',action:'spotify.ready'})); }
+    catch { setAuthDiagnostic('APK-Bridge nicht erreichbar'); }
+  }
   handleCallback().catch(error => {
     st.authError = 'Anmeldung fehlgeschlagen: ' + errorText(error);
     rerender();
