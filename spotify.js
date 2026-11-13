@@ -429,6 +429,79 @@
     }
   }
 
+  // Prefer the normal Android deep link, but allow the resumed WebView to ask
+  // for a callback explicitly when evaluateJavascript was not delivered.
+  // Only the native main-frame bridge for our exact Pages origin can reply.
+  const oauthBridgeRequests = new Map();
+  let oauthBridgeSerial = 0;
+  let oauthPullTimer = null;
+  let oauthPullBusy = false;
+  function oauthNativeCall(action, fields = {}) {
+    if (!nativeOAuthBridge()) return Promise.reject(new Error('Keine Android-Bridge'));
+    return new Promise((resolve, reject) => {
+      const id = 'spotify-oauth-' + (++oauthBridgeSerial);
+      const timer = setTimeout(() => {
+        oauthBridgeRequests.delete(id);
+        reject(new Error('Android-Bridge Timeout'));
+      }, 5000);
+      oauthBridgeRequests.set(id, {resolve, reject, timer});
+      try { window.MeviNativeBridge.postMessage(JSON.stringify({id, action, ...fields})); }
+      catch (error) {
+        clearTimeout(timer);
+        oauthBridgeRequests.delete(id);
+        reject(error);
+      }
+    });
+  }
+  if (nativeOAuthBridge()) {
+    const previous = window.MeviNativeBridge.onmessage;
+    window.MeviNativeBridge.onmessage = event => {
+      if (typeof previous === 'function') {
+        try { previous(event); } catch { /* unrelated bridge handler */ }
+      }
+      let reply;
+      try { reply = JSON.parse(event.data); } catch { return; }
+      const pending = oauthBridgeRequests.get(reply?.id);
+      if (!pending) return;
+      clearTimeout(pending.timer);
+      oauthBridgeRequests.delete(reply.id);
+      if (reply.ok) pending.resolve(reply);
+      else pending.reject(new Error(String(reply.error || 'Android-Bridge fehlgeschlagen')));
+    };
+  }
+  async function pullSpotifyCallback() {
+    if (!nativeOAuthBridge() || document.hidden || oauthPullBusy || st.token) return;
+    oauthPullBusy = true;
+    try {
+      const result = await oauthNativeCall('spotify.callback.pull');
+      if (typeof result.callback !== 'string' ||
+          !result.callback.startsWith(NATIVE_REDIRECT + '?')) return;
+      setAuthDiagnostic('Spotify-Rückruf über Android-Bridge empfangen');
+      const processed = await acceptNativeCallback(result.callback);
+      if (processed) {
+        const state = new URL(result.callback).searchParams.get('state') || '';
+        await oauthNativeCall('spotify.callback.ack', {state});
+      }
+    } catch {
+      // The existing evaluateJavascript callback remains a fallback.
+      // Never display an authorization code or PKCE verifier in diagnostics.
+    } finally { oauthPullBusy = false; }
+  }
+  function startSpotifyCallbackPolling() {
+    if (!nativeOAuthBridge() || st.token) return;
+    if (oauthPullTimer) return;
+    const started = Date.now();
+    oauthPullTimer = setInterval(() => {
+      if (st.token || Date.now() - started > 10 * 60 * 1000) {
+        clearInterval(oauthPullTimer);
+        oauthPullTimer = null;
+        return;
+      }
+      pullSpotifyCallback();
+    }, 1400);
+    pullSpotifyCallback();
+  }
+
   async function connect(showDialog) {
     st.authError = '';
     setAuthDiagnostic('Anmeldung wird vorbereitet');
@@ -451,6 +524,7 @@
       const challenge = await codeChallenge(verifier);
       writeJson(authStorage(), KEYS.auth, { verifier, state, redirect, at: Date.now() });
       setAuthDiagnostic('PKCE vorbereitet · Spotify-Freigabe wird geöffnet');
+      startSpotifyCallbackPolling();
       const url = new URL(ACCOUNTS + '/authorize');
       url.searchParams.set('response_type', 'code');
       url.searchParams.set('client_id', clientId);
@@ -1908,8 +1982,13 @@
     catch { setAuthDiagnostic('APK-Bridge nicht erreichbar'); }
   }
   notifyNativeReady();
+  if (nativeOAuthBridge() && pendingAuth() && !st.token) startSpotifyCallbackPolling();
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) notifyNativeReady();
+    if (!document.hidden) {
+      notifyNativeReady();
+      if (pendingAuth() && !st.token) startSpotifyCallbackPolling();
+      pullSpotifyCallback();
+    }
   });
   handleCallback().catch(error => {
     st.authError = 'Anmeldung fehlgeschlagen: ' + errorText(error);
