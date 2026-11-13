@@ -30,6 +30,7 @@ function runNativeCallback(pending, {bridgeCallback = ''} = {}) {
   const session={};
   const requests=[];
   const bridgeActions=[];
+  const bridgeRequests=[];
   const store=values=>({
     getItem:key=>values[key]??null,
     setItem(key,value){values[key]=String(value)},
@@ -40,6 +41,7 @@ function runNativeCallback(pending, {bridgeCallback = ''} = {}) {
   const window={MeviNativeBridge:{postMessage(raw){
     const req=JSON.parse(raw);
     bridgeActions.push(req.action);
+    bridgeRequests.push(req);
     if(!bridgeCallback)return;
     let reply=null;
     if(req.action==='spotify.callback.pull')reply={id:req.id,ok:true,callback:bridgeCallback};
@@ -70,8 +72,30 @@ function runNativeCallback(pending, {bridgeCallback = ''} = {}) {
       window,document,{},store(saved),store(session),loc,{replaceState(){}},
       fakeFetch,URL,TextEncoder,()=>1,()=>{},()=>1,()=>{},AbortController
     );
-  return {window,saved,session,requests,bridgeActions};
+  return {window,saved,session,requests,bridgeActions,bridgeRequests};
 }
+// Starting Spotify from the hybrid APK must never navigate the WebView to
+// accounts.spotify.com. The APK opens the validated authorization URL instead.
+const authorize=runNativeCallback({
+  state:'old-state',verifier:'old-verifier',at:Date.now(),
+  redirect:'mevicarnext://spotify-callback'
+});
+authorize.window.crypto={
+  getRandomValues(bytes){ bytes.fill(7); return bytes; },
+  subtle:{digest:async()=>new Uint8Array(32).buffer}
+};
+authorize.window.btoa=value=>Buffer.from(value,'binary').toString('base64');
+await authorize.window.meviSpotifyConnect();
+const request=authorize.bridgeRequests.find(r=>r.action==='spotify.authorize');
+assert.ok(request,'Hybrid login must send spotify.authorize to Android');
+const loginUrl=new URL(request.url);
+assert.equal(loginUrl.hostname,'accounts.spotify.com');
+assert.equal(loginUrl.searchParams.get('redirect_uri'),'mevicarnext://spotify-callback');
+assert.equal(loginUrl.searchParams.get('code_challenge_method'),'S256');
+assert.ok(loginUrl.searchParams.get('code_challenge'));
+assert.equal(JSON.parse(authorize.saved['mevicar-spotify-auth-v1']).state,
+  loginUrl.searchParams.get('state'));
+
 const native=runNativeCallback({
   state:'state123456',verifier:'pkce-verifier',at:Date.now(),
   redirect:'mevicarnext://spotify-callback'
