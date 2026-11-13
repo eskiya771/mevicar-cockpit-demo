@@ -44,6 +44,8 @@ jobs:
         run: node tests/youtube-smoke.mjs
       - name: Test TradingView finance view and watchlist
         run: node tests/stocks-smoke.mjs
+      - name: Test Wer ist schuld? bottle spinner
+        run: node tests/weristschuld-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
@@ -206,6 +208,11 @@ jobs:
           html = html.replace(sudoku_js_tag, '<script id="mevicar-sudoku-script">' + sudoku_js + '</script>')
           html = html.replace('<link rel="stylesheet" href="./tetris.css">', '<style>' + pathlib.Path('tetris.css').read_text() + '</style>')
           html = html.replace('<script src="./tetris.js"></script>', '<script>' + pathlib.Path('tetris.js').read_text() + '</script>')
+          guilt_css = '<link rel="stylesheet" href="./weristschuld.css">'
+          guilt_js = '<script src="./weristschuld.js"></script>'
+          assert guilt_css in html and guilt_js in html, 'Wer ist schuld? assets missing'
+          html = html.replace(guilt_css, '<style id="mevicar-bottle-game-style">' + pathlib.Path('weristschuld.css').read_text() + '</style>')
+          html = html.replace(guilt_js, '<script id="mevicar-bottle-game-script">' + pathlib.Path('weristschuld.js').read_text() + '</script>')
           html = html.replace('<link rel="stylesheet" href="./tv.css">', '<style>' + pathlib.Path('tv.css').read_text() + '</style>')
           html = html.replace('<script src="./xtream.js"></script>', '<script>' + pathlib.Path('xtream.js').read_text() + '</script>')
           html = html.replace('<script src="./tv.js"></script>', '<script>' + pathlib.Path('tv.js').read_text() + '</script>')
@@ -242,7 +249,7 @@ jobs:
           cp vendor/hls-LICENSE.txt dist/vendor/
           mkdir -p dist/weather
           cp -R weather/. dist/weather/
-          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css weristschuld.js weristschuld.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
