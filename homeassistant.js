@@ -318,7 +318,7 @@
   catch(e){state.connected=false;state.error=errorText(e);state.token='';throw e}
   finally{state.loading=false;repaint()}
  }
- async function connect(){return connectWithToken((get('ha-token')?.value||state.token))}
+ async function connect(){try{return await connectWithToken((get('ha-token')?.value||state.token))}catch{return false}}
   function disconnect(options={}){
   state.token='';state.connected=false;state.states=[];state.radar=[];state.query='';
   state.busyIds.clear();state.requestId++;
