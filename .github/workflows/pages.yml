@@ -22,6 +22,8 @@ jobs:
       - uses: actions/configure-pages@v5
       - name: Test separate Web and APK version indicators
         run: node tests/version-smoke.mjs
+      - name: Test Maps first-run setup and clean status controls
+        run: node tests/first-run-maps-smoke.mjs
       - name: Test signed APK update Settings
         run: node tests/native-updates-smoke.mjs
       - name: Test centralized credentials and no secret persistence
