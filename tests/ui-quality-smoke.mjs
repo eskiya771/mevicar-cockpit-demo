@@ -101,6 +101,9 @@ assert.equal(get('s.mode'),'split');
 get('openApp("audio")');
 assert.equal(get('s.mode'),'full');
 get('openApp("nav")');
+// With a configured Maps key, CarPlay-like address search remains fully usable.
+// Missing-key onboarding is tested separately in maps-first-run-smoke.mjs.
+get('window.MeviGoogleNav={hasKey:()=>true,changeQuery:()=>{}}');
 get('openSearch()');
 assert.equal(get('s.nav'),'search');
 assert.match(node('screen').innerHTML,/Ziel suchen/);
