@@ -21,7 +21,7 @@ public class MeviNavigationActivity extends Activity {
   private double lat,lng;
   private String title;
   private boolean connecting=false;
-  private final Navigator.ArrivalListener arrivalListener=()->{
+  private final Navigator.ArrivalListener arrivalListener=(event)->{
     guiding=false;
     if(navigator!=null)navigator.stopGuidance();
     showStatus("Ziel erreicht: "+title);
@@ -134,6 +134,6 @@ public class MeviNavigationActivity extends Activity {
     if(navigationView!=null){navigationView.onDestroy();navigationView=null;}
     super.onDestroy();
   }
-  @Override public void onLowMemory(){super.onLowMemory();if(navigationView!=null)navigationView.onLowMemory();}
+  @Override public void onTrimMemory(int level){super.onTrimMemory(level);if(navigationView!=null)navigationView.onTrimMemory(level);}
   @Override protected void onSaveInstanceState(Bundle out){if(navigationView!=null)navigationView.onSaveInstanceState(out);super.onSaveInstanceState(out);}
 }
