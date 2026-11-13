@@ -87,7 +87,9 @@ function html(){
   '<div class="mevi-update-panel"><strong>Updatekanal</strong><div class="mevi-update-actions">'+
   '<button type="button" aria-pressed="'+(state.channel==='preview')+'" '+(state.busy?'disabled':'')+' onclick="MeviNativeUpdates.channel(\'preview\')">Preview / Beta</button>'+
   '<button type="button" aria-pressed="'+(state.channel==='stable')+'" '+(state.busy?'disabled':'')+' onclick="MeviNativeUpdates.channel(\'stable\')">Stable</button>'+
-  '</div><small>Preview sucht nur dauerhaft signierte Next-Test-APKs. Die alten Debug-Builds werden ausdrücklich ausgeschlossen.</small></div>'+
+  '</div><small>'+(state.channel==='stable'
+    ? 'Für Stable wurde bislang keine signierte Next-APK veröffentlicht. Bitte Preview / Beta wählen, um die aktuellen Updates zu erhalten.'
+    : 'Preview sucht nur dauerhaft signierte Next-Test-APKs. Die alten Debug-Builds werden ausdrücklich ausgeschlossen.')+'</small></div>'+
   '<div class="mevi-update-panel">'+
   '<div class="mevi-update-actions"><button type="button" '+(state.busy?'disabled':'')+' onclick="MeviNativeUpdates.check()">Auf Updates prüfen</button>'+
   (available?'<button type="button" '+(state.busy?'disabled':'')+' onclick="MeviNativeUpdates.download()">APK laden &amp; installieren</button>':'')+
