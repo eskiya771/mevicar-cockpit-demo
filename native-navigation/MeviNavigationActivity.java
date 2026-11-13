@@ -17,6 +17,18 @@ public class MeviNavigationActivity extends Activity {
   private Navigator navigator;
   private NavigationView navigationView;
   private TextView status;
+  private LinearLayout phoneBanner;
+  private TextView phoneCaller;
+  private Button phoneAccept,phoneDecline;
+  private final MeviPhonePlugin.CallObserver phoneObserver=call->runOnUiThread(()->{
+    if(phoneBanner==null||isFinishing()||isDestroyed())return;
+    if(call==null){phoneBanner.setVisibility(View.GONE);return;}
+    phoneCaller.setText("☎ IPHONE · "+call.getName()+
+      (call.getDetail().isEmpty()?"":"\n"+call.getDetail()));
+    phoneAccept.setVisibility(call.getCanAnswer()?View.VISIBLE:View.GONE);
+    phoneDecline.setVisibility(call.getCanDecline()?View.VISIBLE:View.GONE);
+    phoneBanner.setVisibility(View.VISIBLE);
+  });
   private MeviRoadAssistNative roadAssist;
   private boolean guiding=false, started=false, resumed=false;
   private double lat,lng;
@@ -75,6 +87,33 @@ public class MeviNavigationActivity extends Activity {
     controls.addView(end);
     FrameLayout.LayoutParams cp=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP);
     root.addView(controls,cp);
+    phoneBanner=new LinearLayout(this);
+    phoneBanner.setOrientation(LinearLayout.VERTICAL);
+    phoneBanner.setBackgroundColor(0xEE0D4B59);
+    phoneBanner.setPadding(16,12,16,12);
+    phoneBanner.setElevation(20);
+    phoneCaller=new TextView(this);
+    phoneCaller.setTextColor(Color.WHITE);
+    phoneCaller.setTextSize(17);
+    phoneCaller.setMaxLines(2);
+    phoneBanner.addView(phoneCaller,new LinearLayout.LayoutParams(-1,-2));
+    LinearLayout phoneActions=new LinearLayout(this);
+    phoneActions.setOrientation(LinearLayout.HORIZONTAL);
+    phoneAccept=new Button(this);phoneAccept.setText("Annehmen");
+    phoneAccept.setOnClickListener(v->{
+      if(!MeviPhonePlugin.respondNativeCall(true))showStatus("iPhone-Anruf nicht mehr verfügbar");
+    });
+    phoneActions.addView(phoneAccept);
+    phoneDecline=new Button(this);phoneDecline.setText("Ablehnen");
+    phoneDecline.setOnClickListener(v->{
+      if(!MeviPhonePlugin.respondNativeCall(false))showStatus("iPhone-Anruf nicht mehr verfügbar");
+    });
+    phoneActions.addView(phoneDecline);
+    phoneBanner.addView(phoneActions);
+    FrameLayout.LayoutParams phoneLayout=new FrameLayout.LayoutParams(-2,-2,Gravity.TOP|Gravity.RIGHT);
+    phoneLayout.setMargins(12,84,18,0);
+    root.addView(phoneBanner,phoneLayout);
+    phoneBanner.setVisibility(View.GONE);
     TextView radarAlert=new TextView(this);
     radarAlert.setTextColor(Color.WHITE);radarAlert.setTextSize(17);
     radarAlert.setPadding(20,14,20,14);radarAlert.setMaxLines(3);
@@ -94,6 +133,7 @@ public class MeviNavigationActivity extends Activity {
       ha[2],!"false".equals(ha[3]),!"false".equals(ha[4]));
     voice.setText(roadAssist.voiceEnabled()?"Radar Ton AN":"Radar Ton AUS");
     setContentView(root);
+    MeviPhonePlugin.addCallObserver(phoneObserver);
     if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED) {
       requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},81);
     } else prepareKey();
@@ -168,6 +208,7 @@ public class MeviNavigationActivity extends Activity {
   @Override protected void onPause(){resumed=false;if(navigationView!=null)navigationView.onPause();super.onPause();}
   @Override protected void onStop(){started=false;if(navigationView!=null)navigationView.onStop();super.onStop();}
   @Override protected void onDestroy(){
+    MeviPhonePlugin.removeCallObserver(phoneObserver);
     if(roadAssist!=null){roadAssist.stop();roadAssist=null;}
     if(navigator!=null){navigator.removeArrivalListener(arrivalListener);navigator.stopGuidance();navigator.clearDestinations();navigator.cleanup();navigator=null;}
     if(navigationView!=null){navigationView.onDestroy();navigationView=null;}
