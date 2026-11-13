@@ -470,7 +470,10 @@
     };
   }
   async function pullSpotifyCallback() {
-    if (!nativeOAuthBridge() || document.hidden || oauthPullBusy || st.token) return;
+    // Android can mark the WebView document hidden during the Chrome-to-APK
+    // transition even while its JS/bridge is already usable. Do not suppress
+    // the pull solely because document.hidden is true.
+    if (!nativeOAuthBridge() || oauthPullBusy || st.token) return;
     oauthPullBusy = true;
     try {
       const result = await oauthNativeCall('spotify.callback.pull');
