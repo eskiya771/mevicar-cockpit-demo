@@ -6,7 +6,7 @@ const DEFAULT=['Merz','Typtest','Systemtest','Entwicklung','PSS','Werk','PL','EU
 const STORE='mevicar-wer-ist-schuld-parties-v1';
 const MAX=16;
 const clean=s=>String(s??'').trim().replace(/\s+/g,' ').slice(0,28);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;':'&quot;',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function load(){
  try{
   const data=JSON.parse(localStorage.getItem(STORE));
