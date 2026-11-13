@@ -36,19 +36,19 @@ if marker not in text:
 # and core library desugaring (Google Navigation SDK Android setup requirements).
 root_gradle=Path("android/build.gradle")
 root_source=root_gradle.read_text()
-root_source,count=re.subn(r"com\\.android\\.tools\\.build:gradle:\\d+\\.\\d+\\.\\d+",
+root_source,count=re.subn(r"com\.android\.tools\.build:gradle:\d+\.\d+\.\d+",
                          "com.android.tools.build:gradle:8.13.2",root_source)
 if count<1: raise SystemExit("Unable to locate Android Gradle plugin version")
 root_gradle.write_text(root_source)
 text=gradle.read_text()
 if "coreLibraryDesugaringEnabled true" not in text:
     if "android {" not in text: raise SystemExit("Android gradle config missing")
-    text=text.replace("android {","android {\\n    compileOptions {\\n        coreLibraryDesugaringEnabled true\\n    }",1)
+    text=text.replace("android {","android {\n    compileOptions {\n        coreLibraryDesugaringEnabled true\n    }",1)
 desugar="coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs_nio:2.1.5'"
 if desugar not in text:
-    m=re.search(r"dependencies\\s*\\{",text)
+    m=re.search(r"dependencies\s*\{",text)
     if not m: raise SystemExit("Gradle dependencies block missing for desugaring")
-    text=text[:m.end()]+"\\n    "+desugar+text[m.end():]
+    text=text[:m.end()]+"\n    "+desugar+text[m.end():]
 gradle.write_text(text)
 manifest=root/"src/main/AndroidManifest.xml"
 text=manifest.read_text()
