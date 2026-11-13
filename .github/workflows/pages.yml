@@ -22,6 +22,8 @@ jobs:
       - uses: actions/configure-pages@v5
       - name: Test separate Web and APK version indicators
         run: node tests/version-smoke.mjs
+      - name: Test signed APK update Settings
+        run: node tests/native-updates-smoke.mjs
       - name: Test centralized credentials and no secret persistence
         run: node tests/credential-settings-smoke.mjs
       - name: Quick JavaScript and configuration smoke tests
@@ -253,8 +255,9 @@ jobs:
           cp vendor/hls-LICENSE.txt dist/vendor/
           mkdir -p dist/weather
           cp -R weather/. dist/weather/
-          cp credential-settings.js credential-settings.css xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css weristschuld.js weristschuld.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          cp native-updates.js native-updates.css credential-settings.js credential-settings.css xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css weristschuld.js weristschuld.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           test -s dist/credential-settings.js && test -s dist/credential-settings.css
+          test -s dist/native-updates.js && test -s dist/native-updates.css
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
