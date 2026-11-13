@@ -75,6 +75,11 @@ assert.equal(JSON.parse(native.saved['mevicar-spotify-token-v1']).access_token,
 assert.equal(native.saved['mevicar-spotify-auth-v1'],undefined,'PKCE request consumed once');
 assert.equal(native.requests[0].body.includes('code_verifier=pkce-verifier'),true);
 assert.equal(native.requests[0].body.includes('redirect_uri=mevicarnext%3A%2F%2Fspotify-callback'),true);
+const tokenExchangeCount=native.requests.filter(req=>req.url.endsWith('/api/token')).length;
+assert.equal(await native.window.meviSpotifyAcceptNativeCallback(
+  'mevicarnext://spotify-callback?code=spotify-authorization-code&state=state123456'),true);
+assert.equal(native.requests.filter(req=>req.url.endsWith('/api/token')).length,
+  tokenExchangeCount,'Android retry must not invalidate an already completed Spotify login');
 const stale=runNativeCallback({
   state:'state123456',verifier:'pkce-verifier',at:Date.now()-11*60*1000,
   redirect:'mevicarnext://spotify-callback'
