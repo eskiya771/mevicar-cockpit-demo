@@ -58,4 +58,16 @@ fake('ha','LONG_LIVED_ACCESS_TOKEN_VALUE_ABC123');
 await api.save('ha').catch(()=>{});
 assert.doesNotMatch(JSON.stringify([...store]),/LONG_LIVED_ACCESS/,'HA token may not persist in browser');
 assert.match(read('sw.js'),/const CACHE=['"]mevicar-next-shell-v\d+['"]/);
+const settingsCss=read('credential-settings.css');
+const workflow=read('.github/workflows/pages.yml');
+assert.match(settingsCss,/\.settings-ui:has\(\.mevi-credentials\) \.settings-tabs button\s*\{[^}]*min-height:46px/s,
+ 'Settings tabs must be easier to tap');
+assert.match(settingsCss,/\.mevi-cred-row input\s*\{[^}]*min-height:50px/s,
+ 'Credential inputs need 50px touch targets');
+assert.match(settingsCss,/\.mevi-cred-row button,\.mevi-credentials>button\s*\{[^}]*min-height:50px/s,
+ 'Credential actions need 50px touch targets');
+assert.match(settingsCss,/\.mevi-credentials\s*\{[^}]*overflow-y:auto/s,
+ 'Large labels must scroll without overflowing the cockpit');
+assert.match(workflow,/mevicar-versioned-credentials/,
+ 'Credential CSS must be embedded in every versioned HTML release');
 console.log('Central credentials: fields, removal from app screens, storage and no secret leakage OK');
