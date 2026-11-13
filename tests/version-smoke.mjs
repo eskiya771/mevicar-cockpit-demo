@@ -8,7 +8,7 @@ assert(inline.includes('window.meviSetNativeBuild'), 'Native build callback miss
 assert(inline.includes("NATIVE_BUILD?'Web '"), 'Android/Web status must distinguish builds');
 assert(inline.includes('Pages-Build ') && inline.includes('APK-Build '), 'Version title must distinguish sources');
 assert(inline.includes('versionStatus()'), 'Settings must show both sources');
-assert(inline.includes("window.addEventListener('load',()=>checkForUpdate({silent:true}))"), 'Web build must be checked automatically on launch');
+assert(inline.includes("window.addEventListener('load',()=>checkForUpdateImpl(true))"), 'Web build must be checked automatically on launch');
 assert(inline.includes("url.searchParams.get('v')!==String(latestBuild)"), 'Startup refresh must avoid infinite reload loops');
 assert(readFileSync('VERSION','utf8').trim().match(/^\d+\.\d+\.\d+$/));
 new vm.Script(inline.replace('__MEVICAR_BUILD__',JSON.stringify({version:'0.5.3',build:53,commit:'abcdef123456'})),{filename:'index.html'});
