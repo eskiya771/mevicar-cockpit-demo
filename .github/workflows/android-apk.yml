@@ -14,6 +14,8 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
+      - name: Test centralized credentials and no secret persistence
+        run: node tests/credential-settings-smoke.mjs
       - name: Quick JavaScript and configuration smoke tests
         run: |
           node --check credential-settings.js
