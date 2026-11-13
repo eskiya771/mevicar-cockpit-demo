@@ -36,6 +36,8 @@ jobs:
           node tests/xtream-smoke.mjs
       - name: Test Google Maps navigation and GPS fallback
         run: node tests/navigation-google-smoke.mjs
+      - name: Test first-run Maps setup and gated address search
+        run: node tests/maps-first-run-smoke.mjs
       - name: Test Home Assistant dashboard and REST access
         run: node tests/homeassistant-smoke.mjs
       - name: Test route-matched Road Assist camera safety
