@@ -476,12 +476,16 @@
       const result = await oauthNativeCall('spotify.callback.pull');
       if (typeof result.callback !== 'string' ||
           !result.callback.startsWith(NATIVE_REDIRECT + '?')) return;
+      const state = new URL(result.callback).searchParams.get('state') || '';
+      const expected = pendingAuth()?.state || '';
+      if (state !== expected || !expected) {
+        // Never let an old Android callback clear a newer PKCE request.
+        await oauthNativeCall('spotify.callback.ack', {state});
+        return;
+      }
       setAuthDiagnostic('Spotify-Rückruf über Android-Bridge empfangen');
       const processed = await acceptNativeCallback(result.callback);
-      if (processed) {
-        const state = new URL(result.callback).searchParams.get('state') || '';
-        await oauthNativeCall('spotify.callback.ack', {state});
-      }
+      if (processed) await oauthNativeCall('spotify.callback.ack', {state});
     } catch {
       // The existing evaluateJavascript callback remains a fallback.
       // Never display an authorization code or PKCE verifier in diagnostics.
