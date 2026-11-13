@@ -60,8 +60,12 @@ assert.doesNotMatch(JSON.stringify([...store]),/LONG_LIVED_ACCESS/,'HA token may
 assert.match(read('sw.js'),/const CACHE=['"]mevicar-next-shell-v\d+['"]/);
 const settingsCss=read('credential-settings.css');
 const workflow=read('.github/workflows/pages.yml');
-assert.match(settingsCss,/\.settings-ui:has\(\.mevi-credentials\) \.settings-tabs button\s*\{[^}]*min-height:46px/s,
- 'Settings tabs must be easier to tap');
+assert.match(settingsCss,/\.settings-ui \.settings-tabs button\s*\{[^}]*min-height:48px/s,
+ 'Settings tabs on all four pages must have 48px touch targets');
+assert.doesNotMatch(settingsCss,/\.settings-ui:has\(\.mevi-credentials\) \.settings-tabs button/,
+ 'Larger Settings tabs must not be limited to Credentials');
+assert.match(settingsCss,/\.settings-ui \.settings-bottom button\s*\{[^}]*min-height:46px/s,
+ 'Release Notes must be easy to tap');
 assert.match(settingsCss,/\.mevi-cred-row input\s*\{[^}]*min-height:50px/s,
  'Credential inputs need 50px touch targets');
 assert.match(settingsCss,/\.mevi-cred-row button,\.mevi-credentials>button\s*\{[^}]*min-height:50px/s,
