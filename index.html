@@ -125,7 +125,7 @@ function gpsSpeedOnly(){return typeof window.meviSpeedHTML==='function'?window.m
 function gpsDashboard(){return typeof window.meviSpeedHTML==='function'?window.meviSpeedHTML(false):'<div class="center">Tacho wird geladen …</div>'}
 
 function setSettingsTab(tab){s.settingsTab=['design','screensaver','credentials','updates'].includes(tab)?tab:'design';render();if(tab==='updates')window.MeviNativeUpdates?.refresh?.()}
-function openCredentialSettings(){s.app='settings';s.mode='full';s.settingsTab='credentials';render()}
+function openCredentialSettings(){s.app='settings';s.extra='settings';s.mode='full';s.settingsTab='credentials';s.keyboard=false;render()}
 window.meviOpenCredentialSettings=openCredentialSettings;
 function settingsHTML(){
  const tab=['design','screensaver','credentials','updates'].includes(s.settingsTab)?s.settingsTab:'design';
