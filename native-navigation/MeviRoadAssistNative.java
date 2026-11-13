@@ -50,7 +50,10 @@ public final class MeviRoadAssistNative {
   private final TextView notice, health;
   private final ExecutorService worker=Executors.newSingleThreadExecutor();
   private final Handler main=new Handler(Looper.getMainLooper());
-  private final String haOrigin, haToken;
+  private final String haOrigin, haToken, configId;
+  private boolean radarEnabled, voiceEnabled;
+  private boolean scanActive=false;
+  private List<Camera> scanned=Collections.emptyList();
   private volatile boolean closed=false;
   private boolean guiding=false;
   private List<LatLng> route=Collections.emptyList();
@@ -94,10 +97,13 @@ public final class MeviRoadAssistNative {
     final double progress;
     Match(Camera c,double p){camera=c;progress=p;}
   }
-  public MeviRoadAssistNative(Activity activity,TextView notice,TextView health,String origin,String token){
+  public MeviRoadAssistNative(Activity activity,TextView notice,TextView health,String origin,String token,
+    String configId,boolean enabled,boolean voice){
     this.activity=activity;this.notice=notice;this.health=health;
     haOrigin=origin==null?"":origin;
     haToken=token==null?"":token;
+    this.configId=configId==null?"":configId;
+    radarEnabled=enabled;voiceEnabled=voice;
     notice.setVisibility(View.GONE);
     tts=new TextToSpeech(activity,status->{
       ttsReady=status==TextToSpeech.SUCCESS&&!closed;
@@ -163,7 +169,9 @@ public final class MeviRoadAssistNative {
     if(closed)return;
     List<Match> result=new ArrayList<>();
     Map<String,Match> distinct=new HashMap<>();
-    for(Camera c:cameras){
+    List<Camera> combined=new ArrayList<>(cameras);
+    combined.addAll(scanned);
+    for(Camera c:combined){
       Position p=project(route,c.lat,c.lng);
       if(p==null||p.offset>CAMERA_CORRIDOR_METERS)continue;
       String place=String.format(Locale.ROOT,"%.5f,%.5f",c.lat,c.lng);
@@ -187,6 +195,8 @@ public final class MeviRoadAssistNative {
   private void updateHealth(){
     if(closed)return;
     String status=feedStatus;
+    if(!radarEnabled)status="Warnungen ausgeschaltet";
+    else if(scanActive)status="Routenscan läuft … "+feedStatus;
     if(!route.isEmpty()&&lastReceived>0)
       status+=" · "+matches.size()+" auf Route";
     health.setText("ROAD ASSIST · "+status);
@@ -204,6 +214,7 @@ public final class MeviRoadAssistNative {
     notice.setVisibility(View.VISIBLE);
   }
   private void speak(Camera camera,String stage,double ahead){
+    if(!voiceEnabled)return;
     String id=camera.id+"|"+stage;
     if(!spoken.add(id))return;
     if(System.currentTimeMillis()-lastSpeech<1400||!ttsReady||tts==null)return;
@@ -214,7 +225,7 @@ public final class MeviRoadAssistNative {
     tts.speak(speech,TextToSpeech.QUEUE_ADD,null,"road_assist_"+id);
   }
   private void onPosition(Location fix){
-    if(closed||!guiding||route.size()<2||lastReceived<=0||
+    if(closed||!guiding||!radarEnabled||route.size()<2||lastReceived<=0||
        System.currentTimeMillis()-lastReceived>MAX_HA_AGE_MS){
       notice.setVisibility(View.GONE);return;
     }
@@ -294,6 +305,14 @@ public final class MeviRoadAssistNative {
       }
     } finally {conn.disconnect();}
   }
+  /** Voice is independent from Google's spoken turn-by-turn directions. */
+  public boolean toggleVoice(){
+    voiceEnabled=!voiceEnabled;
+    if(!voiceEnabled&&tts!=null)tts.stop();
+    return voiceEnabled;
+  }
+  public boolean voiceEnabled(){return voiceEnabled;}
+  public boolean hasScanConfig(){return configId.matches("[0-9A-HJKMNP-TV-Z]{26}");}
   public void stop(){
     if(closed)return;
     closed=true;guiding=false;
