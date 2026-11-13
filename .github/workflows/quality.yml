@@ -1,7 +1,7 @@
 name: MeviCar Quality Check
 on:
   push:
-    branches: [main]
+    branches: [main, feature/central-settings-credentials]
   workflow_dispatch:
 permissions:
   contents: read
@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
+      - name: Test centralized credentials Settings
+        run: node tests/settings-smoke.mjs
       - name: Test MeviMedia playback and library
         run: node tests/mevimedia-smoke.mjs
       - name: Test split-screen Lichtshow effect app
