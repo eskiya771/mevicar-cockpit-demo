@@ -1,43 +1,22 @@
-# MeviCar Next – Spotify Android Integration
+# MeviCar Next – Spotify ohne installierte Spotify-App (Android, Web)
 
-**Code integration, not a device-verified playback claim.** Classic remains unchanged.
+## Architektur
+MeviCar Next stellt Radio, MeviMedia und Spotify über denselben Audio-Quellenumschalter dar. Spotify nutzt die vorhandene Web-App-Oberfläche mit Suche, Bibliothek, Playlists, Cover, Favoriten, Wiedergabesteuerung und Lautstärke.
 
-## Shared UI
+**Anmeldung:** Nur die öffentliche Spotify Client-ID wird eingegeben, dazu einmalige Spotify-Kontoautorisierung über OAuth Authorization Code + PKCE. Kein Client Secret, kein Spotify-Passwort in MeviCar. Spotify Premium erforderlich.
 
-`eskiya771/mevicar-cockpit-demo/spotify.js` remains the Spotify frontend in both the PWA and the Android app. It retains:
-- Spotify Premium OAuth Authorization Code + PKCE
-- Library, playlists, albums, artists, podcasts, search, history
-- Play, pause, skip, seek, shuffle/repeat, likes, queue, volume and media source switching
-- Player metadata via the Spotify Web API
+**Wiedergabe:** Die Web-App nutzt den offiziellen Spotify Web Playback SDK. In der Hybrid-APK wird ebenfalls der Web-Player probiert, **nicht** die im Hintergrund laufende Spotify-Android-App. Spotify unterstützt den SDK in mobilen Browsern, aber unterstützt DRM-Wiedergabe innerhalb von Android WebView nicht explizit. Daher ist Live-Wiedergabe innerhalb der APK nicht garantiert.
 
-The **web browser** uses the Spotify Web Playback SDK and its own Spotify Connect player. The **Android APK** uses the official Spotify App Remote v0.8.0 to delegate playback to the installed Spotify app. The JS frontend routes commands through the origin-checked `MeviNativeBridge`. This avoids a second UI and avoids assuming WebView supports DRM/Spotify streaming.
+## Web/Android Redirect-URIs im Spotify Dashboard
+- Web: `https://eskiya771.github.io/mevicar-cockpit-demo/`
+- APK OAuth per externem Browser: `mevicarnext://spotify-callback`
 
-## One-time Spotify Developer Dashboard setup
+Die App ruft die Spotify-Login-Seite im Standardbrowser auf; der Callback geht zurück in die Hybrid-App. Danach versucht der integrierte Player Wiedergabe direkt im WebView.
 
-Use the same Spotify Client ID already configured in **MeviCar Next → Settings → Zugänge → Spotify Client-ID**, subject to Spotify developer permissions.
+## Browser-Ausweichweg
+Wenn der Android WebView die Spotify-DRM-Engine nicht bereitstellt oder der Web Playback SDK mit initialization_error scheitert, zeigt die Spotify-Oberfläche den Grund und **Im Browser öffnen**. Diese Funktion öffnet die MeviCar-Web-App mit Chrome/systemeigenem Browser, ohne die Spotify-App zu benötigen. Browser und WebView besitzen getrennten Speicher: Client-ID und OAuth können im Browser einmalig neu nötig sein.
 
-Register:
-- APK Android application ID: `de.mevicar.next`
-- SHA-1 fingerprint corresponding to the **actual signing certificate** of the APK
-- Redirect URI: `mevicarnext://spotify-callback`
-- Existing web redirect remains `https://eskiya771.github.io/mevicar-cockpit-demo/`
-
-Both redirects must be entered verbatim. The release SHA-1 differs from the debug signing certificate's SHA-1. The application is presently built as a debug preview; device auth still requires real Spotify app and valid registration.
-
-## Security and lifecycle
-
-- Spotify account login is intercepted and launched in an **external** browser, not an Android WebView.
-- The Spotify OAuth response is delivered back through a scoped Android deep link and forwarded only to the trusted GitHub Pages document.
-- The original PKCE verifier and state check remain in `spotify.js`. Neither tokens nor Spotify password are sent to App Remote native bridge.
-- Native controller accepts a typed allowlist of Spotify URI actions and controls the installed Spotify app.
-- Native controller disconnects during Activity destruction.
-- For Spotify playback, the Spotify Android app must be installed and logged in.
-- WebView retains the same browser-local OAuth tokens as the existing web app. These are **not** currently migrated into Android Keystore; avoid calling this a native-encrypted Spotify token store.
-
-## Build
-
-GitHub Actions downloads Spotify's official 0.8.0 AAR from a pinned GitHub release and checks exact asset size. For a local Gradle build, place the same AAR at `app/libs/spotify-app-remote-release-0.8.0.aar`. Gradle also includes the Gson dependency, as in Classic.
-
-## Still to test on Android
-
-OAuth/browser callback and process restoration; Spotify app authorization; playback, queue, shuffle, repeat, background audio, audio focus, reconnection after Android lifecycle changes, source switching and DeX layouts.
+## Abnahme
+- Automatische Smoke-Tests prüfen OAuth-PKCE, keine Spotify-App-Remote-Nutzung für den Audiopfad, integrierte Oberfläche und DRM-Fehlerzustände.
+- Auf dem realen Galaxy S20 FE muss Spotify Premium-Wiedergabe im Android WebView und gegebenenfalls im Browser geprüft werden. CI kann Widevine auf dem Telefon nicht simulieren.
+- App Remote SDK wird von der Android-Hybrid-App im nächsten Schritt vollständig entfernt.

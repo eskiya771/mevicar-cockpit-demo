@@ -4,9 +4,12 @@
 (function () {
   'use strict';
 
-  // Android: Spotify Web API remains the UI; the installed Spotify app plays audio.
+  // The Android bridge is used ONLY for external-browser OAuth and optional Chrome fallback.
+  // Spotify App Remote requires the Spotify app running in the background, so it is disabled.
+  // Both the Web PWA and hybrid APK attempt the SAME Web Playback SDK media engine.
   const NATIVE_REDIRECT = 'mevicarnext://spotify-callback';
-  const androidSpotify = () => !!window.MeviNativeBridge?.postMessage;
+  const nativeOAuthBridge = () => !!window.MeviNativeBridge?.postMessage;
+  const androidSpotify = () => false;
   const nativePending = new Map();
   let nativeCounter = 0;
   function nativeRequest(action, fields={}) {
@@ -198,7 +201,7 @@
     return text.slice(0, 4) + '…' + text.slice(-4);
   }
   function redirectUri() {
-    if (androidSpotify()) return NATIVE_REDIRECT;
+    if (nativeOAuthBridge()) return NATIVE_REDIRECT;
     let path = location.pathname || '/';
     path = path.replace(/\/index\.html$/i, '/');
     if (!path.endsWith('/')) path += '/';
@@ -526,7 +529,7 @@
     const url = new URL(sourceUrl);
     const nativeCallback=url.protocol==='mevicarnext:' && url.host==='spotify-callback';
     if (sourceUrl !== location.href && !nativeCallback) return false;
-    if (nativeCallback && !androidSpotify()) return false;
+    if (nativeCallback && !nativeOAuthBridge()) return false;
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
     const oauthError = url.searchParams.get('error');
@@ -645,7 +648,13 @@
     if (st.mounted) rerender();
   }
   async function startWebPlayer() {
-    if (androidSpotify()) { await connectNative(); return; }
+    // Spotify's Web SDK is not officially supported in Android WebView.
+    // Do not start Spotify App Remote or silently switch to playback in another app.
+    if (nativeOAuthBridge() && typeof navigator.requestMediaKeySystemAccess !== 'function') {
+      webPlayerStatus('Nicht unterstützt',
+        'Android WebView bietet hier kein DRM für Spotify. Über Chrome öffnen.');
+      return;
+    }
     if (!st.token) { setNotice('Bitte zunächst mit Spotify verbinden.'); return; }
     if (!(st.token.scope || '').split(' ').includes('streaming')) {
       st.accountOpen = true;
@@ -685,7 +694,10 @@
           webPlayerStatus('Offline','Spotify-Player nicht erreichbar.');
         });
         for (const event of ['initialization_error','authentication_error','account_error','playback_error']) {
-          player.addListener(event, ({ message }) => webPlayerStatus('Fehler', message || event));
+          player.addListener(event, ({ message }) => webPlayerStatus('Fehler',
+            (event === 'initialization_error' && nativeOAuthBridge()
+              ? 'Spotify-DRM im Android WebView nicht verfügbar. Über Chrome öffnen. '
+              : '') + (message || event)));
         }
         player.addListener('autoplay_failed', () => webPlayerStatus('Bereit','Wiedergabe mit Play-Taste aktivieren.'));
         player.addListener('player_state_changed', () => { if (st.mounted) poll(true); });
@@ -726,6 +738,7 @@
       '<span>'+esc(label)+'</span></button>'+
       '<span class="sp-web-status">'+esc(st.webStatus)+'</span>'+
       (st.webError?'<span class="sp-web-error" role="status">'+esc(st.webError)+'</span>':'')+
+      (nativeOAuthBridge()&&st.webError?'<button type="button" class="sp-web-action" onclick="meviSpotifyOpenBrowser()">In Chrome öffnen</button>':'')+
       '</div>';
   }
 
@@ -762,12 +775,12 @@
     return '<div class="sp-onboard">' +
       '<div class="sp-onboard-head"><span class="sp-onboard-icon">' + icon('spotify') + '</span><div>' +
       '<span class="sp-eyebrow">SPOTIFY PREMIUM // MEVICAR NEXT</span><h2>Spotify direkt im Cockpit hören</h2>' +
-      '<p>Mit Spotify Premium spielst du Musik direkt in MeviCar Next ab. Dafür wird ein unterstützter Browser benötigt.</p></div></div>' +
+      '<p>Spotify Premium läuft über den Web Playback SDK ohne zusätzliche Spotify-App. In der Android-APK kann die WebView DRM-Wiedergabe blockieren; dann in Chrome öffnen.</p></div></div>' +
       (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
       (st.notice ? '<div class="sp-alert is-ok">' + icon('check') + '<span>' + esc(st.notice) + '</span></div>' : '') +
       '<div class="sp-setup">' +
       '<div class="sp-step"><span class="sp-step-num">1</span><div><strong>Spotify Premium</strong><p>Mit deinem Premium-Konto spielt der MeviCar Player die Musik direkt über dieses Gerät ab.</p><button type="button" class="sp-linkbtn" onclick="meviSpotifyOpen()">Spotify-Anmeldung' + icon('external') + '</button></div></div>' +
-      '<div class="sp-step"><span class="sp-step-num">2</span><div><strong>Redirect-URI hinterlegen</strong><p>Die URI muss im Spotify Developer Dashboard exakt eingetragen sein.'+(androidSpotify()?' Für die APK außerdem Paket de.mevicar.next und den SHA-1 der APK registrieren.':'')+'</p><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirect) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div><a class="sp-linkbtn" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Developer Dashboard' + icon('external') + '</a></div></div>' +
+      '<div class="sp-step"><span class="sp-step-num">2</span><div><strong>Redirect-URI hinterlegen</strong><p>Die URI muss im Spotify Developer Dashboard exakt eingetragen sein.'+(nativeOAuthBridge()?' Für die Anmeldung in der APK zusätzlich mevicarnext://spotify-callback erlauben.':'')+'</p><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirect) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div><a class="sp-linkbtn" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Developer Dashboard' + icon('external') + '</a></div></div>' +
       '<div class="sp-step"><span class="sp-step-num">3</span><div><strong>Client ID in Settings</strong><p>Spotify-Client-ID zentral unter Settings → Zugänge &amp; Schlüssel verwalten.</p><button type="button" class="sp-linkbtn" onclick="meviOpenCredentialSettings()">Settings öffnen</button></div></div>' +
       '</div>' +
       '<div class="sp-onboard-actions"><button type="button" class="sp-primary" onclick="meviSpotifyConnect()" ' + (!hasClient || st.authLoading ? 'disabled' : '') + '>' + icon('spotify') + (st.authLoading ? 'Verbinde …' : 'Mit Spotify verbinden') + '</button>' +
@@ -871,7 +884,9 @@
   function noDeviceMarkup() {
     return '<div class="sp-empty">' + icon('spotify') +
       '<strong>Spotify direkt in MeviCar</strong><p>'+(androidSpotify()?'Verbinde die installierte Spotify-App und wähle Titel oder Playlists aus.':'Starte den MeviCar Player und wähle einen Titel oder eine Playlist aus.')+'</p>' +
-      '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + (androidSpotify()?'Spotify-App verbinden':'MeviCar Player starten')+'</button></div></div>';
+      '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + 'MeviCar Player starten</button>'+
+      (nativeOAuthBridge() ? '<button type="button" onclick="meviSpotifyOpenBrowser()">Im Browser öffnen</button>' : '')+
+      '</div>'+(st.webError?'<p role="alert">'+esc(st.webError)+'</p>':'')+'</div>';
   }
   function queueMarkup() {
     const current = st.queue?.currently_playing;
@@ -1652,6 +1667,17 @@
     st.confirmReset = false;
     rerender();
   }
+  function openInSystemBrowser() {
+    if (!nativeOAuthBridge()) { setNotice('Browsermodus ist nur in der APK verfügbar.'); return; }
+    try {
+      window.MeviNativeBridge.postMessage(JSON.stringify({
+        id:'spotify-browser-'+Date.now(), action:'spotify.browser'
+      }));
+      setNotice('Die MeviCar-Web-App wird in Chrome geöffnet. Dort ist gegebenenfalls eine erneute Anmeldung nötig.');
+    } catch {
+      setNotice('Browser konnte nicht geöffnet werden.');
+    }
+  }
   function openSpotify() {
     const link = document.createElement('a');
     link.href = 'https://open.spotify.com';
@@ -1802,6 +1828,7 @@
     meviSpotifyVolume: setVolume,
     meviSpotifyPlayLink: playLink,
     meviSpotifyOpen: openSpotify,
+    meviSpotifyOpenBrowser: openInSystemBrowser,
     meviSpotifyCopyRedirect: copyRedirect,
     meviSpotifyPauseForSource: pauseForSource,
     meviSpotifyParseLink: parseLink,
