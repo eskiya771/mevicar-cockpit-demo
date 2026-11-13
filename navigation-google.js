@@ -26,13 +26,14 @@ function clearStatus(){
  error='';errorKind='';
  const notice=document.getElementById('mg-map-notice');if(notice)notice.hidden=true;
 }
-function setupHTML(){return '<div class="mg-setup"><strong>Google Maps noch nicht eingerichtet</strong><p>Den Web-API-Key findest du unter Settings → Zugänge &amp; Schlüssel.</p><button type="button" onclick="meviOpenCredentialSettings()">Google Maps in Settings einrichten</button><span id="mg-status" role="status">'+text(error)+'</span></div>'}
+function setupHTML(){return '<section class="mg-setup" role="region" aria-label="Google Maps Ersteinrichtung"><strong>Google Maps einrichten</strong><p>Für Karte und Adresssuche fehlt noch der Google Maps Web-API-Key.</p><p>Hinterlege ihn einmalig unter <b>Settings → Zugänge</b>. Anschließend kannst du nach Adressen suchen und Favoriten verwenden.</p><button type="button" onclick="meviOpenCredentialSettings()">Google Maps einrichten</button></section>'}
 function mapBackdrop(){
  const message='<div class="mg-map-state" id="mg-map-notice" role="status"><span id="mg-status">'+text(error||'Google Maps wird geladen …')+'</span>'+
   '<button type="button" id="mg-change-key" class="mg-change-key" onclick="meviOpenCredentialSettings()"'+(errorKind==='maps-auth'?'':' hidden')+'>API-Schlüssel erneut einrichten</button>'+
   '<button type="button" id="mg-manual-origin" class="mg-manual-action" onclick="MeviGoogleNav.selectOriginOnMap()"'+(errorKind==='gps'?'':' hidden')+'>Startpunkt auf Karte wählen</button></div>';
  const picking=choosingOrigin?'<div class="mg-origin-instruction" role="status">Startpunkt wählen: Auf eine Stelle der Karte tippen oder klicken. <button type="button" onclick="MeviGoogleNav.cancelOriginSelection()">Abbrechen</button></div>':'';
- return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+(!key()?setupHTML():message+picking);
+ if(!key())return '<div id="mg-map" class="mg-map" aria-hidden="true"></div>'+setupHTML();
+ return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+message+picking;
 }
 function load(){
  if(!key())return Promise.reject(new Error('Google Maps Browser-Key fehlt.'));
@@ -98,7 +99,7 @@ async function search(q,serial){
 function refreshResults(){const e=document.getElementById('suggestions');if(e)e.innerHTML=resultsHTML()}
 function item(d,i,kind){return '<button type="button" class="suggestion mg-result" onclick="MeviGoogleNav.pick(\''+kind+'\','+i+')" aria-label="'+text(d.name)+' auswählen"><span class="circle">⌖</span><span><strong>'+text(d.name)+'</strong><small>'+text(d.address||'Google Maps')+'</small></span><span class="suggestion-chevron">›</span></button>'}
 function resultsHTML(){
- if(!key())return setupHTML();
+ if(!key())return '<div class="mg-search-message">Bitte zuerst Google Maps unter Settings → Zugänge einrichten.</div>';
  if(query.length>=3){if(suggestions.length)return suggestions.map((s,i)=>item({name:s.placePrediction.text.toString(),address:'Google Places'},i,'suggest')).join('');return '<div class="mg-search-message">'+text(error||'Google Places sucht Adressen …')+'</div>'}
  const all=unique([...cache.favorites,...cache.recent],12);
  return all.length?all.map((d,i)=>item(d,i,'stored')).join(''):'<div class="mg-search-message">Gib mindestens drei Zeichen ein, um eine Adresse zu suchen.</div>';
