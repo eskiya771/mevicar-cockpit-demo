@@ -163,6 +163,8 @@ public final class MeviRoadAssistNative {
       }
     }
     route=newRoute;
+    routeVersion++;
+    scanned=Collections.emptyList();
     recomputeMatches();
   }
   private void recomputeMatches(){
@@ -304,6 +306,138 @@ public final class MeviRoadAssistNative {
         return new JSONArray(output.toString("UTF-8"));
       }
     } finally {conn.disconnect();}
+  }
+  // Native equivalent of Classic's optional tracker scan. Never runs automatically.
+  // The user must configure the existing HA Blitzer.de configuration ID and tap Scan.
+  private int routeVersion=0;
+  private static List<LatLng> sampleRoute(List<LatLng> points){
+    if(points.size()<2)return Collections.emptyList();
+    double total=0;
+    for(int i=1;i<points.size();i++)total+=meters(points.get(i-1),points.get(i));
+    if(total<1)return Collections.emptyList();
+    double spacing=Math.max(15000,total/11.0);
+    List<LatLng> samples=new ArrayList<>();
+    samples.add(points.get(0));
+    double passed=0,next=spacing;
+    for(int i=1;i<points.size();i++){
+      LatLng a=points.get(i-1),b=points.get(i);
+      double distance=meters(a,b);
+      while(distance>0&&passed+distance>=next&&samples.size()<11){
+        double fraction=Math.max(0,Math.min(1,(next-passed)/distance));
+        samples.add(new LatLng(a.latitude+(b.latitude-a.latitude)*fraction,
+          a.longitude+(b.longitude-a.longitude)*fraction));
+        next+=spacing;
+      }
+      passed+=distance;
+    }
+    if(samples.size()<12&&meters(samples.get(samples.size()-1),points.get(points.size()-1))>100)
+      samples.add(points.get(points.size()-1));
+    return samples;
+  }
+  private JSONObject apiObject(String path,String method,JSONObject body) throws Exception {
+    if(!path.equals("/api/services/device_tracker/see")&&
+       !path.equals("/api/states/device_tracker.mevicar_route_scan")&&
+       !path.equals("/api/services/blitzer/refresh_controls?return_response"))
+      throw new IllegalArgumentException("HA endpoint not allowed");
+    HttpURLConnection conn=(HttpURLConnection)new URL(haOrigin+path).openConnection();
+    conn.setInstanceFollowRedirects(false);
+    conn.setConnectTimeout(8000);conn.setReadTimeout(15000);
+    conn.setRequestMethod(method);
+    conn.setRequestProperty("Authorization","Bearer "+haToken);
+    conn.setRequestProperty("Accept","application/json");
+    if(body!=null){
+      conn.setDoOutput(true);
+      conn.setRequestProperty("Content-Type","application/json");
+      byte[] bytes=body.toString().getBytes("UTF-8");
+      if(bytes.length>4096)throw new IllegalArgumentException("HA request too large");
+      try(java.io.OutputStream out=conn.getOutputStream()){out.write(bytes);}
+    }
+    try{
+      int code=conn.getResponseCode();
+      if(code<200||code>=300)throw new IllegalStateException("HA HTTP "+code);
+      try(InputStream input=conn.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream()){
+        byte[] buf=new byte[8192];int n;
+        while((n=input.read(buf))!=-1){
+          if(out.size()+n>1_000_000)throw new IllegalStateException("HA scan response too large");
+          out.write(buf,0,n);
+        }
+        String data=out.toString("UTF-8").trim();
+        return data.startsWith("{")?new JSONObject(data):new JSONObject();
+      }
+    }finally{conn.disconnect();}
+  }
+  public void scanOnDemand(){
+    if(closed||scanActive)return;
+    if(haOrigin.isEmpty()||haToken.isEmpty()){
+      feedStatus="HA verbinden, dann Routenscan starten";updateHealth();return;
+    }
+    if(!hasScanConfig()){
+      feedStatus="Blitzer.de Konfigurations-ID in MeviCar Road Assist speichern";
+      updateHealth();return;
+    }
+    if(route.size()<2){
+      feedStatus="Zuerst Google-Route berechnen";updateHealth();return;
+    }
+    final int version=routeVersion;
+    final List<LatLng> path=new ArrayList<>(route);
+    final List<LatLng> samples=sampleRoute(path);
+    if(samples.isEmpty())return;
+    scanActive=true;updateHealth();
+    worker.execute(()->{
+      Map<String,Camera> found=new HashMap<>();
+      int confirmed=0;
+      try{
+        for(LatLng spot:samples){
+          if(closed||Thread.currentThread().isInterrupted())return;
+          JSONObject tracker=new JSONObject();
+          tracker.put("dev_id","mevicar_route_scan");
+          tracker.put("gps",new JSONArray().put(spot.latitude).put(spot.longitude));
+          tracker.put("gps_accuracy",10);
+          apiObject("/api/services/device_tracker/see","POST",tracker);
+          Thread.sleep(900);
+          JSONObject state=apiObject("/api/states/device_tracker.mevicar_route_scan","GET",null);
+          JSONObject attrs=state.optJSONObject("attributes");
+          if(attrs==null)continue;
+          double lat=attrs.optDouble("latitude",Double.NaN);
+          double lng=attrs.optDouble("longitude",Double.NaN);
+          if(!valid(lat,lng)||meters(spot,new LatLng(lat,lng))>=100)continue;
+          confirmed++;
+          JSONObject request=new JSONObject().put("config_entry_id",configId);
+          JSONObject response=apiObject("/api/services/blitzer/refresh_controls?return_response","POST",request);
+          JSONObject payload=response.optJSONObject("service_response");
+          if(payload==null)payload=response;
+          JSONArray controls=payload.optJSONArray("controls");
+          if(controls==null)continue;
+          for(int i=0;i<controls.length()&&found.size()<MAX_CAMERAS;i++){
+            JSONObject item=controls.optJSONObject(i);if(item==null)continue;
+            double y=item.optDouble("latitude",Double.NaN),x=item.optDouble("longitude",Double.NaN);
+            if(!valid(y,x))continue;
+            String id=item.optString("id","");
+            if(id.isEmpty())id=String.format(Locale.ROOT,"%.5f,%.5f",y,x);
+            int speed=item.optInt("vmax",0);if(speed<0||speed>350)speed=0;
+            found.put(id,new Camera("scan_"+id,item.optString("type","unknown"),
+              item.optString("street",""),item.optString("city",""),y,x,speed));
+          }
+        }
+        final int complete=confirmed,count=found.size();
+        final List<Camera> results=new ArrayList<>(found.values());
+        main.post(()->{
+          if(closed)return;
+          scanActive=false;
+          if(version!=routeVersion){feedStatus="Route geändert · erneut scannen";updateHealth();return;}
+          scanned=results;lastReceived=System.currentTimeMillis();
+          feedStatus="Routenscan: "+complete+"/"+samples.size()+" bestätigt · "+count+" Kontrollen";
+          recomputeMatches();
+        });
+      }catch(Exception ex){
+        main.post(()->{
+          if(closed)return;
+          scanActive=false;
+          feedStatus="Routenscan fehlgeschlagen · Verbindung prüfen";
+          updateHealth();
+        });
+      }
+    });
   }
   /** Voice is independent from Google's spoken turn-by-turn directions. */
   public boolean toggleVoice(){
