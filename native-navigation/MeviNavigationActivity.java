@@ -17,12 +17,14 @@ public class MeviNavigationActivity extends Activity {
   private Navigator navigator;
   private NavigationView navigationView;
   private TextView status;
+  private MeviRoadAssistNative roadAssist;
   private boolean guiding=false, started=false, resumed=false;
   private double lat,lng;
   private String title;
   private boolean connecting=false;
   private final Navigator.ArrivalListener arrivalListener=(event)->{
     guiding=false;
+    if(roadAssist!=null)roadAssist.setGuiding(false);
     if(navigator!=null)navigator.stopGuidance();
     showStatus("Ziel erreicht: "+title);
   };
@@ -57,6 +59,22 @@ public class MeviNavigationActivity extends Activity {
     controls.addView(end);
     FrameLayout.LayoutParams cp=new FrameLayout.LayoutParams(-1,-2,Gravity.TOP);
     root.addView(controls,cp);
+    TextView radarAlert=new TextView(this);
+    radarAlert.setTextColor(Color.WHITE);radarAlert.setTextSize(17);
+    radarAlert.setPadding(20,14,20,14);radarAlert.setMaxLines(3);
+    radarAlert.setElevation(12);
+    FrameLayout.LayoutParams alertLayout=new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.RIGHT);
+    alertLayout.setMargins(16,16,22,44);
+    root.addView(radarAlert,alertLayout);
+    TextView radarHealth=new TextView(this);
+    radarHealth.setTextColor(0xFFB7DAE3);radarHealth.setTextSize(11);
+    radarHealth.setPadding(10,6,10,6);
+    radarHealth.setBackgroundColor(0xCC102A3B);
+    FrameLayout.LayoutParams healthLayout=new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.LEFT);
+    healthLayout.setMargins(12,12,10,12);
+    root.addView(radarHealth,healthLayout);
+    String[] ha=MeviNativeNavigationPlugin.takeRadarSession();
+    roadAssist=new MeviRoadAssistNative(this,radarAlert,radarHealth,ha[0],ha[1]);
     setContentView(root);
     if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED) {
       requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},81);
@@ -100,6 +118,7 @@ public class MeviNavigationActivity extends Activity {
           connecting=false;navigator=value;
           value.setTaskRemovedBehavior(Navigator.TaskRemovedBehavior.QUIT_SERVICE);
           value.addArrivalListener(arrivalListener);
+          if(roadAssist!=null)roadAssist.attach(value);
           calculate();
         });
       }
@@ -121,6 +140,7 @@ public class MeviNavigationActivity extends Activity {
             .setGuidanceMode(AudioGuidanceSettings.GuidanceMode.VOICE_ALERTS_AND_GUIDANCE)
             .setBluetoothAudioEnabled(true).build());
           nav.startGuidance();guiding=true;
+          if(roadAssist!=null)roadAssist.setGuiding(true);
           showStatus("Zielführung: "+title);
         } else showStatus("Keine Route: "+result);
       }));
@@ -130,6 +150,7 @@ public class MeviNavigationActivity extends Activity {
   @Override protected void onPause(){resumed=false;if(navigationView!=null)navigationView.onPause();super.onPause();}
   @Override protected void onStop(){started=false;if(navigationView!=null)navigationView.onStop();super.onStop();}
   @Override protected void onDestroy(){
+    if(roadAssist!=null){roadAssist.stop();roadAssist=null;}
     if(navigator!=null){navigator.removeArrivalListener(arrivalListener);navigator.stopGuidance();navigator.clearDestinations();navigator.cleanup();navigator=null;}
     if(navigationView!=null){navigationView.onDestroy();navigationView=null;}
     super.onDestroy();
