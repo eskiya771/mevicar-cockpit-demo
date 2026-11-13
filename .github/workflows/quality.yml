@@ -47,6 +47,8 @@ jobs:
         run: node tests/speedometer-smoke.mjs
       - name: Test Spotify Connect remote integration
         run: node tests/spotify-smoke.mjs
+      - name: Test Spotify Android PKCE/App Remote integration
+        run: node tests/spotify-android-smoke.mjs
       - name: Test Tetris game rules
         run: node tests/tetris-smoke.mjs
       - name: Test TV catalog and playlists
