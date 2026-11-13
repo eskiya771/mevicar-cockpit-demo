@@ -465,7 +465,15 @@
   if(path.startsWith('/api/services/')&&options.method!=='POST')throw new Error('POST für HA-Service erforderlich.');
   return request(path,{method:options.method||'GET',body:options.body});
  }
- window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,stockHistory,requestService,favoriteEntity,toggleFromDashboard,
+ // Native bridge receives the already authenticated HA session in memory only.
+ // Do not expose the token as a getter, save it, or put it in Android Intent extras.
+ function launchNativeWithRadar(destination){
+  if(!window.MeviPlatform?.navigation?.nativeRoute)
+   return Promise.reject(new Error('Native Android-Navigation ist nicht verfuegbar.'));
+  const auth=state.connected&&state.token?{origin:state.origin,token:state.token}:null;
+  return window.MeviPlatform.navigation.nativeRoute(destination,auth);
+ }
+ window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,connect,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,stockHistory,requestService,launchNativeWithRadar,favoriteEntity,toggleFromDashboard,
   debug:()=>({tab:state.tab,connected:state.connected,count:state.states.length,cameras:state.radar.length,
    origin:state.origin,dashboard:dashboardUrl(),tokenPresent:!!state.token,tokenStored:false}),
   // Helpers for node-only contract tests; no token or credentials exposed.
