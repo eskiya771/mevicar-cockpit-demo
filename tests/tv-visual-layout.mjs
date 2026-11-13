@@ -83,11 +83,14 @@ try{
     assert(icon&&label&&label.y>=icon.y+icon.height+1,
       'launcher caption must sit below illustration: '+await tile.getAttribute('aria-label'));
    }
-   await page.getByRole('button',{name:'TV öffnen',exact:true}).click();
+   // PIN entry lives in global Settings, never inside the IPTV dialog.
+   await page.evaluate(()=>window.meviOpenCredentialSettings());
+   await page.locator('#mevi-cred-tv').fill('0000');
+   await page.locator('#mevi-cred-tv').locator('xpath=..').getByRole('button',{name:'Speichern'}).click();
+   await page.evaluate(()=>window.openApp('tv'));
    await page.locator('.tv-root').waitFor();
    assert.deepEqual(await page.locator('#dock').boundingBox(),dockBefore,'TV must preserve shared dock geometry');
    await page.getByRole('button',{name:'IPTV-Einstellungen',exact:true}).click();
-   await page.getByLabel('Zugangscode').fill('0000');
    await page.getByRole('button',{name:'Katalog verbinden'}).click();
    await page.locator('.tv-xtream-item').first().waitFor();
    await page.locator('.tv-xtream-dialog').getByRole('button',{name:'Schließen',exact:true}).click();
