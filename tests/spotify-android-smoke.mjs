@@ -31,6 +31,7 @@ function runNativeCallback(pending, {bridgeCallback = '', hidden = false} = {}) 
   const requests=[];
   const bridgeActions=[];
   const bridgeRequests=[];
+  let activeBridgeCallback=bridgeCallback;
   const store=values=>({
     getItem:key=>values[key]??null,
     setItem(key,value){values[key]=String(value)},
@@ -42,9 +43,9 @@ function runNativeCallback(pending, {bridgeCallback = '', hidden = false} = {}) 
     const req=JSON.parse(raw);
     bridgeActions.push(req.action);
     bridgeRequests.push(req);
-    if(!bridgeCallback)return;
+    if(!activeBridgeCallback)return;
     let reply=null;
-    if(req.action==='spotify.callback.pull')reply={id:req.id,ok:true,callback:bridgeCallback};
+    if(req.action==='spotify.callback.pull')reply={id:req.id,ok:true,callback:activeBridgeCallback};
     if(req.action==='spotify.callback.ack')reply={id:req.id,ok:true,acknowledged:true};
     if(reply && typeof this.onmessage==='function')this.onmessage({data:JSON.stringify(reply)});
   }},render(){},addEventListener(){}};
@@ -73,7 +74,8 @@ function runNativeCallback(pending, {bridgeCallback = '', hidden = false} = {}) 
       window,document,{},store(saved),store(session),loc,{replaceState(){}},
       fakeFetch,URL,TextEncoder,()=>1,()=>{},()=>1,()=>{},AbortController
     );
-  return {window,saved,session,requests,bridgeActions,bridgeRequests};
+  return {window,saved,session,requests,bridgeActions,bridgeRequests,
+    setBridgeCallback(value){activeBridgeCallback=value}};
 }
 // Starting Spotify from the hybrid APK must never navigate the WebView to
 // accounts.spotify.com. The APK opens the validated authorization URL instead.
@@ -140,6 +142,24 @@ await new Promise(resolve=>setTimeout(resolve,0));
 assert.equal(hiddenPulled.window.meviSpotifyDebug().connected,true,
   'Hidden WebView must still pull OAuth callback');
 assert.ok(hiddenPulled.bridgeActions.includes('spotify.callback.pull'));
+
+// The Android status callback is proof that evaluateJavascript already
+// reached the web runtime. It must trigger an immediate pull when Android's
+// lifecycle/visibility events did not resume the normal polling timer.
+const stageTriggered=runNativeCallback({
+  state:'stage-state',verifier:'stage-verifier',at:Date.now(),
+  redirect:'mevicarnext://spotify-callback'
+});
+stageTriggered.setBridgeCallback(
+  'mevicarnext://spotify-callback?code=stage-code&state=stage-state'
+);
+stageTriggered.window.meviSpotifyNativeStage(
+  'Build 53 · Spotify-Code von Android empfangen'
+);
+await new Promise(resolve=>setTimeout(resolve,0));
+assert.equal(stageTriggered.window.meviSpotifyDebug().connected,true,
+  'Native stage must trigger web callback pull and PKCE token exchange');
+assert.ok(stageTriggered.bridgeActions.includes('spotify.callback.ack'));
 
 const stale=runNativeCallback({
   state:'state123456',verifier:'pkce-verifier',at:Date.now()-11*60*1000,
