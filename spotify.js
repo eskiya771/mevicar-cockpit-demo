@@ -1208,6 +1208,21 @@
 
   async function playItem(item) {
     if (!item?.uri) return;
+    if (androidSpotify()) {
+      if (!st.nativeConnected) {
+        st.pendingPlay={body:{uris:[item.uri]},title:item.title,at:Date.now()};
+        await connectNative();
+        return;
+      }
+      try {
+        window.meviMediaStopForSource?.('spotify');
+        await nativeRequest('spotify.play',{uri:item.uri});
+        st.pendingPlay=null; st.error='';
+        setNotice('Wiedergabe: '+item.title);
+        await sleep(350); await poll(true); rerender();
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     const body = item.kind === 'track' || item.kind === 'episode' ? { uris: [item.uri] } : { context_uri: item.uri };
     if (!st.webDeviceId) {
       st.pendingPlay = { body, title: item.title, at: Date.now() };
@@ -1228,6 +1243,19 @@
   }
   async function queueItem(item) {
     if (!item?.uri) return;
+    if (androidSpotify()) {
+      if (!st.nativeConnected) { setNotice('Zuerst Spotify-App verbinden.'); return; }
+      if (item.kind !== 'track' && item.kind !== 'episode') {
+        st.error='Nur Titel und Podcast-Folgen lassen sich zur Warteschlange hinzufügen.';
+        paintBanner(); return;
+      }
+      try {
+        await nativeRequest('spotify.queue',{uri:item.uri});
+        setNotice('Zur Warteschlange: '+item.title);
+        if (st.queueOpen) { await loadQueue(); paintNow(); }
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     if (!st.webDeviceId) {
       setNotice('Zuerst den MeviCar Player starten.');
       return;
@@ -1245,6 +1273,17 @@
     } catch (error) { handleApiError(error); }
   }
   async function toggle() {
+    if (androidSpotify()) {
+      if (!st.nativeConnected) { await connectNative(); return; }
+      try {
+        const playing=!!st.player?.is_playing;
+        if (!playing) window.meviMediaStopForSource?.('spotify');
+        await nativeRequest(playing?'spotify.pause':'spotify.resume');
+        if (st.player) st.player.is_playing=!playing;
+        await poll(true); paintNow();
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     const player = st.player;
     if (!st.webDeviceId) { await startWebPlayer(); return; }
     if (!player || player.device?.id !== st.webDeviceId) return;
@@ -1262,6 +1301,13 @@
     } catch (error) { handleApiError(error); }
   }
   async function skip(direction) {
+    if (androidSpotify()) {
+      if (!st.nativeConnected) return;
+      try { await nativeRequest(direction==='next'?'spotify.next':'spotify.previous');
+        await sleep(300); await poll(true); paintNow();
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     if (!st.webDeviceId) return;
     try {
       await api('/me/player/' + direction + '?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'POST' });
@@ -1283,6 +1329,19 @@
     if (seek) seek.style.setProperty('--seek', (clamp(Number(value) || 0, 0, 1000) / 10) + '%');
   }
   async function seek(value) {
+    if (androidSpotify()) {
+      if (!st.nativeConnected) return;
+      const player=st.player,duration=Number(player?.item?.duration_ms)||0;
+      if (!duration) return;
+      const ms=Math.round(clamp(Number(value)||0,0,1000)/1000*duration);
+      try {
+        await nativeRequest('spotify.seek',{positionMs:ms});
+        if (player) player.progress_ms=ms;
+        st.progressBase=ms;st.playerAt=Date.now();tickProgress(true);
+        setTimeout(()=>poll(true),450);
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     const player = st.player;
     if (!st.webDeviceId || player?.device?.id !== st.webDeviceId) return;
     const duration = Number(player?.item?.duration_ms) || 0;
@@ -1299,6 +1358,18 @@
     } catch (error) { handleApiError(error); }
   }
   async function seekBy(delta) {
+    if (androidSpotify()) {
+      if (!st.nativeConnected) return;
+      const player=st.player,duration=Number(player?.item?.duration_ms)||0;
+      const ms=Math.round(clamp((Number(st.progressBase)||0)+(Number(delta)||0),0,duration||Number.MAX_SAFE_INTEGER));
+      try {
+        await nativeRequest('spotify.seek',{positionMs:ms});
+        if (player) player.progress_ms=ms;
+        st.progressBase=ms;st.playerAt=Date.now();tickProgress(true);
+        setTimeout(()=>poll(true),450);
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     const player = st.player;
     if (!st.webDeviceId || player?.device?.id !== st.webDeviceId) return;
     const duration = Number(player?.item?.duration_ms) || 0;
@@ -1314,6 +1385,15 @@
     } catch (error) { handleApiError(error); }
   }
   async function shuffle() {
+    if (androidSpotify()) {
+      if (!st.nativeConnected) return;
+      try {
+        await nativeRequest('spotify.shuffle');
+        if (st.player) st.player.shuffle_state=!st.player.shuffle_state;
+        paintNow();
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     if (!st.webDeviceId || st.player?.device?.id !== st.webDeviceId) return;
     try {
       const next = !st.player.shuffle_state;
@@ -1323,6 +1403,18 @@
     } catch (error) { handleApiError(error); }
   }
   async function repeat() {
+    if (androidSpotify()) {
+      if (!st.nativeConnected) return;
+      try {
+        await nativeRequest('spotify.repeat');
+        if (st.player) {
+          const seq={off:'context',context:'track',track:'off'};
+          st.player.repeat_state=seq[st.player.repeat_state||'off']||'off';
+        }
+        paintNow();
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     if (!st.webDeviceId || st.player?.device?.id !== st.webDeviceId) return;
     const sequence = { off: 'context', context: 'track', track: 'off' };
     const next = sequence[st.player.repeat_state || 'off'] || 'off';
@@ -1381,6 +1473,16 @@
     return pending;
   }
   async function setVolume(value) {
+    if (androidSpotify()) {
+      if (!st.nativeConnected) return;
+      try {
+        const volume=Math.round(clamp(Number(value)||0,0,100));
+        await api('/me/player/volume?volume_percent='+volume,{method:'PUT'});
+        if (st.player?.device) st.player.device.volume_percent=volume;
+        paintNow();
+      } catch (error) { handleApiError(error); }
+      return;
+    }
     if (!st.webDeviceId) return;
     const volume = Math.round(clamp(Number(value) || 0, 0, 100));
     try {
@@ -1535,6 +1637,10 @@
     try { localStorage.removeItem(KEYS.device); } catch { /* ignore */ }
   }
   function disconnect() {
+    if (androidSpotify()) {
+      nativeRequest('spotify.disconnect').catch(()=>{});
+      st.nativeConnected=false;
+    }
     clearAuthState();
     st.accountOpen = false;
     st.authError = '';
@@ -1583,6 +1689,14 @@
     else playItem(item);
   }
   function pauseForSource(target) {
+    if (androidSpotify()) {
+      if (target!=='spotify' && st.nativeConnected && st.player?.is_playing)
+        nativeRequest('spotify.pause').then(()=>{
+          if (st.player) st.player.is_playing=false;
+          paintNow();paintBanner();
+        }).catch(()=>{});
+      return;
+    }
     if (target === 'spotify' || !st.token || !st.webDeviceId || !st.player?.is_playing ||
         st.player.device?.id !== st.webDeviceId) return;
     api('/me/player/pause?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' }).then(() => {
