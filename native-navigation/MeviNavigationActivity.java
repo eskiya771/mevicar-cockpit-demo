@@ -54,6 +54,17 @@ public class MeviNavigationActivity extends Activity {
     Button overview=new Button(this);overview.setText("Übersicht");
     overview.setOnClickListener(v->navigationView.showRouteOverview());
     controls.addView(overview);
+    Button voice=new Button(this);voice.setText("Blitzer Ton");
+    voice.setOnClickListener(v->{
+      if(roadAssist!=null){
+        boolean on=roadAssist.toggleVoice();
+        voice.setText(on?"Radar Ton AN":"Radar Ton AUS");
+      }
+    });
+    controls.addView(voice);
+    Button scan=new Button(this);scan.setText("Routenscan");
+    scan.setOnClickListener(v->{if(roadAssist!=null)roadAssist.scanOnDemand();});
+    controls.addView(scan);
     Button end=new Button(this);end.setText("Beenden");
     end.setOnClickListener(v->finish());
     controls.addView(end);
@@ -74,7 +85,9 @@ public class MeviNavigationActivity extends Activity {
     healthLayout.setMargins(12,12,10,12);
     root.addView(radarHealth,healthLayout);
     String[] ha=MeviNativeNavigationPlugin.takeRadarSession();
-    roadAssist=new MeviRoadAssistNative(this,radarAlert,radarHealth,ha[0],ha[1]);
+    roadAssist=new MeviRoadAssistNative(this,radarAlert,radarHealth,ha[0],ha[1],
+      ha[2],!"false".equals(ha[3]),!"false".equals(ha[4]));
+    voice.setText(roadAssist.voiceEnabled()?"Radar Ton AN":"Radar Ton AUS");
     setContentView(root);
     if(checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)!=PackageManager.PERMISSION_GRANTED) {
       requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},81);
