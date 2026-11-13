@@ -63,7 +63,12 @@ public class MeviNavigationActivity extends Activity {
     });
     controls.addView(voice);
     Button scan=new Button(this);scan.setText("Routenscan");
-    scan.setOnClickListener(v->{if(roadAssist!=null)roadAssist.scanOnDemand();});
+    scan.setOnClickListener(v->new AlertDialog.Builder(this)
+      .setTitle("Blitzer-Routenscan")
+      .setMessage("Der Scan setzt den Home-Assistant-Tracker mevicar_route_scan nacheinander auf maximal 12 Routenpunkte und ruft blitzer.refresh_controls auf. Nur mit gültiger Blitzer.de-Konfigurations-ID starten.")
+      .setNegativeButton("Abbrechen",null)
+      .setPositiveButton("Scan starten",(dialog,which)->{if(roadAssist!=null)roadAssist.scanOnDemand();})
+      .show());
     controls.addView(scan);
     Button end=new Button(this);end.setText("Beenden");
     end.setOnClickListener(v->finish());
