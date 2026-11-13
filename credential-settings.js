@@ -88,6 +88,9 @@ function html(){
   groups.push(row('android-maps','Google Navigation SDK · Android-API-Key','Android-SDK-Schlüssel eingeben',
     nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
     'Nur für de.mevicar.next. Google Cloud muss die passende Paket-ID und den SHA-1-Fingerabdruck erlauben.',{secret:true}));
+  groups.push(row('github-token','GitHub · Token für private APK-Updates','GitHub Fine-grained PAT eingeben',
+    nativeStatus?.githubToken?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
+    'Nur Zugriff auf eskiya771/mevicar-next · Contents: Read-only. Der Token wird ausschließlich im Android Keystore gespeichert.',{secret:true}));
   groups.push('<button type="button" onclick="MeviCredentials.refreshNativeStatus()">Gespeicherte Android-Zugänge prüfen</button>');
  }else{
   groups.push('<p class="mevi-cred-note">Der Android-Navigation-SDK-Schlüssel wird ausschließlich in Settings der APK eingegeben, nicht im Browser.</p>');
@@ -129,6 +132,10 @@ async function save(id){
     if(!/^[A-Za-z0-9_-]{20,}$/.test(v))throw new Error('Android-Navigation-API-Key ist ungültig.');
     await nativeCall('settings.set','mapsKey',v);
     nativeStatus={...nativeStatus,mapsKey:true};break;
+   case 'github-token':
+    if(v.length<20||v.length>8192||/\s/.test(v))throw new Error('GitHub-Token ist ungültig.');
+    await nativeCall('settings.set','githubToken',v);
+    nativeStatus={...nativeStatus,githubToken:true};break;
    default:throw new Error('Einstellung nicht bekannt.');
   }
   clearInput(id);report('Einstellung gespeichert.'); 
@@ -147,6 +154,7 @@ async function clear(id){
    case 'tv':tvPin='';break;
    case 'ha':global.MeviHA?.disconnect?.();if(nativeAvailable())await nativeCall('settings.clear','haToken').catch(()=>null);break;
    case 'android-maps':await nativeCall('settings.clear','mapsKey');nativeStatus={...nativeStatus,mapsKey:false};break;
+   case 'github-token':await nativeCall('settings.clear','githubToken');nativeStatus={...nativeStatus,githubToken:false};break;
    default:throw new Error('Einstellung nicht bekannt.');
   }
   clearInput(id);report('Einstellung entfernt.');
