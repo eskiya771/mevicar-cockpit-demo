@@ -22,7 +22,7 @@ assert.match(source,/mm-mode-button/,'Same media source buttons as Radio and Mev
 assert.match(settings,/meviSpotifySaveClient/);
 // Simulate Chrome returning after Android has recreated the WebView. The old
 // sessionStorage is empty, but the short-lived PKCE verifier must still work.
-function runNativeCallback(pending, {bridgeCallback = ''} = {}) {
+function runNativeCallback(pending, {bridgeCallback = '', hidden = false} = {}) {
   const saved={
     'mevicar-spotify-client-v1':'testclient1234',
     'mevicar-spotify-auth-v1':JSON.stringify(pending)
@@ -49,6 +49,7 @@ function runNativeCallback(pending, {bridgeCallback = ''} = {}) {
     if(reply && typeof this.onmessage==='function')this.onmessage({data:JSON.stringify(reply)});
   }},render(){},addEventListener(){}};
   const document={
+    hidden,
     getElementById(){return null},
     querySelector(){return null},
     addEventListener(){}
@@ -125,6 +126,20 @@ assert.ok(pulled.bridgeActions.includes('spotify.callback.pull'));
 assert.ok(pulled.bridgeActions.includes('spotify.callback.ack'));
 assert.equal(pulled.requests.filter(q=>q.url.endsWith('/api/token')).length,1);
 assert.equal(pulled.saved['mevicar-spotify-auth-v1'],undefined);
+
+// Android WebView can report document.hidden=true during the handoff even
+// when WebMessage communication is active. OAuth must still be recovered.
+const hiddenPulled=runNativeCallback({
+  state:'hidden-state',verifier:'hidden-verifier',at:Date.now(),
+  redirect:'mevicarnext://spotify-callback'
+}, {
+  bridgeCallback:'mevicarnext://spotify-callback?code=hidden-code&state=hidden-state',
+  hidden:true
+});
+await new Promise(resolve=>setTimeout(resolve,0));
+assert.equal(hiddenPulled.window.meviSpotifyDebug().connected,true,
+  'Hidden WebView must still pull OAuth callback');
+assert.ok(hiddenPulled.bridgeActions.includes('spotify.callback.pull'));
 
 const stale=runNativeCallback({
   state:'state123456',verifier:'pkce-verifier',at:Date.now()-11*60*1000,
