@@ -6,7 +6,7 @@ root=Path("android/app")
 source=Path("native-navigation")
 dest=root/"src/main/java/de/mevicar/next"
 dest.mkdir(parents=True,exist_ok=True)
-for name in ("MeviNavigationActivity.java","MeviNativeNavigationPlugin.java","MeviRoadAssistNative.java"):
+for name in ("MeviNavigationActivity.java","MeviNativeNavigationPlugin.java","MeviRoadAssistNative.java","MeviSecureSettingsPlugin.java"):
     (dest/name).write_text((source/name).read_text())
 main=root/"src/main/java/de/mevicar/next/MainActivity.java"
 if not main.exists():
@@ -14,7 +14,7 @@ if not main.exists():
 text=main.read_text()
 if "registerPlugin(MeviNativeNavigationPlugin.class)" not in text:
     # Capacitor's generated MainActivity normally has no onCreate override.
-    invocation="registerPlugin(MeviNativeNavigationPlugin.class);"
+    invocation="registerPlugin(MeviNativeNavigationPlugin.class);\n        registerPlugin(MeviSecureSettingsPlugin.class);"
     if "super.onCreate(savedInstanceState);" in text:
         text=text.replace("super.onCreate(savedInstanceState);",invocation+"\n        super.onCreate(savedInstanceState);")
     else:

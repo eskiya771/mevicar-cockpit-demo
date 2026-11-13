@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Quick JavaScript and configuration smoke tests
         run: |
+          node --check credential-settings.js
           node --check tv.js
           node --check xtream.js
           node tests/display-profiles-smoke.mjs
@@ -236,7 +237,7 @@ jobs:
           cp vendor/hls-LICENSE.txt dist/vendor/
           mkdir -p dist/weather
           cp -R weather/. dist/weather/
-          cp xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          cp credential-settings.js credential-settings.css xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           python3 -m pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
           from PIL import Image, ImageDraw, ImageFont
@@ -281,6 +282,8 @@ jobs:
         run: node tests/native-navigation-sdk-smoke.mjs
       - name: Verify native route-matched Blitzer Road Assist
         run: node tests/native-roadassist-smoke.mjs
+      - name: Verify native secure Settings
+        run: node tests/native-settings-smoke.mjs
       - name: Install native Google Navigation SDK integration
         run: python3 scripts/install-native-navigation.py
       - name: Verify native Classic iPhone ANCS telephone integration

@@ -9,7 +9,6 @@ import android.view.Gravity;
 import android.widget.*;
 import android.view.View;
 import android.widget.FrameLayout;
-import android.text.InputType;
 import com.google.android.libraries.navigation.*;
 
 public class MeviNavigationActivity extends Activity {
@@ -146,20 +145,12 @@ public class MeviNavigationActivity extends Activity {
     }
   }
   private void prepareKey() {
-    String saved=getSharedPreferences("navigation_sdk",MODE_PRIVATE).getString("api_key","");
-    if(saved!=null&&!saved.trim().isEmpty()){connect(saved.trim());return;}
-    EditText input=new EditText(this);
-    input.setSingleLine(true); input.setHint("Android Navigation SDK API-Key");
-    input.setInputType(InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
-    new AlertDialog.Builder(this).setTitle("Google Navigation SDK").setMessage(
-      "Android-Schlüssel für de.mevicar.next eintragen (nicht den Browser-Schlüssel).")
-      .setView(input).setNegativeButton("Abbrechen",(d,w)->finish())
-      .setPositiveButton("Verbinden",(d,w)->{
-        String key=input.getText().toString().trim();
-        if(key.isEmpty()){showStatus("Schlüssel fehlt");return;}
-        getSharedPreferences("navigation_sdk",MODE_PRIVATE).edit().putString("api_key",key).apply();
-        connect(key);
-      }).show();
+    String saved=MeviSecureSettingsPlugin.readStored(this,"mapsKey");
+    if(saved==null||saved.isEmpty()){
+      showStatus("Google Navigation API-Key fehlt. Bitte unter Settings → Zugänge & Schlüssel in MeviCar Next eintragen.");
+      return;
+    }
+    connect(saved);
   }
   private void connect(String key) {
     if(connecting)return;

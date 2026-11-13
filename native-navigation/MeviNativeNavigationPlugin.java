@@ -37,7 +37,10 @@ public class MeviNativeNavigationPlugin extends Plugin {
     Double lat=call.getDouble("lat"), lng=call.getDouble("lng");
     if(lat==null || lng==null || !Double.isFinite(lat) || !Double.isFinite(lng) ||
        Math.abs(lat)>90 || Math.abs(lng)>180){call.reject("Ungültiges Navigationsziel");return;}
-    setRadarSession(call.getString("haOrigin",""),call.getString("haToken",""),
+    String haToken=call.getString("haToken","");
+    if(haToken==null||haToken.isEmpty())
+      haToken=MeviSecureSettingsPlugin.readStored(getContext(),"haToken");
+    setRadarSession(call.getString("haOrigin",""),haToken,
       call.getString("haConfigId",""),call.getString("radarEnabled","true"),call.getString("radarVoice","true"));
     Intent intent=new Intent(getContext(),MeviNavigationActivity.class);
     intent.putExtra("lat",lat); intent.putExtra("lng",lng);
