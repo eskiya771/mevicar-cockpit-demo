@@ -102,7 +102,13 @@ get('openApp("audio")');
 assert.equal(get('s.mode'),'full');
 get('openApp("nav")');
 get('openSearch()');
-assert.equal(get('s.nav'),'search');
+assert.equal(get('s.app'),'settings','Before a Maps key exists, search opens central credential Settings');
+assert.equal(get('s.settingsTab'),'credentials');
+assert.equal(get('s.nav'),'browse','Search does not activate without a key');
+get('window.MeviGoogleNav={hasKey:()=>true,changeQuery(){},mapBackdrop(){return "<div id=\\"mg-map\\"></div>"},locationButton(){return ""},resultsHTML(){return ""},favoritesHTML(){return ""},buttons(){return ""},mount(){}}');
+get('openApp("nav")');
+get('openSearch()');
+assert.equal(get('s.nav'),'search','Search opens after configuring the Web Maps key');
 assert.match(node('screen').innerHTML,/Ziel suchen/);
 // The legacy fixed-destination demo is replaced by an isolated Web navigation
 // adapter. Assert the integration contract, not fake address results/routes.
@@ -118,4 +124,4 @@ assert.match(readFileSync(new URL('../navigation-google.js',import.meta.url),'ut
 assert.match(readFileSync(new URL('../navigation-google.js',import.meta.url),'utf8'),/Route\.computeRoutes/);
 get('backToBrowse()');
 assert.equal(get('s.nav'),'browse');
-console.log('UI smoke OK: 3 themes, fullscreen toggles, CarPlay-like search overlay, Google Maps/Places route adapter linked.');
+console.log('UI smoke OK: 3 themes, first-run Maps key gating, CarPlay-like search overlay and route adapter linked.');
