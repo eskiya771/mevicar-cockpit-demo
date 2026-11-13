@@ -35,8 +35,8 @@ if plugin not in code:
     if opening not in code: raise SystemExit("Unexpected Capacitor Android application Gradle plugin")
     code=code.replace(opening,opening+"\n"+plugin,1)
 if "kotlin { compilerOptions {" not in code:
-    code+="\n// ANCS Classic Kotlin modules compile to the same Java 17 bytecode as Capacitor.\n"
-    code+="kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }\n"
+    code+="\n// ANCS Classic Kotlin modules compile to the same Java 21 bytecode as Capacitor.\n"
+    code+="kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21) } }\n"
 app_gradle.write_text(code)
 
 main=dest/"MainActivity.java"
