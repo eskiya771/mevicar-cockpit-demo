@@ -14,7 +14,7 @@
     orientation:typeof root.DeviceOrientationEvent!=='undefined',
     localFiles:typeof root.showOpenFilePicker==='function'||typeof root.FileReader!=='undefined',
     nativeBluetooth:false,
-    nativePhone:false,
+    nativePhone:native()&&!!root.Capacitor?.Plugins?.MeviPhone,
     nativeAudio:false,
     nativeNavigation:native()&&!!root.Capacitor?.Plugins?.MeviNativeNavigation
   });
