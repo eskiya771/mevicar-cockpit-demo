@@ -556,6 +556,18 @@
     throw error;
   }
 
+  // Android can retry the same deep link after the Activity resumes.
+  // Process each callback once, otherwise the second attempt would consume
+  // the already-used PKCE verifier and incorrectly return to onboarding.
+  let handledNativeCallbackState = '';
+  function acceptNativeCallback(uri) {
+    const url = new URL(uri);
+    const state = url.searchParams.get('state') || url.searchParams.get('error') || '';
+    if (state && state === handledNativeCallbackState) return Promise.resolve(true);
+    if (state) handledNativeCallbackState = state;
+    return handleCallback(uri);
+  }
+
   async function handleCallback(sourceUrl = location.href) {
     const url = new URL(sourceUrl);
     const nativeCallback=url.protocol==='mevicarnext:' && url.host==='spotify-callback';
@@ -1839,7 +1851,7 @@
 
   Object.assign(window, {
     meviSpotifyHTML: html,
-    meviSpotifyAcceptNativeCallback: uri => handleCallback(uri),
+    meviSpotifyAcceptNativeCallback: acceptNativeCallback,
     meviSpotifyNativeStage: acceptNativeStage,
     meviSpotifyWebPlayer: startWebPlayer,
     meviSpotifyMount: mount,
@@ -1890,10 +1902,15 @@
     }
   });
 
-  if (nativeOAuthBridge()) {
+  function notifyNativeReady() {
+    if (!nativeOAuthBridge()) return;
     try { window.MeviNativeBridge.postMessage(JSON.stringify({id:'spotify-ready',action:'spotify.ready'})); }
     catch { setAuthDiagnostic('APK-Bridge nicht erreichbar'); }
   }
+  notifyNativeReady();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) notifyNativeReady();
+  });
   handleCallback().catch(error => {
     st.authError = 'Anmeldung fehlgeschlagen: ' + errorText(error);
     rerender();
