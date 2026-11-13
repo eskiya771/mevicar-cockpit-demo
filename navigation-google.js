@@ -424,6 +424,10 @@ function updatePosition(p){
  paintGuidance();
 }
 async function startGuidance(){
+ if(window.MeviPlatform?.capabilities?.().nativeNavigation && selected){
+  try {await window.MeviPlatform.navigation.nativeRoute(selected);return true}
+  catch(e){status('Native Navigation: '+(e.message||e),'route');return false}
+ }
  if(!routeData||!selected){status('Bitte zuerst eine Route berechnen.','route');return false}
  if(guidanceActive)return true;
  try{
