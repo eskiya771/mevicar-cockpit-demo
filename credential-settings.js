@@ -26,8 +26,15 @@ function row(id,title,placeholder,status,description,options={}){
   '<button type="button" class="mevi-cred-remove" onclick="MeviCredentials.clear(\''+id+'\')">Entfernen</button></div>'+
   '<small class="mevi-cred-status">'+escapeHTML(status)+'</small><p>'+escapeHTML(description)+'</p></div>';
 }
-function nativeAvailable(){return !!global.MeviNativeBridge?.postMessage}
+function nativeAvailable(){return !!(global.MeviNativeBridge?.postMessage || global.Capacitor?.Plugins?.MeviSecureSettings)}
 function nativeCall(action,name,secret){
+ const plugin=global.Capacitor?.Plugins?.MeviSecureSettings;
+ if(plugin){
+  if(action==='settings.status')return plugin.status();
+  if(action==='settings.set')return plugin.set({name,value:secret});
+  if(action==='settings.clear')return plugin.remove({name});
+  return Promise.reject(new Error('Android-Einstellung unbekannt.'));
+ }
  return new Promise((resolve,reject)=>{
   if(!nativeAvailable())return reject(new Error('Nur in der Android-APK verfügbar.'));
   const id='settings-'+(++requestNumber);
