@@ -422,6 +422,17 @@
     nativeOAuthStage = String(message || '').slice(0, 120);
     const label = document.getElementById('sp-native-diagnostic');
     if (label) label.textContent = nativeOAuthStage;
+    // The native status already arrives in JS even on devices that don't
+    // dispatch visibilitychange/resume reliably after Chrome. Use that proven
+    // channel to request the pending one-time callback immediately.
+    if (nativeOAuthBridge() && !st.token && pendingAuth() &&
+        nativeOAuthStage.includes('Spotify-Code von Android empfangen')) {
+      setAuthDiagnostic('Android-Rückruf erkannt · Code wird abgeholt');
+      Promise.resolve().then(() => pullSpotifyCallback());
+      setTimeout(() => {
+        if (!st.token && pendingAuth()) pullSpotifyCallback();
+      }, 700);
+    }
   }
   function clearPendingAuth() {
     for (const store of [sessionStorage, localStorage]) {
@@ -489,9 +500,12 @@
       setAuthDiagnostic('Spotify-Rückruf über Android-Bridge empfangen');
       const processed = await acceptNativeCallback(result.callback);
       if (processed) await oauthNativeCall('spotify.callback.ack', {state});
-    } catch {
-      // The existing evaluateJavascript callback remains a fallback.
-      // Never display an authorization code or PKCE verifier in diagnostics.
+    } catch (error) {
+      // Only show a safe error category, never a code, URI or verifier.
+      if (pendingAuth() && !st.token) {
+        setAuthDiagnostic('Android-Rückkanal antwortet nicht (' +
+          String(error?.message || 'unbekannt').replace(/[^a-zA-ZäöüÄÖÜß0-9 -]/g,'').slice(0,45) + ')');
+      }
     } finally { oauthPullBusy = false; }
   }
   function startSpotifyCallbackPolling() {
