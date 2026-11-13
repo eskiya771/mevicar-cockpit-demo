@@ -191,3 +191,22 @@ html[data-theme="liquidglass"] .mg-navigation .mg-guidance-banner{
  .mg-guidance-compact .mg-guidance-instruction #mg-next-distance{font-size:13px}
  .mg-guidance-compact .mg-guidance-instruction #mg-next-turn{font-size:10px}
 }
+
+/* First-run Maps onboarding: no search/favorites layer until the key exists. */
+.mg-navigation.mg-unconfigured{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 44%,#24445b,#102536 80%)}
+.mg-navigation.mg-unconfigured .mg-setup{
+  position:relative;top:auto;left:auto;transform:none;z-index:2;
+  width:min(480px,calc(100% - 28px));max-width:100%;
+  box-sizing:border-box;text-align:center;align-items:stretch;
+  padding:clamp(14px,3vw,26px);gap:clamp(9px,1.4vh,15px);
+}
+.mg-navigation.mg-unconfigured .mg-setup strong{font-size:clamp(18px,3.1vh,25px)}
+.mg-navigation.mg-unconfigured .mg-setup p{font-size:clamp(12px,1.9vh,16px);line-height:1.35}
+.mg-navigation.mg-unconfigured .mg-setup small{font-size:clamp(10px,1.6vh,13px);line-height:1.35}
+.mg-navigation.mg-unconfigured .mg-setup button{min-height:clamp(42px,7vh,55px);font-size:clamp(12px,1.8vh,16px)}
+@media(max-height:430px){
+ .mg-navigation.mg-unconfigured .mg-setup{padding:9px 14px;gap:6px}
+ .mg-navigation.mg-unconfigured .mg-setup strong{font-size:16px}
+ .mg-navigation.mg-unconfigured .mg-setup p{font-size:11px}
+ .mg-navigation.mg-unconfigured .mg-setup small{font-size:10px}
+}

@@ -26,13 +26,14 @@ function clearStatus(){
  error='';errorKind='';
  const notice=document.getElementById('mg-map-notice');if(notice)notice.hidden=true;
 }
-function setupHTML(){return '<div class="mg-setup"><strong>Google Maps noch nicht eingerichtet</strong><p>Den Web-API-Key findest du unter Settings → Zugänge &amp; Schlüssel.</p><button type="button" onclick="meviOpenCredentialSettings()">Google Maps in Settings einrichten</button><span id="mg-status" role="status">'+text(error)+'</span></div>'}
+function setupHTML(){return '<div class="mg-setup" role="status"><strong>Google Maps einrichten</strong><p>Für die Karte und die Adresssuche wird zuerst der Google Maps Web-API-Key benötigt.</p><button type="button" onclick="meviOpenCredentialSettings()">Zu Settings → Zugänge</button><small>Nach dem Speichern wird die Karte geladen und die Adresssuche freigeschaltet.</small></div>'}
 function mapBackdrop(){
  const message='<div class="mg-map-state" id="mg-map-notice" role="status"><span id="mg-status">'+text(error||'Google Maps wird geladen …')+'</span>'+
   '<button type="button" id="mg-change-key" class="mg-change-key" onclick="meviOpenCredentialSettings()"'+(errorKind==='maps-auth'?'':' hidden')+'>API-Schlüssel erneut einrichten</button>'+
   '<button type="button" id="mg-manual-origin" class="mg-manual-action" onclick="MeviGoogleNav.selectOriginOnMap()"'+(errorKind==='gps'?'':' hidden')+'>Startpunkt auf Karte wählen</button></div>';
+ if(!key())return setupHTML();
  const picking=choosingOrigin?'<div class="mg-origin-instruction" role="status">Startpunkt wählen: Auf eine Stelle der Karte tippen oder klicken. <button type="button" onclick="MeviGoogleNav.cancelOriginSelection()">Abbrechen</button></div>':'';
- return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+(!key()?setupHTML():message+picking);
+ return '<div id="mg-map" class="mg-map" aria-label="Google Maps Karte"></div>'+message+picking;
 }
 function load(){
  if(!key())return Promise.reject(new Error('Google Maps Browser-Key fehlt.'));
