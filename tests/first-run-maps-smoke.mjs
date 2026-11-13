@@ -15,6 +15,22 @@ assert(index.includes('APK-Updates') && index.includes('async function checkForU
 assert(index.includes("if(!window.MeviGoogleNav?.hasKey?.()){openCredentialSettings();return}"),
  'Search must be gated until the Google Maps browser key is configured');
 
+// Opening Google Maps setup must update the dynamic sidebar slot (not leave Wetter selected).
+const setupMatch=inline.match(/function openCredentialSettings\(\)\{[^}]*\}/);
+assert(setupMatch,'Missing credentials navigation handler');
+const settingsState={app:'nav',extra:'weather',mode:'map',keyboard:true,settingsTab:'design'};
+let redraws=0;
+const showSettings=new Function('s','render',setupMatch[0]+';return openCredentialSettings;')(
+ settingsState,()=>{redraws++});
+showSettings();
+assert.equal(settingsState.app,'settings');
+assert.equal(settingsState.extra,'settings','Dynamic dock slot must show Settings, not Weather');
+assert.equal(settingsState.mode,'full');
+assert.equal(settingsState.settingsTab,'credentials');
+assert.equal(settingsState.keyboard,false);
+assert.equal(redraws,1);
+
+
 const start=inline.indexOf('function mapHTML(){');
 const finish=inline.indexOf('\nconst gpsData=',start);
 assert(start>=0&&finish>start,'Missing mapHTML function');
