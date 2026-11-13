@@ -9,7 +9,7 @@ if registration not in html:
     raise SystemExit("PWA service-worker registration changed; review Android packaging")
 html = html.replace(registration, "")
 # The platform abstraction is loaded only in the Android wrapper.
-html = html.replace('</head>', '<script src="./meviplatform.js"></script></head>')
+html = html.replace('</head>', '<script src="./meviplatform.js"></script><link rel="stylesheet" href="./meviphone.css"><script src="./meviphone.js" defer></script></head>')
 # This is a native bundle, not a browser-installable PWA.
 html = html.replace('<link rel="manifest" href="./manifest.webmanifest">', '')
 index.write_text(html)
@@ -17,6 +17,12 @@ platform = Path('meviplatform.js')
 if not platform.is_file():
     raise SystemExit('Platform adapter missing')
 Path('dist/meviplatform.js').write_text(platform.read_text())
+# Native phone bridge exists ONLY in Android assets, never on public PWA.
+for name in ("meviphone.js", "meviphone.css"):
+    asset = Path(name)
+    if not asset.is_file():
+        raise SystemExit("Missing native phone asset "+name)
+    Path("dist/"+name).write_text(asset.read_text())
 sw = Path("dist/sw.js")
 if sw.exists():
     sw.unlink()
