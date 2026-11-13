@@ -9,7 +9,7 @@ const native=()=>!!global.MeviNativeBridge?.postMessage;
 const tasks=new Map();
 let serial=0;
 let state={
-  initialized:false,busy:false,channel:'preview',
+  initialized:false,supported:null,busy:false,channel:'preview',
   installedBuild:null,installedVersion:'',release:null,available:false,
   canInstall:false,downloaded:false,progress:0,total:0,message:'',error:''
 };
@@ -76,6 +76,7 @@ function html(){
   '<button type="button" onclick="checkForUpdate()">Web-App auf Updates prüfen</button>'+
   '<p class="mevi-update-note">Der native APK-Installer und GitHub-Token werden ausschließlich in der Android-APK angeboten.</p></section>';
  }
+ if(state.supported===false)return '<section class="mevi-updates"><h3>APK-Updates</h3><p>Diese ältere Android-APK enthält noch keinen nativen Update-Installer. Nach dem einmaligen Umstieg auf die dauerhaft signierte Next-APK stehen künftige Updates hier zur Verfügung.</p><p>Die alte Debug-Signatur kann nicht überinstalliert werden. Vor einer Neuinstallation zuerst Einstellungen und Daten sichern.</p></section>';
  const x=state.release;
  const available=state.available;
  const installed=state.installedBuild===null?'Status noch nicht gelesen':esc(state.installedVersion)+' · APK-Build '+state.installedBuild;
@@ -108,8 +109,12 @@ function html(){
 }
 async function refresh(){
  if(!native())return;
- try {statusInfo(await request('update.status'));state.error='';paint()}
- catch(e){state.error=e.message||String(e);paint()}
+ try {
+  const caps=await request('capabilities');
+  state.supported=!!caps.capabilities?.nativeUpdater;
+  if(!state.supported){state.error='';state.initialized=true;paint();return}
+  statusInfo(await request('update.status'));state.error='';paint();
+ } catch(e){state.error=e.message||String(e);paint()}
 }
 async function channel(v){
  if(state.busy||!['stable','preview'].includes(v))return;
