@@ -15,6 +15,7 @@ let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=n
 const nativeRequests=new Map();
 let nativeRequestSerial=0;
 // The APK uses its own Android-restricted key and native Google SDKs, never a web key.
+let lastNativeLayout='';
 function nativeMode(){return !!window.MeviNativeBridge?.postMessage}
 if(window.MeviNativeBridge?.postMessage){
  const previousNativeMessage=window.MeviNativeBridge.onmessage;
@@ -39,6 +40,30 @@ function nativeRequest(action,fields={}){
   catch(error){clearTimeout(timeout);nativeRequests.delete(id);reject(new Error('Android-Bridge nicht erreichbar'))}
  });
 }
+/** Keep the SDK map exactly inside the Web cockpit's #mg-map rectangle.
+ * Never cover the dock or the right-hand split app. No web key is involved.
+ */
+function syncNativeLayout(force=false){
+ if(!nativeMode())return;
+ const el=document.getElementById('mg-map');
+ const rect=el?.getBoundingClientRect?.();
+ const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
+ const usable=rect&&rect.width>=1&&rect.height>=1&&vw>0&&vh>0;
+ const fields=usable?{
+  visible:true,
+  x:Math.max(0,Math.round(rect.left)),
+  y:Math.max(0,Math.round(rect.top)),
+  width:Math.min(Math.round(rect.width),Math.max(1,Math.round(vw-rect.left))),
+  height:Math.min(Math.round(rect.height),Math.max(1,Math.round(vh-rect.top))),
+  viewportWidth:Math.round(vw),viewportHeight:Math.round(vh),
+  favorites:cache.favorites.slice(0,8).filter(valid).map(d=>({lat:d.lat,lng:d.lng,title:d.name.slice(0,120)}))
+ }:{visible:false};
+ const signature=JSON.stringify(fields);
+ if(!force&&signature===lastNativeLayout)return;
+ lastNativeLayout=signature;
+ nativeRequest('navigation.layout',fields).catch(()=>{lastNativeLayout=''});
+}
+window.addEventListener?.('resize',()=>syncNativeLayout(true));
 async function startNativeNavigation(){
  if(!nativeMode())return false;
  const caps=await nativeRequest('capabilities');
@@ -122,8 +147,8 @@ function load(){
 }
 async function mount(nextState){
  state=nextState||state;mounted=true;const el=document.getElementById('mg-map');
- if(!el)return;
- if(nativeMode()||!key())return;
+ if(nativeMode()){syncNativeLayout();return}
+ if(!el||!key())return;
  try{
    await load();
    if(!document.contains(el))return;
@@ -196,8 +221,8 @@ async function pick(kind,index){
  window.meviGoogleDestination?.(d.name,d.address);
 }
 function favoritesHTML(){return '<div class="favs mg-favorites">'+cache.favorites.map((d,i)=>'<button type="button" class="fav" onclick="MeviGoogleNav.pick(\'favorites\','+i+')" aria-label="'+text(d.name)+' auswählen"><span class="bubble">⌖</span><span>'+text(d.name)+'</span></button>').join('')+'</div>'}
-function saveFavorite(){if(!selected)return;cache.favorites=unique([selected,...cache.favorites.filter(x=>keyOf(x)!==keyOf(selected))],100);persist();window.meviGoogleRerender?.()}
-function removeFavorite(){if(!selected)return;cache.favorites=cache.favorites.filter(x=>keyOf(x)!==keyOf(selected));persist();window.meviGoogleRerender?.()}
+function saveFavorite(){if(!selected)return;cache.favorites=unique([selected,...cache.favorites.filter(x=>keyOf(x)!==keyOf(selected))],100);persist();syncNativeLayout(true);window.meviGoogleRerender?.()}
+function removeFavorite(){if(!selected)return;cache.favorites=cache.favorites.filter(x=>keyOf(x)!==keyOf(selected));persist();syncNativeLayout(true);window.meviGoogleRerender?.()}
 function isFavorite(){return !!selected&&cache.favorites.some(x=>keyOf(x)===keyOf(selected))}
 function selectedAddress(){return selected?.address||'Bitte gültige Adresse auswählen'}
 function markOrigin(){
@@ -569,7 +594,7 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={mount,mapBackdrop,isNativeMode:nativeMode,openNativeMap,openNativeSearch,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,openNativeMap,openNativeSearch,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
