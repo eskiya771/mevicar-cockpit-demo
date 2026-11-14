@@ -43,7 +43,9 @@ jobs:
           node tests/xtream-smoke.mjs
           node tests/iptv-native-smoke.mjs
       - name: Test Google Maps navigation and GPS fallback
-        run: node tests/navigation-google-smoke.mjs
+        run: |
+          node tests/navigation-google-smoke.mjs
+          node tests/navigation-google-native-smoke.mjs
       - name: Test Home Assistant dashboard and REST access
         run: node tests/homeassistant-smoke.mjs
       - name: Test route-matched Road Assist camera safety
