@@ -9,8 +9,10 @@ runInNewContext(read('tv.js'),{window,localStorage:{getItem:()=>null}});
 const markup=window.meviTVHTML();
 // Structural guard only. Real dimensions, scrolling and playback are checked by
 // tv-visual-layout.mjs against the generated Pages artifact before deployment.
-assert.doesNotMatch(css,/position:fixed/,'TV must stay in its host beside the MeviCar dock');
-assert.doesNotMatch(css,/\.dock[^}]*\{/,'TV must not restyle the shared dock');
+const normalCSS=css.split('/* Full-display MeviTV inside Android WebView')[0];
+assert.doesNotMatch(normalCSS,/position:fixed/,'Normal TV must stay in its host beside the MeviCar dock');
+assert.doesNotMatch(normalCSS,/\.dock[^}]*\{/,'Normal TV must not restyle the shared dock');
+assert.match(css,/html\.mevi-tv-theater \.shell/,'Fullscreen theater may expand to the whole viewport');
 assert.match(css,/\.cockpit \.full>\.tv-root>\.tv-library\{\s*display:flex/);
 assert.match(css,/\.cockpit \.full>\.tv-root>\.tv-player\{display:flex/);
 assert.match(css,/\.tv-xtream-item\{flex:0 0 auto;min-height:48px/);
