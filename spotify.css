@@ -121,7 +121,9 @@
 .sp-pane-head{display:flex;align-items:center;gap:5px;flex:none;min-width:0}
 .sp-chips{display:flex;align-items:center;gap:3px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;padding:1px 0}
 .sp-chips::-webkit-scrollbar{display:none}
-.sp-chip{flex:none;min-height:36px;padding:5px 9px;border:1px solid #557c9b48;border-radius:10px;background:#16263799;color:#b7cadd;font-size:clamp(9px,1.35vh,12px);font-weight:740;white-space:nowrap}
+.sp-chip{flex:1 0 auto;min-height:36px;padding:5px clamp(4px,.55vw,9px);border:1px solid #557c9b48;border-radius:10px;background:#16263799;color:#b7cadd;font-size:clamp(9px,1.35vh,12px);font-weight:740;white-space:nowrap}
+.sp-chip[data-browse="tracks"]{flex:0 0 36px;display:grid;place-items:center;padding:0}
+.sp-chip[data-browse="tracks"] .sp-icon{width:17px;height:17px}
 .sp-chip.selected{color:#eafff4;background:#13503a;border-color:#2ee077}
 .sp-scroll,.sp-results{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#32617a #080f1e;padding-right:2px}
 .sp-rows{display:flex;flex-direction:column;gap:3px}
@@ -137,9 +139,6 @@
 .sp-row-time{font-size:10px;color:#8fa9bb;font-variant-numeric:tabular-nums;flex:none}
 .sp-row-play{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:#1ed76018;color:#6dffac;flex:none}
 .sp-row-play .sp-icon{width:14px;height:14px}
-.sp-row-queue{width:42px;min-width:42px;min-height:42px;display:grid;place-items:center;border:0;border-left:1px solid #608aad26;background:transparent;color:#9dc2d6;padding:4px}
-.sp-row-queue:hover{color:#7bffb3;background:#1ed76012}
-.sp-row-queue .sp-icon{width:18px;height:18px}
 .sp-group-title{display:flex;align-items:center;gap:6px;padding:7px 3px 4px;font-size:clamp(9px,1.3vh,11px);font-weight:850;letter-spacing:.13em;text-transform:uppercase;color:var(--sp-green)}
 .sp-group-title .sp-icon{width:15px;height:15px}
 .sp-group-title span{margin-left:auto;color:#8fa9bb;font-weight:700;letter-spacing:0}
@@ -290,7 +289,7 @@ html[data-theme="liquidglass"] .sp-art{border-color:#ffffff66}
   .sp-tools{gap:3px}
   .sp-drawers{max-height:min(46vh,180px)}
   .sp-browse,.sp-search{padding:4px 6px;gap:4px}
-  .sp-chip{min-height:34px;padding:4px 7px;font-size:9px}
+  .sp-chip{min-height:34px;font-size:9px}
   .sp-row{min-height:46px}
   .sp-row-main{padding:3px 5px;gap:5px}
   .sp-row-art{width:32px;height:32px}

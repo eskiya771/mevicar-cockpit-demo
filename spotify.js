@@ -33,10 +33,10 @@
   const KINDS = new Set(['track', 'album', 'playlist', 'artist', 'show', 'episode']);
   const BROWSE_DEFS = {
     playlists: { label: 'Playlists', path: '/me/playlists?limit=50', pick: d => d?.items || [], map: mapPlaylist },
-    tracks: { label: 'Favoriten', path: '/me/tracks?limit=50', pick: d => d?.items || [], map: x => mapTrack(x?.track) },
     albums: { label: 'Alben', path: '/me/albums?limit=50', pick: d => d?.items || [], map: x => mapAlbum(x?.album) },
     shows: { label: 'Podcasts', path: '/me/shows?limit=50', pick: d => d?.items || [], map: x => mapShow(x?.show) },
-    recent: { label: 'Zuletzt', path: '/me/player/recently-played?limit=20', pick: d => d?.items || [], map: x => mapTrack(x?.track) }
+    recent: { label: 'Zuletzt', path: '/me/player/recently-played?limit=20', pick: d => d?.items || [], map: x => mapTrack(x?.track) },
+    tracks: { label: 'Favoriten', path: '/me/tracks?limit=50', pick: d => d?.items || [], map: x => mapTrack(x?.track) }
   };
   const SEARCH_GROUPS = [
     ['tracks', 'Titel', 'music'],
@@ -55,6 +55,7 @@
     shuffle: '<path d="M3 7h3c5 0 6 10 12 10h3M18 14l3 3-3 3M3 17h3c1 0 2-.5 3-2M14 9c1-1.5 2-2 4-2h3M18 4l3 3-3 3"/>',
     repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
     heart: '<path d="M20.8 4.6a5.3 5.3 0 0 0-7.4 0L12 6l-1.4-1.4a5.3 5.3 0 0 0-7.4 7.4L12 21l8.8-9a5.3 5.3 0 0 0 0-7.4Z"/>',
+    star: '<path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.3-5.7-3-5.7 3 1.1-6.3-4.5-4.4 6.3-.9Z"/>',
     search: '<circle cx="10.8" cy="10.8" r="7.2"/><path d="m16 16 5.5 5.5"/>',
     music: '<path d="M9 18V5l12-3v13"/><path d="M9 8l12-3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/>',
     disc: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 10 10"/>',
@@ -1219,7 +1220,10 @@
 
   function browseMarkup() {
     return '<div class="sp-browse"><div class="sp-pane-head"><div class="sp-chips" role="tablist" aria-label="Spotify-Bereiche">' +
-      Object.entries(BROWSE_DEFS).map(([id, def]) => '<button type="button" role="tab" class="sp-chip' + (st.browse === id ? ' selected' : '') + '" data-browse="' + id + '" aria-selected="' + (st.browse === id) + '" onclick="meviSpotifyBrowse(\'' + id + '\')">' + esc(def.label) + '</button>').join('') +
+      Object.entries(BROWSE_DEFS).map(([id, def]) => {
+        const isFavorite = id === 'tracks';
+        return '<button type="button" role="tab" class="sp-chip' + (st.browse === id ? ' selected' : '') + '" data-browse="' + id + '"' + (isFavorite ? ' aria-label="Favoriten" title="Favoriten"' : '') + ' aria-selected="' + (st.browse === id) + '" onclick="meviSpotifyBrowse(\'' + id + '\')">' + (isFavorite ? icon('star') : esc(def.label)) + '</button>';
+      }).join('') +
       '</div><button type="button" class="sp-icon-button" aria-label="Bereich aktualisieren" title="Aktualisieren" onclick="meviSpotifyReloadBrowse()">' + icon('refresh') + '</button></div>' +
       '<div class="sp-scroll" id="sp-browse-list">' + browseListMarkup() + '</div></div>';
   }
@@ -1232,13 +1236,11 @@
     return '<div class="sp-rows">' + items.map((item, index) => rowMarkup(item, 'browse', index)).join('') + '</div>' + (st.browseLoading ? '<div class="sp-list-loading small"><span class="sp-spinner"></span><span>Aktualisiere …</span></div>' : '');
   }
   function rowMarkup(item, group, index) {
-    const queueable = item.kind === 'track' || item.kind === 'episode';
     return '<div class="sp-row"><button type="button" class="sp-row-main" onclick="meviSpotifyPlayStored(\'' + group + '\',' + index + ')" aria-label="' + esc(item.title + ' abspielen') + '">' +
       '<span class="sp-row-art">' + (item.image ? '<img src="' + esc(item.image) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : icon(item.kind === 'episode' || item.kind === 'show' ? 'podcast' : item.kind === 'playlist' ? 'list' : item.kind === 'album' ? 'disc' : item.kind === 'artist' ? 'mic' : 'music')) + '</span>' +
       '<span class="sp-row-text"><strong>' + esc(item.title) + '</strong><small>' + esc(item.meta) + '</small></span>' +
       (item.duration ? '<span class="sp-row-time">' + fmtMs(item.duration) + '</span>' : '') +
       '<span class="sp-row-play">' + icon('play') + '</span></button>' +
-      (queueable ? '<button type="button" class="sp-row-queue" aria-label="' + esc(item.title + ' zur Warteschlange') + '" title="Zur Warteschlange" onclick="meviSpotifyQueueStored(\'' + group + '\',' + index + ')">' + icon('plus') + '</button>' : '') +
       '</div>';
   }
   function searchMarkup() {
@@ -1363,12 +1365,6 @@
     if (group !== 'browse' && st.query.trim()) addHistory(st.query.trim());
     playItem(item);
   }
-  function queueStored(group, index) {
-    const item = storedItem(group, index);
-    if (!item) return;
-    queueItem(item);
-  }
-
   // Browser speech recognition is optional and starts only after a direct tap.
   // Safari or installed PWAs may not expose this API; manual search remains available.
   function paintVoice() {
@@ -2022,7 +2018,6 @@
     meviSpotifyUseHistory: useHistory,
     meviSpotifyClearHistory: clearHistory,
     meviSpotifyPlayStored: playStored,
-    meviSpotifyQueueStored: queueStored,
     meviSpotifyToggle: toggle,
     meviSpotifyNext: () => skip('next'),
     meviSpotifyPrev: () => skip('previous'),
