@@ -535,9 +535,20 @@
       }
       return false;
     } finally { oauthPullBusy = false; }
-    if (typeof result.callback !== 'string' ||
-        !result.callback.startsWith(NATIVE_REDIRECT + '?')) {
+    if (typeof result.callback !== 'string') {
       if (manual === true) setAuthDiagnostic('Android hält keinen Spotify-Rückruf bereit');
+      return false;
+    }
+    // Android intentionally accepts both mevicarnext://spotify-callback?...
+    // and mevicarnext://spotify-callback/?... . Validate the parsed URL
+    // instead of dropping the second form silently.
+    let callbackUrl;
+    try { callbackUrl = new URL(result.callback); } catch { /* invalid redirect */ }
+    if (callbackUrl?.protocol !== 'mevicarnext:' ||
+        callbackUrl?.host !== 'spotify-callback' ||
+        (callbackUrl.pathname !== '' && callbackUrl.pathname !== '/') ||
+        (!callbackUrl.searchParams.has('code') && !callbackUrl.searchParams.has('error'))) {
+      setAuthDiagnostic('Android-Rückruf hat ein unbekanntes Format');
       return false;
     }
     logOAuth('Web: Spotify-Rückruf über Android-Bridge abgeholt');
