@@ -279,3 +279,63 @@
 .tv-stage:fullscreen,.tv-stage:-webkit-full-screen{width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;min-height:0!important;border-radius:0!important;background:#000;overflow:hidden}
 .tv-stage:fullscreen .tv-fullscreen-exit,.tv-stage:-webkit-full-screen .tv-fullscreen-exit{display:block}
 .tv-stage:fullscreen video,.tv-stage:-webkit-full-screen video,.tv-stage:fullscreen movi-player,.tv-stage:-webkit-full-screen movi-player{width:100%!important;height:100%!important;object-fit:contain}
+
+
+/* Full-display MeviTV inside Android WebView without the blocked Fullscreen API.
+   Retain the video/movi element in place to avoid decoder reset or stream restart. */
+html.mevi-tv-theater,
+html.mevi-tv-theater body{overflow:hidden!important;width:100%!important;height:100%!important}
+html.mevi-tv-theater .shell{
+ position:fixed!important;inset:0!important;z-index:2147483000!important;
+ display:flex!important;flex-direction:column!important;
+ width:100vw!important;height:100dvh!important;max-width:none!important;
+ margin:0!important;padding:0!important;overflow:hidden!important;background:#000!important
+}
+html.mevi-tv-theater .cockpit,
+html.mevi-tv-theater .cockpit .body,
+html.mevi-tv-theater .cockpit .workspace,
+html.mevi-tv-theater .cockpit .screen,
+html.mevi-tv-theater .cockpit .full:has(>.tv-root),
+html.mevi-tv-theater .cockpit .side:has(>.tv-root),
+html.mevi-tv-theater .cockpit .tv-root,
+html.mevi-tv-theater .cockpit .tv-player{
+ display:flex!important;flex:1 1 auto!important;
+ min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
+ max-width:none!important;max-height:none!important;
+ margin:0!important;padding:0!important;gap:0!important;
+ border:0!important;border-radius:0!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ background:#000!important;overflow:hidden!important
+}
+html.mevi-tv-theater .cockpit .body,
+html.mevi-tv-theater .cockpit .screen,
+html.mevi-tv-theater .cockpit .tv-root{flex-direction:row!important}
+html.mevi-tv-theater .cockpit .workspace,
+html.mevi-tv-theater .cockpit .full:has(>.tv-root),
+html.mevi-tv-theater .cockpit .side:has(>.tv-root),
+html.mevi-tv-theater .cockpit .tv-player{flex-direction:column!important}
+html.mevi-tv-theater .tv-root{container-type:normal!important}
+html.mevi-tv-theater :is(
+ .toolbar,.note,.cockpit .dock,.cockpit .status,.cockpit .screen>.map,
+ .tv-root>.tv-library,.tv-player>header,.tv-player>.tv-actions,
+ .tv-player>.tv-program,.tv-player>.tv-status,.tv-player>.tv-network,
+ .tv-player>.tv-movi-diagnostics
+){display:none!important}
+html.mevi-tv-theater .cockpit .tv-stage{
+ display:flex!important;position:relative!important;flex:1 1 auto!important;
+ inset:auto!important;min-width:0!important;min-height:0!important;
+ width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+ background:#000!important;overflow:hidden!important
+}
+html.mevi-tv-theater .tv-stage .tv-fullscreen-exit{
+ display:block!important;z-index:100!important;
+ top:max(10px,env(safe-area-inset-top,0px))!important;
+ right:max(10px,env(safe-area-inset-right,0px))!important;
+ width:48px!important;height:48px!important;min-height:48px!important
+}
+html.mevi-tv-theater .tv-stage video,
+html.mevi-tv-theater .tv-stage movi-player{
+ width:100%!important;height:100%!important;max-width:none!important;
+ object-fit:contain!important
+}
