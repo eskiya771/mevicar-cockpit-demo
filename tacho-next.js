@@ -108,8 +108,8 @@ function applyFix(pos,token){
  speed=currentSpeed;
  lastFixAt=now;
  gpsStatus='GPS aktiv';
- if(Number.isFinite(coords.heading)&&coords.heading>=0&&coords.heading<=360&&
-    Number.isFinite(currentSpeed)&&currentSpeed>=5)gpsHeading=normalize(coords.heading);
+ gpsHeading=(Number.isFinite(coords.heading)&&coords.heading>=0&&coords.heading<=360&&
+    Number.isFinite(currentSpeed)&&currentSpeed>=5)?normalize(coords.heading):null;
  // Track position only after meaningful movement. This preserves small distances
  // between successive fixes without accumulating idle GPS jitter as trip.
  if(!lastPoint)lastPoint=point;
@@ -120,7 +120,7 @@ function applyFix(pos,token){
 }
 function onGpsError(error,token){
  if(token!==generation||!host)return;
- gpsWatch=null;lastFixAt=0;speed=null;gpsHeading=null;
+ gpsWatch=null;lastFixAt=0;speed=null;gpsHeading=null;lastPoint=null;
  const code=error?.code;
  gpsStatus=code===1?'Standortfreigabe fehlt':code===2?'GPS-Signal nicht verfügbar':code===3?'GPS-Zeitüberschreitung':'GPS nicht verfügbar';
  const retry=host.querySelector('#tn-gps-retry');if(retry)retry.hidden=false;
@@ -205,7 +205,7 @@ function mount(){
  paint();
  if(!document.hidden){startGps();setupCompass();}
  healthTimer=setInterval(()=>{
-  if(lastFixAt&&Date.now()-lastFixAt>staleAfterMs){lastFixAt=0;speed=null;gpsHeading=null;gpsStatus='GPS-Signal veraltet';}
+  if(lastFixAt&&Date.now()-lastFixAt>staleAfterMs){lastFixAt=0;speed=null;gpsHeading=null;lastPoint=null;gpsStatus='GPS-Signal veraltet';}
   paint();
  },2500);
 }
