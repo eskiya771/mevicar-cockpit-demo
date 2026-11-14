@@ -26,7 +26,7 @@ jobs:
         run: node tests/first-run-maps-smoke.mjs
       - name: Test signed APK update Settings
         run: node tests/native-updates-smoke.mjs
-      - name: Test centralized credentials and no secret persistence
+      - name: Test centralized credentials and local IPTV PIN persistence
         run: node tests/credential-settings-smoke.mjs
       - name: Quick JavaScript and configuration smoke tests
         run: |
@@ -35,6 +35,7 @@ jobs:
           node tests/display-profiles-smoke.mjs
           node tests/launcher-landscape-smoke.mjs
           node tests/tv-smoke.mjs
+          node tests/tv-restore-smoke.mjs
           node tests/xtream-smoke.mjs
       - name: Test Google Maps navigation and GPS fallback
         run: node tests/navigation-google-smoke.mjs
