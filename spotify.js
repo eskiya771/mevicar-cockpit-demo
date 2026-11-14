@@ -278,6 +278,7 @@
     mounted: false,
     webPlayer: null,
     webDeviceId: '',
+    webConnectBusy: false,
     webTransferBusy: false,
     webStatus: 'Aus',
     webError: '',
@@ -884,7 +885,7 @@
     } else rerender();
   }
 
-  // Load the official Spotify Web Playback SDK only at user request.
+  // Load Spotify's SDK when Spotify opens, or when the user selects a track.
   function loadWebPlaybackSDK() {
     if (window.Spotify?.Player) return Promise.resolve();
     if (sdkLoading) return sdkLoading;
@@ -955,6 +956,12 @@
       else webPlayerStatus('Bereit');
       return;
     }
+    // Rendering the new status re-enters mount(): prevent a second connection.
+    if (st.webConnectBusy) {
+      st.webPlayer?.activateElement();
+      return;
+    }
+    st.webConnectBusy = true;
     webPlayerStatus('Verbinde …');
     try {
       await loadWebPlaybackSDK();
@@ -997,6 +1004,8 @@
     } catch(error) {
       logPlayback('Start fehlgeschlagen · ' + (error?.message || 'unbekannt'));
       webPlayerStatus('Fehler',error.message || String(error));
+    } finally {
+      st.webConnectBusy = false;
     }
   }
   async function transferToWebPlayer() {
@@ -1180,11 +1189,17 @@
       '</div>';
   }
   function noDeviceMarkup() {
-    return '<div class="sp-empty">' + icon('spotify') +
-      '<strong>Spotify direkt in MeviCar</strong><p>Starte den MeviCar Player und wähle einen Titel oder eine Playlist aus.</p>' +
-      '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + 'MeviCar Player starten</button>'+
-      (nativeOAuthBridge() ? '<button type="button" onclick="meviSpotifyOpenBrowser()">Im Browser öffnen</button>' : '')+
-      '</div>'+(st.webError?'<p role="alert">'+esc(st.webError)+'</p>':'')+'</div>';
+    const ready = !!st.webDeviceId;
+    const connecting = !ready && (st.webConnectBusy || st.webStatus === 'Registriere Gerät …');
+    const title = ready ? 'Bereit für Musik' : connecting ? 'MeviCar Player wird gestartet …' : 'Spotify direkt in MeviCar';
+    const hint = ready ? 'Wähle einen Titel oder eine Playlist aus deiner Bibliothek.'
+      : connecting ? 'Der integrierte Spotify-Player wird automatisch verbunden.'
+      : 'Der automatische Player-Start war nicht möglich. Erneut versuchen.';
+    return '<div class="sp-empty">' + (connecting ? '<span class="sp-spinner" aria-hidden="true"></span>' : icon('spotify')) +
+      '<strong>'+title+'</strong><p>'+hint+'</p>' +
+      (!ready && !connecting ? '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + 'MeviCar Player starten</button>'+
+      (nativeOAuthBridge() ? '<button type="button" onclick="meviSpotifyOpenBrowser()">Im Browser öffnen</button>' : '') + '</div>' : '') +
+      (st.webError?'<p role="alert">'+esc(st.webError)+'</p>':'')+'</div>';
   }
   function queueMarkup() {
     const current = st.queue?.currently_playing;
@@ -1521,6 +1536,8 @@
 
   async function playItem(item) {
     if (!item?.uri) return;
+    // Selecting a track is a real user gesture: unlock browser audio before awaits.
+    st.webPlayer?.activateElement();
     const body = item.kind === 'track' || item.kind === 'episode' ? { uris: [item.uri] } : { context_uri: item.uri };
     if (!st.webDeviceId) {
       st.pendingPlay = { body, title: item.title, at: Date.now() };
@@ -1558,6 +1575,7 @@
     } catch (error) { handleApiError(error); }
   }
   async function toggle() {
+    st.webPlayer?.activateElement();
     const player = st.player;
     if (!st.webDeviceId) { await startWebPlayer(); return; }
     if (!player || player.device?.id !== st.webDeviceId) return;
@@ -1935,7 +1953,10 @@
     bindGlobals();
     const shell = document.querySelector('.sp-shell');
     if (!shell || !st.token) { unmount(); return; }
+    const firstOpen = !st.mounted;
     st.mounted = true;
+    // Automatically connect when opening Spotify, not on each rerender.
+    if (firstOpen && !st.webDeviceId) startWebPlayer().catch(() => {});
     if (!pollTimer) pollTimer = setInterval(() => poll(false), 3000);
     if (!tickTimer) tickTimer = setInterval(() => tickProgress(), 500);
     poll(false);
