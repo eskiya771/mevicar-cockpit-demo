@@ -53,6 +53,8 @@ jobs:
         run: node tests/speedometer-smoke.mjs
       - name: Test Tacho Next default dock and Classic app selector
         run: node tests/tacho-default-smoke.mjs
+      - name: Test Tacho Next live GPS, compass and trip
+        run: node tests/tacho-next-live-smoke.mjs
       - name: Test Spotify Connect remote integration
         run: node tests/spotify-smoke.mjs
       - name: Test Spotify Android PKCE/App Remote integration
