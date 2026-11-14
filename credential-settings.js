@@ -80,9 +80,15 @@ function html(){
  const android=nativeAvailable();
  const groups=[
   '<h3>Google-Dienste</h3>',
-  row('maps','Google Maps · Browser-API-Key','Neuen Browser-API-Key eingeben',
-      saved(MAPS_KEY)?'Eingerichtet':'Nicht eingerichtet',
-      'Für die Web-App: HTTP-Referrer auf die MeviCar-Seite einschränken. Kein Android-SDK-Schlüssel.'),
+  ...(android?[
+   row('android-maps','Google Navigation SDK · Android-API-Key','Android-SDK-Schlüssel eingeben',
+       nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
+       'Für Android-Karte, Google-Places-Adresssuche und Routenführung. Paket de.mevicar.next und SHA-1 der signierten APK in Google Cloud freigeben.',{secret:true})
+  ]:[
+   row('maps','Google Maps · Browser-API-Key','Neuen Browser-API-Key eingeben',
+       saved(MAPS_KEY)?'Eingerichtet':'Nicht eingerichtet',
+       'Nur für die Web-App: HTTP-Referrer auf die MeviCar-Seite einschränken. Kein Android-SDK-Schlüssel.')
+  ]),
   row('calendar','Google Kalender · OAuth-Web-Client-ID','…apps.googleusercontent.com',
       cal.clientId?'Eingerichtet':'Nicht eingerichtet',
       'Client-ID für den lesenden Kalenderzugriff; Google-Passwort wird niemals hier eingegeben.'),
@@ -108,9 +114,6 @@ function html(){
  ];
  if(android){
   groups.push('<h3>Nur Android-APK</h3>');
-  groups.push(row('android-maps','Google Navigation SDK · Android-API-Key','Android-SDK-Schlüssel eingeben',
-    nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
-    'Nur für de.mevicar.next. Google Cloud muss die passende Paket-ID und den SHA-1-Fingerabdruck erlauben.',{secret:true}));
   groups.push(row('github-token','GitHub · Token für private APK-Updates','GitHub Fine-grained PAT eingeben',
     nativeStatus?.githubToken?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
     'Nur Zugriff auf eskiya771/mevicar-next · Contents: Read-only. Der Token wird ausschließlich im Android Keystore gespeichert.',{secret:true}));
@@ -120,7 +123,10 @@ function html(){
  }
  return '<div class="mevi-credentials"><p class="mevi-cred-intro">Alle Schlüssel, Client-IDs, PINs und Zugänge werden hier verwaltet. Die übrigen Apps haben keine eigenen Zugangsdatenfelder mehr.</p>'+
   groups.join('')+
-  '<p class="mevi-cred-note">Sicherheit: Browser-Schlüssel und öffentliche Client-IDs bleiben im lokalen Browser-Speicher. Browser-Schlüssel müssen bei Google Cloud eingeschränkt werden; sie sind keine geheimen Server-Schlüssel. Home-Assistant-Token bleibt nur im Arbeitsspeicher. Der MeviTV-PIN wird in der aktuellen Android-APK verschlüsselt im Android Keystore gespeichert; im Browser und in älteren APKs lokal und unverschlüsselt. Er kann hier jederzeit entfernt werden. Andere Android-SDK-Schlüssel liegen verschlüsselt im Android Keystore.</p>'+
+  '<p class="mevi-cred-note">'+(android?
+   'Android: Google-Navigation und Places verwenden ausschließlich den Android-API-Key im verschlüsselten Android Keystore; ein Browser-Key wird nicht benötigt.':
+   'Web-App: Google Maps nutzt einen auf diese Website eingeschränkten Browser-API-Key.')+
+   ' Der MeviTV-PIN wird in der aktuellen Android-APK verschlüsselt, in der Web-App lokal gespeichert. Home-Assistant-Token bleiben im Arbeitsspeicher.</p>'+
   '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div></div>';
 }
 async function save(id){
@@ -128,6 +134,7 @@ async function save(id){
  try {
   switch(id){
    case 'maps':
+    if(nativeAvailable())throw new Error('Der Browser-Key ist in der APK nicht verfügbar. Bitte den Android-Navigation-Key verwenden.');
     if(!/^[A-Za-z0-9_-]{20,}$/.test(v))throw new Error('Google Maps Browser-Key ist ungültig.');
     localStorage.setItem(MAPS_KEY,v);break;
    case 'spotify':
@@ -179,7 +186,9 @@ async function save(id){
 async function clear(id){
  try{
   switch(id){
-   case 'maps':localStorage.removeItem(MAPS_KEY);break;
+   case 'maps':
+    if(nativeAvailable())throw new Error('In der APK ist nur der Android-Navigation-Key verfügbar.');
+    localStorage.removeItem(MAPS_KEY);break;
    case 'spotify':global.meviSpotifyResetClient?.(true);break;
    case 'calendar':global.MeviCalendar?.setClientId?.('');break;
    case 'road':global.MeviRoadAssist?.setConfigId?.('');break;
