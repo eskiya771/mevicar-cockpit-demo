@@ -42,7 +42,7 @@ for(const selector of [
 assert.ok(css.includes('env(safe-area-inset-left'),'iPhone safe-area insets must be handled');
 assert.ok(css.includes('--car-touch:44px'),'Touch target baseline is missing');
 const touchChecks=[
-  '.mm-shell.is-compact .mm-mode-button{min-width:44px}',
+  ':is(.mm-shell,.sp-shell).is-compact .mm-mode-button{min-width:44px}',
   '.mm-shell.is-compact .mm-now .mm-icon-button{width:44px',
   '.mm-shell .mm-transport button{min-width:44px;min-height:44px}',
   '.mm-shell .mm-transport .mm-primary{min-width:56px;min-height:56px}',
