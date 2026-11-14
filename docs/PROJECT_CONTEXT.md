@@ -126,6 +126,7 @@ Screensaver verwaltet ein globales Body-Overlay, Idle- und Uhrtimer sowie Eingab
 | --- | --- |
 | `mevicar-next-theme` | Theme-ID |
 | `mevicar-media-favorites-v1` | Dateiidentitäten der Favoriten |
+| `mevicar-next-destinations-native-import-v1` | `1`, sobald die Google-Favoriten einmalig an das native Adressbuch der APK übergeben wurden (`navigation.favorites.import`, nur bei Fähigkeit `navigationFavoritesImport`). Danach zeigt die APK ausschließlich ihr eigenes Adressbuch; im Browser bleibt alles unverändert. |
 | `mevicar-media-options-v1` | Shuffle und Repeat |
 | `mevicar-spotify-client-v1` | Spotify Client ID (öffentlich) |
 | `mevicar-spotify-token-v1` | Access-/Refresh-Token mit Ablaufzeit |
