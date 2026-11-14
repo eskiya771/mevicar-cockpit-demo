@@ -110,4 +110,19 @@ api.meviTachoNextMount();
 assert.equal(watches.size,1,'Remount should start a new watch');
 assert.equal(api.meviTachoNextDebug().tripKm,trip,'GPS trip survives switching between apps');
 api.meviTachoNextUnmount();
-console.log('Tacho Next live: GPS speed, real compass, spike filter, trip persistence, stale signal, no simulated OBD, lifecycle OK');
+// iOS: previously granted compass events work without a second prompt. When not
+// granted, the explicit button requests permission from a direct user click.
+let promptCalls=0;
+window.DeviceOrientationEvent.requestPermission=async()=>{promptCalls++;return 'granted';};
+api.meviTachoNextMount();
+assert.equal(node('#tn-compass-permission').hidden,false,'iPhone should offer a permission control');
+assert.ok(windowListeners.deviceorientation,'Previously granted sensor events can already arrive');
+host.listeners.click({target:{closest:selector=>selector==='#tn-compass-permission'?node('#tn-compass-permission'):null}});
+await Promise.resolve();
+await Promise.resolve();
+assert.equal(promptCalls,1,'Permission must be requested only from the user action');
+assert.equal(node('#tn-compass-permission').hidden,true);
+windowListeners.deviceorientation({webkitCompassHeading:135});
+assert.equal(api.meviTachoNextDebug().heading,135);
+api.meviTachoNextUnmount();
+console.log('Tacho Next live: GPS speed, real compass, iOS permission, spike filter, trip persistence, stale signal, no simulated OBD, lifecycle OK');
