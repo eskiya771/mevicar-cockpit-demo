@@ -24,7 +24,7 @@ const localStorage={
 const nodes={'mg-status':{textContent:'',hidden:false,classList:{add(){}}},
  'mg-map-notice':{hidden:false},'mg-change-key':{hidden:true},
  'mg-manual-origin':{hidden:true}};
-let mapRect={left:0,top:16,width:1200,height:700};
+let mapRect={left:0,top:16,right:1200,width:1200,height:700};
 nodes['mg-map']={getBoundingClientRect:()=>mapRect};
 const window={MeviNativeBridge:bridge,innerWidth:1200,innerHeight:800};
 const document={getElementById:id=>nodes[id]||null,querySelector:()=>null};
@@ -42,7 +42,7 @@ assert.deepEqual(
 );
 assert.equal(layout.favorites.length,1);
 assert.equal(layout.favorites[0].title,favorite.name);
-mapRect={left:0,top:16,width:700,height:700};
+mapRect={left:0,top:16,right:700,width:700,height:700};
 api.syncNativeLayout();
 layout=commands.filter(x=>x.action==='navigation.layout').at(-1);
 assert.equal(layout.width,700,'Split layout must leave 500 CSS pixels free for the side app');
@@ -78,4 +78,29 @@ for(const request of opens){
  assert.equal(request.title,favorite.name);
 }
 assert.equal(window.google,undefined,'Do not initialize Maps JavaScript in the APK');
+// An updated APK can place controls in a separate rectangle above the map.
+let headerEnabled=false;
+let headerVisible=true;
+nodes['mg-native-header-slot']={
+ parentElement:{classList:{add:()=>{headerEnabled=true}}},
+ getBoundingClientRect:()=>headerEnabled&&headerVisible?
+  {left:0,top:0,right:330,bottom:48,width:330,height:48}:{width:0,height:0}
+};
+const originalPost=bridge.postMessage;
+bridge.postMessage=function(raw){
+ const request=JSON.parse(raw);
+ if(request.action!=='capabilities')return originalPost.call(this,raw);
+ setTimeout(()=>this.onmessage({data:JSON.stringify({id:request.id,ok:true,
+  capabilities:{nativeNavigationHeader:true}})}),0);
+};
+mapRect={left:0,top:48,right:1200,width:1200,height:700};
+api.syncNativeLayout();
+for(let attempt=0;!headerEnabled&&attempt<20;attempt++){
+ await new Promise(resolve=>setTimeout(resolve,5));
+}
+assert.deepEqual(commands.filter(x=>x.action==='navigation.layout').at(-1).header,
+ {x:0,y:0,width:330,height:48});
+headerVisible=false;
+api.syncNativeLayout();
+assert.equal(commands.filter(x=>x.action==='navigation.layout').at(-1).header,undefined);
 console.log('Android native map, split viewport, dock visibility, Places, favorites and routing work without a browser API key.');

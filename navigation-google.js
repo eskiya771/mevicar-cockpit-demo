@@ -43,9 +43,26 @@ function nativeRequest(action,fields={}){
 /** Keep the SDK map exactly inside the Web cockpit's #mg-map rectangle.
  * Never cover the dock or the right-hand split app. No web key is involved.
  */
+let nativeHeaderCapability;
+function syncNativeHeader() {
+ const slot=document.getElementById('mg-native-header-slot');
+ if(!slot)return null;
+ const header=slot.parentElement;
+ if(!nativeHeaderCapability){
+  nativeHeaderCapability=nativeRequest('capabilities').then(result=>{
+   if(result.capabilities?.nativeNavigationHeader){
+    header.classList.add('mg-native-header');
+    syncNativeLayout(true);
+   }
+  }).catch(()=>{nativeHeaderCapability=null});
+ }
+ const rect=slot.getBoundingClientRect();
+ return rect.width>0&&rect.height>0?rect:null;
+}
 function syncNativeLayout(force=false){
  if(!nativeMode())return;
  const el=document.getElementById('mg-map');
+ const header=el?syncNativeHeader():null;
  const rect=el?.getBoundingClientRect?.();
  const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
  const usable=rect&&rect.width>=1&&rect.height>=1&&vw>0&&vh>0;
@@ -58,6 +75,14 @@ function syncNativeLayout(force=false){
   viewportWidth:Math.round(vw),viewportHeight:Math.round(vh),
   favorites:cache.favorites.slice(0,8).filter(valid).map(d=>({lat:d.lat,lng:d.lng,title:d.name.slice(0,120)}))
  }:{visible:false};
+ if(usable&&header){
+  const x=Math.round(header.left),y=Math.round(header.top);
+  const width=Math.min(Math.round(header.right),Math.round(rect.right))-x;
+  const height=Math.min(Math.round(header.bottom),Math.round(rect.top))-y;
+  if(x>=0&&y>=0&&width>=220&&height>=40){
+   fields.header={x,y,width,height};
+  }
+ }
  const signature=JSON.stringify(fields);
  if(!force&&signature===lastNativeLayout)return;
  lastNativeLayout=signature;

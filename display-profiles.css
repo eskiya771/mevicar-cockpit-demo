@@ -739,3 +739,48 @@ html,body{min-height:0;overscroll-behavior:none}
  z-index:2;
 }
 .cockpit .map.searchmode .keyboard .keyrow{position:relative;z-index:1}
+
+/* Native Android actions share the cockpit header in standalone navigation. */
+#mg-native-header-slot { display: none; }
+.cockpit.nav-status-only .workspace > .status.mg-native-header {
+ position: static !important;
+ width: auto;
+ max-width: none;
+ height: 48px;
+ min-height: 48px;
+ box-sizing: border-box;
+ gap: 8px;
+ padding: 0 6px 0 0;
+ border: 0;
+ border-radius: 0;
+ background: transparent;
+ backdrop-filter: none;
+}
+.status.mg-native-header #mg-native-header-slot {
+ display: block;
+ order: -1;
+ flex: 0 0 clamp(220px, 33%, 440px);
+ align-self: stretch;
+}
+.cockpit .status.mg-native-header #meviPlatformHeader {
+ display: block;
+ margin-left: auto;
+ min-width: 0;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+}
+.status.mg-native-header .status-right {
+ flex: 0 1 auto;
+ min-width: 0;
+ white-space: nowrap;
+}
+.status.mg-native-header #updateMessage {
+ min-width: 0;
+ overflow: hidden;
+ text-overflow: ellipsis;
+}
+@media (max-width: 700px) {
+ .status.mg-native-header #updateMessage,
+ .status.mg-native-header .status-chip { display: none; }
+}
