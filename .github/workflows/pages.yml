@@ -27,7 +27,9 @@ jobs:
       - name: Test signed APK update Settings
         run: node tests/native-updates-smoke.mjs
       - name: Test centralized credentials and local IPTV PIN persistence
-        run: node tests/credential-settings-smoke.mjs
+        run: |
+          node tests/credential-settings-smoke.mjs
+          node tests/credential-native-pin-smoke.mjs
       - name: Quick JavaScript and configuration smoke tests
         run: |
           node --check tv.js
