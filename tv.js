@@ -193,7 +193,7 @@ async function restoreLastPlaylist(){
  }
  if(restoreInFlight||api.state.busy)return;
  if(!/^\d{4}$/.test(pin)){status('Zuletzt verwendete IPTV-Liste: PIN in Settings → Zugänge speichern.');return;}
- const name=lastPlaylist.name,owner=root;
+ const name=lastPlaylist.name;
  const button=owner.querySelector('.tv-xtream-form button[type=submit]');
  if(button)button.disabled=true;
  status('Lade zuletzt verwendete IPTV-Liste '+name+' …');
