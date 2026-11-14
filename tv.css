@@ -273,7 +273,7 @@
 
 /* Dedicated video fullscreen: header control remains visible on compact Samsung screens.
    Fullscreen keeps the same stage/player; no new stream or player is created. */
-.tv-root .tv-fullscreen-toggle{flex:0 0 42px;width:42px;min-height:34px;height:34px;padding:2px;font-size:23px;line-height:1}
+.tv-root .tv-fullscreen-toggle{flex:0 0 44px;width:44px;min-height:34px;height:34px;padding:2px;font-size:23px;line-height:1}
 .tv-root .tv-fullscreen-toggle:active{background:#126585}
 .tv-stage .tv-fullscreen-exit{display:none;position:absolute;z-index:30;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));min-width:44px;min-height:44px;padding:4px 10px;font-size:24px;line-height:1;border:1px solid #ffffff66;border-radius:12px;background:#071923d9;color:white;touch-action:manipulation}
 .tv-stage:fullscreen,.tv-stage:-webkit-full-screen{width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;min-height:0!important;border-radius:0!important;background:#000;overflow:hidden}
