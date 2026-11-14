@@ -32,7 +32,9 @@ jobs:
       - name: Test navigation and UX quality
         run: node tests/ui-quality-smoke.mjs
       - name: Test Google Maps route and GPS fallback
-        run: node tests/navigation-google-smoke.mjs
+        run: |
+          node tests/navigation-google-smoke.mjs
+          node tests/navigation-google-native-smoke.mjs
       - name: Test Home Assistant dashboard and REST access
         run: node tests/homeassistant-smoke.mjs
       - name: Test route-matched Road Assist camera safety
