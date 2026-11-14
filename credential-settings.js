@@ -1,16 +1,19 @@
 /* Central configuration UI. Never embed entered secrets into HTML or logs.
    Browser API keys / OAuth client identifiers retain their legacy local keys for compatibility.
-   HA access token and MeviTV PIN are session-memory only; Android stores its native SDK key in Keystore. */
+   HA access token stays in session memory; MeviTV PIN is stored locally on this device by user choice. Android SDK key stays in Keystore. */
 (function(global){
 'use strict';
 const MAPS_KEY='mevicar-next-google-maps-key-v1';
 const SPOTIFY_KEY='mevicar-spotify-client-v1';
 const CAL_KEY='mevicar-next-calendar-settings-v1';
 const ROAD_KEY='mevicar-next-roadassist-v1';
+const TV_PIN_KEY='mevicar-next-tv-pin-v1';
 let tvPin='', feedback='', nativeStatus=null, requestNumber=0;
 const pending=new Map();
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function saved(key){try{return localStorage.getItem(key)||''}catch{return ''}}
+// The PIN is read only on this origin/device; it is never rendered in HTML or logs.
+{const storedPin=saved(TV_PIN_KEY);if(/^\d{4}$/.test(storedPin))tvPin=storedPin;}
 function json(key){try{return JSON.parse(saved(key)||'{}')}catch{return {}}}
 function input(id){return document.getElementById('mevi-cred-'+id)}
 function value(id){return String(input(id)?.value||'').trim()}
@@ -72,8 +75,8 @@ function html(){
       road.configId?'Eingerichtet':'Nicht eingerichtet',
       'Steuert den optionalen Routenscan; kein Home-Assistant-Token.'),
   row('tv','MeviTV · vierstelliger PIN','Vierstelligen Zugangscode eingeben',
-      tvPin?'Für diese Sitzung hinterlegt':'Nicht hinterlegt',
-      'PIN wird nur im Arbeitsspeicher aufbewahrt und nach Neustart verworfen.',{secret:true,pin:true}),
+      tvPin?'Auf diesem Gerät gespeichert':'Nicht hinterlegt',
+      'PIN bleibt für den automatischen IPTV-Start auf diesem Gerät gespeichert. Er ist im lokalen Browser-Speicher nicht verschlüsselt; auf gemeinsam genutzten Geräten bitte entfernen.',{secret:true,pin:true}),
   '<h3>Home Assistant</h3>',
   row('ha','Home Assistant · Long-Lived Access Token','Neuen HA-Token einfügen',
       ha.connected?'API verbunden':ha.tokenPresent?'Token in dieser Sitzung vorhanden':'Nicht verbunden',
@@ -98,7 +101,7 @@ function html(){
  }
  return '<div class="mevi-credentials"><p class="mevi-cred-intro">Alle Schlüssel, Client-IDs, PINs und Zugänge werden hier verwaltet. Die übrigen Apps haben keine eigenen Zugangsdatenfelder mehr.</p>'+
   groups.join('')+
-  '<p class="mevi-cred-note">Sicherheit: Browser-Schlüssel und öffentliche Client-IDs bleiben im lokalen Browser-Speicher. Browser-Schlüssel müssen bei Google Cloud eingeschränkt werden; sie sind keine geheimen Server-Schlüssel. Home-Assistant-Token und MeviTV-PIN werden im Browser nicht dauerhaft gespeichert. Android-SDK-Schlüssel liegen verschlüsselt im Android Keystore.</p>'+
+  '<p class="mevi-cred-note">Sicherheit: Browser-Schlüssel und öffentliche Client-IDs bleiben im lokalen Browser-Speicher. Browser-Schlüssel müssen bei Google Cloud eingeschränkt werden; sie sind keine geheimen Server-Schlüssel. Home-Assistant-Token bleibt nur im Arbeitsspeicher. Der MeviTV-PIN wird für automatisches Laden lokal und unverschlüsselt auf diesem Gerät gespeichert und kann hier jederzeit entfernt werden. Android-SDK-Schlüssel liegen verschlüsselt im Android Keystore.</p>'+
   '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div></div>';
 }
 async function save(id){
@@ -117,7 +120,7 @@ async function save(id){
     if(!global.MeviRoadAssist?.setConfigId?.(v))throw new Error('Blitzer Konfigurations-ID ist ungültig.');break;
    case 'tv':
     if(!/^\d{4}$/.test(v))throw new Error('PIN muss aus genau vier Ziffern bestehen.');
-    tvPin=v;break;
+    localStorage.setItem(TV_PIN_KEY,v);tvPin=v;break;
    case 'ha':
     if(v.length<20||/\s/.test(v))throw new Error('Bitte einen gültigen Home-Assistant-Token eingeben.');
     await global.MeviHA?.connectWithToken?.(v);
@@ -152,7 +155,7 @@ async function clear(id){
    case 'spotify':global.meviSpotifyResetClient?.(true);break;
    case 'calendar':global.MeviCalendar?.setClientId?.('');break;
    case 'road':global.MeviRoadAssist?.setConfigId?.('');break;
-   case 'tv':tvPin='';break;
+   case 'tv':tvPin='';localStorage.removeItem(TV_PIN_KEY);break;
    case 'ha':global.MeviHA?.disconnect?.();if(nativeAvailable())await nativeCall('settings.clear','haToken').catch(()=>null);break;
    case 'android-maps':await nativeCall('settings.clear','mapsKey');nativeStatus={...nativeStatus,mapsKey:false};break;
    case 'github-token':await nativeCall('settings.clear','githubToken');nativeStatus={...nativeStatus,githubToken:false};break;
