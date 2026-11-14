@@ -293,6 +293,11 @@ jobs:
               d.ellipse((n*.46,n*.46,n*.54,n*.54),fill='#e8fbff')
               im.save(f'dist/icon-{n}.png')
           PY
+      - name: Package complete offline Web distribution for the hybrid APK
+        run: |
+          python3 scripts/make-offline-bundle.py dist
+          test -s dist/offline-bundle.zip
+          test -s dist/offline-bundle.json
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
