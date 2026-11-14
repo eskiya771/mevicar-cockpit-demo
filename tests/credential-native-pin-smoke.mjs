@@ -35,6 +35,9 @@ const createWindow=(vault,supported=true)=>{
 
 const vault={pin:'5824'};
 let win=createWindow(vault);
+const nativeCredentials=win.MeviCredentials.html();
+assert.match(nativeCredentials,/mevi-cred-android-maps/, 'APK must show the Android Navigation SDK key');
+assert.doesNotMatch(nativeCredentials,/id="mevi-cred-maps"/, 'APK must hide the browser Maps key field');
 assert.equal(await win.MeviCredentials.tvPinReady(),'5824','APK must restore the encrypted PIN');
 assert.equal(localStorage.getItem(key),null,'Native PIN must never be copied to localStorage');
 credentialField('9271');
