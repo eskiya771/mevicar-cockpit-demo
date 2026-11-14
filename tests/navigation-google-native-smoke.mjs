@@ -84,7 +84,7 @@ let headerVisible=true;
 nodes['mg-native-header-slot']={
  parentElement:{classList:{add:()=>{headerEnabled=true}}},
  getBoundingClientRect:()=>headerEnabled&&headerVisible?
-  {left:0,top:0,right:330,bottom:48,width:330,height:48}:{width:0,height:0}
+  {left:0,top:0,right:330,bottom:40,width:330,height:40}:{width:0,height:0}
 };
 const originalPost=bridge.postMessage;
 bridge.postMessage=function(raw){
@@ -93,13 +93,13 @@ bridge.postMessage=function(raw){
  setTimeout(()=>this.onmessage({data:JSON.stringify({id:request.id,ok:true,
   capabilities:{nativeNavigationHeader:true}})}),0);
 };
-mapRect={left:0,top:48,right:1200,width:1200,height:700};
+mapRect={left:0,top:42,right:1200,width:1200,height:700};
 api.syncNativeLayout();
 for(let attempt=0;!headerEnabled&&attempt<20;attempt++){
  await new Promise(resolve=>setTimeout(resolve,5));
 }
 assert.deepEqual(commands.filter(x=>x.action==='navigation.layout').at(-1).header,
- {x:0,y:0,width:330,height:48});
+ {x:0,y:0,width:330,height:40});
 headerVisible=false;
 api.syncNativeLayout();
 assert.equal(commands.filter(x=>x.action==='navigation.layout').at(-1).header,undefined);
