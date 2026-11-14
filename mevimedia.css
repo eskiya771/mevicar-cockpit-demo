@@ -120,12 +120,12 @@ html[data-theme="cyberpunk"] .mm-track.current,html[data-theme="cyberpunk"] .mm-
 html[data-theme="cyberpunk"] .mm-artwork{border-color:#ea62ed9b;box-shadow:0 0 23px #e33ddf3e,0 14px 29px #0008,inset 0 1px #fffb}
 html[data-theme="liquidglass"] .mm-shell{--mm-cyan:#b3edff;--mm-magenta:#ffd0f6;background:linear-gradient(125deg,#365779b8,#121e3ed9);border-color:#fff7;backdrop-filter:blur(20px)}
 html[data-theme="liquidglass"] .mm-track,html[data-theme="liquidglass"] .mm-group{background:#daeaff20;border-color:#fff4}
-.mm-shell.is-compact .mm-top{padding:5px 7px;gap:3px}
-.mm-shell.is-compact .mm-heading{font-size:clamp(12px,2.8vh,17px)}
-.mm-shell.is-compact .mm-eyebrow{font-size:8px}
-.mm-shell.is-compact .mm-top-actions{gap:3px}
-.mm-shell.is-compact .mm-mode-button{min-width:0;min-height:32px;padding:5px 6px;font-size:9px}
-.mm-shell.is-compact .mm-mode-button .mm-icon{display:none}
+:is(.mm-shell,.sp-shell).is-compact .mm-top{padding:5px 7px;gap:3px}
+:is(.mm-shell,.sp-shell).is-compact .mm-heading{font-size:clamp(12px,2.8vh,17px)}
+:is(.mm-shell,.sp-shell).is-compact .mm-eyebrow{font-size:8px}
+:is(.mm-shell,.sp-shell).is-compact .mm-top-actions{gap:3px}
+:is(.mm-shell,.sp-shell).is-compact .mm-mode-button{min-width:0;min-height:32px;padding:5px 6px;font-size:9px}
+:is(.mm-shell,.sp-shell).is-compact .mm-mode-button .mm-icon{display:none}
 .mm-shell.is-compact .mm-content{display:flex;flex-direction:column;overflow:hidden}
 .mm-shell.is-compact .mm-compact-toggle{display:flex;justify-content:center;gap:5px;flex:none;padding:5px 6px;background:#081327a8}
 .mm-compact-toggle button{min-height:35px;flex:1;background:#182d47;color:#d6e9ff;border:1px solid #54758f;border-radius:8px;font-size:11px;font-weight:750}
