@@ -37,6 +37,7 @@ Wenn der Android WebView die Spotify-DRM-Engine nicht bereitstellt oder der Web 
 
 ## Abnahme
 - Automatische Smoke-Tests (`spotify-smoke`, `spotify-android-smoke`, `spotify-oauth-race-smoke`, Android `SpotifyCallbackGateTest`) prüfen PKCE, die Einmal-Code-Übergabe, die Bestätigungsreihenfolge und die Geheimnisfreiheit der Diagnosen.
+- `tests/spotify-login-browser.mjs` (Playwright, läuft in `quality.yml`) startet die echte `index.html` in Chromium mit nachgebildeter Android-Brücke und gemocktem Spotify: Tipp auf „Mit Spotify verbinden“, Rückruf in beiden Formen (mit und ohne `/`), sichtbarer Wechsel von der Einrichtung zur Bibliothek, genau ein Code-Tausch, genau eine Bestätigung, keine Neuanmeldung nach Neuladen. Lokal: `npm install --no-save --package-lock=false playwright` und `node tests/spotify-login-browser.mjs`.
 - Sie beweisen keine DRM-Wiedergabe. Die Geräteabnahme auf dem Galaxy S20 FE mit Spotify Premium ist erfolgt (APK-Build 54, Web-Build 886, Nutzertest): Anmeldung und Bibliothek, Ton aus dem WebView ohne Spotify-App, keine Neuanmeldung nach App-Neustart, Wechsel Spotify/Radio/MeviMedia und Split mit Navigation. Nach Änderungen an Rückruf, Token oder Player ist ein kurzer Gerätetest zu wiederholen.
 
 ## Token-Erneuerung

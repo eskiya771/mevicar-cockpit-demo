@@ -309,6 +309,8 @@ jobs:
           npx playwright install --with-deps chromium
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg
+      - name: Test Spotify login flow in a real browser (fake Android bridge, mocked Spotify)
+        run: node tests/spotify-login-browser.mjs
       - name: Verify Classic weather in seven landscape and split profiles
         run: node tests/weather-visual-layout.mjs
       - name: Save weather browser screenshots
