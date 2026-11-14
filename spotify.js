@@ -1052,9 +1052,11 @@
       '<div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">SPOTIFY</span></div>' +
       '<div class="mm-top-actions">' + sourceMarkup() + '</div></div>';
   }
+  // Only errors belong in the inline player banner; playback confirmations
+  // are deliberately silent to avoid pushing the library/player up and down.
   function bannerMarkup() {
-    const text = st.error || st.notice;
-    return '<div class="sp-banner' + (st.error ? ' is-error' : '') + '" id="sp-banner" role="status" ' + (text ? '' : 'hidden') + '>' + icon(st.error ? 'alert' : 'check') + '<span>' + esc(text) + '</span></div>';
+    const text = st.error;
+    return '<div class="sp-banner is-error" id="sp-banner" role="alert" ' + (text ? '' : 'hidden') + '>' + icon('alert') + '<span>' + esc(text) + '</span></div>';
   }
   function tabsMarkup() {
     return '<div class="sp-tabs" role="tablist" aria-label="Spotify-Ansichten">' +
@@ -1259,9 +1261,9 @@
   function paintBanner() {
     const el = $('sp-banner');
     if (!el) return;
-    const text = st.error || st.notice;
+    const text = st.error;
     el.hidden = !text;
-    el.className = 'sp-banner' + (st.error ? ' is-error' : '');
+    el.className = 'sp-banner is-error';
     const span = el.querySelector('span');
     if (span) span.textContent = text;
   }
