@@ -6,6 +6,7 @@ import {runInNewContext} from 'node:vm';
 const source=readFileSync(new URL('../navigation-google.js',import.meta.url),'utf8');
 new Function(source);
 const destination={name:'Erlangen Arcaden',address:'Erlangen',lat:49.597,lng:11.004};
+const written=[];
 function harness(gps='timeout'){
  const notice={hidden:false},keyButton={hidden:false},manualButton={hidden:true},message={textContent:'',hidden:false,classList:{add(){}}};
  const targets={'mg-map-notice':notice,'mg-change-key':keyButton,'mg-manual-origin':manualButton,'mg-status':message};
@@ -24,8 +25,8 @@ function harness(gps='timeout'){
   }}}:{},
  }};
  const storage={
-  getItem:k=>k==='mevicar-next-google-maps-key-v1'?'TEST-KEY-NOT-REAL':k==='mevicar-next-destinations-v1'?JSON.stringify({favorites:[],recent:[destination]}):null,
-  setItem(){}
+  getItem:k=>k==='mevicar-next-google-maps-key-v1'?'TEST-KEY-NOT-REAL':k==='mevicar-next-destinations-v1'?JSON.stringify({favorites:[destination],recent:[destination]}):null,
+  setItem(key){written.push(key)}
  };
  const doc={
   getElementById:id=>targets[id]||null,
@@ -101,6 +102,8 @@ function harness(gps='timeout'){
  assert.equal(h.api.guidanceRunning(),true);
  h.api.stopGuidance();
 }
+assert.equal(written.includes('mevicar-next-destinations-native-import-v1'),false,
+ 'The browser keeps its own favourites: no takeover without the APK bridge');
 const cockpit=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(cockpit,/Navigation starten/,'Classic-like navigation start action is visible');
 assert.match(cockpit,/beginNavigation\(\)/,'Start action calls the GPS guidance engine');

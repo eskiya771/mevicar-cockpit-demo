@@ -70,9 +70,30 @@ function syncNativeTheme(){
  lastNativeTheme=theme;
  nativeRequest('navigation.theme',{theme}).catch(()=>{});
 }
+/** One address book: an APK with `navigationFavoritesImport` owns all destinations.
+ * The Web favourites are handed over once; the APK checks every entry again.
+ * An older APK lacks the capability and keeps receiving them with the layout.
+ */
+const HANDOVER='mevicar-next-destinations-native-import-v1';
+let nativeAddressBook=false,favoritesHandover=null;
+const plain=(value,max)=>String(value??'').replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,max);
+function handOverFavorites(){
+ if(favoritesHandover)return;
+ favoritesHandover=nativeRequest('capabilities').then(async result=>{
+  if(!result.capabilities?.navigationFavoritesImport)return;
+  nativeAddressBook=true;window.meviGoogleRerender?.(); // drop the Web favourite buttons
+  let done=false;try{done=localStorage.getItem(HANDOVER)==='1'}catch{}
+  if(done)return;
+  const entries=cache.favorites.filter(valid).slice(0,100)
+   .map(d=>({lat:d.lat,lng:d.lng,title:plain(d.name,120),address:plain(d.address,200)}));
+  if(entries.length)await nativeRequest('navigation.favorites.import',{entries});
+  try{localStorage.setItem(HANDOVER,'1')}catch{}
+ }).catch(()=>{favoritesHandover=null});
+}
 function syncNativeLayout(force=false){
  if(!nativeMode())return;
  syncNativeTheme();
+ handOverFavorites();
  const el=document.getElementById('mg-map');
  const header=el?syncNativeHeader():null;
  const rect=el?.getBoundingClientRect?.();
@@ -84,9 +105,10 @@ function syncNativeLayout(force=false){
   y:Math.max(0,Math.round(rect.top)),
   width:Math.min(Math.round(rect.width),Math.max(1,Math.round(vw-rect.left))),
   height:Math.min(Math.round(rect.height),Math.max(1,Math.round(vh-rect.top))),
-  viewportWidth:Math.round(vw),viewportHeight:Math.round(vh),
-  favorites:cache.favorites.slice(0,8).filter(valid).map(d=>({lat:d.lat,lng:d.lng,title:d.name.slice(0,120)}))
+  viewportWidth:Math.round(vw),viewportHeight:Math.round(vh)
  }:{visible:false};
+ if(usable&&!nativeAddressBook)
+  fields.favorites=cache.favorites.slice(0,8).filter(valid).map(d=>({lat:d.lat,lng:d.lng,title:d.name.slice(0,120)}));
  if(usable&&header){
   const x=Math.round(header.left),y=Math.round(header.top);
   const width=Math.min(Math.round(header.right),Math.round(rect.right))-x;
@@ -143,7 +165,7 @@ function clearStatus(){
 }
 function setupHTML(){return '<section class="mg-setup" role="region" aria-label="Google Maps Ersteinrichtung"><strong>Google Maps einrichten</strong><p>Für Karte und Adresssuche fehlt noch der Google Maps Web-API-Key.</p><p>Hinterlege ihn einmalig unter <b>Settings → Zugänge</b>. Anschließend kannst du nach Adressen suchen und Favoriten verwenden.</p><button type="button" onclick="meviOpenCredentialSettings()">Google Maps einrichten</button></section>'}
 function nativePanelHTML(){
- const saved=cache.favorites.slice(0,4).map((d,i)=>
+ const saved=nativeAddressBook?'':cache.favorites.slice(0,4).map((d,i)=>
   '<button type="button" onclick="MeviGoogleNav.pick(\'favorites\','+i+')">'+text(d.name)+'</button>').join('');
  return '<div id="mg-map" class="mg-map mg-native-map" aria-hidden="true"></div>'+
   '<section class="mg-setup mg-native-setup" role="region" aria-label="Google Navigation für Android">'+

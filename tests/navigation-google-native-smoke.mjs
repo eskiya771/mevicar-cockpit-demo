@@ -64,6 +64,7 @@ assert.equal(await api.openNativeSearch(),true);
 await api.pick('favorites',0);
 assert.equal(await api.calculateRoute(),'native');
 assert.deepEqual(commands.map(x=>x.action),[
+ 'capabilities', // one check whether the APK owns the address book
  'navigation.layout','navigation.layout','navigation.layout',
  'capabilities','navigation.show',
  'capabilities','navigation.search',
@@ -78,6 +79,9 @@ for(const request of opens){
  assert.equal(request.title,favorite.name);
 }
 assert.equal(window.google,undefined,'Do not initialize Maps JavaScript in the APK');
+assert.equal(commands.some(x=>x.action==='navigation.favorites.import'),false,
+ 'An older APK without the capability never receives the import message');
+assert.match(api.mapBackdrop(),/Erlangen Arcaden/,'An older APK keeps the Web favourites');
 // An updated APK can place controls in a separate rectangle above the map.
 let headerEnabled=false;
 let headerVisible=true;
@@ -135,4 +139,56 @@ assert.equal(themes()[1].theme,'liquidglass');
 assert.equal(commands.filter(x=>x.action==='navigation.layout').length,layoutsBefore+1);
 api.syncNativeLayout(true);
 assert.equal(themes().length,2,'A rejected theme is not retried until it changes');
+// One address book: an APK with navigationFavoritesImport takes the Web favourites over once.
+async function handover({stored,importOk=true}){
+ const sent=[],store=new Map([['mevicar-next-destinations-v1',JSON.stringify(stored)]]);
+ const run=async()=>{
+  const nativeBridge={postMessage(raw){
+   const request=JSON.parse(raw);sent.push(request);
+   const result=request.action==='capabilities'?
+    {id:request.id,ok:true,capabilities:{nativeMap:true,navigationFavoritesImport:true}}:
+    request.action==='navigation.favorites.import'&&!importOk?
+    {id:request.id,ok:false,error:'Favoriten konnten nicht übernommen werden'}:
+    {id:request.id,ok:true,added:1,duplicates:0,discarded:0};
+   setTimeout(()=>nativeBridge.onmessage?.({data:JSON.stringify(result)}),0);
+  }};
+  const win={MeviNativeBridge:nativeBridge,innerWidth:1200,innerHeight:800};
+  const doc={getElementById:id=>id==='mg-map'?{getBoundingClientRect:()=>
+   ({left:0,top:16,right:1200,width:1200,height:700})}:null,querySelector:()=>null};
+  runInNewContext(source,{window:win,document:doc,console,setTimeout,clearTimeout,setInterval,clearInterval,Intl,
+   localStorage:{getItem:key=>store.get(key)??null,setItem:(key,value)=>store.set(key,String(value))}});
+  await win.MeviGoogleNav.mount('browse');
+  await new Promise(resolve=>setTimeout(resolve,20));
+  win.MeviGoogleNav.syncNativeLayout(true);
+  await new Promise(resolve=>setTimeout(resolve,5));
+  return win.MeviGoogleNav;
+ };
+ return {sent,store,run};
+}
+const flag='mevicar-next-destinations-native-import-v1';
+const imports=list=>list.filter(x=>x.action==='navigation.favorites.import');
+let take=await handover({stored:{favorites:[
+ {name:'  Erlangen\nArcaden ',address:'Erlangen',lat:49.597,lng:11.004},
+ {name:'Kaputt',lat:'x',lng:11},
+ {name:'Büro',lat:48.14,lng:11.58}],recent:[]}});
+let nav=await take.run();
+assert.equal(imports(take.sent).length,1);
+assert.deepEqual(Object.keys(imports(take.sent)[0]).sort(),['action','entries','id']);
+assert.deepEqual(imports(take.sent)[0].entries,[
+ {lat:49.597,lng:11.004,title:'Erlangen Arcaden',address:'Erlangen'},
+ {lat:48.14,lng:11.58,title:'Büro',address:''}],'Only valid favourites, as plain text, are handed over');
+assert.equal(take.store.get(flag),'1');
+assert.equal(take.sent.filter(x=>x.action==='navigation.layout').at(-1).favorites,undefined,
+ 'After the takeover the favourites are no longer appended to the layout');
+assert.doesNotMatch(nav.mapBackdrop(),/Büro/,'The native address book is the only list in the APK');
+await take.run(); // next app start
+assert.equal(imports(take.sent).length,1,'The takeover happens exactly once');
+take=await handover({stored:{favorites:[],recent:[]}});
+await take.run();
+assert.equal(imports(take.sent).length,0,'Nothing to hand over: no message');
+assert.equal(take.store.get(flag),'1');
+take=await handover({stored:{favorites:[{name:'Büro',lat:48.14,lng:11.58}],recent:[]},importOk:false});
+await take.run();
+assert.equal(imports(take.sent).length,2,'A failed takeover is retried with the next layout');
+assert.equal(take.store.get(flag),undefined,'A failed takeover is not marked as done');
 console.log('Android native map, split viewport, dock visibility, Places, favorites and routing work without a browser API key.');
