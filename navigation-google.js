@@ -14,6 +14,8 @@ let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=n
 // The Web/PWA keeps its own GPS guidance and never needs an Android API key.
 const nativeRequests=new Map();
 let nativeRequestSerial=0;
+// The APK uses its own Android-restricted key and native Google SDKs, never a web key.
+function nativeMode(){return !!window.MeviNativeBridge?.postMessage}
 if(window.MeviNativeBridge?.postMessage){
  const previousNativeMessage=window.MeviNativeBridge.onmessage;
  window.MeviNativeBridge.onmessage=event=>{
@@ -38,11 +40,28 @@ function nativeRequest(action,fields={}){
  });
 }
 async function startNativeNavigation(){
- if(!window.MeviNativeBridge?.postMessage)return false;
+ if(!nativeMode())return false;
  const caps=await nativeRequest('capabilities');
- if(!caps.capabilities?.googleNavigation)return false;
+ if(!caps.capabilities?.googleNavigation)throw new Error('Bitte die APK auf eine Version mit Navigation SDK aktualisieren.');
+ if(!valid(selected))throw new Error('Bitte zuerst ein gültiges Ziel wählen.');
  await nativeRequest('navigation.open',{lat:selected.lat,lng:selected.lng,title:selected.name});
  return true;
+}
+async function openNativeMap(){
+ try{
+  const caps=await nativeRequest('capabilities');
+  if(!caps.capabilities?.nativeMap)throw new Error('Die installierte APK unterstützt die native Karte noch nicht.');
+  await nativeRequest('navigation.show');
+  return true;
+ }catch(e){status('Android-Karte: '+(e.message||e));return false}
+}
+async function openNativeSearch(){
+ try{
+  const caps=await nativeRequest('capabilities');
+  if(!caps.capabilities?.nativePlacesSearch)throw new Error('Die installierte APK unterstützt die native Zielsuche noch nicht.');
+  await nativeRequest('navigation.search');
+  return true;
+ }catch(e){status('Android-Zielsuche: '+(e.message||e));return false}
 }
 function persist(){try{localStorage.setItem(DATA,JSON.stringify(cache))}catch{}}
 function key(){try{return localStorage.getItem(KEY)||''}catch{return ''}}
@@ -61,7 +80,21 @@ function clearStatus(){
  const notice=document.getElementById('mg-map-notice');if(notice)notice.hidden=true;
 }
 function setupHTML(){return '<section class="mg-setup" role="region" aria-label="Google Maps Ersteinrichtung"><strong>Google Maps einrichten</strong><p>Für Karte und Adresssuche fehlt noch der Google Maps Web-API-Key.</p><p>Hinterlege ihn einmalig unter <b>Settings → Zugänge</b>. Anschließend kannst du nach Adressen suchen und Favoriten verwenden.</p><button type="button" onclick="meviOpenCredentialSettings()">Google Maps einrichten</button></section>'}
+function nativePanelHTML(){
+ const saved=cache.favorites.slice(0,4).map((d,i)=>
+  '<button type="button" onclick="MeviGoogleNav.pick(\'favorites\','+i+')">'+text(d.name)+'</button>').join('');
+ return '<div id="mg-map" class="mg-map mg-native-map" aria-hidden="true"></div>'+
+  '<section class="mg-setup mg-native-setup" role="region" aria-label="Google Navigation für Android">'+
+  '<strong>Google Navigation SDK · Android</strong>'+
+  '<p>Karte, Google-Places-Zielsuche und Routenführung laufen direkt über Android. Kein Web-API-Key erforderlich.</p>'+
+  '<button type="button" onclick="MeviGoogleNav.openNativeMap()">Google-Karte öffnen</button>'+
+  '<button type="button" onclick="MeviGoogleNav.openNativeSearch()">Ziel suchen</button>'+
+  (saved?'<p>Favoriten</p>'+saved:'')+
+  '<button type="button" onclick="meviOpenCredentialSettings()">Android-API-Key verwalten</button>'+
+  '<p id="mg-status" role="status" aria-live="polite">'+text(error)+'</p></section>';
+}
 function mapBackdrop(){
+ if(nativeMode())return nativePanelHTML();
  const message='<div class="mg-map-state" id="mg-map-notice" role="status"><span id="mg-status">'+text(error||'Google Maps wird geladen …')+'</span>'+
   '<button type="button" id="mg-change-key" class="mg-change-key" onclick="meviOpenCredentialSettings()"'+(errorKind==='maps-auth'?'':' hidden')+'>API-Schlüssel erneut einrichten</button>'+
   '<button type="button" id="mg-manual-origin" class="mg-manual-action" onclick="MeviGoogleNav.selectOriginOnMap()"'+(errorKind==='gps'?'':' hidden')+'>Startpunkt auf Karte wählen</button></div>';
@@ -90,7 +123,7 @@ function load(){
 async function mount(nextState){
  state=nextState||state;mounted=true;const el=document.getElementById('mg-map');
  if(!el)return;
- if(!key())return;
+ if(nativeMode()||!key())return;
  try{
    await load();
    if(!document.contains(el))return;
@@ -153,6 +186,12 @@ async function pick(kind,index){
   }catch(e){status('Ziel konnte nicht geladen werden: '+(e.message||e));return}
  }else d=kind==='stored'?unique([...cache.favorites,...cache.recent],12)[index]:list(kind)[index];
  if(!valid(d))return;
+ if(nativeMode()){
+  selected=d;cache.recent=unique([d,...cache.recent],20);persist();
+  try{await startNativeNavigation()}
+  catch(e){status('Android-Navigation: '+(e.message||e))}
+  return;
+ }
  stopGuidance();selected=d;routeData=null;clearLines();mark(d);
  window.meviGoogleDestination?.(d.name,d.address);
 }
@@ -315,6 +354,10 @@ async function computeRouteFrom(from){
 }
 async function calculateRoute(){
  if(!selected){status('Bitte zuerst ein Ziel auswählen.');return false}
+ if(nativeMode()){
+  try{await startNativeNavigation();return 'native'}
+  catch(e){status('Android-Routenberechnung: '+(e.message||e));return false}
+ }
  try{
   let from;
   if(manualOrigin)from=manualOrigin;
@@ -459,6 +502,10 @@ function updatePosition(p){
  paintGuidance();
 }
 async function startGuidance(){
+ if(nativeMode()){
+  try{await startNativeNavigation();return 'native'}
+  catch(e){status('Android-Navigation: '+(e.message||e));return false}
+ }
  if(!routeData||!selected){status('Bitte zuerst eine Route berechnen.','route');return false}
  if(guidanceActive)return true;
  if(window.MeviNativeBridge?.postMessage){
@@ -522,7 +569,7 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={mount,mapBackdrop,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={mount,mapBackdrop,isNativeMode:nativeMode,openNativeMap,openNativeSearch,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
