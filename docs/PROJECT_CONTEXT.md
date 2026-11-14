@@ -285,3 +285,12 @@ Nach PR #3 bestätigt der Nutzer für den Testfilm sofortiges Bild und synchrone
 ### Übernahme als offizieller MKV-Standard
 
 Auf Nutzerauftrag lädt die normale MeviCar-Next-URL nun den bestätigten Player aus `vendor/movi-mevitv-mkv-size-2/`. Frühere Testparameter ändern die Auswahl nicht mehr. JS/WASM sind mit Manifest und Prüfsummen versionsfest enthalten; Pages greift nicht mehr auf wechselnde npm-Versionen oder kurzlebige Actions-Artefakte für den offiziellen Player zurück. Service-Worker-Cache v32 übernimmt die neuen Asset-URLs. Proxy Build 8 ist bereits installiert bestätigt. Details: [QA_MKV_OFFICIAL.md](QA_MKV_OFFICIAL.md).
+
+
+## Optionaler Android ExoPlayer – 14. November 2026
+
+TV-Einstellungen bieten in der APK die gespeicherte Auswahl „Bisheriger Player“ / „ExoPlayer · direkt ohne Synology“. Der native Pfad benötigt die Capability `iptvExoplayer`. Anbieteradresse, Benutzername und Passwort werden über einen nativen Dialog erfasst und im Android Keystore verschlüsselt gespeichert; die Web-App erhält keine gespeicherten Anbieter-Zugangsdaten oder Stream-URLs. Der vierstellige Synology-PIN allein reicht für diesen Modus nicht.
+
+Katalog, Serienfolgen und EPG laufen über `iptv.api` direkt zum Anbieter. Streams starten über `iptv.play` als interne native Vollbildansicht mit Zurück zur Senderliste, Pause/Seek und erneutem Laden. Keine externe Player-App und kein automatischer Rückfall auf den Proxy. Der bestehende Player bleibt Standard, die reine Web-App unverändert. Beim Wechsel wird die bisherige Wiedergabe gestoppt und der passende Katalog geladen; beim Start nur Katalog laden, kein Autoplay.
+
+Validierung: `tests/iptv-native-smoke.mjs` prüft echte JS-Bridge-Nachrichten, Direktkatalog ohne Browser-/Proxy-Requests, Abbruch und Browser-Fallback. Android-Build, Lint und Unit-Tests im APK-Repository. Reale Anbieterwiedergabe, Codec-Kompatibilität, Seek und Langzeittest benötigen das Zielgerät mit Anbieterzugang. Native Wiedergabe erfolgt in dieser Ausbaustufe im Vollbild, nicht eingebettet neben der Kanalliste.

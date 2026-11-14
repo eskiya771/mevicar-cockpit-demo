@@ -339,3 +339,10 @@ html.mevi-tv-theater .tv-stage movi-player{
  width:100%!important;height:100%!important;max-width:none!important;
  object-fit:contain!important
 }
+
+/* Direct Android mode has its own provider vault, independent of Synology PIN. */
+.tv-native-direct .tv-xtream-form p,
+.tv-native-direct .tv-xtream-form label,
+.tv-native-direct [data-act="xtream-settings"],
+.tv-native-direct [data-act="proxy-status"] {display:none!important}
+.tv-engine {display:block;width:100%;min-height:44px;font:inherit;margin-top:8px}

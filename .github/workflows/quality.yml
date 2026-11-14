@@ -372,6 +372,7 @@ jobs:
           mkdir -p tests/fixtures
           ffmpeg -hide_banner -loglevel error -f lavfi -i "testsrc2=size=640x360:rate=25" -t 12 -c:v libx264 -preset ultrafast -pix_fmt yuv420p -g 25 -an -f mpegts tests/fixtures/tv-test.ts
           node tests/tv-visual-layout.mjs
+          node tests/iptv-native-visual.mjs
       - name: Save MeviTV browser screenshots and report
         if: always()
         uses: actions/upload-artifact@v4

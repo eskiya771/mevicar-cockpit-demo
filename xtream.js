@@ -2,6 +2,43 @@
 (function(global){
 'use strict';
 const MAX_CATALOG_BYTES=64*1024*1024;
+// Typed Android transport; provider secrets remain in the Android Keystore.
+let nativeSerial=0,nativeCaps=null;
+const nativeTasks=new Map();
+if(global.MeviNativeBridge?.postMessage){
+ const previous=global.MeviNativeBridge.onmessage;
+ global.MeviNativeBridge.onmessage=event=>{
+  if(typeof previous==='function')previous(event);
+  let data;try{data=JSON.parse(event.data);}catch{return;}
+  const task=nativeTasks.get(data.id);if(!task)return;
+  nativeTasks.delete(data.id);clearTimeout(task.timer);
+  if(data.ok)task.resolve(data);else task.reject(Error(data.error||'Android-IPTV fehlgeschlagen'));
+ };
+}
+function nativeRequest(action,fields={}){
+ return new Promise((resolve,reject)=>{
+  if(!global.MeviNativeBridge?.postMessage)return reject(Error('ExoPlayer ist nur in der Android-APK verfügbar.'));
+  const id='iptv-'+(++nativeSerial),timer=setTimeout(()=>{nativeTasks.delete(id);reject(Error('Android-IPTV: Zeitüberschreitung'));},action==='iptv.configure'?300000:100000);
+  nativeTasks.set(id,{resolve,reject,timer});
+  try{global.MeviNativeBridge.postMessage(JSON.stringify({id,action,...fields}));}
+  catch{clearTimeout(timer);nativeTasks.delete(id);reject(Error('Android-Bridge nicht erreichbar'));}
+ });
+}
+async function nativeReady(){
+ if(!global.MeviNativeBridge?.postMessage)return false;
+ if(!nativeCaps)nativeCaps=nativeRequest('capabilities').then(r=>!!r.capabilities?.iptvExoplayer).catch(()=>false);
+ return nativeCaps;
+}
+function nativeSelected(){try{return !!global.MeviNativeBridge?.postMessage&&localStorage.getItem('mevicar-tv-engine-v1')==='exoplayer';}catch{return false;}}
+async function nativeJSON(url,{signal}={}){
+ if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+ const query=new URL(url).searchParams,extra={};
+ for(const key of ['stream_id','series_id','limit'])if(query.has(key))extra[key]=query.get(key);
+ const response=await nativeRequest('iptv.api',{apiAction:query.get('action'),extra});
+ if(signal?.aborted)throw new DOMException('Abgebrochen','AbortError');
+ return JSON.parse(response.body);
+}
+
 function origin(value){try{const u=new URL(String(value).trim());if(u.protocol!=='https:'||u.username||u.password||u.search||u.hash)return null;return u.origin;}catch{return null;}}
 function credentials(base,user,password){const host=origin(base),u=String(user||'').trim(),p=String(password||'');if(!host||!u||!p||u.length>180||p.length>180||/[\/\\?#&]/.test(u)||/[\/\\?#&]/.test(p))throw Error('HTTPS-Server und gültige Zugangsdaten erforderlich.');return {host,user:u,password:p};}
 const FIXED_BRIDGE='https://mevitv.mtankurt.synology.me';
@@ -14,11 +51,11 @@ async function pinCredentials(pin){
  return {host:FIXED_BRIDGE,token:data.session,bridge:true};
 }
 function bridgeCredentials(base,accessToken){const host=origin(base),token=String(accessToken||'').trim();if(!host||token.length<32)throw Error('HTTPS-Bridge und Zugangs-Token (mindestens 32 Zeichen) erforderlich.');return {host,token,bridge:true};}
-function apiURL(c,action,extra={}){if(c.bridge){const url=new URL('/api',c.host);url.searchParams.set('action',action);for(const [k,v] of Object.entries(extra))url.searchParams.set(k,String(v));return url.href;}const url=new URL('/player_api.php',c.host);url.searchParams.set('username',c.user);url.searchParams.set('password',c.password);if(action)url.searchParams.set('action',action);for(const [k,v] of Object.entries(extra))url.searchParams.set(k,String(v));return url.href;}
+function apiURL(c,action,extra={}){if(c.nativeDirect){const url=new URL("https://native.invalid/player_api.php");url.searchParams.set("action",action);for(const [k,v] of Object.entries(extra))url.searchParams.set(k,String(v));return url.href;}if(c.bridge){const url=new URL('/api',c.host);url.searchParams.set('action',action);for(const [k,v] of Object.entries(extra))url.searchParams.set(k,String(v));return url.href;}const url=new URL('/player_api.php',c.host);url.searchParams.set('username',c.user);url.searchParams.set('password',c.password);if(action)url.searchParams.set('action',action);for(const [k,v] of Object.entries(extra))url.searchParams.set(k,String(v));return url.href;}
 function mediaURL(c,type,id,ext){if(!['live','movie','series'].includes(type)||!/^\d+$/.test(String(id)))throw Error('Ungültige Medien-ID');const e=String(ext|| (type==='live'?'m3u8':'mp4')).replace(/^\./,'').toLowerCase();if(!/^[a-z0-9]{2,5}$/.test(e))throw Error('Ungültiges Medienformat');return c.host+'/'+type+'/'+encodeURIComponent(c.user)+'/'+encodeURIComponent(c.password)+'/'+id+'.'+e;}
 function normalizeCategories(raw){return (Array.isArray(raw)?raw:[]).slice(0,3000).map(x=>({id:String(x.category_id||''),name:String(x.category_name||'Andere').slice(0,100)})).filter(x=>x.id);}
 function normalizeItems(raw,type){return (Array.isArray(raw)?raw:[]).slice(0,15000).map(x=>({id:String(type==='series'?x.series_id:x.stream_id||''),name:String(x.name||x.title||'Ohne Titel').slice(0,140),category:String(x.category_id||''),poster:String(x.stream_icon||x.cover||'').slice(0,1000),extension:String(x.container_extension|| (type==='live'?'m3u8':'mp4')),rating:String(x.rating||''),plot:String(x.plot||'').slice(0,900)})).filter(x=>/^\d+$/.test(x.id));}
-async function readJSON(url,c,{signal,timeoutMs=90000}={}){const controller=new AbortController(),abort=()=>controller.abort(),t=setTimeout(abort,timeoutMs);if(signal?.aborted)abort();signal?.addEventListener("abort",abort,{once:true});try{const bridge=!!c?.bridge;const dest=bridge?new URL(url):null;const params=bridge?Object.fromEntries(dest.searchParams.entries()):null;const res=await fetch(bridge?c.host+'/api':url,{method:bridge?'POST':'GET',headers:bridge?{'Authorization':'Bearer '+c.token,'Content-Type':'application/json'}:{},body:bridge?JSON.stringify(params):undefined,signal:controller.signal,credentials:'omit',cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const len=Number(res.headers.get('content-length')||0);if(len>MAX_CATALOG_BYTES)throw Error('Katalog größer als 64 MiB');const reader=res.body?.getReader();if(!reader){const content=await res.text();if(content.length>MAX_CATALOG_BYTES)throw Error('Katalog größer als 64 MiB');return JSON.parse(content);}let size=0,parts=[];while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>MAX_CATALOG_BYTES){await reader.cancel();throw Error('Katalog größer als 64 MiB');}parts.push(value);}const all=new Uint8Array(size);let offset=0;for(const p of parts){all.set(p,offset);offset+=p.length;}return JSON.parse(new TextDecoder().decode(all));}finally{clearTimeout(t);signal?.removeEventListener("abort",abort);}}
+async function readJSON(url,c,{signal,timeoutMs=90000}={}){if(c?.nativeDirect)return nativeJSON(url,{signal});const controller=new AbortController(),abort=()=>controller.abort(),t=setTimeout(abort,timeoutMs);if(signal?.aborted)abort();signal?.addEventListener("abort",abort,{once:true});try{const bridge=!!c?.bridge;const dest=bridge?new URL(url):null;const params=bridge?Object.fromEntries(dest.searchParams.entries()):null;const res=await fetch(bridge?c.host+'/api':url,{method:bridge?'POST':'GET',headers:bridge?{'Authorization':'Bearer '+c.token,'Content-Type':'application/json'}:{},body:bridge?JSON.stringify(params):undefined,signal:controller.signal,credentials:'omit',cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const len=Number(res.headers.get('content-length')||0);if(len>MAX_CATALOG_BYTES)throw Error('Katalog größer als 64 MiB');const reader=res.body?.getReader();if(!reader){const content=await res.text();if(content.length>MAX_CATALOG_BYTES)throw Error('Katalog größer als 64 MiB');return JSON.parse(content);}let size=0,parts=[];while(true){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>MAX_CATALOG_BYTES){await reader.cancel();throw Error('Katalog größer als 64 MiB');}parts.push(value);}const all=new Uint8Array(size);let offset=0;for(const p of parts){all.set(p,offset);offset+=p.length;}return JSON.parse(new TextDecoder().decode(all));}finally{clearTimeout(t);signal?.removeEventListener("abort",abort);}}
 // Xtream EPG uses base64 UTF-8 text and Unix timestamps. Do not interpret
 // timezone-less provider dates in the viewer's timezone.
 function epgText(value,max=4000){
@@ -89,7 +126,7 @@ async function epg(account,id,{signal,force=false}={}){
 
 const state={accounts:[],active:null,kind:'live',group:'ALL',query:'',busy:false};
 const kindActions={live:['get_live_categories','get_live_streams'],movie:['get_vod_categories','get_vod_streams'],series:['get_series_categories','get_series']};
-const api={origin,credentials,bridgeCredentials,pinCredentials,FIXED_BRIDGE,apiURL,mediaURL,normalizeCategories,normalizeItems,state};
+const api={nativeRequest,nativeReady,nativeSelected,origin,credentials,bridgeCredentials,pinCredentials,FIXED_BRIDGE,apiURL,mediaURL,normalizeCategories,normalizeItems,state};
 async function connect(name,c,onProgress){if(state.busy)throw Error('Import läuft bereits');state.busy=true;const a={id:'xt-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),name:String(name||'Xtream').slice(0,80),credentials:c,categories:{},items:{},episodes:{}};try{
  for(const kind of ['live','movie','series']){const [catAct,itemAct]=kindActions[kind];onProgress?.('Lade '+kind+' Kategorien …');a.categories[kind]=normalizeCategories(await readJSON(apiURL(c,catAct),c));onProgress?.('Lade '+kind+' Katalog …');a.items[kind]=normalizeItems(await readJSON(apiURL(c,itemAct),c),kind);onProgress?.(kind+': '+a.items[kind].length+' Einträge');}
  state.accounts.push(a);state.active=a.id;return a;
@@ -98,7 +135,7 @@ function active(){return state.accounts.find(x=>x.id===state.active)||null;}
 function remove(id){state.accounts=state.accounts.filter(x=>x.id!==id);if(state.active===id)state.active=state.accounts[0]?.id||null;}
 function view(kind=state.kind,group=state.group,q=state.query){const a=active();if(!a)return[];const needle=q.toLocaleLowerCase('de');return(a.items[kind]||[]).filter(x=>(group==='ALL'||x.category===group)&&x.name.toLocaleLowerCase('de').includes(needle)).slice(0,500);}
 async function episodes(a,item){if(!a||!item)return[];if(a.episodes[item.id])return a.episodes[item.id];const info=await readJSON(apiURL(a.credentials,'get_series_info',{series_id:item.id}),a.credentials);const result=[];for(const [season,episodes] of Object.entries(info.episodes||{})){if(!Array.isArray(episodes))continue;for(const ep of episodes.slice(0,100)){if(!/^\d+$/.test(String(ep.id)))continue;result.push({id:String(ep.id),season,number:String(ep.episode_num||''),name:String(ep.title||ep.name||'Folge').slice(0,140),extension:String(ep.container_extension||'mp4')});}}a.episodes[item.id]=result.slice(0,2000);return a.episodes[item.id];}
-async function playbackURL(c,type,id,ext,transport='default'){if(!c.bridge)return mediaURL(c,type,id,ext);const res=await fetch(c.host+'/ticket',{method:'POST',credentials:'omit',headers:{'Authorization':'Bearer '+c.token,'Content-Type':'application/json'},body:JSON.stringify({type,id,ext,transport:transport==='raw'?'raw':'default'})});if(!res.ok)throw Error('Medienzugriff fehlgeschlagen (HTTP '+res.status+')');const data=await res.json();if(typeof data.url!=='string'||!/^\/(?:stream\/(?:live|movie|series)\/\d{1,15}\.(?:m3u8|ts|mp4|mkv|avi|mov)|remux\/live\/\d{1,15}\/index\.m3u8)\?exp=\d+&sig=[0-9a-f]{64}$/.test(data.url))throw Error('Ungültige Wiedergabeadresse');return c.host+data.url;}
+async function playbackURL(c,type,id,ext,transport='default'){if(c.nativeDirect)throw Error('Direkte IPTV-Quelle benötigt ExoPlayer');if(!c.bridge)return mediaURL(c,type,id,ext);const res=await fetch(c.host+'/ticket',{method:'POST',credentials:'omit',headers:{'Authorization':'Bearer '+c.token,'Content-Type':'application/json'},body:JSON.stringify({type,id,ext,transport:transport==='raw'?'raw':'default'})});if(!res.ok)throw Error('Medienzugriff fehlgeschlagen (HTTP '+res.status+')');const data=await res.json();if(typeof data.url!=='string'||!/^\/(?:stream\/(?:live|movie|series)\/\d{1,15}\.(?:m3u8|ts|mp4|mkv|avi|mov)|remux\/live\/\d{1,15}\/index\.m3u8)\?exp=\d+&sig=[0-9a-f]{64}$/.test(data.url))throw Error('Ungültige Wiedergabeadresse');return c.host+data.url;}
 Object.assign(api,{connect,active,remove,view,episodes,playbackURL,epg,normalizeEPG});
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 global.meviXtream=api;
