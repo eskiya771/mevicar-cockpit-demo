@@ -24,13 +24,37 @@ const localStorage={
 const nodes={'mg-status':{textContent:'',hidden:false,classList:{add(){}}},
  'mg-map-notice':{hidden:false},'mg-change-key':{hidden:true},
  'mg-manual-origin':{hidden:true}};
-const window={MeviNativeBridge:bridge};
+let mapRect={left:0,top:16,width:1200,height:700};
+nodes['mg-map']={getBoundingClientRect:()=>mapRect};
+const window={MeviNativeBridge:bridge,innerWidth:1200,innerHeight:800};
 const document={getElementById:id=>nodes[id]||null,querySelector:()=>null};
 runInNewContext(source,{window,localStorage,document,console,setTimeout,clearTimeout,
  setInterval,clearInterval,Intl});
 const api=window.MeviGoogleNav;
 assert.equal(api.isNativeMode(),true);
 assert.equal(api.hasKey(),true,'Android must never be gated by a web Maps key');
+await api.mount('browse');
+let layout=commands.find(x=>x.action==='navigation.layout');
+assert.deepEqual(
+ [layout.visible,layout.x,layout.y,layout.width,layout.height,layout.viewportWidth,layout.viewportHeight],
+ [true,0,16,1200,700,1200,800],
+ 'Android map must cover just the map surface, preserving the dock'
+);
+assert.equal(layout.favorites.length,1);
+assert.equal(layout.favorites[0].title,favorite.name);
+mapRect={left:0,top:16,width:700,height:700};
+api.syncNativeLayout();
+layout=commands.filter(x=>x.action==='navigation.layout').at(-1);
+assert.equal(layout.width,700,'Split layout must leave 500 CSS pixels free for the side app');
+assert.equal(layout.height,700);
+api.syncNativeLayout();
+assert.equal(commands.filter(x=>x.action==='navigation.layout').length,2,
+ 'Unchanged layout must not trigger repeated native bridge work');
+delete nodes['mg-map'];
+api.syncNativeLayout();
+layout=commands.filter(x=>x.action==='navigation.layout').at(-1);
+assert.equal(layout.visible,false,'Hide native map when the main content is a full-screen app');
+nodes['mg-map']={getBoundingClientRect:()=>mapRect};
 assert.match(api.mapBackdrop(),/Google Navigation SDK · Android/);
 assert.match(api.mapBackdrop(),/Google-Karte öffnen/);
 assert.match(api.mapBackdrop(),/Ziel suchen/);
@@ -40,6 +64,7 @@ assert.equal(await api.openNativeSearch(),true);
 await api.pick('favorites',0);
 assert.equal(await api.calculateRoute(),'native');
 assert.deepEqual(commands.map(x=>x.action),[
+ 'navigation.layout','navigation.layout','navigation.layout',
  'capabilities','navigation.show',
  'capabilities','navigation.search',
  'capabilities','navigation.open',
@@ -53,4 +78,4 @@ for(const request of opens){
  assert.equal(request.title,favorite.name);
 }
 assert.equal(window.google,undefined,'Do not initialize Maps JavaScript in the APK');
-console.log('Android native map, Places, favorites and routing work without a browser API key.');
+console.log('Android native map, split viewport, dock visibility, Places, favorites and routing work without a browser API key.');
