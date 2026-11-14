@@ -162,7 +162,7 @@ function versionStatus(){
     (NATIVE_BUILD?' | APK v'+NATIVE_BUILD.version.replace(/-native-preview$/,'')+' · B'+NATIVE_BUILD.build:'');
 }
 window.meviSetNativeBuild=function(info){
-  if(!info||typeof info!=='object'||!/^[0-9]+\.[0-9]+\.[0-9]+-native-preview$/.test(String(info.version||''))||
+  if(!info||typeof info!=='object'||!/^[0-9]+\.[0-9]+\.[0-9]+(?:-native-preview)?$/.test(String(info.version||''))||
      !Number.isInteger(info.build)||info.build<1||info.build>2100000000)return;
   NATIVE_BUILD={version:String(info.version),build:info.build,commit:String(info.commit||'').slice(0,12)};
   initBuild();
