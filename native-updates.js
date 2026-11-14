@@ -40,7 +40,7 @@ function request(action,fields={},onProgress){
     const id='update-'+(++serial);
     const timer=setTimeout(()=>{
       tasks.delete(id);reject(new Error('Keine Antwort der Android-App.'));
-    },action==='update.download'?300000:45000);
+    },(action==='update.download'||action==='web.update')?300000:45000);
     tasks.set(id,{resolve,reject,timer,onProgress});
     try{global.MeviNativeBridge.postMessage(JSON.stringify({id,action,...fields}))}
     catch(error){clearTimeout(timer);tasks.delete(id);reject(new Error('Android-Bridge nicht erreichbar.'))}
@@ -161,5 +161,8 @@ async function cancel(){
  try{await request('update.cancel');state.message='Abbruch angefordert.';paint()}
  catch(e){state.error=e.message||String(e);paint()}
 }
-global.MeviNativeUpdates={html,refresh,channel,check,download,install,permission,cancel,debug:()=>({...state})};
+// Unlike the signed native APK updater, this only refreshes the locally stored
+// Web shell. The server is contacted exclusively after the user taps Update.
+async function webUpdate(onProgress){return request('web.update',{},onProgress);}
+global.MeviNativeUpdates={html,refresh,channel,check,download,install,permission,cancel,webUpdate,debug:()=>({...state})};
 })(typeof window==='undefined'?globalThis:window);
