@@ -642,8 +642,16 @@
     } catch (error) { throw toNetworkError(error); }
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.access_token) {
-      if (data.error === 'invalid_grant') clearToken();
-      throw makeError(authErrorText(data), 'auth', response.status);
+      // Only Spotify's explicit rejection of the refresh token or client ends
+      // the session. 5xx, 429 or an unreadable answer are transient: keep the
+      // refresh token so the next request can try again without a new login.
+      const rejected = (response.status === 400 || response.status === 401) &&
+        (data.error === 'invalid_grant' || data.error === 'invalid_client');
+      if (rejected) {
+        clearToken();
+        throw makeError(authErrorText(data), 'auth', response.status);
+      }
+      throw makeError('Spotify-Anmeldedienst vorübergehend nicht verfügbar', 'network', response.status);
     }
     saveToken({ ...data, refresh_token: data.refresh_token || current.refresh_token });
     return st.token;
@@ -1115,7 +1123,7 @@
     return '<div class="sp-onboard">' +
       '<div class="sp-onboard-head"><span class="sp-onboard-icon">' + icon('spotify') + '</span><div>' +
       '<span class="sp-eyebrow">SPOTIFY PREMIUM // MEVICAR NEXT</span><h2>Spotify direkt im Cockpit hören</h2>' +
-      '<p>Spotify Premium läuft über den Web Playback SDK ohne zusätzliche Spotify-App. In der Android-APK kann die WebView DRM-Wiedergabe blockieren; dann in Chrome öffnen.</p></div></div>' +
+      '<p>Spotify Premium läuft über den Web Playback SDK ohne zusätzliche Spotify-App. Auch in der Android-APK spielt die Musik direkt in MeviCar.</p></div></div>' +
       (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
       (st.notice ? '<div class="sp-alert is-ok">' + icon('check') + '<span>' + esc(st.notice) + '</span></div>' : '') +
       '<div class="sp-setup">' +

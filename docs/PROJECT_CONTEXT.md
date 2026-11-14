@@ -100,7 +100,7 @@ Hybrid-APK-Rückruf (ab Web-Stand November 2026, Details in [SPOTIFY_ANDROID.md]
 
 Mount startet 3-Sekunden-Polling und einen 500-ms-Fortschrittstakt; Unmount entfernt beide Timer. Polling pausiert bei verborgenem Tab, nach `online` wird sofort aktualisiert, `Retry-After` blockiert weitere Anfragen. Quellenwechsel weg von Spotify pausiert die externe Wiedergabe best effort; Spotify-Start stoppt lokale Medien und Radio. Fehler werden unterschieden: 401 Token-Refresh beziehungsweise Trennung, 403 Premium, 404 kein Gerät, 429 Rate Limit, Offline/Timeout. Likes nutzen `/me/library` und `/me/library/contains`; die Suche bleibt bei 10 Treffern je Typ. Keine `/browse/*`- oder Batch-Endpunkte.
 
-Gerätestand: Windows-Browser und Chrome auf dem Galaxy S20 FE spielen mit Ton (Nutzertest). iPhone-Browser: Anmeldung ja, kein Ton (offen). Android-WebView der Hybrid-APK: von Spotify nicht als unterstützte Umgebung genannt; Wiedergabe dort ist erst nach Gerätetest belegt. Hintergrundverhalten und der mögliche Wechsel einer installierten iPhone-PWA nach Safari sind offene Geräteprüfungen. Nachweis: [Spotify-QA](QA_SPOTIFY_2026-11-07.md).
+Gerätestand: Windows-Browser und Chrome auf dem Galaxy S20 FE spielen mit Ton (Nutzertest). iPhone-Browser: Anmeldung ja, kein Ton (offen). Android-WebView der Hybrid-APK: von Spotify nicht als unterstützte Umgebung genannt, auf dem Galaxy S20 FE aber mit Ton abgenommen (Nutzertest, APK-Build 54, Web-Build 886; Anmeldung, Neustart ohne Neuanmeldung, Quellenwechsel und Split mit Navigation). Hintergrundverhalten und der mögliche Wechsel einer installierten iPhone-PWA nach Safari sind offene Geräteprüfungen. Nachweis: [Spotify-QA](QA_SPOTIFY_2026-11-07.md).
 
 ### Tacho
 
@@ -202,7 +202,7 @@ Die folgenden Punkte sind offen, keine in dieser Übernahme vorgenommenen Korrek
 | P1 | Codebefund: Such-Taste „123“ fügt nur „1“ ein; `scrollResults()` entfernt Tastatur und Searchmode beim Scrollen | Erwartetes Suchverhalten und Dock-Rückkehr prüfen, kleine Bedienkorrektur |
 | P1 | Codebefund: `placeButton` setzt encodeURIComponent-Ergebnis in ein einfach gequotetes Inline-JS-Argument; Apostroph bleibt unkodiert | Zielnamen mit Apostroph als Regression testen, Argumentescaping konsistent machen |
 | P1 | Mehrere Dienstplatzhalter außerhalb von Audio noch nicht ausdrücklich Demo. Radio und Spotify sind echte Integrationen; Spotify hängt an Premium, Client ID und aktivem Gerät | Verbleibende Dienstplatzhalter kennzeichnen, ohne neue Dienste anzubinden |
-| P1 | Prüflücke: Spotify-OAuth, Token-Refresh, Premium-Gerätesteuerung und iPhone-PWA-Safari-Wechsel sind nur statisch/mit Mocks geprüft | Mit realem Client ID auf iPhone 17 und S20 FE/DeX durchspielen, Fehlerfälle dokumentieren |
+| P1 | Prüflücke: Spotify auf dem S20 FE (Hybrid-APK) ist am Gerät abgenommen; Token-Refresh-Fehlerfälle, DeX und iPhone-PWA-Safari-Wechsel sind nur statisch/mit Mocks geprüft | Mit realem Client ID auf iPhone 17 und DeX durchspielen, Fehlerfälle dokumentieren |
 | P1 | Codebefund: Lichtshow reduziert Canvasbewegung bei reduced motion nicht; kompakte Buttons 32 px, Intervallknöpfe 29 px hoch | Bewegungsvorgabe und Touchflächen profilübergreifend prüfen |
 | P1 | Prüflücke: keine reproduzierbaren Browser-/Start-/PWA-Tests im Repository | Kleinen Browserprüfweg ergänzen, vorhandene 30 Layoutbehauptungen erneut belegen |
 | P2 | Codebefund: Buildanzeige kann Serverversion statt geladenem Code zeigen; SW entfernt fremde Cache-Namen | Versionsdarstellung und Cache-Eigentümerschaft isoliert absichern |

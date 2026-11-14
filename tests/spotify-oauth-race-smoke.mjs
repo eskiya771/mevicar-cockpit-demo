@@ -211,6 +211,30 @@ await scenario('diagnostics never contain the code, verifier or tokens', async (
   assert.ok(Array.isArray(log) && log.length >= 3, 'debug() must expose the OAuth event log');
 });
 
+const expiredToken = () => ({ access_token: 'old', refresh_token: 'keep-me', expires_at: Date.now() - 1000, scope: 'streaming' });
+
+await scenario('transient refresh failure (HTTP 503) keeps the session and refresh token', async () => {
+  const h = harness({ token: expiredToken() });
+  h.window.meviSpotifyRefresh();
+  await settle(10);
+  assert.ok(h.tokenCalls.length >= 1, 'startup must try to refresh the expired token');
+  assert.match(h.tokenCalls[0].body, /grant_type=refresh_token/);
+  h.tokenCalls[0].reject(503, 'server_error');
+  await settle(10);
+  assert.equal(h.connected(), true, 'a Spotify outage must not log the user out');
+  assert.equal(JSON.parse(h.saved['mevicar-spotify-token-v1']).refresh_token, 'keep-me');
+});
+
+await scenario('refresh rejected with invalid_grant ends the session', async () => {
+  const h = harness({ token: expiredToken() });
+  h.window.meviSpotifyRefresh();
+  await settle(10);
+  h.tokenCalls[0].reject(400, 'invalid_grant');
+  await settle(10);
+  assert.equal(h.connected(), false);
+  assert.equal(h.saved['mevicar-spotify-token-v1'], undefined);
+});
+
 if (failures.length) {
   console.error('Spotify OAuth hand-over: ' + failures.length + ' scenario(s) violated');
   process.exit(1);

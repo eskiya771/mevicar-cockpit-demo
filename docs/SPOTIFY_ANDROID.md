@@ -27,7 +27,7 @@ In `spotify.js` läuft je Rückruf höchstens eine Verarbeitung (`oauthInFlight`
 Der Einrichtungsbildschirm zeigt ein dauerhaft gespeichertes Ereignisprotokoll (Anmeldung und Wiedergabe) und die Schaltfläche **Rückruf jetzt abholen**. `meviSpotifyDebug()` liefert dieselben Daten. Codes, Tokens, State und PKCE-Verifier erscheinen weder im Protokoll noch in Android-Logs.
 
 ## Wiedergabe im Android WebView
-- Spotify nennt als unterstützte Umgebungen des Web Playback SDK Chrome, Firefox, Safari und Edge. Der Android System WebView wird nicht genannt: **nicht offiziell unterstützt, technisch möglich, auf dem Gerät noch nicht nachgewiesen.**
+- Spotify nennt als unterstützte Umgebungen des Web Playback SDK Chrome, Firefox, Safari und Edge. Der Android System WebView wird nicht genannt: **nicht offiziell unterstützt, aber auf dem Galaxy S20 FE nachgewiesen** (Nutzerabnahme November 2026 mit APK-Build 54 und Web-Build 886: Ton aus dem WebView ohne Spotify-App im Hintergrund). Ein WebView- oder Spotify-Update kann das ändern.
 - Bis Build 53 hat die APK die WebView-Berechtigung `RESOURCE_PROTECTED_MEDIA_ID` nie erteilt. Ohne sie verweigert der WebView Widevine. Ab dem folgenden Build wird ausschließlich diese Berechtigung und ausschließlich für `https://eskiya771.github.io` und `https://sdk.scdn.co` erteilt, solange das Hauptdokument die vertrauenswürdige MeviCar-Seite ist.
 - `mediaPlaybackRequiresUserGesture` ist ausgeschaltet, weil der SDK Audio in einem fremden iframe startet, in dem die Nutzergeste aus dem MeviCar-Dokument nicht gilt.
 - Die Web-App prüft Widevine mit `navigator.requestMediaKeySystemAccess` und protokolliert Ergebnis, SDK-Fehlerereignisse, `connect()`, Geräteregistrierung und Übertragung der Wiedergabe. Fehlendes DRM wird angezeigt, nicht umgangen.
@@ -37,4 +37,7 @@ Wenn der Android WebView die Spotify-DRM-Engine nicht bereitstellt oder der Web 
 
 ## Abnahme
 - Automatische Smoke-Tests (`spotify-smoke`, `spotify-android-smoke`, `spotify-oauth-race-smoke`, Android `SpotifyCallbackGateTest`) prüfen PKCE, die Einmal-Code-Übergabe, die Bestätigungsreihenfolge und die Geheimnisfreiheit der Diagnosen.
-- Sie beweisen keine DRM-Wiedergabe. Ton aus dem Android WebView muss auf dem realen Galaxy S20 FE mit Spotify Premium abgenommen werden.
+- Sie beweisen keine DRM-Wiedergabe. Die Geräteabnahme auf dem Galaxy S20 FE mit Spotify Premium ist erfolgt (APK-Build 54, Web-Build 886, Nutzertest): Anmeldung und Bibliothek, Ton aus dem WebView ohne Spotify-App, keine Neuanmeldung nach App-Neustart, Wechsel Spotify/Radio/MeviMedia und Split mit Navigation. Nach Änderungen an Rückruf, Token oder Player ist ein kurzer Gerätetest zu wiederholen.
+
+## Token-Erneuerung
+Nur eine ausdrückliche Ablehnung durch Spotify (`invalid_grant` oder `invalid_client` mit HTTP 400/401) beendet die Sitzung. HTTP 5xx, 429, unlesbare Antworten und Netzfehler gelten als vorübergehend: Das Refresh-Token bleibt erhalten, die nächste Anfrage versucht es erneut.
