@@ -10,6 +10,40 @@ const keyOf=d=>d.lat.toFixed(5)+','+d.lng.toFixed(5);
 const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!valid(x))return false;let k=keyOf(x);if(keys.has(k))return false;keys.add(k);return true}).slice(0,max)};
 let cache={favorites:[],recent:[]};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],100),recent:unique(d.recent||[],20)}}catch{}
 let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,suggestions=[],query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
+// Native Navigation SDK is available only in the hybrid Android APK.
+// The Web/PWA keeps its own GPS guidance and never needs an Android API key.
+const nativeRequests=new Map();
+let nativeRequestSerial=0;
+if(window.MeviNativeBridge?.postMessage){
+ const previousNativeMessage=window.MeviNativeBridge.onmessage;
+ window.MeviNativeBridge.onmessage=event=>{
+  if(typeof previousNativeMessage==='function'){
+   try{previousNativeMessage(event)}catch{}
+  }
+  let data;try{data=JSON.parse(event.data)}catch{return}
+  const pending=nativeRequests.get(data.id);if(!pending)return;
+  clearTimeout(pending.timeout);nativeRequests.delete(data.id);
+  if(data.ok)pending.resolve(data);
+  else pending.reject(new Error(String(data.error||'Native Navigation nicht verfügbar')));
+ };
+}
+function nativeRequest(action,fields={}){
+ return new Promise((resolve,reject)=>{
+  if(!window.MeviNativeBridge?.postMessage){reject(new Error('Nur in der Android-APK verfügbar'));return}
+  const id='navigation-'+(++nativeRequestSerial);
+  const timeout=setTimeout(()=>{nativeRequests.delete(id);reject(new Error('Keine Antwort der Android-Navigation'))},18000);
+  nativeRequests.set(id,{resolve,reject,timeout});
+  try{window.MeviNativeBridge.postMessage(JSON.stringify({id,action,...fields}))}
+  catch(error){clearTimeout(timeout);nativeRequests.delete(id);reject(new Error('Android-Bridge nicht erreichbar'))}
+ });
+}
+async function startNativeNavigation(){
+ if(!window.MeviNativeBridge?.postMessage)return false;
+ const caps=await nativeRequest('capabilities');
+ if(!caps.capabilities?.googleNavigation)return false;
+ await nativeRequest('navigation.open',{lat:selected.lat,lng:selected.lng,title:selected.name});
+ return true;
+}
 function persist(){try{localStorage.setItem(DATA,JSON.stringify(cache))}catch{}}
 function key(){try{return localStorage.getItem(KEY)||''}catch{return ''}}
 function setKey(){window.meviOpenCredentialSettings?.()}
@@ -427,6 +461,17 @@ function updatePosition(p){
 async function startGuidance(){
  if(!routeData||!selected){status('Bitte zuerst eine Route berechnen.','route');return false}
  if(guidanceActive)return true;
+ if(window.MeviNativeBridge?.postMessage){
+  try{
+   if(await startNativeNavigation()){
+    status('Google Navigation SDK gestartet · die Android-Karte ist geöffnet.');
+    return 'native';
+   }
+  }catch(e){
+   status('Android-Navigation nicht gestartet: '+(e.message||e),'route');
+   return false;
+  }
+ }
  try{
   const actual=await position();
   if(manualOrigin&&distanceBetween(manualOrigin,actual)>150){
