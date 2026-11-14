@@ -6,7 +6,7 @@ const source=fs.readFileSync('spotify.js','utf8');
 const settings=fs.readFileSync('credential-settings.js','utf8');
 new vm.Script(source,{filename:'spotify.js'});
 assert.match(source,/const nativeOAuthBridge = \(\) => !!window\.MeviNativeBridge\?\.postMessage/);
-assert.match(source,/const androidSpotify = \(\) => false/,'Android must NOT require Spotify App Remote');
+assert.doesNotMatch(source,/androidSpotify|nativeRequest|connectNative|nativeConnected|'spotify.(connect|play|pause|resume|queue|seek|next|previous|shuffle|repeat|disconnect)'/,'Android must NOT contain a Spotify App Remote path');
 assert.match(source,/if \(nativeOAuthBridge\(\)\) return NATIVE_REDIRECT/);
 assert.match(source,/nativeCallback && !nativeOAuthBridge\(\)/);
 assert.match(source,/code_verifier: saved\.verifier/);
