@@ -138,6 +138,28 @@ try{
    result.geometry=await measure(page);
    validate(result.geometry);
    await page.screenshot({path:`${output}/${prefix}.png`});
+   // Simulate Android's restricted Fullscreen API. Our in-app player must
+   // expand without detaching the video or reconnecting the channel.
+   await page.locator('.tv-stage').evaluate(stage=>{
+    stage.requestFullscreen=()=>Promise.reject(new DOMException('Fullscreen blocked by WebView','NotAllowedError'));
+   });
+   const theaterTimeBefore=await page.locator('.tv-stage video').evaluate(v=>v.currentTime);
+   await page.getByRole('button',{name:'TV-Video im Vollbild'}).click();
+   await expect(page.locator('html')).toHaveClass(/mevi-tv-theater/);
+   const stageFull=await page.locator('.tv-stage').boundingBox();
+   assert(stageFull&&stageFull.x>=-1&&stageFull.y>=-1&&
+     stageFull.x+stageFull.width<=profile.width+1&&stageFull.y+stageFull.height<=profile.height+1&&
+     stageFull.width>=profile.width-2&&stageFull.height>=profile.height-2,
+     'IPTV must fill the screen even when Android blocks native fullscreen');
+   assert(!await page.locator('#dock').isVisible(),'Fullscreen must hide the MeviCar dock');
+   assert.equal(tickets.length,1,'Fullscreen must reuse the existing IPTV session');
+   assert(await page.locator('.tv-stage video').evaluate(v=>v.currentTime)>=theaterTimeBefore,
+     'Fullscreen must keep the same video playing');
+   await page.screenshot({path:`${output}/${prefix}-tv-fullscreen.png`});
+   await page.getByRole('button',{name:'Vollbild verlassen'}).click();
+   await expect(page.locator('html')).not.toHaveClass(/mevi-tv-theater/);
+   assert(await page.locator('#dock').isVisible(),'Leaving fullscreen restores the MeviCar dock');
+   assert.equal(tickets.length,1,'Leaving fullscreen must not reconnect a channel');
    await page.getByRole('button',{name:'TV-Programm öffnen'}).click();
    await expect(page.locator('.tv-epg-content')).toContainText('Güncel <script>alert(1)</script> & Kultur.');
    assert.equal(await page.locator('.tv-epg-content script').count(),0,'provider text is escaped');
