@@ -156,6 +156,12 @@ assert.match(markup,/class="mm-top sp-unified-top"/);
 assert.equal((markup.match(/class="mm-mode-button /g)||[]).length,3,'Spotify must expose the same three source buttons as Radio/Media');
 assert.equal((markup.match(/class="mm-icon"/g)||[]).length,3,'Spotify source buttons must use MeviMedia icon sizing');
 assert.doesNotMatch(markup,/sp-settings-button|sp-refresh-button/,'No redundant settings or refresh buttons in Spotify header');
+const bannerSource=source.slice(source.indexOf('function bannerMarkup()'),source.indexOf('function tabsMarkup()'));
+const paintBannerSource=source.slice(source.indexOf('function paintBanner()'),source.indexOf('function paintNow()'));
+assert.doesNotMatch(bannerSource,/st\.notice/,'Success notices must not create a visible Spotify banner');
+assert.doesNotMatch(paintBannerSource,/st\.notice/,'Live banner updates must not display success notices');
+assert.match(markup, /class="sp-banner is-error"[^>]*hidden/,'No success strip should occupy space under the Spotify header');
+
 assert.match(mediaCss,/:is\(\.mm-shell,\.sp-shell\)\.is-compact \.mm-mode-button/,'Both media shells must use one compact toolbar definition');
 assert.match(displayCss,/:is\(\.mm-shell,\.sp-shell\)\.is-compact \.mm-mode-button/,'Both media shells must share touch-size profile overrides');
 assert.match(displayCss,/:is\(\.mm-shell,\.sp-shell\) \.mm-mode-button\{min-height:44px\}/,'Both media shells require the same 44px touch baseline');
