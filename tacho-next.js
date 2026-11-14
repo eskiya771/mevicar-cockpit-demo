@@ -146,6 +146,7 @@ function onOrientation(event){
  else if(event.absolute&&Number.isFinite(event.alpha))heading=360-event.alpha;
  if(!Number.isFinite(heading))return;
  sensorHeading=normalize(heading);lastSensorAt=Date.now();
+ const btn=host.querySelector('#tn-compass-permission');if(btn)btn.hidden=true;
  paintCompass();
 }
 function attachCompass(){
@@ -159,8 +160,8 @@ function setupCompass(){
  const btn=host?.querySelector('#tn-compass-permission');
  if(!event)return;
  // On iPhone the permission must be requested synchronously from a tap.
- if(typeof event.requestPermission==='function'){if(btn)btn.hidden=false;}
- else attachCompass();
+ attachCompass();
+ if(typeof event.requestPermission==='function'&&btn&&lastSensorAt===0)btn.hidden=false;
 }
 async function requestCompassPermission(){
  const btn=host?.querySelector('#tn-compass-permission');
