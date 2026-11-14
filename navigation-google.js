@@ -16,6 +16,8 @@ const nativeRequests=new Map();
 let nativeRequestSerial=0;
 // The APK uses its own Android-restricted key and native Google SDKs, never a web key.
 let lastNativeLayout='';
+let lastNativeTheme='';
+const nativeThemes=['default','cyberpunk','liquidglass'];
 function nativeMode(){return !!window.MeviNativeBridge?.postMessage}
 if(window.MeviNativeBridge?.postMessage){
  const previousNativeMessage=window.MeviNativeBridge.onmessage;
@@ -59,8 +61,18 @@ function syncNativeHeader() {
  const rect=slot.getBoundingClientRect();
  return rect.width>0&&rect.height>0?rect:null;
 }
+/** Tell the APK which cockpit theme is active so the native controls match.
+ * Sent once per change; an older APK rejects the action, which is ignored.
+ */
+function syncNativeTheme(){
+ const theme=document.documentElement?.dataset?.theme;
+ if(!nativeThemes.includes(theme)||theme===lastNativeTheme)return;
+ lastNativeTheme=theme;
+ nativeRequest('navigation.theme',{theme}).catch(()=>{});
+}
 function syncNativeLayout(force=false){
  if(!nativeMode())return;
+ syncNativeTheme();
  const el=document.getElementById('mg-map');
  const header=el?syncNativeHeader():null;
  const rect=el?.getBoundingClientRect?.();

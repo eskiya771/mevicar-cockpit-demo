@@ -103,4 +103,36 @@ assert.deepEqual(commands.filter(x=>x.action==='navigation.layout').at(-1).heade
 headerVisible=false;
 api.syncNativeLayout();
 assert.equal(commands.filter(x=>x.action==='navigation.layout').at(-1).header,undefined);
+// The native controls follow the cockpit theme: one message per change.
+const themes=()=>commands.filter(x=>x.action==='navigation.theme');
+assert.equal(themes().length,0,'No theme message before the theme is known');
+document.documentElement={dataset:{theme:'cyberpunk'}};
+api.syncNativeLayout();
+assert.equal(themes().length,1);
+assert.deepEqual(Object.keys(themes()[0]).sort(),['action','id','theme']);
+assert.equal(themes()[0].theme,'cyberpunk');
+api.syncNativeLayout(true);
+await api.mount('browse');
+assert.equal(themes().length,1,'Unchanged theme must not be sent again');
+document.documentElement.dataset.theme='matrix';
+api.syncNativeLayout(true);
+assert.equal(themes().length,1,'Only the three cockpit themes are sent');
+// An older APK does not know the action; layout sync must keep working.
+const modernPost=bridge.postMessage;
+bridge.postMessage=function(raw){
+ const request=JSON.parse(raw);
+ if(request.action!=='navigation.theme')return modernPost.call(this,raw);
+ commands.push(request);
+ setTimeout(()=>this.onmessage({data:JSON.stringify({id:request.id,ok:false,
+  error:'Unbekannte Funktion'})}),0);
+};
+document.documentElement.dataset.theme='liquidglass';
+const layoutsBefore=commands.filter(x=>x.action==='navigation.layout').length;
+api.syncNativeLayout(true);
+await new Promise(resolve=>setTimeout(resolve,10));
+assert.equal(themes().length,2);
+assert.equal(themes()[1].theme,'liquidglass');
+assert.equal(commands.filter(x=>x.action==='navigation.layout').length,layoutsBefore+1);
+api.syncNativeLayout(true);
+assert.equal(themes().length,2,'A rejected theme is not retried until it changes');
 console.log('Android native map, split viewport, dock visibility, Places, favorites and routing work without a browser API key.');
