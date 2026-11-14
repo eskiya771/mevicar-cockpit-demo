@@ -129,6 +129,17 @@ assert.ok(pulled.bridgeActions.includes('spotify.callback.ack'));
 assert.equal(pulled.requests.filter(q=>q.url.endsWith('/api/token')).length,1);
 assert.equal(pulled.saved['mevicar-spotify-auth-v1'],undefined);
 
+// Android's SpotifyCallbackGate also accepts a callback path with a slash.
+// The WebView must not silently drop that otherwise valid redirect.
+const slashPulled=runNativeCallback({
+  state:'slash-state',verifier:'slash-verifier',at:Date.now(),
+  redirect:'mevicarnext://spotify-callback'
+}, {bridgeCallback:'mevicarnext://spotify-callback/?code=slash-code&state=slash-state'});
+await new Promise(resolve=>setTimeout(resolve,0));
+assert.equal(slashPulled.window.meviSpotifyDebug().connected,true,
+  'Android callback with /? query must reach the PKCE token exchange');
+assert.ok(slashPulled.bridgeActions.includes('spotify.callback.ack'));
+
 // Android WebView can report document.hidden=true during the handoff even
 // when WebMessage communication is active. OAuth must still be recovered.
 const hiddenPulled=runNativeCallback({
