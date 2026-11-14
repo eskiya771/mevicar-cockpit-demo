@@ -10,7 +10,11 @@ new vm.Script(inline.replace('__MEVICAR_BUILD__',
 new vm.Script(nav,{filename:'navigation-google.js'});
 
 assert(!index.includes('id="fullscreenBtn"'));
-assert(!index.includes('id="updateBtn"'));
+assert(index.includes('id="updateBtn"'), 'Web update button must exist for the navigation screen');
+assert(index.includes("s.nav!=='search'&&!!window.MeviGoogleNav?.hasKey?.()"),
+ 'Update/status controls must stay hidden during first-run setup and address search');
+assert(index.includes('.cockpit.nav-status-only #updateBtn{display:inline-flex'),
+ 'Web update button must be visible on the full-screen navigation status bar');
 assert(index.includes('APK-Updates') && index.includes('async function checkForUpdate()'));
 assert(index.includes("if(!window.MeviGoogleNav?.hasKey?.()){openCredentialSettings();return}"),
  'Search must be gated until the Google Maps browser key is configured');
