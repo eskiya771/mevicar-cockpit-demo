@@ -18,5 +18,6 @@ assert.match(html,/s\.app==='speed'&&s\.mode==='full'/);
 assert.match(html,/window\.meviTachoNextMount\(\)/);
 assert.match(html,/window\.meviSpeedMount\(\)/);
 assert.match(html,/function appLauncherHTML\(\)/,'App grid still lists additional apps');
-assert.match(html,/onclick="launch\(\\'\+id\+\\'\)"/,'App grid still launches by entry ID');
+assert.match(html,/extras\.map\(\(\[id,name\]\)=>/,'App list continues rendering all extra entries');
+assert.match(html,/function launch\(id\)\{s\.extra=id;s\.app=id;/,'Classic tacho launches from its app tile');
 console.log('Tacho Next is the default dock app, Tacho Classic remains in Apps; both modes and icons OK.');
