@@ -411,27 +411,64 @@
     return native || readJson(sessionStorage, KEYS.auth, null);
   }
   let nativeOAuthStage = '';
-  let oauthDiagnostic = readJson(localStorage, KEYS.diag, null)?.message || 'Noch keine Spotify-Anmeldung gestartet';
+  // Non-secret OAuth/playback event log. It survives WebView reloads so that a
+  // single device run shows the complete hand-over. Entries are fixed texts
+  // plus safe categories (HTTP status, error name) - never a code, state,
+  // verifier or token.
+  const OAUTH_LOG_LIMIT = 40;
+  const savedDiagnostic = readJson(localStorage, KEYS.diag, null);
+  let oauthDiagnostic = savedDiagnostic?.message || 'Noch keine Spotify-Anmeldung gestartet';
+  let oauthLog = Array.isArray(savedDiagnostic?.log)
+    ? savedDiagnostic.log.filter(entry => entry && typeof entry.text === 'string' && Number.isFinite(Number(entry.at)))
+      .slice(-OAUTH_LOG_LIMIT).map(entry => ({ at: Number(entry.at), text: entry.text.slice(0, 170) }))
+    : [];
+  function persistDiagnostic() {
+    writeJson(localStorage, KEYS.diag, { message: oauthDiagnostic, at: Date.now(), log: oauthLog });
+  }
+  function logTime(at) {
+    const d = new Date(at);
+    const two = value => String(value).padStart(2, '0');
+    return two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
+  }
+  function oauthLogMarkup() {
+    return oauthLog.slice(-14).map(entry => '<li>' + esc(logTime(entry.at) + ' ' + entry.text) + '</li>').join('');
+  }
+  function logOAuth(text) {
+    const entry = String(text || '').slice(0, 170);
+    if (!entry) return;
+    const last = oauthLog[oauthLog.length - 1];
+    if (last && last.text === entry) last.at = Date.now();
+    else oauthLog.push({ at: Date.now(), text: entry });
+    if (oauthLog.length > OAUTH_LOG_LIMIT) oauthLog = oauthLog.slice(-OAUTH_LOG_LIMIT);
+    persistDiagnostic();
+    const list = document.getElementById('sp-oauth-log');
+    if (list) list.innerHTML = oauthLogMarkup();
+  }
   function setAuthDiagnostic(message) {
     oauthDiagnostic = String(message || '').slice(0, 160);
-    writeJson(localStorage, KEYS.diag, { message: oauthDiagnostic, at: Date.now() });
+    logOAuth('Web: ' + oauthDiagnostic);
     const label = document.getElementById('sp-oauth-diagnostic');
     if (label) label.textContent = oauthDiagnostic;
   }
+  function diagnosticsMarkup() {
+    return '<div class="sp-fine sp-diagnose" style="border:1px solid #456477;border-radius:10px;padding:10px;margin-top:10px;font-size:14px;line-height:1.55" role="status"><strong>Spotify-Diagnose</strong>' +
+      '<div>Web: <span id="sp-oauth-diagnostic">' + esc(oauthDiagnostic) + '</span></div>' +
+      (nativeOAuthBridge() ? '<div>APK: <span id="sp-native-diagnostic">' + esc(nativeOAuthStage || 'Status wird geladen') + '</span></div>' : '') +
+      '<ol id="sp-oauth-log" aria-label="Spotify-Ereignisprotokoll" style="margin:8px 0 0;padding-left:0;list-style:none;font-size:12px;line-height:1.45;max-height:170px;overflow:auto;word-break:break-word">' + oauthLogMarkup() + '</ol>' +
+      (nativeOAuthBridge() ? '<button type="button" class="sp-linkbtn" style="min-height:44px;margin-top:8px" onclick="meviSpotifyPullCallback()">Rückruf jetzt abholen</button>' : '') +
+      '</div>';
+  }
+  const NATIVE_CALLBACK_READY = /Spotify-Code von Android empfangen|Spotify hat einen Fehler zurückgegeben|Spotify-Rückruf liegt bereit/;
   function acceptNativeStage(message) {
     nativeOAuthStage = String(message || '').slice(0, 120);
+    logOAuth('APK: ' + nativeOAuthStage);
     const label = document.getElementById('sp-native-diagnostic');
     if (label) label.textContent = nativeOAuthStage;
-    // The native status already arrives in JS even on devices that don't
-    // dispatch visibilitychange/resume reliably after Chrome. Use that proven
-    // channel to request the pending one-time callback immediately.
-    if (nativeOAuthBridge() && !st.token && pendingAuth() &&
-        nativeOAuthStage.includes('Spotify-Code von Android empfangen')) {
-      setAuthDiagnostic('Android-Rückruf erkannt · Code wird abgeholt');
+    // The stage is only a nudge without any secret. The one-time callback is
+    // always fetched over the trusted WebMessage bridge - even with an existing
+    // session, so that Android never keeps an obsolete code.
+    if (nativeOAuthBridge() && NATIVE_CALLBACK_READY.test(nativeOAuthStage)) {
       Promise.resolve().then(() => pullSpotifyCallback());
-      setTimeout(() => {
-        if (!st.token && pendingAuth()) pullSpotifyCallback();
-      }, 700);
     }
   }
   function clearPendingAuth() {
@@ -480,40 +517,42 @@
       else pending.reject(new Error(String(reply.error || 'Android-Bridge fehlgeschlagen')));
     };
   }
-  async function pullSpotifyCallback() {
+  async function pullSpotifyCallback(manual) {
     // Android can mark the WebView document hidden during the Chrome-to-APK
     // transition even while its JS/bridge is already usable. Do not suppress
-    // the pull solely because document.hidden is true.
-    if (!nativeOAuthBridge() || oauthPullBusy || st.token) return;
+    // the pull solely because document.hidden is true. An existing session
+    // does not suppress it either: a leftover callback has to be released.
+    if (!nativeOAuthBridge() || oauthPullBusy) return false;
     oauthPullBusy = true;
+    let result;
     try {
-      const result = await oauthNativeCall('spotify.callback.pull');
-      if (typeof result.callback !== 'string' ||
-          !result.callback.startsWith(NATIVE_REDIRECT + '?')) return;
-      const state = new URL(result.callback).searchParams.get('state') || '';
-      const expected = pendingAuth()?.state || '';
-      if (state !== expected || !expected) {
-        // Never let an old Android callback clear a newer PKCE request.
-        await oauthNativeCall('spotify.callback.ack', {state});
-        return;
-      }
-      setAuthDiagnostic('Spotify-Rückruf über Android-Bridge empfangen');
-      const processed = await acceptNativeCallback(result.callback);
-      if (processed) await oauthNativeCall('spotify.callback.ack', {state});
+      result = await oauthNativeCall('spotify.callback.pull');
     } catch (error) {
       // Only show a safe error category, never a code, URI or verifier.
-      if (pendingAuth() && !st.token) {
+      if (manual === true || (pendingAuth() && !st.token)) {
         setAuthDiagnostic('Android-Rückkanal antwortet nicht (' +
           String(error?.message || 'unbekannt').replace(/[^a-zA-ZäöüÄÖÜß0-9 -]/g,'').slice(0,45) + ')');
       }
+      return false;
     } finally { oauthPullBusy = false; }
+    if (typeof result.callback !== 'string' ||
+        !result.callback.startsWith(NATIVE_REDIRECT + '?')) {
+      if (manual === true) setAuthDiagnostic('Android hält keinen Spotify-Rückruf bereit');
+      return false;
+    }
+    logOAuth('Web: Spotify-Rückruf über Android-Bridge abgeholt');
+    return acceptNativeCallback(result.callback);
+  }
+  function pullSpotifyCallbackNow() {
+    setAuthDiagnostic('Rückruf wird manuell bei Android abgefragt');
+    return pullSpotifyCallback(true);
   }
   function startSpotifyCallbackPolling() {
     if (!nativeOAuthBridge() || st.token) return;
     if (oauthPullTimer) return;
     const started = Date.now();
     oauthPullTimer = setInterval(() => {
-      if (st.token || Date.now() - started > 10 * 60 * 1000) {
+      if (st.token || !pendingAuth() || Date.now() - started > 10 * 60 * 1000) {
         clearInterval(oauthPullTimer);
         oauthPullTimer = null;
         return;
@@ -662,79 +701,149 @@
     throw error;
   }
 
-  // Android can retry the same deep link after the Activity resumes.
-  // Process each callback once, otherwise the second attempt would consume
-  // the already-used PKCE verifier and incorrectly return to onboarding.
-  let handledNativeCallbackState = '';
+  // The authorization code is a one-time value and Android may hand the same
+  // callback over several times (pull, nudge, push by older APKs). Exactly one
+  // owner processes each callback; everybody else shares its result:
+  //   idle -> exchanging -> done  (definitive result, acknowledged once)
+  //                      -> retry (transport error only: Android keeps the
+  //                         code, the PKCE request stays, a later pull retries)
+  const OAUTH_WINDOW_MS = 10 * 60 * 1000;
+  const OAUTH_RETRY_DELAYS = [0, 3000, 8000, 15000];
+  const oauthSettled = new Set();
+  const oauthRetry = new Map();
+  let oauthInFlight = null;
+  async function acknowledgeNativeCallback(state) {
+    if (!nativeOAuthBridge()) return;
+    try {
+      const reply = await oauthNativeCall('spotify.callback.ack', { state });
+      logOAuth(reply?.acknowledged === false
+        ? 'Web: Android hielt diesen Rückruf nicht mehr'
+        : 'Web: Rückruf gegenüber Android bestätigt');
+    } catch {
+      // Android keeps the callback; the next pull meets a settled key and
+      // acknowledges again without a second token exchange.
+      logOAuth('Web: Bestätigung an Android nicht zugestellt · wird wiederholt');
+    }
+  }
   function acceptNativeCallback(uri) {
-    const url = new URL(uri);
-    const state = url.searchParams.get('state') || url.searchParams.get('error') || '';
-    if (state && state === handledNativeCallbackState) return Promise.resolve(true);
-    if (state) handledNativeCallbackState = state;
-    return handleCallback(uri).then(handled => {
-      // Android must retain the one-time code until the asynchronous token
-      // exchange has finished; evaluateJavascript returning true is not enough.
-      if (handled && nativeOAuthBridge() && state) {
-        try {
-          window.MeviNativeBridge.postMessage(JSON.stringify({
-            id: 'spotify-callback-ack-' + (++oauthBridgeSerial),
-            action: 'spotify.callback.ack',
-            state
-          }));
-        } catch { /* Android can recover on the next callback pull */ }
+    let url;
+    try { url = new URL(uri); } catch { return Promise.resolve(false); }
+    if (url.protocol !== 'mevicarnext:' || url.host !== 'spotify-callback' || !nativeOAuthBridge()) {
+      return Promise.resolve(false);
+    }
+    const state = url.searchParams.get('state') || '';
+    const oauthError = url.searchParams.get('error') || '';
+    if (!url.searchParams.get('code') && !oauthError) return Promise.resolve(false);
+    const key = state || ('error:' + oauthError);
+    if (oauthInFlight && oauthInFlight.key === key) return oauthInFlight.promise;
+    if (oauthSettled.has(key)) return acknowledgeNativeCallback(state).then(() => true);
+    const saved = pendingAuth();
+    if ((saved && saved.state !== state) || (!saved && st.token)) {
+      // Never let an old Android callback touch a newer PKCE request or an
+      // existing session. Release it on the Android side and say so.
+      oauthSettled.add(key);
+      logOAuth('Web: Veralteter Android-Rückruf verworfen (gehört zu keiner offenen Anmeldung)');
+      return acknowledgeNativeCallback(state).then(() => true);
+    }
+    const retry = oauthRetry.get(key);
+    if (retry && Date.now() < retry.notBefore) return Promise.resolve(false);
+    const promise = (async () => {
+      let outcome;
+      try {
+        outcome = await processCallback(uri, { retryable: !retry || retry.count < OAUTH_RETRY_DELAYS.length });
+      } catch { outcome = 'done'; }
+      if (outcome === 'ignored') return false;
+      if (outcome === 'retry') {
+        const count = (retry?.count || 0) + 1;
+        oauthRetry.set(key, { count, notBefore: Date.now() + OAUTH_RETRY_DELAYS[Math.min(count - 1, OAUTH_RETRY_DELAYS.length - 1)] });
+        return false;
       }
-      return handled;
-    });
+      oauthRetry.delete(key);
+      oauthSettled.add(key);
+      await acknowledgeNativeCallback(state);
+      return true;
+    })();
+    oauthInFlight = { key, promise };
+    const release = () => { if (oauthInFlight && oauthInFlight.promise === promise) oauthInFlight = null; };
+    promise.then(release, release);
+    return promise;
   }
 
+  // Plain web redirect (location.href carries ?code=...).
   async function handleCallback(sourceUrl = location.href) {
+    return (await processCallback(sourceUrl, { retryable: false })) !== 'ignored';
+  }
+
+  // Returns 'ignored' (not an OAuth callback), 'done' (definitive result:
+  // connected or a defined error) or 'retry' (native hand-over only: the token
+  // endpoint gave no answer, so nothing has been consumed).
+  async function processCallback(sourceUrl, { retryable = false } = {}) {
     const url = new URL(sourceUrl);
     const nativeCallback=url.protocol==='mevicarnext:' && url.host==='spotify-callback';
-    if (sourceUrl !== location.href && !nativeCallback) return false;
-    if (nativeCallback && !nativeOAuthBridge()) return false;
+    if (sourceUrl !== location.href && !nativeCallback) return 'ignored';
+    if (nativeCallback && !nativeOAuthBridge()) return 'ignored';
     const code = url.searchParams.get('code');
     const state = url.searchParams.get('state');
     const oauthError = url.searchParams.get('error');
     const description = url.searchParams.get('error_description');
-    if (!code && !oauthError) return false;
+    if (!code && !oauthError) return 'ignored';
     setAuthDiagnostic(oauthError ? 'Spotify hat den Rückruf mit einem Fehler gesendet' : 'Spotify-Code in der Web-App angekommen');
     const saved = pendingAuth();
-    if (!nativeCallback) cleanCallbackUrl(url);
-    clearPendingAuth();
+    if (!nativeCallback) {
+      // The browser URL is cleaned at once, so the code cannot be replayed.
+      cleanCallbackUrl(url);
+      clearPendingAuth();
+    }
     if (oauthError) {
-      setAuthDiagnostic('Spotify-Freigabe fehlgeschlagen: ' + String(oauthError).slice(0, 60));
+      clearPendingAuth();
+      setAuthDiagnostic('Spotify-Freigabe fehlgeschlagen: ' + String(oauthError).replace(/[^a-z_]/gi, '').slice(0, 60));
       st.authError = oauthError === 'access_denied' ? 'Spotify-Verbindung wurde abgebrochen.' : ('Spotify: ' + (description || oauthError));
       returnToAudio();
-      return true;
+      return 'done';
     }
     if (!saved || !state || saved.state !== state || !saved.verifier ||
-        !Number.isFinite(Number(saved.at)) || Date.now() - Number(saved.at) > 10 * 60 * 1000 ||
+        !Number.isFinite(Number(saved.at)) || Date.now() - Number(saved.at) > OAUTH_WINDOW_MS ||
         Date.now() < Number(saved.at)) {
+      clearPendingAuth();
       setAuthDiagnostic('PKCE-Sicherheitsprüfung fehlgeschlagen (Status/Verifizierer fehlt oder abgelaufen)');
       st.authError = 'Spotify-Sicherheitsprüfung fehlgeschlagen. Bitte erneut verbinden.';
       returnToAudio();
-      return true;
+      return 'done';
     }
     st.authLoading = true;
     setAuthDiagnostic('PKCE gültig · Spotify-Token wird angefordert');
     returnToAudio();
+    let outcome = 'done';
     try {
-      const response = await fetch(ACCOUNTS + '/api/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          code,
-          redirect_uri: saved.redirect || redirectUri(),
-          client_id: readClientId(),
-          code_verifier: saved.verifier
-        })
-      });
+      let response;
+      const controller = new AbortController();
+      const guard = setTimeout(() => controller.abort(), 20000);
+      try {
+        response = await fetch(ACCOUNTS + '/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          signal: controller.signal,
+          body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: saved.redirect || redirectUri(),
+            client_id: readClientId(),
+            code_verifier: saved.verifier
+          })
+        });
+      } catch (error) {
+        // No HTTP answer at all: Spotify has not judged the code.
+        const transport = new Error('Spotify-Anmeldeserver nicht erreichbar');
+        transport.name = error?.name === 'AbortError' ? 'Zeitüberschreitung' : 'Netzwerkfehler';
+        transport.transport = true;
+        throw transport;
+      } finally { clearTimeout(guard); }
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.access_token) {
-        setAuthDiagnostic('Token-Austausch fehlgeschlagen · HTTP ' + response.status + ' · ' + String(data.error || 'ohne Token').slice(0, 45));
+        setAuthDiagnostic('Token-Austausch fehlgeschlagen · HTTP ' + response.status + ' · ' + String(data.error || 'ohne Token').replace(/[^a-z_ ]/gi, '').slice(0, 45));
         throw makeError(authErrorText(data), 'auth', response.status);
       }
+      clearPendingAuth();
       saveToken(data);
       setAuthDiagnostic('Spotify-Token erfolgreich gespeichert');
       st.authError = '';
@@ -742,17 +851,28 @@
       st.tab = 'now';
       setNotice('Mit Spotify verbunden.');
       rerender();
-      await Promise.allSettled([loadProfile(), poll(true)]);
-      rerender();
+      // Loading the library is not part of the hand-over: Android is told
+      // right away, profile and player state fill in afterwards.
+      Promise.allSettled([loadProfile(), poll(true)]).then(() => {
+        logOAuth('Web: Profil und Wiedergabestatus geladen');
+        rerender();
+      });
     } catch (error) {
-      if (!oauthDiagnostic.startsWith('Token-Austausch fehlgeschlagen')) setAuthDiagnostic('Token-Austausch nicht abgeschlossen: ' + (error?.name || 'Netzwerkfehler'));
-      st.authError = 'Anmeldung fehlgeschlagen: ' + errorText(error);
+      if (error?.transport && nativeCallback && retryable) {
+        outcome = 'retry';
+        setAuthDiagnostic('Token-Austausch nicht abgeschlossen: ' + error.name + ' · Code bleibt bei Android, neuer Versuch folgt');
+        st.authError = 'Spotify-Anmeldeserver nicht erreichbar. Neuer Versuch läuft automatisch.';
+      } else {
+        clearPendingAuth();
+        if (!oauthDiagnostic.startsWith('Token-Austausch fehlgeschlagen')) setAuthDiagnostic('Token-Austausch nicht abgeschlossen: ' + (error?.name || 'Netzwerkfehler'));
+        st.authError = 'Anmeldung fehlgeschlagen: ' + errorText(error);
+      }
       rerender();
     } finally {
       st.authLoading = false;
       rerender();
     }
-    return true;
+    return outcome;
   }
   function returnToAudio() {
     if (typeof window.selectAudioSource === 'function') window.selectAudioSource('spotify');
@@ -820,7 +940,30 @@
     st.webError = error;
     if (st.mounted) rerender();
   }
+  // Evidence only: asks the browser engine whether Widevine is usable for the
+  // audio format Spotify streams. Nothing is worked around when it is not.
+  let widevineProbe = 'nicht geprüft';
+  async function probeWidevine() {
+    try {
+      if (typeof navigator.requestMediaKeySystemAccess !== 'function') {
+        widevineProbe = 'EME-Schnittstelle fehlt';
+      } else {
+        const access = await navigator.requestMediaKeySystemAccess('com.widevine.alpha', [{
+          initDataTypes: ['cenc'],
+          audioCapabilities: [{ contentType: 'audio/mp4; codecs="mp4a.40.2"' }]
+        }]);
+        await access.createMediaKeys();
+        widevineProbe = 'verfügbar';
+      }
+    } catch (error) {
+      widevineProbe = 'abgelehnt (' + String(error?.name || 'Fehler').replace(/[^a-zA-Z]/g, '').slice(0, 30) + ')';
+    }
+    logOAuth('Wiedergabe: Widevine-DRM ' + widevineProbe);
+    return widevineProbe;
+  }
+  function logPlayback(text) { logOAuth('Wiedergabe: ' + String(text || '').replace(/\s+/g, ' ').slice(0, 120)); }
   async function startWebPlayer() {
+    probeWidevine();
     // Spotify's Web SDK is not officially supported in Android WebView.
     // Do not start Spotify App Remote or silently switch to playback in another app.
     if (nativeOAuthBridge() && typeof navigator.requestMediaKeySystemAccess !== 'function') {
@@ -859,26 +1002,35 @@
         st.webPlayer = player;
         player.addListener('ready', ({ device_id }) => {
           st.webDeviceId = device_id;
+          logPlayback('Spotify-SDK bereit · MeviCar als Gerät registriert');
           webPlayerStatus('Bereit');
           transferToWebPlayer().catch(() => {});
         });
         player.addListener('not_ready', ({ device_id }) => {
           if (st.webDeviceId === device_id) st.webDeviceId = '';
+          logPlayback('Spotify-SDK meldet Gerät offline');
           webPlayerStatus('Offline','Spotify-Player nicht erreichbar.');
         });
         for (const event of ['initialization_error','authentication_error','account_error','playback_error']) {
+          player.addListener(event, ({ message }) => logPlayback('SDK-Fehler ' + event + ' · ' + (message || '')));
           player.addListener(event, ({ message }) => webPlayerStatus('Fehler',
             (event === 'initialization_error' && nativeOAuthBridge()
               ? 'Spotify-DRM im Android WebView nicht verfügbar. Über Chrome öffnen. '
               : '') + (message || event)));
         }
+        player.addListener('autoplay_failed', () => logPlayback('SDK meldet autoplay_failed (Nutzergeste nötig)'));
         player.addListener('autoplay_failed', () => webPlayerStatus('Bereit','Wiedergabe mit Play-Taste aktivieren.'));
         player.addListener('player_state_changed', () => { if (st.mounted) poll(true); });
       }
       st.webPlayer.activateElement();
+      logPlayback('SDK geladen · connect() wird aufgerufen');
       if (!await st.webPlayer.connect()) throw new Error('Spotify konnte den MeviCar Player nicht verbinden.');
+      logPlayback('connect() erfolgreich · warte auf Geräteregistrierung');
       if (!st.webDeviceId) webPlayerStatus('Registriere Gerät …');
-    } catch(error) { webPlayerStatus('Fehler',error.message || String(error)); }
+    } catch(error) {
+      logPlayback('Start fehlgeschlagen · ' + (error?.message || 'unbekannt'));
+      webPlayerStatus('Fehler',error.message || String(error));
+    }
   }
   async function transferToWebPlayer() {
     if (!st.webDeviceId || st.webTransferBusy) return;
@@ -896,9 +1048,13 @@
         st.pendingPlay = null;
         setNotice('Wiedergabe: ' + pending.title);
       }
+      logPlayback('Wiedergabe an MeviCar übertragen');
       webPlayerStatus('Wiedergabe über MeviCar');
       await poll(true);
-    } catch(error) { webPlayerStatus('Bereit',errorText(error)); }
+    } catch(error) {
+      logPlayback('Übertragung fehlgeschlagen · ' + errorText(error));
+      webPlayerStatus('Bereit',errorText(error));
+    }
     finally { st.webTransferBusy = false; }
   }
   function webPlayerMarkup() {
@@ -959,7 +1115,7 @@
       (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
       '<div class="sp-onboard-actions"><button type="button" class="sp-primary" onclick="meviSpotifyConnect()" ' + (!hasClient || st.authLoading ? 'disabled' : '') + '>' + icon('spotify') + (st.authLoading ? 'Verbinde …' : 'Mit Spotify verbinden') + '</button>' +
       (hasClient ? '<span class="sp-fine">Client ID: ' + esc(maskClient(st.clientId)) + '</span>' : '') + '</div>' +
-      '<div class="sp-fine" style="border:1px solid #456477;border-radius:10px;padding:10px;margin-top:10px;font-size:14px;line-height:1.55" role="status"><strong>Spotify-Diagnose</strong><div>Web: <span id="sp-oauth-diagnostic">' + esc(oauthDiagnostic) + '</span></div>' + (nativeOAuthBridge() ? '<div>APK: <span id="sp-native-diagnostic">' + esc(nativeOAuthStage || 'Status wird geladen') + '</span></div>' : '') + '</div>' +
+      diagnosticsMarkup() +
       '<p class="sp-fine">Kein Passwort und kein Client Secret. Access- und Refresh-Token bleiben lokal in diesem Browser. Dev Mode: maximal 5 Nutzer, der App-Inhaber braucht Premium. Auf iPhone kann die Anmeldung aus einer installierten PWA heraus in Safari landen; dann die Verbindung in Safari herstellen.</p>' +
       '</div>';
   }
@@ -979,6 +1135,7 @@
         ? '<button type="button" class="sp-primary" onclick="meviSpotifyResetClient(true)">Ja, löschen</button><button type="button" onclick="meviSpotifyResetClient(false)">Abbrechen</button>'
         : '<button type="button" class="sp-primary" onclick="meviSpotifyConnect(true)">Neu verbinden</button><button type="button" onclick="meviSpotifyDisconnect()">Spotify trennen</button><button type="button" onclick="meviOpenCredentialSettings()">Client ID in Settings</button>') +
       '</div>' +
+      diagnosticsMarkup() +
       '<p class="sp-fine">Die Verbindung nutzt OAuth PKCE ohne Backend. Access- und Refresh-Token liegen ausschließlich im lokalen Speicher dieses Browsers. Beim Trennen bleiben nur die Client ID und die Suchhistorie erhalten.</p>' +
       '</div></div>';
   }
@@ -1960,7 +2117,9 @@
       liked: st.liked,
       results: st.results ? Object.fromEntries(Object.entries(st.results).map(([key, value]) => [key, value.length])) : null,
       mounted: st.mounted,
-      webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy },
+      webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy, widevine: widevineProbe },
+      oauth: { pending: !!pendingAuth(), exchanging: !!oauthInFlight, diagnostic: oauthDiagnostic, nativeStage: nativeOAuthStage },
+      oauthLog: oauthLog.map(entry => ({ at: entry.at, text: entry.text })),
       nativeSpotify: { supported: androidSpotify(), connected: st.nativeConnected },
       polling: !!pollTimer,
       error: st.error,
@@ -1972,6 +2131,7 @@
     meviSpotifyHTML: html,
     meviSpotifyAcceptNativeCallback: acceptNativeCallback,
     meviSpotifyNativeStage: acceptNativeStage,
+    meviSpotifyPullCallback: pullSpotifyCallbackNow,
     meviSpotifyWebPlayer: startWebPlayer,
     meviSpotifyMount: mount,
     meviSpotifyUnmount: unmount,
@@ -2017,7 +2177,8 @@
       typeLabel,
       scopes: SCOPES,
       apiBase: API,
-      accountsBase: ACCOUNTS
+      accountsBase: ACCOUNTS,
+      authBusy: () => !!oauthInFlight || !!st.authLoading
     }
   });
 
@@ -2027,7 +2188,12 @@
     catch { setAuthDiagnostic('APK-Bridge nicht erreichbar'); }
   }
   notifyNativeReady();
-  if (nativeOAuthBridge() && pendingAuth() && !st.token) startSpotifyCallbackPolling();
+  // One pull at every start: completes an interrupted login after a WebView
+  // reload and releases a callback Android may still hold.
+  if (nativeOAuthBridge()) {
+    if (pendingAuth() && !st.token) startSpotifyCallbackPolling();
+    else pullSpotifyCallback();
+  }
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
       notifyNativeReady();

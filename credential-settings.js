@@ -50,7 +50,8 @@ function onNativeMessage(event){
  pending.delete(data.id);clearTimeout(item.timer);
  if(data.ok)item.resolve(data);else item.reject(new Error(data.error||'Einstellung nicht gespeichert.'));
 }
-if(global.MeviNativeBridge)global.MeviNativeBridge.onmessage=onNativeMessage;
+// Chain instead of overwrite: Spotify and update replies share this single bridge handler.
+if(global.MeviNativeBridge){const previousNativeHandler=global.MeviNativeBridge.onmessage;global.MeviNativeBridge.onmessage=event=>{if(typeof previousNativeHandler==='function'){try{previousNativeHandler(event)}catch{}}onNativeMessage(event)}}
 function html(){
  const ha=global.MeviHA?.debug?.()||{};
  const cal=json(CAL_KEY),road=json(ROAD_KEY);
@@ -167,5 +168,5 @@ async function refreshNativeStatus(){
  catch(e){report(e.message)}
 }
 global.MeviCredentials={html,save,clear,tvPin:()=>tvPin,refreshNativeStatus,nativeAvailable,onNativeMessage};
-if(global.MeviNativeBridge)global.MeviNativeBridge.onmessage=onNativeMessage;
+
 })(typeof window==='undefined'?globalThis:window);

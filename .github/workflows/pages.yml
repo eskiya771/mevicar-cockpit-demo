@@ -54,6 +54,11 @@ jobs:
         run: node tests/stocks-smoke.mjs
       - name: Test Wer ist schuld? bottle spinner
         run: node tests/weristschuld-smoke.mjs
+      - name: Test Spotify PKCE and Android one-time code hand-over
+        run: |
+          node tests/spotify-smoke.mjs
+          node tests/spotify-android-smoke.mjs
+          node tests/spotify-oauth-race-smoke.mjs
       - name: Generate versioned site
         env:
           BUILD_NUMBER: ${{ github.run_number }}
