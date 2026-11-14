@@ -7,7 +7,8 @@ assert.match(code,/LAST_PLAYLIST_KEY='mevicar-tv-last-playlist-v1'/);
 assert.match(code,/rememberPlaylist\('xtream',a\.name,'live'\)/,'Successful IPTV connect must remember last list');
 assert.match(code,/rememberPlaylist\('m3u',source\.id\)/,'Imported M3U source must be remembered');
 assert.match(code,/function restoreLastPlaylist\(\)/,'IPTV must be restored when opened');
-assert.match(code,/restoreLastPlaylist\(\);\}/,'TV mount must restore last list');
+assert.match(code,/restoreLastPlaylist\(\);/,'TV mount must reuse or restore last list');
+assert.match(code,/void restoreLastPlaylist\(\);/,'IPTV must preload as the app starts');
 assert.doesNotMatch(code,/localStorage\.setItem\([^;]*(?:credentials|\.token|pin)/,'Do not persist proxy session credentials in TV preferences');
 
 // Model a reload after the user's PIN and last Xtream list have been saved.
@@ -45,6 +46,10 @@ const xtream={
 };
 const win={document:doc,meviXtream:xtream,MeviCredentials:{tvPin:()=> '1234'}};
 runInNewContext(code,{window:win,document:doc,URL,localStorage:storage,setTimeout,clearTimeout,setInterval,clearInterval,console});
+for(let i=0;i<8;i++)await Promise.resolve();
+assert.equal(pinCalls,1,'PIN must be read before opening TV');
+assert.equal(connections,1,'Last IPTV catalogue must start loading at app launch');
+assert.equal(state.kind,'movie','Last IPTV category must be restored in the background');
 win.meviTVMount();
 for(let i=0;i<8;i++)await Promise.resolve();
 assert.equal(pinCalls,1,'Restored PIN must be submitted exactly once');
@@ -76,6 +81,8 @@ const firstRunApi={
 };
 const freshWindow={document:doc,meviXtream:firstRunApi,MeviCredentials:{tvPin:()=> '1234'}};
 runInNewContext(code,{window:freshWindow,document:doc,URL,localStorage:storage,setTimeout,clearTimeout,setInterval,clearInterval,console});
+for(let i=0;i<8;i++)await Promise.resolve();
+assert.equal(firstRunConnects,1,'Saved APK PIN must preload default MeviTV without opening TV');
 freshWindow.meviTVMount();
 for(let i=0;i<8;i++)await Promise.resolve();
 assert.equal(firstRunConnects,1,'Saved APK PIN must restore default MeviTV on first launch');
@@ -87,6 +94,8 @@ freshWindow.meviTVUnmount();
 store.set('mevicar-tv-last-playlist-v1',JSON.stringify({type:'public',name:'',kind:'live'}));
 const publicWindow={document:doc,meviXtream:firstRunApi,MeviCredentials:{tvPin:()=> '1234'}};
 runInNewContext(code,{window:publicWindow,document:doc,URL,localStorage:storage,setTimeout,clearTimeout,setInterval,clearInterval,console});
+for(let i=0;i<4;i++)await Promise.resolve();
+assert.equal(firstRunConnects,1,'Public TV must not preload IPTV');
 publicWindow.meviTVMount();
 for(let i=0;i<4;i++)await Promise.resolve();
 assert.equal(firstRunConnects,1,'Public-TV selection must not reconnect the IPTV proxy');

@@ -25,11 +25,12 @@ let showDiagnostics=false;try{showDiagnostics=localStorage.getItem('mevicar-tv-d
 try{const data=JSON.parse(localStorage.getItem(KEY)||'{}');sources=(Array.isArray(data.sources)?data.sources:[]).filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&safeURL(x.url)).slice(0,30).map(x=>({id:x.id,name:x.name.slice(0,80),url:safeURL(x.url),updated:x.updated||''}));custom=(Array.isArray(data.custom)?data.custom:[]).filter(c=>c&&typeof c.name==='string'&&typeof c.id==='string'&&safeURL(c.url)).slice(0,100).map(c=>({...c,country:'OTHER',url:safeURL(c.url)}));favorites=(Array.isArray(data.favorites)?data.favorites:[]).filter(x=>typeof x==='string');selected=typeof data.selected==='string'?data.selected:selected;}catch{}
 // Persist only the last selected catalogue identity, never its session token or provider credentials.
 const LAST_PLAYLIST_KEY='mevicar-tv-last-playlist-v1';
-let lastPlaylist=null,restoreInFlight=null;
+let lastPlaylist=null,restoreInFlight=null,restoreFeedback='';
 try{const stored=JSON.parse(localStorage.getItem(LAST_PLAYLIST_KEY)||'null');if(stored&&['xtream','m3u','public'].includes(stored.type)&&typeof stored.name==='string'&&stored.name.length<=80){lastPlaylist={type:stored.type,name:stored.name,kind:['live','movie','series'].includes(stored.kind)?stored.kind:'live'};}}catch{}
 if(lastPlaylist?.type==='m3u') {const first=custom.find(x=>x.sourceId===lastPlaylist.name);if(first){country='OTHER';if(!custom.some(x=>x.id===selected&&x.sourceId===lastPlaylist.name))selected=first.id;}}
 function rememberPlaylist(type,name='',kind='live'){
  lastPlaylist={type: ['xtream','m3u'].includes(type)?type:'public',name:String(name||'').slice(0,80),kind:['live','movie','series'].includes(kind)?kind:'live'};
+ restoreFeedback='';
  try{localStorage.setItem(LAST_PLAYLIST_KEY,JSON.stringify(lastPlaylist));}catch{}
 }
 function channels(){return [...CATALOG,...custom];}
@@ -170,49 +171,60 @@ function xtFilteredItems(api,account){
  (xtFavoritesOnly?xtFavorites.includes(xtFavoriteKey(account,item)):xtCountry==='ALL'||xtCountryCode(item,cats)===xtCountry)).slice(0,500);
 }
 function xtStatus(v){const e=root?.querySelector('.tv-xtream-status');if(e)e.textContent=v;}
-async function restoreLastPlaylist(){
- const api=global.meviXtream,owner=root;
- if(!owner||!api)return;
- // Native encrypted storage is loaded asynchronously after a WebView restart.
- // Do not decide that the PIN is missing before its Android reply has arrived.
- const pin=String(typeof global.MeviCredentials?.tvPinReady==='function'
-  ?await global.MeviCredentials.tvPinReady()
-  :global.MeviCredentials?.tvPin?.()||'');
- if(root!==owner)return;
- // Android WebView and a regular browser have separate local storage. On a first
- // APK launch there may be a saved PIN but no previously connected catalogue.
- // In that case use the application's configured default Xtream list.
- if(!lastPlaylist&&/^\d{4}$/.test(pin))rememberPlaylist('xtream','MeviTV','live');
- if(lastPlaylist?.type!=='xtream')return;
- const existing=api.state.accounts.find(a=>a.name===lastPlaylist.name);
- if(existing){
-  api.state.active=existing.id;
-  api.state.kind=lastPlaylist.kind;
-  paintXtream();
-  return;
- }
- if(restoreInFlight||api.state.busy)return;
- if(!/^\d{4}$/.test(pin)){status('Zuletzt verwendete IPTV-Liste: PIN in Settings → Zugänge speichern.');return;}
- const name=lastPlaylist.name;
- const button=owner.querySelector('.tv-xtream-form button[type=submit]');
- if(button)button.disabled=true;
- status('Lade zuletzt verwendete IPTV-Liste '+name+' …');
- restoreInFlight=(async()=>{
+function restoreLastPlaylist(){
+ const api=global.meviXtream;
+ if(!api)return Promise.resolve();
+ // App startup and TV mount share a single request, even during native PIN retrieval.
+ if(restoreInFlight)return restoreInFlight;
+ const feedback=message=>{restoreFeedback=message;status(message);};
+ const task=(async()=>{
+  if(lastPlaylist&&lastPlaylist.type!=='xtream')return;
+  const pin=String(typeof global.MeviCredentials?.tvPinReady==='function'
+   ?await global.MeviCredentials.tvPinReady()
+   :global.MeviCredentials?.tvPin?.()||'');
+  // APK and Web have separate storage. A saved PIN selects default MeviTV.
+  if(!lastPlaylist&&/^\d{4}$/.test(pin))rememberPlaylist('xtream','MeviTV','live');
+  if(lastPlaylist?.type!=='xtream')return;
+  const name=lastPlaylist.name,kind=lastPlaylist.kind;
+  const existing=api.state.accounts.find(a=>a.name===name);
+  if(existing){
+   api.state.active=existing.id;
+   api.state.kind=kind;
+   paintXtAccounts();paintXtream();
+   return;
+  }
+  if(api.state.busy)return;
+  if(!/^\d{4}$/.test(pin)){feedback('Zuletzt verwendete IPTV-Liste: PIN in Settings → Zugänge speichern.');return;}
+  feedback('Lade zuletzt verwendete IPTV-Liste '+name+' …');
   const credentials=await api.pinCredentials(pin);
-  // A new short-lived proxy session and catalogue are required after every page reload.
-  const account=await api.connect(name,credentials,message=>{if(root)status(message);});
-  if(lastPlaylist?.type!=='xtream'){api.state.active=null;return;}
+  if(lastPlaylist?.type!=='xtream'||lastPlaylist.name!==name)return;
+  // Import only catalogue metadata at launch. Never auto-start a stream.
+  const account=await api.connect(name,credentials,message=>{
+   if(lastPlaylist?.type==='xtream'&&lastPlaylist.name===name)feedback(message);
+  });
+  if(lastPlaylist?.type!=='xtream'||lastPlaylist.name!==name){
+   if(api.state.active===account.id)api.state.active=null;
+   return;
+  }
   api.state.kind=lastPlaylist.kind;
-  if(root){paintXtAccounts();paintXtream();status(account.name+' automatisch geladen.');}
+  paintXtAccounts();paintXtream();
+  feedback(account.name+' automatisch geladen.');
  })().catch(error=>{
-  if(!root)return;
+  if(lastPlaylist?.type!=='xtream')return;
   const message=String(error?.message||'');
   const explanation=error?.name==='TypeError'?'Netzwerk oder CORS nicht erreichbar':
    /401|403|invalid|ungültig|PIN|code/i.test(message)?'Zugangscode oder Proxy-Anmeldung abgelehnt':
    /timeout|aborted|Zeitüberschreitung/i.test(message)?'Zeitüberschreitung':'Proxy oder IPTV-Katalog nicht erreichbar';
-  status('IPTV konnte nicht automatisch geladen werden: '+explanation+'. Unter ⚙ erneut verbinden.');
- })
- .finally(()=>{restoreInFlight=null;if(button)button.disabled=false;});
+  feedback('IPTV konnte nicht automatisch geladen werden: '+explanation+'. Unter ⚙ erneut verbinden.');
+ }).finally(()=>{
+  restoreInFlight=null;
+  const button=root?.querySelector('.tv-xtream-form button[type=submit]');
+  if(button)button.disabled=false;
+ });
+ restoreInFlight=task;
+ const button=root?.querySelector('.tv-xtream-form button[type=submit]');
+ if(button)button.disabled=true;
+ return task;
 }
 function paintXtAccounts(){const api=global.meviXtream,e=root?.querySelector('.tv-xtream-accounts');if(!api||!e)return;e.innerHTML=api.state.accounts.map(a=>'<div class="tv-source-row"><span>'+esc(a.name)+' <small>'+a.items.live.length+' Live · '+a.items.movie.length+' Filme · '+a.items.series.length+' Serien</small></span><button data-xt-account="'+esc(a.id)+'">Öffnen</button><button data-xt-delete="'+esc(a.id)+'">Löschen</button></div>').join('')||'<p>Noch kein Xtream-Katalog verbunden.</p>';}
 function paintXtream(){const api=global.meviXtream,area=root?.querySelector('.tv-xtream-catalog');if(!api||!area)return;const a=api.active();xtreamView=!!a;root.classList.toggle('tv-xtream-mode',xtreamView);root.querySelector('.tv-list').hidden=xtreamView;root.querySelector('.tv-search').hidden=xtreamView;root.querySelector('.tv-filters').hidden=xtreamView;area.hidden=!xtreamView;if(!a)return;root.querySelectorAll('[data-kind]').forEach(b=>b.setAttribute('aria-pressed',String(api.state.kind===b.dataset.kind)));const isLive=api.state.kind==='live';
@@ -867,6 +879,8 @@ async function change(e){if(e.target.matches('.tv-diagnostics-toggle')){showDiag
 function submit(e){if(e.target.matches('.tv-xtream-form')){e.preventDefault();const api=global.meviXtream;if(!api)return xtStatus('Xtream-Modul nicht geladen.');if(restoreInFlight)return xtStatus('Die gespeicherte IPTV-Liste wird bereits geladen.');const form=e.target,data=new FormData(form),button=form.querySelector('button[type=submit]');if(button)button.disabled=true;Promise.resolve(typeof global.MeviCredentials?.tvPinReady==='function'?global.MeviCredentials.tvPinReady():global.MeviCredentials?.tvPin?.()).then(pin=>{if(!/^[0-9]{4}$/.test(String(pin||'')))throw Error('Zugangscode fehlt. Bitte Settings → Zugänge öffnen.');return api.pinCredentials(pin);}).then(c=>api.connect(data.get('name'),c,xtStatus)).then(a=>{if(!root)return;rememberPlaylist('xtream',a.name,'live');api.state.kind='live';paintXtAccounts();paintXtream();xtStatus(a.name+' verbunden. Kataloge geladen.');}).catch(err=>xtStatus('Verbindung fehlgeschlagen: '+(err.name==='TypeError'?'Netzwerk/CORS prüfen':err.message))).finally(()=>{if(button)button.disabled=false;});return;}if(e.target.matches('.tv-source-form')){e.preventDefault();const data=new FormData(e.target),name=String(data.get('name')||'').trim().slice(0,80),url=safeURL(data.get('url'));if(!name||!url){sourceStatus('Bitte Name und gültige HTTPS-M3U-Adresse eingeben.');return;}if(sources.length>=30){sourceStatus('Maximal 30 Quellen.');return;}if(sources.some(x=>x.url===url)){sourceStatus('Quelle existiert bereits.');return;}const source={id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7),name,url};syncSource(source);return;}if(!e.target.matches('.tv-form'))return;e.preventDefault();const data=new FormData(e.target),url=safeURL(data.get('url')),name=String(data.get('name')||'').trim();const out=root.querySelector('.tv-import-status');if(!url||!name){out.textContent='Name und gültige HTTPS-Adresse ohne Benutzername/Passwort eingeben.';return;}out.textContent=add([{name:name.slice(0,80),url}])?'Sender gespeichert.':'Sender bereits vorhanden oder Liste voll.';}
 function visibility(){if(document.hidden&&root)stop();}
 function unmount(){clearInterval(networkTimer);networkTimer=null;networkBusy=false;clearEPG();xtRequestSeq++;cleanup();xtPlayback=null;activePlaybackName='';playbackFormat='';if(root){root.removeEventListener('click',click);root.removeEventListener('input',input);root.removeEventListener('change',change);root.removeEventListener('submit',submit);root.removeEventListener('error',logoError,true);}if(video){video.removeEventListener('playing',onPlaying);video.removeEventListener('error',onError);video.removeEventListener('waiting',onWaiting);}document.removeEventListener('visibilitychange',visibility);root=null;video=null;}
-function mount(){unmount();root=document.querySelector('.tv-root');if(!root)return;video=root.querySelector('video');root.addEventListener('click',click);root.addEventListener('input',input);root.addEventListener('change',change);root.addEventListener('submit',submit);root.addEventListener('error',logoError,true);video.addEventListener('playing',onPlaying);video.addEventListener('error',onError);video.addEventListener('waiting',onWaiting);document.addEventListener('visibilitychange',visibility);root.querySelector('.tv-search').value=query;root.querySelector('.tv-country').value=country;paintTitle();paintList();paintXtream();syncDiagnostics();restoreLastPlaylist();}
+function mount(){unmount();root=document.querySelector('.tv-root');if(!root)return;video=root.querySelector('video');root.addEventListener('click',click);root.addEventListener('input',input);root.addEventListener('change',change);root.addEventListener('submit',submit);root.addEventListener('error',logoError,true);video.addEventListener('playing',onPlaying);video.addEventListener('error',onError);video.addEventListener('waiting',onWaiting);document.addEventListener('visibilitychange',visibility);root.querySelector('.tv-search').value=query;root.querySelector('.tv-country').value=country;paintTitle();paintList();paintXtAccounts();paintXtream();syncDiagnostics();if(restoreFeedback&&lastPlaylist?.type==='xtream')status(restoreFeedback);restoreLastPlaylist();if(restoreInFlight){const button=root.querySelector('.tv-xtream-form button[type=submit]');if(button)button.disabled=true;}}
 global.meviTVHTML=html;global.meviTVMount=mount;global.meviTVUnmount=unmount;global.meviTVStopForSource=source=>{if(source!=='tv'&&root)stop();};
+// Begin fetching the last IPTV catalogue at app startup, before TV is opened.
+void restoreLastPlaylist();
 })(typeof window==='undefined'?globalThis:window);
