@@ -50,10 +50,17 @@ const storedBeforePin=JSON.stringify([...store]);
 fake('tv','9073');
 await api.save('tv');
 assert.equal(api.tvPin(),'9073');
-assert.equal(JSON.stringify([...store]),storedBeforePin,'TV PIN must not trigger localStorage writes');
+assert.notEqual(JSON.stringify([...store]),storedBeforePin,'TV PIN must be persisted when explicitly saved');
+assert.equal(localStorage.getItem('mevicar-next-tv-pin-v1'),'9073','TV PIN must survive an app restart');
 assert.doesNotMatch(api.html(),/9073/,'TV PIN may not appear in settings HTML');
+// Simulate a new WebView/browser load with the same device storage.
+const restoredWindow={...window};
+vm.runInNewContext(code,{window:restoredWindow,localStorage,document,setTimeout,clearTimeout,console});
+assert.equal(restoredWindow.MeviCredentials.tvPin(),'9073','PIN must be restored without asking again');
 await api.clear('tv');
 assert.equal(api.tvPin(),'');
+assert.equal(localStorage.getItem('mevicar-next-tv-pin-v1'),null,'Removing PIN must delete stored PIN');
+assert.doesNotMatch(api.html(),/9073/,'Removed PIN may not remain visible');
 fake('ha','LONG_LIVED_ACCESS_TOKEN_VALUE_ABC123');
 await api.save('ha').catch(()=>{});
 assert.doesNotMatch(JSON.stringify([...store]),/LONG_LIVED_ACCESS/,'HA token may not persist in browser');
