@@ -56,4 +56,39 @@ win.meviTVMount();
 for(let i=0;i<4;i++)await Promise.resolve();
 assert.equal(connections,1,'Remount must reuse existing catalogue, not load it twice');
 win.meviTVUnmount();
-console.log('MeviTV last-list restore: saved PIN, single reconnection, category, no autoplay, remount OK');
+
+// Regression: the Android APK has its own browser storage. A previously connected
+// Web-App catalogue is absent, but the user entered/saved the PIN in APK settings.
+store.delete('mevicar-tv-last-playlist-v1');
+const firstRunState={accounts:[],active:null,kind:'live',group:'ALL',query:'',busy:false};
+let firstRunConnects=0;
+const firstRunApi={
+ state:firstRunState,
+ active:()=>firstRunState.accounts.find(a=>a.id===firstRunState.active)||null,
+ view:()=>[],
+ pinCredentials:async pin=>{assert.equal(pin,'1234');return {host:'https://bridge.example',bridge:true,token:'temporary'};},
+ connect:async(name,c)=>{
+  firstRunConnects++;
+  assert.equal(name,'MeviTV');
+  const a={id:'x2',name,credentials:c,categories:{live:[],movie:[],series:[]},items:{live:[],movie:[],series:[]}};
+  firstRunState.accounts.push(a);firstRunState.active=a.id;return a;
+ }
+};
+const freshWindow={document:doc,meviXtream:firstRunApi,MeviCredentials:{tvPin:()=> '1234'}};
+runInNewContext(code,{window:freshWindow,document:doc,URL,localStorage:storage,setTimeout,clearTimeout,setInterval,clearInterval,console});
+freshWindow.meviTVMount();
+for(let i=0;i<8;i++)await Promise.resolve();
+assert.equal(firstRunConnects,1,'Saved APK PIN must restore default MeviTV on first launch');
+assert.equal(firstRunState.active,'x2');
+assert.deepEqual(JSON.parse(store.get('mevicar-tv-last-playlist-v1')),{type:'xtream',name:'MeviTV',kind:'live'});
+freshWindow.meviTVUnmount();
+
+// Selecting ordinary TV must not be overridden by a saved PIN.
+store.set('mevicar-tv-last-playlist-v1',JSON.stringify({type:'public',name:'',kind:'live'}));
+const publicWindow={document:doc,meviXtream:firstRunApi,MeviCredentials:{tvPin:()=> '1234'}};
+runInNewContext(code,{window:publicWindow,document:doc,URL,localStorage:storage,setTimeout,clearTimeout,setInterval,clearInterval,console});
+publicWindow.meviTVMount();
+for(let i=0;i<4;i++)await Promise.resolve();
+assert.equal(firstRunConnects,1,'Public-TV selection must not reconnect the IPTV proxy');
+publicWindow.meviTVUnmount();
+console.log('MeviTV restore: prior catalogue, first-APK PIN-only setup, no autoplay, remount, public-TV choice OK');
