@@ -36,6 +36,7 @@ jobs:
           node --check xtream.js
           node tests/display-profiles-smoke.mjs
           node tests/launcher-landscape-smoke.mjs
+          node tests/tacho-default-smoke.mjs
           node tests/tv-smoke.mjs
           node tests/tv-restore-smoke.mjs
           node tests/xtream-smoke.mjs
