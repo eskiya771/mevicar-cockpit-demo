@@ -17,10 +17,10 @@
 .tn-rpm-number{font-size:clamp(26px,4vw,53px)}
 .tn-unit{font-size:clamp(9px,1.15vw,14px);letter-spacing:2px;color:var(--tn-muted);font-weight:700}
 .tn-compass{margin-top:8px;color:var(--tn-accent);font-weight:700;font-size:clamp(10px,1.4vw,18px);letter-spacing:1px}
-.tn-demo{margin-top:8px;font-size:clamp(9px,1vw,13px);color:var(--tn-muted)}
+.tn-source-label{margin-top:8px;font-size:clamp(9px,1vw,13px);color:var(--tn-muted)}
 .tn-stats{display:flex;justify-content:space-between;gap:10px;flex:none;padding:clamp(4px,.7vw,10px) clamp(10px,1.4vw,20px);margin-top:5px;border-radius:15px;border:1px solid #25374f;background:#101825}
 .tn-stat{display:flex;flex-direction:column;gap:3px}.tn-stat:last-child{text-align:right}.tn-stat-label{font-size:clamp(9px,.95vw,12px);letter-spacing:2px;color:#9caabb}.tn-stat-value{font-size:clamp(14px,1.7vw,23px);font-weight:700}
-@media(max-height:450px){.tn-stats{padding:3px 10px}.tn-readout{padding:6px 10px}.tn-compass,.tn-demo{margin-top:3px}}
+@media(max-height:450px){.tn-stats{padding:3px 10px}.tn-readout{padding:6px 10px}.tn-compass,.tn-source-label{margin-top:3px}}
 
 /* Horizontal aircraft-style compass tape inside the speedometer readout. */
 .tn-compass-band{position:relative;width:clamp(90px,10.5vw,150px);height:clamp(25px,2.6vw,34px);margin-top:6px;overflow:hidden;border:1px solid #2e5366;border-radius:9px;background:linear-gradient(90deg,#0a1525,#142b3b 50%,#0a1525);box-shadow:inset 0 2px 8px #0007;mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
@@ -145,4 +145,30 @@
  .cockpit .full.tacho-next-host .tn-stat-value{
    font-size:clamp(18px,2.65vw,25px);
  }
+}
+
+/* Live telemetry status. Buttons are intentionally outside the pointer-events:none readout. */
+.tn-gps-status{
+ position:absolute;top:clamp(5px,.65vw,11px);left:clamp(6px,.8vw,13px);
+ z-index:3;max-width:63%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ color:#a4e8eb;font-size:clamp(9px,.9vw,13px);font-weight:650;
+ background:#081824c9;border:1px solid #2f5264;border-radius:9px;padding:4px 7px;
+ pointer-events:none
+}
+.tn-sensor-button{
+ position:absolute;z-index:4;right:clamp(5px,.65vw,11px);
+ padding:4px 7px;background:#18354a;border:1px solid #3a8293;
+ font-size:clamp(9px,.87vw,12px);line-height:1.25;border-radius:8px;
+ max-width:42%
+}
+.tn-sensor-button[hidden]{display:none!important}
+.tn-gps-retry{top:clamp(5px,.65vw,11px)}
+.tn-compass-permission{bottom:clamp(5px,.65vw,11px)}
+.tn-compass-empty{
+ position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+ color:#9aa8bc;font-weight:700;font-size:17px
+}
+@media(max-height:450px){
+ .tn-gps-status{font-size:9px;padding:2px 5px}
+ .tn-sensor-button{font-size:9px;padding:2px 5px}
 }
