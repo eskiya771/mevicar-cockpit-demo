@@ -1044,7 +1044,7 @@
       .map(([id,label,glyph]) =>
         '<button type="button" data-source="'+id+'" class="mm-mode-button '+(id==='spotify'?'active':'')+
         '" aria-label="'+esc(label)+'" aria-pressed="'+(id==='spotify')+
-        '" onclick="selectAudioSource(\''+id+'\')">'+icon(glyph)+esc(label)+'</button>'
+        '" onclick="selectAudioSource(\''+id+'\')">'+icon(glyph).replace('class="sp-icon"','class="mm-icon"')+esc(label)+'</button>'
       ).join('');
   }
   function topMarkup() {
