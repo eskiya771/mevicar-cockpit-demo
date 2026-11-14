@@ -1050,10 +1050,7 @@
   function topMarkup() {
     return '<div class="mm-top sp-unified-top">' +
       '<div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">SPOTIFY</span></div>' +
-      '<div class="mm-top-actions">' + sourceMarkup() +
-      (st.token ? '<button type="button" class="sp-icon-button sp-refresh-button" aria-label="Spotify aktualisieren" title="Aktualisieren" onclick="meviSpotifyRefresh()">' + icon('refresh') + '</button>' : '') +
-      '<button type="button" class="sp-icon-button sp-settings-button" aria-label="Spotify-Konto und Einrichtung" title="Konto" onclick="meviSpotifyAccount()">' + icon(st.accountOpen ? 'back' : 'settings') + '</button>' +
-      '</div></div>';
+      '<div class="mm-top-actions">' + sourceMarkup() + '</div></div>';
   }
   function bannerMarkup() {
     const text = st.error || st.notice;
