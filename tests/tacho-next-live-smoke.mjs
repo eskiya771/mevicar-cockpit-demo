@@ -121,8 +121,8 @@ api.meviTachoNextMount();
 assert.equal(node('#tn-compass-permission').hidden,false,'iPhone should offer a permission control');
 assert.ok(windowListeners.deviceorientation,'Previously granted sensor events can already arrive');
 host.listeners.click({target:{closest:selector=>selector==='#tn-compass-permission'?node('#tn-compass-permission'):null}});
-await Promise.resolve();
-await Promise.resolve();
+// Node VM promises may settle on a later event-loop turn than the host realm.
+await new Promise(resolve=>setTimeout(resolve,0));
 assert.equal(promptCalls,1,'Permission must be requested only from the user action');
 assert.equal(node('#tn-compass-permission').hidden,true);
 windowListeners.deviceorientation({webkitCompassHeading:135});
