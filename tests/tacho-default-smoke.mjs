@@ -1,0 +1,22 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const fixed=html.match(/const fixed=(\[[^;]+?\]);const extras=/)?.[1];
+const extras=html.match(/const extras=(\[[^;]+?\]);const all=/)?.[1];
+assert.ok(fixed && extras,'Dock and app selection should be defined');
+assert.match(fixed,/\['tachonext','Tacho','◉'\]/,'Primary Tacho dock entry opens Tacho Next');
+assert.doesNotMatch(fixed,/\['speed'/,'Classic tacho must not use the primary dock position');
+assert.match(extras,/\['speed','Tacho Classic','◉'\]/,'Classic tacho must remain selectable in Apps');
+assert.doesNotMatch(extras,/\['tachonext'/,'Tacho Next must not be duplicated in Apps');
+assert.match(html,/const splitSwipeApps=\(\)=>\['audio','phone','tachonext',\.\.\.extras/);
+assert.match(html,/APP_VECTORS\.tachonext=/,'Tacho Next dock icon must not fall back to Settings icon');
+assert.match(html,/if\(s\.app==='tachonext'\)return window\.meviTachoNextHTML/);
+assert.match(html,/if\(s\.app==='speed'\)return typeof window\.meviSpeedHTML/);
+assert.match(html,/s\.app==='tachonext'&&s\.mode==='full'/);
+assert.match(html,/s\.app==='speed'&&s\.mode==='full'/);
+assert.match(html,/window\.meviTachoNextMount\(\)/);
+assert.match(html,/window\.meviSpeedMount\(\)/);
+assert.match(html,/function appLauncherHTML\(\)/,'App grid still lists additional apps');
+assert.match(html,/onclick="launch\(\\'\+id\+\\'\)"/,'App grid still launches by entry ID');
+console.log('Tacho Next is the default dock app, Tacho Classic remains in Apps; both modes and icons OK.');
