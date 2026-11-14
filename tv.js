@@ -172,7 +172,13 @@ function xtFilteredItems(api,account){
 function xtStatus(v){const e=root?.querySelector('.tv-xtream-status');if(e)e.textContent=v;}
 function restoreLastPlaylist(){
  const api=global.meviXtream;
- if(!root||!api||lastPlaylist?.type!=='xtream')return;
+ if(!root||!api)return;
+ const pin=String(global.MeviCredentials?.tvPin?.()||'');
+ // Android WebView and a regular browser have separate local storage. On a first
+ // APK launch there may be a saved PIN but no previously connected catalogue.
+ // In that case use the application's configured default Xtream list.
+ if(!lastPlaylist&&/^\d{4}$/.test(pin))rememberPlaylist('xtream','MeviTV','live');
+ if(lastPlaylist?.type!=='xtream')return;
  const existing=api.state.accounts.find(a=>a.name===lastPlaylist.name);
  if(existing){
   api.state.active=existing.id;
@@ -181,7 +187,6 @@ function restoreLastPlaylist(){
   return;
  }
  if(restoreInFlight||api.state.busy)return;
- const pin=String(global.MeviCredentials?.tvPin?.()||'');
  if(!/^\d{4}$/.test(pin)){status('Zuletzt verwendete IPTV-Liste: PIN in Settings → Zugänge speichern.');return;}
  const name=lastPlaylist.name,owner=root;
  const button=owner.querySelector('.tv-xtream-form button[type=submit]');
@@ -194,7 +199,14 @@ function restoreLastPlaylist(){
   if(lastPlaylist?.type!=='xtream'){api.state.active=null;return;}
   api.state.kind=lastPlaylist.kind;
   if(root){paintXtAccounts();paintXtream();status(account.name+' automatisch geladen.');}
- })().catch(()=>{if(root)status('Automatisches Laden der IPTV-Liste fehlgeschlagen. PIN oder Verbindung prüfen.');})
+ })().catch(error=>{
+  if(!root)return;
+  const message=String(error?.message||'');
+  const explanation=error?.name==='TypeError'?'Netzwerk oder CORS nicht erreichbar':
+   /401|403|invalid|ungültig|PIN|code/i.test(message)?'Zugangscode oder Proxy-Anmeldung abgelehnt':
+   /timeout|aborted|Zeitüberschreitung/i.test(message)?'Zeitüberschreitung':'Proxy oder IPTV-Katalog nicht erreichbar';
+  status('IPTV konnte nicht automatisch geladen werden: '+explanation+'. Unter ⚙ erneut verbinden.');
+ })
  .finally(()=>{restoreInFlight=null;if(button)button.disabled=false;});
 }
 function paintXtAccounts(){const api=global.meviXtream,e=root?.querySelector('.tv-xtream-accounts');if(!api||!e)return;e.innerHTML=api.state.accounts.map(a=>'<div class="tv-source-row"><span>'+esc(a.name)+' <small>'+a.items.live.length+' Live · '+a.items.movie.length+' Filme · '+a.items.series.length+' Serien</small></span><button data-xt-account="'+esc(a.id)+'">Öffnen</button><button data-xt-delete="'+esc(a.id)+'">Löschen</button></div>').join('')||'<p>Noch kein Xtream-Katalog verbunden.</p>';}
