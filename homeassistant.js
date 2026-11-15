@@ -7,7 +7,7 @@
  const DEFAULT_ORIGIN='https://ha.mtankurt.synology.me';
  const DEFAULT_PATH='/dashboard-familie/0';
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
- const viewNames={dashboard:'Dashboard',devices:'Geräte',radar:'Road Assist',settings:'Verbindung'};
+ const viewNames={dashboard:'Dashboard',devices:'Geräte',settings:'Verbindung'};
  const supported=new Set(['light','switch']);
  const clickable=new Set(['light','switch']);
  const state={tab:'dashboard',origin:DEFAULT_ORIGIN,path:DEFAULT_PATH,token:'',connected:false,
@@ -226,17 +226,6 @@
     '<div class="ha-entity-summary">'+getEntities().length+' von '+state.states.length+' Entitäten angezeigt · Aktualisierung alle 30 s</div>'+
     '<div id="ha-entity-list" class="ha-entity-list">'+(getEntities().map(deviceRow).join('')||'<div class="ha-empty">Keine passenden Entitäten gefunden.</div>')+'</div></div>';
  }
- function radarHTML(){
-  if(!state.connected)return loginPrompt('Road Assist: Blitzer.de-Entitäten aus Home Assistant lesen');
-  const items=state.radar;
-  return '<div class="ha-radar-view">'+
-   '<div class="ha-radar-title"><b>'+items.length+' Blitzer-Meldungen</b><span>Read-only · Quelle: Home Assistant / Blitzer.de</span></div>'+
-   '<div class="ha-radar-list">'+(window.MeviRoadAssist?.infoHTML()||'')+(items.map(c=>'<div class="ha-radar-item"><span class="ha-radar-pin">⌖</span>'+
-    '<div><strong>'+esc(c.name)+'</strong><span>'+esc([c.street,c.city].filter(Boolean).join(' · ')||c.id)+
-    '</span></div><span class="ha-radar-badge">'+(c.vmax?c.vmax+' km/h':esc(c.type))+'</span></div>').join('')||
-    '<div class="ha-empty">Keine Blitzer.de-Kamera-Entitäten gefunden. Classic filtert auf attributes.source = blitzer_* mit gültigen GPS-Koordinaten.</div>')+
-   '</div><div class="ha-footnote">Blitzer-Daten sind hier nur eine Liste. Eine echte Zuordnung zur aktiven Google-Route wird dadurch nicht behauptet.</div></div>';
- }
  function loginPrompt(topic){
   return '<div class="ha-login-prompt"><span class="ha-large-icon">⌂</span>'+
     '<h3>'+esc(topic)+'</h3><p>Dieser Bereich benötigt einen Home-Assistant-Long-Lived-Access-Token. '+
@@ -253,7 +242,6 @@
   function viewHTML(){
   switch(state.tab){
    case 'devices':return devicesHTML();
-   case 'radar':return radarHTML();
    case 'settings':return settingsHTML();
    default:return dashboardHTML();
   }
@@ -284,7 +272,7 @@
  function tab(id){
   if(!viewNames[id])return;
   state.tab=id;repaint();
-  if((id==='devices'||id==='radar')&&state.connected&&(!state.states.length||Date.now()-state.lastUpdate>15000))
+  if(id==='devices'&&state.connected&&(!state.states.length||Date.now()-state.lastUpdate>15000))
    refresh().catch(()=>{});
  }
  function openDashboard(){
@@ -333,7 +321,7 @@
    const data=await request('/api/states');
    if(generation!==state.requestId)return;
    derive(data);state.connected=true;state.error='';window.MeviRoadAssist?.onHAChange?.();
-   if(state.mounted&&['dashboard','devices','radar'].includes(state.tab))repaint();
+   if(state.mounted&&['dashboard','devices'].includes(state.tab))repaint();
    else repaint(false);
   }catch(e){
    if(generation===state.requestId){state.error=errorText(e);state.connected=false;window.MeviRoadAssist?.onHAChange?.();repaint(false)}

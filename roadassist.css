@@ -62,3 +62,66 @@ html[data-theme="liquidglass"] .mevi-ra-summary{backdrop-filter:blur(14px)}
  .mevi-ra-summary-actions button{min-height:27px;padding:3px 5px;font-size:9px}
  .mevi-ra-summary small{display:none}
 }
+/* Road Assist as its own cockpit app: planned route with cameras, past trips. */
+.roadassist-host{padding:0!important;overflow:hidden!important;display:flex;min-width:0;min-height:0}
+.roadassist-host>.ra-app{flex:1}
+.ra-app{min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;
+ gap:clamp(8px,1.4vh,14px);padding:clamp(10px,1.6vw,22px);color:#eafaff;background:#071a29;
+ font-size:clamp(12px,1.7vh,15px)}
+.ra-app button{font:inherit;color:#edfaff;cursor:pointer;min-height:44px;min-width:44px;border-radius:10px;
+ border:1px solid #6fceec91;background:#1d536c;padding:8px 14px;font-weight:740}
+.ra-app button:disabled{opacity:.45;cursor:not-allowed}
+.ra-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ra-title{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ra-title b{font-size:clamp(16px,2.6vh,23px);letter-spacing:.09em;color:#63eaf5}
+.ra-title small,.ra-note{color:#bcd6e4;font-size:clamp(10px,1.4vh,13px)}
+.ra-switches,.ra-actions{display:flex;gap:8px;flex-wrap:wrap}
+.ra-app .ra-switch{background:#12303f;border-color:#5c8c9d8c;color:#c4dbe6}
+.ra-app .ra-switch.is-on{background:#17667a;border-color:#63eaf5;color:#fff}
+.ra-card{flex:none;display:flex;flex-direction:column;gap:8px;min-width:0;padding:clamp(10px,1.4vw,16px);
+ border:1px solid #72cddd55;border-radius:14px;background:#0d2336}
+.ra-card h3{margin:0;font-size:clamp(14px,2.1vh,18px)}
+.ra-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ra-route{margin:0;font-weight:750;overflow-wrap:anywhere}
+.ra-empty{margin:0;color:#bbd4df;line-height:1.45}
+.ra-app .ra-quiet{background:transparent;border-color:#6fa5b78c;color:#cfe6ee;font-weight:650}
+.ra-hits,.ra-trips{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.ra-hit{display:flex;align-items:center;gap:10px;min-height:44px;padding:6px 8px;border-radius:10px;background:#0a1c2c}
+.ra-hit.is-passed{opacity:.55}
+.ra-limit{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#fff;
+ border:4px solid #fc4153;color:#101826;font-weight:900;font-variant-numeric:tabular-nums}
+.ra-limit.is-unknown{border-color:#ffb347}
+.ra-hit-text,.ra-trip-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;text-align:left}
+.ra-hit-text b,.ra-trip-main b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ra-hit-at,.ra-trip-side{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px;
+ font-variant-numeric:tabular-nums}
+.ra-hit small,.ra-trip-head small{color:#b4cad8;font-size:clamp(10px,1.35vh,12px);font-weight:500}
+.ra-trip{border:1px solid #72cddd3d;border-radius:12px;background:#0a1c2c;overflow:hidden}
+.ra-app .ra-trip-head,.ra-app .ra-fold{width:100%;display:flex;align-items:center;gap:10px;background:transparent;
+ border:0;border-radius:0;padding:8px 10px;min-height:48px}
+.ra-app .ra-fold{justify-content:space-between;padding:0;text-align:left}
+.ra-trip-head i,.ra-fold i{flex:none;font-style:normal;color:#63eaf5}
+.ra-trip-body{display:flex;flex-direction:column;gap:8px;padding:0 10px 10px}
+.ra-trip-body .ra-hit{background:#0d2336}
+.ra-diag .mevi-ra-tools{border:0;padding:0;background:transparent}
+.ra-app .mevi-ra-tool-actions button{min-height:44px}
+.ra-app .mevi-ra-tools input{height:44px}
+.ra-compact{padding:8px;gap:8px}
+.ra-compact .ra-head{flex-direction:column;align-items:stretch}
+.ra-compact .ra-switch{flex:1}
+.ra-compact .ra-card{padding:9px}
+html[data-theme="cyberpunk"] .ra-app{background:#0b0718}
+html[data-theme="cyberpunk"] .ra-card{background:#160c2b;border-color:#ff4fd87a}
+html[data-theme="cyberpunk"] .ra-title b,html[data-theme="cyberpunk"] .ra-trip-head i,
+html[data-theme="cyberpunk"] .ra-fold i{color:#ff4fd8}
+html[data-theme="cyberpunk"] .ra-hit,html[data-theme="cyberpunk"] .ra-trip{background:#100822;border-color:#35e6ff4d}
+html[data-theme="cyberpunk"] .ra-app .ra-switch.is-on{background:#5a1a7a;border-color:#35e6ff}
+html[data-theme="liquidglass"] .ra-app{background:rgba(10,24,38,.55)}
+html[data-theme="liquidglass"] .ra-card{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.28);
+ backdrop-filter:blur(14px)}
+html[data-theme="liquidglass"] .ra-hit,html[data-theme="liquidglass"] .ra-trip{background:rgba(255,255,255,.07)}
+html[data-theme="liquidglass"] .ra-app .ra-switch.is-on{background:rgba(99,234,245,.3)}
+@media(orientation:landscape) and (max-height:480px){
+ .ra-app{padding:8px;gap:7px;font-size:12px}
+ .ra-card{padding:8px;gap:6px}
+}

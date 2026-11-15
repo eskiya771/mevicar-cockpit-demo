@@ -84,8 +84,9 @@ function makeEnvironment(options={}){
  const actionCount=fetches.length;
  await app.toggle('sensor.temperatur');
  assert.equal(fetches.length,actionCount,'Non-control entities must not receive service actions');
+ assert.equal(app.cameraSnapshot().cameras.length,1,'Camera entities stay available for Road Assist');
  app.tab('radar');
- assert.match(app.html(false),/1 Blitzer-Meldungen/);
+ assert.equal(app.debug().tab,'devices','Road Assist is its own app, not a Home Assistant tab');
  app.disconnect();
  assert.equal(app.debug().tokenPresent,false);
  assert.equal(app.debug().connected,false);
