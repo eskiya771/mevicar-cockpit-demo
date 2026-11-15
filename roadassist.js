@@ -114,11 +114,13 @@ function updateFromHA(){
  const snapshot=camerasFromHA();
  connected=snapshot.connected;haUpdated=snapshot.updatedAt;haCount=snapshot.cameras.length;
  matched=connected?cameraMatches([...snapshot.cameras,...scanCameras]):[];
+ detectNative();pushCameras();
  updateMatch();paint();
 }
 function onHAChange(){updateFromHA()}
 function onRoute(raw){
  const path=raw?.path||raw||[];
+ endTrip();
  const built=buildRoute(path);
  route=built.points;segments=built.segments;routeLength=built.length;routeSerial++;
  guiding=false;demo=false;fix=null;fixAt=0;positionOnRoute=null;currentMatch=null;notified.clear();lastAudioAt=0;
@@ -142,9 +144,11 @@ function onGuidanceStart(isDemo=false){
   },30000);
   if(Date.now()-haUpdated>=30000&&window.MeviHA?.debug?.().connected)refresh().catch(()=>{});
  }
+ startTrip();
  paint();
 }
 function onGuidanceStop(){
+ endTrip();
  guiding=false;demo=false;fix=null;positionOnRoute=null;currentMatch=null;lastCameraId='';
  if(pollTimer!==null){clearInterval(pollTimer);pollTimer=null}
  cancelScan();paint();
@@ -161,6 +165,7 @@ function onPosition(p,options={}){
  }
  const projected=project(position);
  positionOnRoute=projected&&projected.lateral<=FIX_CORRIDOR?projected:null;
+ if(trip&&positionOnRoute)trip.driven=Math.max(trip.driven,positionOnRoute.progress);
  updateMatch();
  maybeSpeak();paint();
 }
@@ -201,7 +206,7 @@ function summaryHTML(){
   '<div class="mevi-ra-summary-actions">'+
    (!connected?'<button type="button" onclick="openApp(\'ha\')" class="mevi-ra-setup">Home Assistant verbinden</button>':
    '<button type="button" onclick="MeviRoadAssist.refresh()">Daten aktualisieren</button>')+
-   (connected?'<button type="button" onclick="MeviRoadAssist.openScan()">Routenscan</button>':'')+
+   '<button type="button" onclick="openApp(\'roadassist\')">Road Assist öffnen</button>'+
    '</div><small>Nur geprüfte Positionen auf der Google-Route · keine Vollständigkeitsgarantie</small></div>';
 }
 function overlayHTML(){
@@ -227,37 +232,39 @@ function paint(){
  if(overview)overview.innerHTML=summaryHTML();
  const status=document.getElementById('mevi-ra-scan-status');
  if(status)status.textContent=scanNote;
+ paintApp();
 }
 function refresh(){
  const h=window.MeviHA;
  if(!h?.debug?.().connected){updateFromHA();return Promise.resolve(false)}
  return Promise.resolve(h.refresh()).then(()=>{updateFromHA();return true},()=>{updateFromHA();return false});
 }
-function setEnabled(value){settings.enabled=!!value;persist();updateMatch();paint()}
-function setVoice(value){settings.voice=!!value;persist();paint()}
+function setEnabled(value){settings.enabled=!!value;persist();nativeSetting();updateMatch();paint()}
+function setVoice(value){settings.voice=!!value;persist();nativeSetting();paint()}
 function setConfigId(value){
  const val=String(value||'').trim().toUpperCase();
  if(val&&!/^[0-9A-HJKMNP-TV-Z]{26}$/.test(val))return false;
  settings.configId=val;persist();paint();return true;
 }
 function infoHTML(){
- const routeKm=(routeLength/1000).toFixed(1).replace('.',',');
+ const m=model();
+ const routeKm=(m.plannedMeters/1000).toFixed(1).replace('.',',');
  const coverage=scanState==='completed'?'Routenscan abgeschlossen ('+scanCoverage+')':
   scanState==='running'?'Routenscan läuft: '+scanProgress+'/'+scanTotal:
   scanState==='cancelled'?'Routenscan abgebrochen':
   scanState==='error'?'Routenscan fehlgeschlagen':'Kein aktiver Routenscan';
- return '<section class="mevi-ra-tools"><h3>Routenblitzer · Diagnose</h3><p>'+esc(routeStatus())+'</p>'+
+ return '<section class="mevi-ra-tools"><h3>Routenblitzer · Diagnose</h3><p>'+esc(m.native?appStatus(m):routeStatus())+'</p>'+
    '<dl><dt>Routenlänge</dt><dd>'+esc(routeKm)+' km</dd>'+
-   '<dt>Routenpunkte</dt><dd>'+route.length+'</dd>'+
-   '<dt>HA-Kameras</dt><dd>'+haCount+'</dd>'+
-   '<dt>Routentreffer</dt><dd>'+matched.length+'</dd>'+
+   (m.native?'<dt>Auswertung</dt><dd>Android-Navigation</dd>':'<dt>Routenpunkte</dt><dd>'+route.length+'</dd>')+
+   '<dt>HA-Kameras</dt><dd>'+m.cameraCount+'</dd>'+
+   '<dt>Routentreffer</dt><dd>'+m.hits.length+'</dd>'+
    '<dt>Abdeckung</dt><dd>'+esc(coverage)+'</dd></dl>'+
    '<p class="mevi-ra-hint">Blitzer.de-Konfigurations-ID wird unter Settings → Zugänge &amp; Schlüssel verwaltet.</p>'+
    '<button type="button" onclick="meviOpenCredentialSettings()">Blitzer-ID in Settings öffnen</button>'+
    '<p class="mevi-ra-hint">Der Routenscan setzt zeitweise den Home-Assistant-Tracker '+TRACKER+
    ' und ruft den Dienst blitzer.refresh_controls an mehreren Routenpunkten auf. Nur bewusst starten; keine automatische Aktivierung.</p>'+
    '<div class="mevi-ra-tool-actions">'+
-   '<button onclick="MeviRoadAssist.scan()" '+(!connected||!route.length||scanState==='running'?'disabled':'')+'>Routenscan starten</button>'+
+   '<button onclick="MeviRoadAssist.scan()" '+(!m.connected||!m.route||scanState==='running'?'disabled':'')+'>Routenscan starten</button>'+
    (scanState==='running'?'<button onclick="MeviRoadAssist.cancelScan()">Abbrechen</button>':'')+
    '<button onclick="MeviRoadAssist.setEnabled('+(!settings.enabled)+')">Warnung '+(settings.enabled?'ausschalten':'einschalten')+'</button>'+
    '<button onclick="MeviRoadAssist.setVoice('+(!settings.voice)+')">Sprachausgabe '+(settings.voice?'ausschalten':'einschalten')+'</button></div>'+
@@ -270,9 +277,9 @@ function storeConfig(){
  scanNote=settings.configId?'Konfigurations-ID gespeichert.':'Konfigurations-ID gelöscht.';paint();
 }
 function openScan(){
- const h=window.MeviHA;
- if(h){h.tab('radar');window.openApp?.('ha')}
- else{scanNote='Home Assistant nicht geladen.';paint()}
+ diagOpen=true;
+ window.openApp?.('roadassist');
+ paintApp();
 }
 function sampleRoute(spacing=SCAN_STEP,maxSamples=MAX_SAMPLES){
  if(!route.length||routeLength<1)return [];
@@ -311,10 +318,19 @@ async function scan(){
  if(scanState==='running')return false;
  const h=window.MeviHA;
  if(!h?.debug?.().connected){scanNote='Home Assistant ist nicht verbunden.';scanState='error';paint();return false}
- if(route.length<2){scanNote='Bitte zuerst eine Route berechnen.';scanState='error';paint();return false}
+ if(!nativeOn&&route.length<2){scanNote='Bitte zuerst eine Route berechnen.';scanState='error';paint();return false}
  if(!settings.configId){scanNote='Bitte zuerst die Blitzer.de Konfigurations-ID speichern.';scanState='error';paint();return false}
  if(typeof h.requestService!=='function'){scanNote='Aktualisiere die Home-Assistant-Anbindung.';scanState='error';paint();return false}
- const tasks=sampleRoute();
+ let tasks;
+ if(nativeOn){
+  // In the APK the route lives in the Android navigation; it hands out at most 12 scan points.
+  try{
+   const reply=await nativeCall('roadassist.scanpoints');
+   tasks=(Array.isArray(reply?.points)?reply.points:[]).map(point).filter(Boolean).slice(0,MAX_SAMPLES);
+  }catch{tasks=[]}
+  if(!tasks.length){scanNote='Bitte zuerst eine Route berechnen.';scanState='error';paint();return false}
+  if(scanState==='running')return false;
+ }else tasks=sampleRoute();
  if(!tasks.length)return false;
  const serial=++scanSerial;scanCancel=new AbortController();
  scanState='running';scanProgress=0;scanTotal=tasks.length;scanCoverage='nicht bestätigt';
@@ -363,7 +379,231 @@ function routeState(){
   currentMatch:currentMatch?{id:currentMatch.camera.id,ahead:currentMatch.ahead}:null,
   positionValid:!!positionOnRoute,scanState,scanProgress,scanTotal,scanNote,guiding,demo,settings:{enabled:settings.enabled,voice:settings.voice,configSet:!!settings.configId}};
 }
+/* ---- Road Assist as its own cockpit app: planned route with cameras, past trips. ----
+   In the APK (capability roadAssistNative) the Android navigation matches cameras and keeps
+   the trips; the web side only delivers the HA cameras and shows the native state.
+   In the browser the web engine above feeds the same view. Trips never hold coordinates. */
+const TRIPS='mevicar-next-roadassist-trips-v1',MAX_TRIPS=30,NATIVE_MAX_CAMERAS=2000;
+let nativeOn=false,nativeProbe=null,nativeStatus=null,nativeTrips=[],nativePushKey='',appTimer=null;
+let trips=[],trip=null,diagOpen=false,clearArmed=false;
+const openTrips=new Set();
+try{
+ const saved=JSON.parse(localStorage.getItem(TRIPS)||'[]');
+ if(Array.isArray(saved))trips=saved.map(cleanTrip).filter(t=>t&&t.outcome!=='active').slice(0,MAX_TRIPS);
+}catch{}
+function cleanHit(c){
+ const limit=Number(c?.limit),meters=Number(c?.meters);
+ return{title:String(c?.title||c?.label||'Blitzerkontrolle').slice(0,120),city:String(c?.city||'').slice(0,120),
+  label:String(c?.label||'').slice(0,60),meters:finite(meters)?Math.max(0,Math.round(meters)):0,
+  passed:!!c?.passed,limit:finite(limit)&&limit>0&&limit<350?Math.round(limit):null};
+}
+function cleanTrip(t){
+ if(!t||typeof t!=='object'||!t.id)return null;
+ const num=v=>finite(Number(v))&&Number(v)>0?Math.round(Number(v)):0;
+ return{id:String(t.id).slice(0,64),startedAt:num(t.startedAt),endedAt:num(t.endedAt),
+  destination:String(t.destination||'').slice(0,120),plannedMeters:num(t.plannedMeters),drivenMeters:num(t.drivenMeters),
+  outcome:['active','arrived','stopped'].includes(t.outcome)?t.outcome:'stopped',dataAvailable:!!t.dataAvailable,
+  cameras:(Array.isArray(t.cameras)?t.cameras:[]).slice(0,200).map(cleanHit)};
+}
+function nativeCall(action,fields){
+ return Promise.resolve(window.MeviGoogleNav.nativeRequest(action,fields));
+}
+function detectNative(){
+ const n=window.MeviGoogleNav;
+ if(nativeOn||nativeProbe||!n?.isNativeMode?.()||typeof n.nativeRequest!=='function')return;
+ nativeProbe=nativeCall('capabilities').then(result=>{
+  nativeOn=!!result?.capabilities?.roadAssistNative;
+  if(nativeOn){pushCameras();nativeSetting();pollNative()}
+ }).catch(()=>{nativeProbe=null});
+}
+function takeStatus(reply){
+ if(!reply||reply.ok===false||!Array.isArray(reply.hits))return;
+ nativeStatus=reply;paintApp();
+}
+function takeTrips(reply){
+ if(!reply||reply.ok===false||!Array.isArray(reply.trips))return;
+ nativeTrips=reply.trips.map(cleanTrip).filter(Boolean).slice(0,MAX_TRIPS);paintApp();
+}
+function pushCameras(){
+ if(!nativeOn)return;
+ const snapshot=camerasFromHA(),list=[],seen=new Set();
+ for(const raw of [...snapshot.cameras,...scanCameras]){
+  const c=sanitizeCamera(raw);
+  if(!c||seen.has(c.id))continue;
+  seen.add(c.id);
+  const item={id:c.id.slice(0,120),lat:c.lat,lng:c.lng,type:c.type,street:c.street,name:c.name,city:c.city};
+  if(c.vmax>=5&&c.vmax<=200)item.vmax=c.vmax;
+  list.push(item);
+  if(list.length>=NATIVE_MAX_CAMERAS)break;
+ }
+ const key=[snapshot.connected,snapshot.updatedAt,list.length,scanCameras.length].join('|');
+ if(key===nativePushKey)return;
+ nativePushKey=key;
+ nativeCall('roadassist.cameras',{cameras:list,connected:snapshot.connected,updatedAt:snapshot.updatedAt})
+  .then(takeStatus).catch(()=>{nativePushKey=''});
+}
+function pollNative(){
+ if(!nativeOn)return Promise.resolve(false);
+ return Promise.all([nativeCall('roadassist.status'),nativeCall('roadassist.trips')])
+  .then(([status,list])=>{takeStatus(status);takeTrips(list);return true}).catch(()=>false);
+}
+function nativeSetting(){
+ if(!nativeOn)return;
+ nativeCall('roadassist.settings',{enabled:settings.enabled,voice:settings.voice}).then(takeStatus).catch(()=>{});
+}
+function destinationName(){
+ try{return String(window.MeviGoogleNav?.destinationName?.()||'').slice(0,120)}catch{return ''}
+}
+function webHits(driven){
+ return matched.map(m=>cleanHit({title:m.camera.street||messageFor(m.camera),city:m.camera.city,
+  label:messageFor(m.camera),meters:m.progress,passed:finite(driven)&&m.progress<=driven,limit:m.camera.vmax}));
+}
+function tripJson(t,endedAt=0){
+ return{id:t.id,startedAt:t.startedAt,endedAt,destination:t.destination,plannedMeters:t.plannedMeters,
+  drivenMeters:Math.round(t.driven),
+  outcome:!endedAt?'active':t.plannedMeters>0&&t.driven>=t.plannedMeters-150?'arrived':'stopped',
+  dataAvailable:t.dataAvailable&&connected,cameras:webHits(t.driven)};
+}
+function saveTrips(){
+ try{localStorage.setItem(TRIPS,JSON.stringify(trips))}catch{}
+}
+/* Browser only: in the APK the web guidance never starts, Android records the trips itself. */
+function startTrip(){
+ endTrip();
+ if(demo||nativeOn||route.length<2)return;
+ trip={id:'w'+Date.now(),startedAt:Date.now(),destination:destinationName(),
+  plannedMeters:Math.round(routeLength),driven:0,dataAvailable:connected};
+}
+function endTrip(){
+ if(!trip)return;
+ trips=[tripJson(trip,Date.now()),...trips].slice(0,MAX_TRIPS);trip=null;
+ saveTrips();paintApp();
+}
+function model(){
+ if(nativeOn&&nativeStatus){
+  const st=nativeStatus;
+  return{native:true,enabled:st.enabled!==false,voice:st.voice!==false,connected:!!st.connected,
+   cameraCount:Number(st.cameraCount)||0,route:!!st.route,guiding:!!st.guiding,
+   destination:String(st.destination||'').slice(0,120),plannedMeters:Math.max(0,Number(st.plannedMeters)||0),
+   hits:st.hits.map(cleanHit),trips:nativeTrips};
+ }
+ return{native:false,enabled:settings.enabled,voice:settings.voice,connected,cameraCount:haCount,
+  route:route.length>1,guiding:guiding&&!demo,destination:destinationName(),plannedMeters:Math.round(routeLength),
+  hits:webHits(trip?trip.driven:positionOnRoute?.progress),trips:trip?[tripJson(trip),...trips]:trips};
+}
+function appStatus(m){
+ if(!m.route)return 'Keine Route geplant';
+ if(!m.connected)return 'Home Assistant nicht verbunden – keine Blitzerprüfung';
+ if(!m.cameraCount)return 'Home Assistant meldet keine Kameras – Abdeckung unbekannt';
+ return m.hits.length+' Blitzer auf der Route · '+m.cameraCount+' HA-Meldungen';
+}
+function dateText(stamp){
+ if(!stamp)return '';
+ try{return new Intl.DateTimeFormat('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(stamp)}
+ catch{return ''}
+}
+function hitHTML(c){
+ const detail=[c.label&&c.label!==c.title?c.label:'',c.city].filter(Boolean).join(' · ')||'Meldung aus Home Assistant';
+ return '<li class="ra-hit'+(c.passed?' is-passed':'')+'">'+
+  '<span class="ra-limit'+(c.limit?'':' is-unknown')+'">'+(c.limit||'!')+'</span>'+
+  '<span class="ra-hit-text"><b>'+esc(c.title)+'</b><small>'+esc(detail)+'</small></span>'+
+  '<span class="ra-hit-at"><b>'+esc(formatMeters(c.meters))+'</b><small>'+(c.passed?'passiert':'ab Start')+'</small></span></li>';
+}
+function tripHTML(t,index){
+ const open=openTrips.has(t.id),count=t.cameras.length;
+ const outcome=t.outcome==='active'?'läuft':t.outcome==='arrived'?'angekommen':'beendet';
+ return '<li class="ra-trip'+(open?' is-open':'')+'">'+
+  '<button type="button" class="ra-trip-head" aria-expanded="'+open+'" onclick="MeviRoadAssist.toggleTrip('+index+')">'+
+  '<span class="ra-trip-main"><b>'+esc(t.destination||'Ziel ohne Namen')+'</b>'+
+  '<small>'+esc([dateText(t.startedAt),outcome].filter(Boolean).join(' · '))+'</small></span>'+
+  '<span class="ra-trip-side"><b>'+esc(formatMeters(t.drivenMeters))+'</b>'+
+  '<small>'+(t.dataAvailable?count+' Blitzer':'ohne Blitzerdaten')+'</small></span>'+
+  '<i aria-hidden="true">'+(open?'▾':'▸')+'</i></button>'+
+  (open?'<div class="ra-trip-body"><p class="ra-route">Geplant '+esc(formatMeters(t.plannedMeters))+
+   ' · gefahren '+esc(formatMeters(t.drivenMeters))+'</p>'+
+   (!t.dataAvailable?'<p class="ra-empty">Für diese Fahrt lagen keine Blitzerdaten vor.</p>':
+    count?'<ul class="ra-hits">'+t.cameras.map(hitHTML).join('')+'</ul>':
+    '<p class="ra-empty">Keine gemeldete Kontrolle auf dieser Route.</p>')+
+   (t.outcome==='active'?'':'<div class="ra-actions"><button type="button" class="ra-quiet" onclick="MeviRoadAssist.removeTrip('+index+')">Fahrt löschen</button></div>')+
+   '</div>':'')+'</li>';
+}
+function appInner(){
+ const m=model();
+ const toggle=(on,label,call)=>'<button type="button" class="ra-switch'+(on?' is-on':'')+'" aria-pressed="'+on+
+  '" onclick="MeviRoadAssist.'+call+'('+(!on)+')">'+label+' '+(on?'an':'aus')+'</button>';
+ const head='<header class="ra-head"><div class="ra-title"><b>◈ ROAD ASSIST</b><small>'+
+  esc(m.connected?m.cameraCount+' Blitzer-Meldungen aus Home Assistant':'Home Assistant nicht verbunden')+'</small></div>'+
+  '<div class="ra-switches">'+toggle(m.enabled,'Warnung','setEnabled')+toggle(m.voice,'Sprache','setVoice')+'</div></header>';
+ let plan;
+ if(!m.route){
+  plan='<p class="ra-empty">Keine Route geplant. Ziel in der Navigation wählen – die Blitzer auf der Strecke erscheinen dann hier.</p>'+
+   '<div class="ra-actions"><button type="button" onclick="openApp(\'nav\')">Navigation öffnen</button></div>';
+ }else{
+  plan='<p class="ra-route">'+esc([m.destination||'Ziel ohne Namen',formatMeters(m.plannedMeters),
+    m.guiding?'Zielführung aktiv':'geplant'].join(' · '))+'</p>'+
+   (!m.connected?'<p class="ra-empty">Home Assistant nicht verbunden – keine Blitzerprüfung.</p>'+
+     '<div class="ra-actions"><button type="button" onclick="openApp(\'ha\')">Home Assistant verbinden</button></div>':
+    (m.hits.length?'<ul class="ra-hits">'+m.hits.map(hitHTML).join('')+'</ul>':
+     '<p class="ra-empty">'+(m.cameraCount?'Keine gemeldete Kontrolle auf dieser Route.':
+      'Home Assistant meldet keine Kameras – Abdeckung unbekannt.')+'</p>')+
+    '<div class="ra-actions"><button type="button" onclick="MeviRoadAssist.refresh()">Daten aktualisieren</button></div>');
+ }
+ const past=m.trips.some(t=>t.outcome!=='active');
+ return head+
+  '<section class="ra-card"><h3>Geplante Route</h3>'+plan+
+  '<small class="ra-note">Nur Meldungen aus Home Assistant · keine Vollständigkeitsgarantie</small></section>'+
+  '<section class="ra-card"><div class="ra-card-head"><h3>Bisherige Fahrten</h3>'+
+  (past?'<button type="button" class="ra-quiet" onclick="MeviRoadAssist.clearTrips()">'+
+   (clearArmed?'Wirklich alle löschen?':'Alle löschen')+'</button>':'')+'</div>'+
+  (m.trips.length?'<ul class="ra-trips">'+m.trips.map(tripHTML).join('')+'</ul>':
+   '<p class="ra-empty">Noch keine Fahrt aufgezeichnet. Eine Fahrt entsteht mit gestarteter Zielführung; '+
+   'gespeichert werden Ziel, Strecke und Blitzer – keine Koordinaten.</p>')+'</section>'+
+  '<section class="ra-card ra-diag"><button type="button" class="ra-fold" aria-expanded="'+diagOpen+
+  '" onclick="MeviRoadAssist.toggleDiag()"><b>Diagnose &amp; Routenscan</b><i aria-hidden="true">'+(diagOpen?'▾':'▸')+'</i></button>'+
+  (diagOpen?infoHTML():'')+'</section>';
+}
+function appHTML(compact){
+ return '<div class="ra-app'+(compact?' ra-compact':'')+'" id="mevi-ra-app">'+appInner()+'</div>';
+}
+function paintApp(){
+ const host=document.getElementById('mevi-ra-app');
+ if(!host)return;
+ const html=appInner();
+ if(host.__raHTML===html)return; // keep scroll position and running taps on unchanged polls
+ host.__raHTML=html;host.innerHTML=html;
+}
+function mount(){
+ if(!document.getElementById('mevi-ra-app'))return;
+ updateFromHA();
+ if(appTimer===null)appTimer=setInterval(()=>{if(!document?.hidden)pollNative()},3000);
+ pollNative();
+}
+function unmount(){
+ if(appTimer!==null){clearInterval(appTimer);appTimer=null}
+ clearArmed=false;
+}
+function toggleTrip(index){
+ const item=model().trips[index];
+ if(!item)return;
+ if(openTrips.has(item.id))openTrips.delete(item.id);else openTrips.add(item.id);
+ clearArmed=false;paintApp();
+}
+function toggleDiag(){diagOpen=!diagOpen;paintApp()}
+function removeTrip(index){
+ const m=model(),item=m.trips[index];
+ if(!item||item.outcome==='active')return;
+ openTrips.delete(item.id);
+ if(m.native){nativeCall('roadassist.trips.remove',{tripId:item.id}).then(takeTrips).catch(()=>{});return}
+ trips=trips.filter(t=>t.id!==item.id);saveTrips();paintApp();
+}
+function clearTrips(){
+ if(!clearArmed){clearArmed=true;paintApp();return}
+ clearArmed=false;openTrips.clear();
+ if(model().native){nativeCall('roadassist.trips.clear').then(takeTrips).catch(()=>{});paintApp();return}
+ trips=[];saveTrips();paintApp();
+}
 window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,paint,
  refresh,setEnabled,setVoice,setConfigId,storeConfig,openScan,infoHTML,scan,cancelScan,
- routeState,project,buildRoute,cameraMatches,sampleRoute,responseCameras,formatMeters};
+ routeState,project,buildRoute,cameraMatches,sampleRoute,responseCameras,formatMeters,
+ appHTML,paintApp,mount,unmount,toggleTrip,toggleDiag,removeTrip,clearTrips,model};
 })();
