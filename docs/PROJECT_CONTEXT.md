@@ -304,6 +304,12 @@ Umsetzung in `navigation-google.js`: `watchTrip` startet und beendet die Abfrage
 
 Validierung: `tests/navigation-google-native-smoke.mjs`, `tests/navigation-google-smoke.mjs` und `tests/display-profiles-smoke.mjs` prüfen Zeilentext, Abfrage nur bei verdeckter Karte und Ereignisbehandlung mit nachgebildeter Bridge. Ob das SDK auf dem Zielgerät Manöver liefert, sowie Platz, Lesbarkeit und Themes der Zeile sind nur am Gerät prüfbar und nicht abgenommen; Prüfschritte in `docs/NAVIGATION_PRO_PRUEFPROTOKOLL.md` (Block F) im APK-Repository. Enthalten ab Web-Build 960 und der signierten Vorschau-APK 117.
 
+## Navigation Pro: zweites Tippen auf die Navi-Taste – 15. November 2026
+
+Auf Nutzerwunsch stehen die Führungsaktionen der nativen Navigation (Stopp suchen, Ton, Übersicht, Beenden) nicht mehr dauerhaft unter der Karte. Liegt die Navi-Karte bereits vorn (`s.app==='nav'` und `s.mode==='map'`), ruft `openApp('nav')` zusätzlich `MeviGoogleNav.toggleNativeActions()` auf; das sendet in der APK `navigation.actions`, worauf die APK ihr Aktionsfeld öffnet oder schließt. Im Browser, ohne Zielführung und in älteren APKs bleibt der Aufruf wirkungslos (Fehler werden verworfen).
+
+Validierung: `tests/navigation-google-native-smoke.mjs` prüft den Brückenaufruf; die fünf Pflicht-Smoke-Tests und `navigation-google-smoke` sind grün. Keine Änderung an Web-Markup oder CSS. Sichtprüfung am Gerät steht aus, sie ist erst mit einer APK möglich, die `navigation.actions` kennt.
+
 ## Navigation Pro: Fahrtzeile sichtbar, Bildschirmschoner bei nativer Navigation – 15. November 2026
 
 Nachmessung des Kartenrechtecks: `syncNativeLayout` misst 160, 600 und 1500 ms nach jedem Aufruf erneut und meldet nur geänderte Werte. Anlass: Auf dem S20 FE lag die native Navi-Leiste beim ersten Öffnen anders als nach Rückkehr aus einer anderen Ansicht (vermutete Ursache: Messung vor dem fertigen Layout; am Gerät noch nicht nachgeprüft).

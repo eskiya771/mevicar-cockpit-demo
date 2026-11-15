@@ -77,6 +77,8 @@ assert.deepEqual(commands.map(x=>x.action),[
  'capabilities','navigation.open',
  'capabilities','navigation.open'
 ]);
+assert.equal(api.toggleNativeActions(),true,'Second Navi tap is handed to the APK');
+assert.equal(commands.pop().action,'navigation.actions','The APK is asked for its guidance actions');
 const opens=commands.filter(x=>x.action==='navigation.open');
 assert.equal(opens.length,2);
 for(const request of opens){
