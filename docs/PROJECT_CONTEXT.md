@@ -306,6 +306,8 @@ Validierung: `tests/navigation-google-native-smoke.mjs`, `tests/navigation-googl
 
 ## Navigation Pro: Fahrtzeile sichtbar, Bildschirmschoner bei nativer Navigation – 15. November 2026
 
+Nachmessung des Kartenrechtecks: `syncNativeLayout` misst 160, 600 und 1500 ms nach jedem Aufruf erneut und meldet nur geänderte Werte. Anlass: Auf dem S20 FE lag die native Navi-Leiste beim ersten Öffnen anders als nach Rückkehr aus einer anderen Ansicht (vermutete Ursache: Messung vor dem fertigen Layout; am Gerät noch nicht nachgeprüft).
+
 Befund aus der Geräteprüfung (S20 FE, Vorschau 117): Die Fahrtzeile lag in der Cockpit-Kopfzeile, die außerhalb der eigenständigen Navigation per `display:none` ausgeblendet ist – sie war unter einer Vollbild-App nie zu sehen. Solange eine Zeile vorliegt, setzt `renderTrip` jetzt `mg-trip-active` am Cockpit; `display-profiles.css` zeigt die Kopfzeile dann als 24 px hohe Zeile, die nur `#mg-native-trip` enthält. Die App darunter wird um diese Höhe kleiner, nichts wird überdeckt.
 
 Der Bildschirmschoner startete trotz Bedienung der nativen Karte, weil Berührungen nativer Ansichten die WebView nicht erreichen; der erste Tipp wurde danach verschluckt. `MeviGoogleNav.nativeBusy()` meldet jetzt, ob die native Karte sichtbar ist oder eine Zielführung hinter einer anderen App läuft; `canStart()` in `screensaver.js` startet in beiden Fällen nicht. Im Browser ohne Bridge ändert sich nichts.

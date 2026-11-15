@@ -50,6 +50,10 @@ assert.equal(layout.height,700);
 api.syncNativeLayout();
 assert.equal(commands.filter(x=>x.action==='navigation.layout').length,2,
  'Unchanged layout must not trigger repeated native bridge work');
+mapRect={left:0,top:16,right:640,width:640,height:700};
+await new Promise(resolve=>setTimeout(resolve,220));
+layout=commands.filter(x=>x.action==='navigation.layout').at(-1);
+assert.equal(layout.width,640,'A layout that settles after the sync is measured again and reported');
 delete nodes['mg-map'];
 api.syncNativeLayout();
 layout=commands.filter(x=>x.action==='navigation.layout').at(-1);
@@ -65,7 +69,7 @@ await api.pick('favorites',0);
 assert.equal(await api.calculateRoute(),'native');
 assert.deepEqual(commands.map(x=>x.action),[
  'capabilities', // one check whether the APK owns the address book
- 'navigation.layout','navigation.layout',
+ 'navigation.layout','navigation.layout','navigation.layout', // initial, split, settled
  'navigation.status', // covered map: the header asks for the trip once
  'navigation.layout',
  'capabilities','navigation.show',

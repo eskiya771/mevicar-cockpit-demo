@@ -90,8 +90,17 @@ function handOverFavorites(){
   try{localStorage.setItem(HANDOVER,'1')}catch{}
  }).catch(()=>{favoritesHandover=null});
 }
-function syncNativeLayout(force=false){
+/** The first measurement can run before the cockpit layout has settled (header
+ * capability, fonts, transitions); without a later look the native toolbar
+ * stays where the unsettled rectangle put it. Unchanged values send nothing. */
+let settleTimers=[];
+function settleNativeLayout(){
+ settleTimers.forEach(clearTimeout);
+ settleTimers=[160,600,1500].map(ms=>setTimeout(()=>syncNativeLayout(false,true),ms));
+}
+function syncNativeLayout(force=false,settling=false){
  if(!nativeMode())return;
+ if(!settling)settleNativeLayout();
  syncNativeTheme();
  handOverFavorites();
  const el=document.getElementById('mg-map');
