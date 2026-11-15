@@ -207,12 +207,13 @@ assert.equal(take.store.get(flag),undefined,'A failed takeover is not marked as 
    {id:request.id,ok:true};
   setTimeout(()=>tripBridge.onmessage?.({data:JSON.stringify(result)}),0);
  }};
- const made=[];
+ const made=[];let tripRow=false;
+ const cockpit={classList:{toggle(name,on){if(name==='mg-trip-active')tripRow=on}}};
  const header={insertBefore(node){made.push(node)}};
  const slot={parentElement:header,nextSibling:null,getBoundingClientRect:()=>({width:0,height:0})};
  const doc={querySelector:()=>null,
   createElement:()=>({hidden:false,textContent:'',attributes:{},setAttribute(k,v){this.attributes[k]=v}}),
-  getElementById:id=>id==='mg-native-header-slot'?slot:id==='mg-native-trip'?(made[0]||null):
+  getElementById:id=>id==='cockpit'?cockpit:id==='mg-native-header-slot'?slot:id==='mg-native-trip'?(made[0]||null):
    id==='mg-map'&&!covered?{getBoundingClientRect:()=>({left:0,top:16,right:1200,width:1200,height:700})}:null};
  const win={MeviNativeBridge:tripBridge,innerWidth:1200,innerHeight:800};
  runInNewContext(source,{window:win,document:doc,console,setTimeout,clearTimeout,Intl,
@@ -223,11 +224,14 @@ assert.equal(take.store.get(flag),undefined,'A failed takeover is not marked as 
  await win.MeviGoogleNav.mount('browse');await wait();
  assert.equal(polls,0,'A visible native map needs no status polling');
  assert.equal(typeof win.meviNavigationNativeEvent,'function');
+ assert.equal(win.MeviGoogleNav.nativeBusy(),true,'A visible native map keeps the screensaver away');
  covered=true;win.MeviGoogleNav.syncNativeLayout();await wait();
  assert.equal(polls,1);assert.equal(ticks.length,1);assert.equal(ticks[0].ms,5000);
  assert.equal(trip().textContent,'in 350 m · Rechts abbiegen auf <b>Musterweg</b> · Ankunft 14:32',
   'SDK text is shown as plain text, never as markup');
  assert.equal(trip().hidden,false);assert.equal(trip().attributes.role,'status');
+ assert.equal(tripRow,true,'The hidden cockpit header becomes a trip row under other apps');
+ assert.equal(win.MeviGoogleNav.nativeBusy(),true,'Guidance behind another app keeps the screensaver away');
  win.MeviGoogleNav.syncNativeLayout();await wait();
  assert.equal(ticks.length,1,'A covered map starts exactly one poll timer');
  win.meviNavigationNativeEvent({type:'navigation.event',event:'gpsLost'});await wait();
@@ -249,6 +253,8 @@ assert.equal(take.store.get(flag),undefined,'A failed takeover is not marked as 
  assert.equal(trip().textContent,'Ankunft 14:32','Package 1 APK without manoeuvre: arrival time only');
  reply={state:'idle'};ticks[0].fn();await wait();
  assert.equal(trip().hidden,true,'Old APK or no guidance: no trip fields, nothing shown');
+ assert.equal(tripRow,false);
+ assert.equal(win.MeviGoogleNav.nativeBusy(),false,'Covered map without guidance: the screensaver may start');
  reply=answers.trip;ticks[0].fn();await wait();assert.equal(trip().hidden,false);
  reply=null;ticks[0].fn();await wait();
  assert.equal(trip().hidden,true,'A rejected status request shows nothing');
@@ -258,5 +264,10 @@ assert.equal(take.store.get(flag),undefined,'A failed takeover is not marked as 
  assert.equal(cleared,1);assert.equal(polls,before);
  win.meviNavigationNativeEvent({type:'navigation.event',event:'rerouted'});await wait();
  assert.equal(polls,before,'No polling while the map is visible');
+}
+{
+ const saver=readFileSync(new URL('../screensaver.js',import.meta.url),'utf8');
+ assert.ok(saver.includes('window.MeviGoogleNav?.nativeBusy?.()'),'The screensaver asks the native navigation before starting');
+ assert.match(saver,/&&!nativeNavActive;/);
 }
 console.log('Android native map, split viewport, dock visibility, Places, favorites and routing work without a browser API key.');
