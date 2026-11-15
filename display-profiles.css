@@ -743,6 +743,16 @@ html,body{min-height:0;overscroll-behavior:none}
 /* Native Android actions share the cockpit header in standalone navigation. */
 .cockpit.nav-status-only .workspace:has(> .mg-native-header) { gap: 2px; }
 #mg-native-header-slot { display: none; }
+/* Next manoeuvre and arrival time while another app covers the native map. */
+#mg-native-trip {
+ flex: 1 1 auto;
+ min-width: 0;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+ font-weight: 600;
+}
+#mg-native-trip[hidden] { display: none; }
 .cockpit.nav-status-only .workspace > .status.mg-native-header {
  position: static !important;
  width: auto;
