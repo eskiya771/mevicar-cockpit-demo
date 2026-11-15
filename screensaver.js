@@ -78,7 +78,9 @@
     const routeActive=typeof s!=='undefined'&&!!s.route;
     const gpsActive=typeof gpsData!=='undefined'&&!!gpsData.active;
     const lightshowActive=typeof s!=='undefined'&&s.app==='lightshow';
-    return !document.hidden&&!routeActive&&!gpsActive&&!lightshowActive;
+    // APK: native map or guidance is in use; its touches never reach this page.
+  const nativeNavActive=!!window.MeviGoogleNav?.nativeBusy?.();
+  return !document.hidden&&!routeActive&&!gpsActive&&!lightshowActive&&!nativeNavActive;
   }
   function schedule(){
     clearTimeout(idleTimer);idleTimer=0;

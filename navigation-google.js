@@ -90,8 +90,17 @@ function handOverFavorites(){
   try{localStorage.setItem(HANDOVER,'1')}catch{}
  }).catch(()=>{favoritesHandover=null});
 }
-function syncNativeLayout(force=false){
+/** The first measurement can run before the cockpit layout has settled (header
+ * capability, fonts, transitions); without a later look the native toolbar
+ * stays where the unsettled rectangle put it. Unchanged values send nothing. */
+let settleTimers=[];
+function settleNativeLayout(){
+ settleTimers.forEach(clearTimeout);
+ settleTimers=[160,600,1500].map(ms=>setTimeout(()=>syncNativeLayout(false,true),ms));
+}
+function syncNativeLayout(force=false,settling=false){
  if(!nativeMode())return;
+ if(!settling)settleNativeLayout();
  syncNativeTheme();
  handOverFavorites();
  const el=document.getElementById('mg-map');
@@ -99,6 +108,7 @@ function syncNativeLayout(force=false){
  const rect=el?.getBoundingClientRect?.();
  const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
  const usable=rect&&rect.width>=1&&rect.height>=1&&vw>0&&vh>0;
+ nativeMapShown=!!usable;
  watchTrip(!usable);
  const fields=usable?{
   visible:true,
@@ -135,7 +145,11 @@ const maneuverWords={depart:'Losfahren',destination:'Ziel','destination-left':'Z
  uturn:'Wenden',merge:'Einfädeln','merge-left':'Links einfädeln','merge-right':'Rechts einfädeln',
  'fork-left':'Links halten','fork-right':'Rechts halten',ramp:'Auffahrt','ramp-left':'Auffahrt links','ramp-right':'Auffahrt rechts',
  exit:'Ausfahrt','exit-left':'Ausfahrt links','exit-right':'Ausfahrt rechts',roundabout:'Kreisverkehr',ferry:'Fähre'};
-let tripCovered=false,tripTimer=null,tripGpsLost=false;
+let tripCovered=false,tripTimer=null,tripGpsLost=false,tripShown=false,nativeMapShown=false;
+/** True while the native map is on screen or native guidance runs behind another app.
+ * Touches on native views never reach the WebView, so the screensaver asks here.
+ */
+const nativeBusy=()=>nativeMode()&&(nativeMapShown||tripShown);
 function tripDistance(meters){
  if(meters<1000)return (meters<50?Math.round(meters/5)*5:Math.round(meters/10)*10)+' m';
  return (meters<10000?(Math.round(meters/100)/10).toFixed(1).replace('.',','):String(Math.round(meters/1000)))+' km';
@@ -152,6 +166,9 @@ function tripLine(data){
  return parts.join(' · ');
 }
 function renderTrip(line){
+ tripShown=!!line;
+ // The cockpit header is hidden under other apps: this class shows it as a bare trip row.
+ document.getElementById('cockpit')?.classList?.toggle('mg-trip-active',tripShown);
  let el=document.getElementById('mg-native-trip');
  if(!el){
   const slot=document.getElementById('mg-native-header-slot');
@@ -718,7 +735,7 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,openNativeMap,openNativeSearch,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeBusy,openNativeMap,openNativeSearch,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
