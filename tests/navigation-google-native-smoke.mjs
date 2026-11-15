@@ -29,7 +29,7 @@ nodes['mg-map']={getBoundingClientRect:()=>mapRect};
 const window={MeviNativeBridge:bridge,innerWidth:1200,innerHeight:800};
 const document={getElementById:id=>nodes[id]||null,querySelector:()=>null};
 runInNewContext(source,{window,localStorage,document,console,setTimeout,clearTimeout,
- setInterval,clearInterval,Intl});
+ setInterval:(fn,ms)=>setInterval(fn,ms).unref(),clearInterval,Intl});
 const api=window.MeviGoogleNav;
 assert.equal(api.isNativeMode(),true);
 assert.equal(api.hasKey(),true,'Android must never be gated by a web Maps key');
@@ -65,7 +65,9 @@ await api.pick('favorites',0);
 assert.equal(await api.calculateRoute(),'native');
 assert.deepEqual(commands.map(x=>x.action),[
  'capabilities', // one check whether the APK owns the address book
- 'navigation.layout','navigation.layout','navigation.layout',
+ 'navigation.layout','navigation.layout',
+ 'navigation.status', // covered map: the header asks for the trip once
+ 'navigation.layout',
  'capabilities','navigation.show',
  'capabilities','navigation.search',
  'capabilities','navigation.open',
@@ -191,4 +193,70 @@ take=await handover({stored:{favorites:[{name:'Büro',lat:48.14,lng:11.58}],rece
 await take.run();
 assert.equal(imports(take.sent).length,2,'A failed takeover is retried with the next layout');
 assert.equal(take.store.get(flag),undefined,'A failed takeover is not marked as done');
+/* Header trip line: asked only while the native map is covered; old APK shows nothing. */
+{
+ const eta=new Date(2026,10,15,14,32).getTime();
+ const answers={trip:{state:'guiding',etaEpochMs:eta,remainingSeconds:600,remainingMeters:5000,title:'Zuhause',stops:[],
+  maneuver:{type:'right',text:'Rechts abbiegen auf <b>Musterweg</b>',distanceMeters:348}}};
+ let reply=answers.trip,polls=0,ticks=[],cleared=0,covered=false;
+ const tripBridge={postMessage(raw){
+  const request=JSON.parse(raw);
+  if(request.action==='navigation.status')polls++;
+  const result=request.action==='capabilities'?{id:request.id,ok:true,capabilities:{googleNavigation:true}}:
+   request.action==='navigation.status'?(reply?{id:request.id,ok:true,...reply}:{id:request.id,ok:false,error:'Unbekannte Aktion'}):
+   {id:request.id,ok:true};
+  setTimeout(()=>tripBridge.onmessage?.({data:JSON.stringify(result)}),0);
+ }};
+ const made=[];
+ const header={insertBefore(node){made.push(node)}};
+ const slot={parentElement:header,nextSibling:null,getBoundingClientRect:()=>({width:0,height:0})};
+ const doc={querySelector:()=>null,
+  createElement:()=>({hidden:false,textContent:'',attributes:{},setAttribute(k,v){this.attributes[k]=v}}),
+  getElementById:id=>id==='mg-native-header-slot'?slot:id==='mg-native-trip'?(made[0]||null):
+   id==='mg-map'&&!covered?{getBoundingClientRect:()=>({left:0,top:16,right:1200,width:1200,height:700})}:null};
+ const win={MeviNativeBridge:tripBridge,innerWidth:1200,innerHeight:800};
+ runInNewContext(source,{window:win,document:doc,console,setTimeout,clearTimeout,Intl,
+  setInterval:(fn,ms)=>{ticks.push({fn,ms});return ticks.length},clearInterval:()=>{cleared++},
+  localStorage:{getItem:()=>null,setItem(){}}});
+ const wait=()=>new Promise(resolve=>setTimeout(resolve,10));
+ const trip=()=>made[0];
+ await win.MeviGoogleNav.mount('browse');await wait();
+ assert.equal(polls,0,'A visible native map needs no status polling');
+ assert.equal(typeof win.meviNavigationNativeEvent,'function');
+ covered=true;win.MeviGoogleNav.syncNativeLayout();await wait();
+ assert.equal(polls,1);assert.equal(ticks.length,1);assert.equal(ticks[0].ms,5000);
+ assert.equal(trip().textContent,'in 350 m · Rechts abbiegen auf <b>Musterweg</b> · Ankunft 14:32',
+  'SDK text is shown as plain text, never as markup');
+ assert.equal(trip().hidden,false);assert.equal(trip().attributes.role,'status');
+ win.MeviGoogleNav.syncNativeLayout();await wait();
+ assert.equal(ticks.length,1,'A covered map starts exactly one poll timer');
+ win.meviNavigationNativeEvent({type:'navigation.event',event:'gpsLost'});await wait();
+ assert.match(trip().textContent,/^GPS-Signal fehlt · in 350 m/);
+ win.meviNavigationNativeEvent({type:'navigation.event',event:'gpsRestored'});await wait();
+ assert.doesNotMatch(trip().textContent,/GPS/);
+ reply={...answers.trip,maneuver:{type:'roundabout',text:'',distanceMeters:1240}};
+ win.meviNavigationNativeEvent({type:'navigation.event',event:'rerouted'});await wait();
+ assert.equal(trip().textContent,'in 1,2 km · Kreisverkehr · Ankunft 14:32');
+ let before=polls;
+ win.meviNavigationNativeEvent({type:'navigation.event',event:'somethingNew'});
+ win.meviNavigationNativeEvent({type:'other',event:'rerouted'});
+ win.meviNavigationNativeEvent(null);await wait();
+ assert.equal(polls,before,'Unknown messages are ignored');
+ win.meviNavigationNativeEvent({type:'navigation.event',event:'arrived'});
+ assert.equal(trip().hidden,true,'Arrival clears the trip line at once');
+ reply={state:'guiding',etaEpochMs:eta,remainingSeconds:600,remainingMeters:5000,title:'Zuhause',stops:[]};
+ ticks[0].fn();await wait();
+ assert.equal(trip().textContent,'Ankunft 14:32','Package 1 APK without manoeuvre: arrival time only');
+ reply={state:'idle'};ticks[0].fn();await wait();
+ assert.equal(trip().hidden,true,'Old APK or no guidance: no trip fields, nothing shown');
+ reply=answers.trip;ticks[0].fn();await wait();assert.equal(trip().hidden,false);
+ reply=null;ticks[0].fn();await wait();
+ assert.equal(trip().hidden,true,'A rejected status request shows nothing');
+ reply=answers.trip;ticks[0].fn();await wait();
+ covered=false;before=polls;win.MeviGoogleNav.syncNativeLayout();await wait();
+ assert.equal(trip().hidden,true,'The native map shows its own guidance when visible');
+ assert.equal(cleared,1);assert.equal(polls,before);
+ win.meviNavigationNativeEvent({type:'navigation.event',event:'rerouted'});await wait();
+ assert.equal(polls,before,'No polling while the map is visible');
+}
 console.log('Android native map, split viewport, dock visibility, Places, favorites and routing work without a browser API key.');

@@ -104,6 +104,14 @@ function harness(gps='timeout'){
 }
 assert.equal(written.includes('mevicar-next-destinations-native-import-v1'),false,
  'The browser keeps its own favourites: no takeover without the APK bridge');
+{
+ const browser={};
+ runInNewContext(source,{window:browser,document:{getElementById:()=>null,querySelector:()=>null},console,
+  setTimeout,clearTimeout,setInterval:()=>{throw new Error('Browser must not poll the APK')},clearInterval(){},Intl,
+  localStorage:{getItem:()=>null,setItem(){}}});
+ assert.equal(browser.meviNavigationNativeEvent,undefined,'navigation.event exists only inside the APK');
+ assert.equal(browser.MeviGoogleNav.isNativeMode(),false);
+}
 const cockpit=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(cockpit,/Navigation starten/,'Classic-like navigation start action is visible');
 assert.match(cockpit,/beginNavigation\(\)/,'Start action calls the GPS guidance engine');

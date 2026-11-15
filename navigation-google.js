@@ -99,6 +99,7 @@ function syncNativeLayout(force=false){
  const rect=el?.getBoundingClientRect?.();
  const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
  const usable=rect&&rect.width>=1&&rect.height>=1&&vw>0&&vh>0;
+ watchTrip(!usable);
  const fields=usable?{
   visible:true,
   x:Math.max(0,Math.round(rect.left)),
@@ -123,6 +124,70 @@ function syncNativeLayout(force=false){
  nativeRequest('navigation.layout',fields).catch(()=>{lastNativeLayout=''});
 }
 window.addEventListener?.('resize',()=>syncNativeLayout(true));
+/** Trip line in the cockpit header while another app covers the native map.
+ * Values come from `navigation.status`, asked only while the map is covered.
+ * An older APK sends no trip fields: nothing is shown. SDK text is plain text only.
+ */
+const TRIP_POLL_MS=5000;
+const maneuverWords={depart:'Losfahren',destination:'Ziel','destination-left':'Ziel links','destination-right':'Ziel rechts',
+ straight:'Geradeaus',left:'Links abbiegen',right:'Rechts abbiegen','keep-left':'Links halten','keep-right':'Rechts halten',
+ 'slight-left':'Leicht links','slight-right':'Leicht rechts','sharp-left':'Scharf links','sharp-right':'Scharf rechts',
+ uturn:'Wenden',merge:'Einfädeln','merge-left':'Links einfädeln','merge-right':'Rechts einfädeln',
+ 'fork-left':'Links halten','fork-right':'Rechts halten',ramp:'Auffahrt','ramp-left':'Auffahrt links','ramp-right':'Auffahrt rechts',
+ exit:'Ausfahrt','exit-left':'Ausfahrt links','exit-right':'Ausfahrt rechts',roundabout:'Kreisverkehr',ferry:'Fähre'};
+let tripCovered=false,tripTimer=null,tripGpsLost=false;
+function tripDistance(meters){
+ if(meters<1000)return (meters<50?Math.round(meters/5)*5:Math.round(meters/10)*10)+' m';
+ return (meters<10000?(Math.round(meters/100)/10).toFixed(1).replace('.',','):String(Math.round(meters/1000)))+' km';
+}
+function tripLine(data){
+ const eta=Number(data?.etaEpochMs);
+ if(!Number.isFinite(eta)||eta<=0)return '';
+ const parts=[];
+ if(tripGpsLost)parts.push('GPS-Signal fehlt');
+ const step=data.maneuver,meters=Number(step?.distanceMeters);
+ const what=plain(step?.text,200)||maneuverWords[step?.type]||'';
+ if(what&&Number.isFinite(meters)&&meters>=0)parts.push('in '+tripDistance(meters)+' · '+what);
+ parts.push('Ankunft '+new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(eta)));
+ return parts.join(' · ');
+}
+function renderTrip(line){
+ let el=document.getElementById('mg-native-trip');
+ if(!el){
+  const slot=document.getElementById('mg-native-header-slot');
+  if(!line||!slot?.parentElement||!document.createElement)return;
+  el=document.createElement('span');el.id='mg-native-trip';el.setAttribute('role','status');
+  slot.parentElement.insertBefore(el,slot.nextSibling);
+ }
+ el.textContent=line;el.hidden=!line;
+}
+function pollTrip(){
+ nativeRequest('navigation.status').then(data=>{
+  if(!tripCovered)return;
+  const line=tripLine(data);
+  if(!line)tripGpsLost=false; // no guidance: a later trip starts with a fresh GPS state
+  renderTrip(line);
+ }).catch(()=>renderTrip(''));
+}
+function watchTrip(covered){
+ if(covered===tripCovered)return;
+ tripCovered=covered;
+ if(tripTimer!==null){clearInterval(tripTimer);tripTimer=null}
+ if(covered){pollTrip();tripTimer=setInterval(pollTrip,TRIP_POLL_MS)}
+ else renderTrip('');
+}
+/** `navigation.event` of the APK: arrived, rerouted, gpsLost, gpsRestored, stopped.
+ * Called by the APK only; unknown events are ignored. Exists only inside the APK.
+ */
+if(nativeMode())window.meviNavigationNativeEvent=message=>{
+ if(message?.type!=='navigation.event')return;
+ const event=message.event;
+ if(event==='arrived'||event==='stopped'){tripGpsLost=false;renderTrip('');return}
+ if(event==='gpsLost')tripGpsLost=true;
+ else if(event==='gpsRestored')tripGpsLost=false;
+ else if(event!=='rerouted')return;
+ if(tripCovered)pollTrip();
+};
 async function startNativeNavigation(){
  if(!nativeMode())return false;
  const caps=await nativeRequest('capabilities');
