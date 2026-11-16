@@ -7,10 +7,10 @@ const source=readFileSync(new URL('../navigation-google.js',import.meta.url),'ut
 new Function(source);
 const destination={name:'Erlangen Arcaden',address:'Erlangen',lat:49.597,lng:11.004};
 const written=[];
-function harness(gps='timeout'){
+function harness(gps='timeout',initialFavorites=[destination]){
  const notice={hidden:false},keyButton={hidden:false},manualButton={hidden:true},message={textContent:'',hidden:false,classList:{add(){}}};
  const targets={'mg-map-notice':notice,'mg-change-key':keyButton,'mg-manual-origin':manualButton,'mg-status':message};
- let routeInput=null,gpsCalls=0,watchCallback=null,watchStopped=false;
+ let routeInput=null,gpsCalls=0,watchCallback=null,watchStopped=false,placeLoads=[];
  const Google={maps:{
   importLibrary:async(lib)=>lib==='routes'?{Route:{computeRoutes:async request=>{
    routeInput=request;
@@ -22,10 +22,13 @@ function harness(gps='timeout'){
       {instructions:'Am Ziel ankommen',maneuver:'STRAIGHT',distanceMeters:600,
        startLocation:{lat:49.59,lng:11.00},endLocation:{lat:49.597,lng:11.004},path:[{lat:49.59,lng:11.00},{lat:49.597,lng:11.004}]}
     ]}],createPolylines:()=>[]}]};
-  }}}:{},
+  }}}:lib==='places'?{Place:class{
+   constructor({id}){placeLoads.push(id);this.id=id}
+   async fetchFields(){this.location={lat:49.592,lng:11.021};this.formattedAddress='Vom Google-Ortsdienst'}
+  }}:{},
  }};
  const storage={
-  getItem:k=>k==='mevicar-next-google-maps-key-v1'?'TEST-KEY-NOT-REAL':k==='mevicar-next-destinations-v1'?JSON.stringify({favorites:[destination],recent:[destination]}):null,
+  getItem:k=>k==='mevicar-next-google-maps-key-v1'?'TEST-KEY-NOT-REAL':k==='mevicar-next-destinations-v1'?JSON.stringify({favorites:initialFavorites,recent:[destination]}):null,
   setItem(key){written.push(key)}
  };
  const doc={
@@ -47,7 +50,7 @@ function harness(gps='timeout'){
  runInNewContext(source,{window,document:doc,localStorage:storage,
   navigator:{geolocation},google:Google,Intl,setTimeout,clearTimeout,setInterval:()=>99,clearInterval:()=>{},console});
  return {api:window.MeviGoogleNav,notice,keyButton,manualButton,message,
-  route:()=>routeInput,gpsCalls:()=>gpsCalls,watch:position=>watchCallback?.({coords:{latitude:position.lat,longitude:position.lng,accuracy:9,speed:10,heading:70}}),wasStopped:()=>watchStopped};
+  route:()=>routeInput,gpsCalls:()=>gpsCalls,placeLoads:()=>placeLoads.slice(),watch:position=>watchCallback?.({coords:{latitude:position.lat,longitude:position.lng,accuracy:9,speed:10,heading:70}}),wasStopped:()=>watchStopped};
 }
 {
  const h=harness('timeout');
@@ -101,6 +104,21 @@ function harness(gps='timeout'){
  assert.equal(h.api.startDemo(),true,'Allow route preview without real GPS');
  assert.equal(h.api.guidanceRunning(),true);
  h.api.stopGuidance();
+}
+{
+ // An Android-exported favourite can contain only the Place ID. Resolve once via
+ // Google Places on first selection, then retain its metadata and coordinates.
+ const idOnly={id:'android-poi',placeId:'ChIJPlaceId_123',name:'Apotheke',note:'Abholung',icon:'heart'};
+ const h=harness('ok',[idOnly]);
+ assert.equal(h.api.webData().favorites.length,1,'The browser must not discard native ID-only entries');
+ assert.equal(h.api.webData().favorites[0].lat,undefined);
+ await h.api.pick('favorites',0);
+ assert.equal(h.placeLoads()[0],'ChIJPlaceId_123');
+ assert.equal(h.api.webData().favorites[0].lat,49.592);
+ assert.equal(h.api.webData().favorites[0].lng,11.021);
+ assert.equal(h.api.webData().favorites[0].note,'Abholung');
+ assert.equal(h.api.webData().favorites[0].icon,'heart');
+ assert.equal(h.api.webData().favorites[0].placeId,'ChIJPlaceId_123');
 }
 assert.equal(written.includes('mevicar-next-destinations-native-import-v1'),false,
  'The browser keeps its own favourites: no takeover without the APK bridge');
