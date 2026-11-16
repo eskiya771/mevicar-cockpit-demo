@@ -321,7 +321,7 @@ async function mount(nextState){
 function mark(place){if(!map||!place)return;if(marker)marker.setMap(null);marker=new google.maps.Marker({map,position:{lat:place.lat,lng:place.lng},title:place.name});map.panTo({lat:place.lat,lng:place.lng});map.setZoom(15)}
 function changeQuery(value){
  query=String(value||'').trim();clearTimeout(timer);requestSerial++;
- suggestions=[];poiResults=null;if(query.length<3||!key()){refreshResults();return}
+ suggestions=[];poiResults=null;if(query.length<2||!key()){refreshResults();return}
  const serial=requestSerial;timer=setTimeout(()=>search(query,serial),320);
  refreshResults();
 }
@@ -340,7 +340,7 @@ async function search(q,serial){
 /** Actual nearby POIs via Google Places (New). Autocomplete remains the fallback. */
 async function webPoi(type,searchText,origin){
  if(nativeMode())return;
- const types={gas:'gas_station',charge:'electric_vehicle_charging_station',parking:'parking',food:'restaurant',cafe:'cafe',cart:'supermarket'};
+ const types={fuel:'gas_station',charge:'electric_vehicle_charging_station',parking:'parking',food:'restaurant',cafe:'cafe',cart:'supermarket',rest:'rest_stop',wrench:'car_repair'};
  changeQuery(searchText);
  const serial=requestSerial;
  try{
@@ -367,7 +367,7 @@ function refreshResults(){const e=document.getElementById('suggestions');if(e)e.
 function item(d,i,kind){return '<button type="button" class="suggestion mg-result" onclick="MeviGoogleNav.pick(\''+kind+'\','+i+')" aria-label="'+text(d.name)+' auswählen"><span class="circle">⌖</span><span><strong>'+text(d.name)+'</strong><small>'+text(d.address||'Google Maps')+'</small></span><span class="suggestion-chevron">›</span></button>'}
 function resultsHTML(){
  if(!key())return '<div class="mg-search-message">Bitte zuerst Google Maps unter Settings → Zugänge einrichten.</div>';
- if(query.length>=3){if(suggestions.length)return suggestions.map((s,i)=>item({name:s.placePrediction.text.toString(),address:'Google Places'},i,'suggest')).join('');return '<div class="mg-search-message">'+text(error||'Google Places sucht Adressen …')+'</div>'}
+ if(query.length>=2){if(suggestions.length)return suggestions.map((s,i)=>item({name:s.placePrediction.text.toString(),address:'Google Places'},i,'suggest')).join('');return '<div class="mg-search-message">'+text(error||'Google Places sucht Adressen …')+'</div>'}
  const all=unique([...cache.favorites,...cache.recent],12);
  return all.length?all.map((d,i)=>item(d,i,'stored')).join(''):'<div class="mg-search-message">Gib mindestens drei Zeichen ein, um eine Adresse zu suchen.</div>';
 }
