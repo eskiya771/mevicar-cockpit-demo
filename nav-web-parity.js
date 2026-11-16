@@ -178,9 +178,17 @@ function input(value){
 function clear(){s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
 function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
 async function choose(kind,index){
- await provider.choose(kind,index);
- if(pendingSlot){provider.saveSlot(pendingSlot);pendingSlot=''}
- if(pendingFavorite){provider.saveFavorite();pendingFavorite=false}
+ const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
+ const saveOnly=!!(savingSlot||savingFavorite);
+ const success=await provider.choose(kind,index,{saveOnly});
+ if(success===false)return;
+ if(savingSlot)provider.saveSlot(savingSlot);
+ if(savingFavorite)provider.saveFavorite();
+ if(saveOnly){
+  pendingSlot='';pendingFavorite=false;
+  view=savingFavorite?'book':'search';s.nav='search';s.query='';
+  provider.search('');rerender();
+ }
 }
 function slot(k){
  const d=data().slots[k];
