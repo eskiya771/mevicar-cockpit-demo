@@ -51,6 +51,7 @@ function createProvider(methods){
  // Place details are optional for older/injected providers (the APK keeps native dialogs).
  const adapter=Object.fromEntries(required.map(key=>[key,(...args)=>methods[key](...args)]));
  adapter.details=typeof methods.details==='function'?(...args)=>methods.details(...args):async()=>null;
+ adapter.startRoute=typeof methods.startRoute==='function'?(...args)=>methods.startRoute(...args):async()=>false;
  return Object.freeze(adapter);
 }
 function createBrowserProvider(navigation){
@@ -64,6 +65,7 @@ function createBrowserProvider(navigation){
   saveFavorite:()=>navigation.saveFavorite?.(),
   searchNearby:(type,query,origin,options)=>navigation.webPoi?.(type,query,origin,options),
   details:(kind,index)=>navigation.webPlaceDetails?.(kind,index),
+  startRoute:()=>root.startRoute?.()??false,
   write:changes=>navigation.webWrite(changes)
  });
 }
