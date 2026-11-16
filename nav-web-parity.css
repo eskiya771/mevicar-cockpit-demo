@@ -82,3 +82,37 @@
  .mg-parity-book-grid section{overflow:visible}
  .mg-parity-book-top strong{display:none}
 }
+
+/* Android-style edit sheet: shared search UI, keyboard-safe, no extra scroll in cockpit. */
+.mg-parity-editor .mg-parity-top>strong{font-size:clamp(17px,3.3vh,29px)}
+.mg-parity-edit-scroll{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;
+ display:flex;flex-direction:column;gap:clamp(8px,1.5vh,14px);padding:clamp(6px,1.1vw,14px)}
+.mg-parity-edit-scroll label{display:flex;flex-direction:column;gap:4px;
+ font-size:clamp(13px,2vh,18px);font-weight:600;color:#dfb8d8}
+.mg-navigation .mg-parity-edit-scroll input{background:#211332;color:#f9e6f3;border:1px solid #755275;
+ border-radius:12px;min-height:clamp(45px,10vh,58px);padding:0 13px;width:100%;font-size:clamp(14px,2.5vh,21px)}
+.mg-parity-edit-address{font-size:clamp(12px,2.1vh,17px);color:#c7a9c9;margin:0}
+.mg-parity-edit-scroll h3{font-size:clamp(12px,2vh,17px);margin:0;color:#dfb8d8}
+.mg-parity-edit-icons,.mg-parity-edit-roles{display:flex;align-items:center;gap:8px;overflow-x:auto;
+ overscroll-behavior-x:contain;scrollbar-width:thin;padding-bottom:6px}
+.mg-navigation .mg-parity-edit-icons button{flex:0 0 clamp(42px,9.5vh,58px);height:clamp(42px,9.5vh,58px);
+ border-radius:12px;background:#211332;color:#e9d3e9;border:2px solid transparent;display:grid;place-items:center}
+.mg-parity-edit-icons svg{height:clamp(19px,4.2vh,27px);width:clamp(19px,4.2vh,27px)}
+.mg-navigation .mg-parity-edit-roles button{flex:0 0 auto;border-radius:12px;border:2px solid transparent;
+ min-height:clamp(42px,9.5vh,58px);padding:0 18px;background:#211332;color:#f6e7f6;
+ font-size:clamp(13px,2.3vh,19px)}
+.mg-navigation .mg-parity-edit-roles button.selected,
+.mg-navigation .mg-parity-edit-icons button.selected{border-color:#55e5f6;background:#32204d}
+.mg-parity-edit-error{color:#ffbcb8;margin:0;min-height:1em;font-size:clamp(12px,2vh,17px)}
+.mg-parity-edit-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:0 0 auto}
+.mg-navigation .mg-parity-edit-actions button{border:0;background:#211332;color:#f8e9f8;
+ border-radius:12px;padding:10px 17px;min-height:clamp(44px,9vh,58px);font-size:clamp(14px,2.4vh,20px)}
+.mg-navigation .mg-parity-edit-actions .mg-parity-edit-save{background:#55e5f6;color:#09252e}
+.mg-navigation .mg-parity-book-grid .mg-parity-inline[disabled]{opacity:.3;pointer-events:none}
+@media(max-width:850px),(max-height:440px){
+ .mg-navigation .mg-parity-book-grid .mg-parity-inline{flex-basis:clamp(27px,5vw,34px);padding:3px}
+ .mg-navigation .mg-parity-book-grid .mg-parity-entry{padding:5px 7px;gap:5px}
+ .mg-parity-edit-scroll{gap:5px;padding:4px}
+ .mg-parity-edit-actions{gap:5px}
+ .mg-navigation .mg-parity-edit-actions button{padding:6px 12px}
+}
