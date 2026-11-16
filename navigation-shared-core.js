@@ -7,7 +7,12 @@ function destination(value){
  const lat=value.lat,lng=value.lng;
  if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return null;
  const result={name:value.name.trim().slice(0,120),address:String(value.address??'').slice(0,200),lat,lng};
- if(typeof value.placeId==='string'&&value.placeId)result.placeId=value.placeId.slice(0,250);
+ for(const [key,limit] of [['id',120],['placeId',250],['icon',60],['note',500]]){
+  if(typeof value[key]==='string'&&value[key])result[key]=value[key].slice(0,limit);
+ }
+ for(const key of ['fetchedAt','usedAt','count']){
+  if(Number.isFinite(value[key])&&value[key]>=0)result[key]=value[key];
+ }
  return result;
 }
 function distinct(values,max){
@@ -56,12 +61,12 @@ function exportAddressBook(source){
  ];
  return {version:2,
   saved:saved.map((item,index)=>({
-   id:'web-'+(index+1),placeId:item.placeId||'',name:item.name,
-   address:item.address,lat:item.lat,lng:item.lng,fetchedAt:0,
-   slot:item.slot,icon:'',note:'',order:index
+   id:item.id||'web-'+(index+1),placeId:item.placeId||'',name:item.name,
+   address:item.address,lat:item.lat,lng:item.lng,fetchedAt:item.fetchedAt||0,
+   slot:item.slot,icon:item.icon||'',note:item.note||'',order:index
   })),
   recent:data.recent.map(item=>({
-   placeId:item.placeId||'',name:item.name,address:item.address,lat:item.lat,lng:item.lng,usedAt:Date.now(),count:1
+   placeId:item.placeId||'',name:item.name,address:item.address,lat:item.lat,lng:item.lng,usedAt:item.usedAt||Date.now(),count:item.count||1
   }))
  };
 }
