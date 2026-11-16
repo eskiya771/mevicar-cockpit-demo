@@ -53,7 +53,7 @@ function createBrowserProvider(navigation){
   isReady:()=>!!navigation.hasKey?.(),
   read:()=>snapshot(navigation.webData()),
   search:query=>navigation.changeQuery(query),
-  choose:(kind,index)=>navigation.pick(kind,index),
+  choose:(kind,index,options)=>navigation.pick(kind,index,options),
   saveSlot:slot=>navigation.webSaveSelectedSlot?.(slot),
   saveFavorite:()=>navigation.saveFavorite?.(),
   searchNearby:(type,query,origin)=>navigation.webPoi?.(type,query,origin),
