@@ -14,7 +14,7 @@ const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!save
 let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],MAX_SAVED),recent:unique(d.recent||[],MAX_RECENT).filter(valid),slots:{home:savedValid(d.slots?.home)?d.slots.home:null,work:savedValid(d.slots?.work)?d.slots.work:null}}}catch{}
 function capBook(){const occupied=Number(!!cache.slots.home)+Number(!!cache.slots.work);cache.favorites=cache.favorites.slice(0,MAX_SAVED-occupied)}
 capBook();
-let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,pendingSave=null,suggestions=[],poiResults=null,poiLoading=false,poiError='',poiActive=false,poiRequest=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
+let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,routeStops=[],routeOrigin=null,routeRequestSerial=0,selected=null,pendingSave=null,suggestions=[],poiResults=null,poiLoading=false,poiError='',poiActive=false,poiRequest=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
 // Native Navigation SDK is available only in the hybrid Android APK.
 // The Web/PWA keeps its own GPS guidance and never needs an Android API key.
 const nativeRequests=new Map();
@@ -348,12 +348,12 @@ async function webPoi(type,searchText,origin,options={}){
  if(nativeMode())return false;
  const types={fuel:'gas_station',charge:'electric_vehicle_charging_station',parking:'parking',
   food:'restaurant',cafe:'cafe',cart:'supermarket',rest:'rest_stop',wrench:'car_repair'};
- const openNow=!!options.openNow,sort=options.sort==='relevance'?'relevance':'distance';
+ const openNow=!!options.openNow,sort=options.sort==='relevance'?'relevance':'distance',alongRoute=!!options.alongRoute;
  changeQuery(searchText);
  clearTimeout(timer);
  const serial=++requestSerial;
  poiActive=true;poiResults=[];poiLoading=true;poiError='';error='';
- poiRequest={type,searchText,openNow,sort};
+ poiRequest={type,searchText,openNow,sort,alongRoute};
  suggestions=[];refreshResults();
  const center=origin||current||manualOrigin||map?.getCenter()?.toJSON?.()||FALLBACK_CENTER;
  try{
@@ -361,7 +361,36 @@ async function webPoi(type,searchText,origin,options={}){
   const {Place,SearchNearbyRankPreference,SearchByTextRankPreference}=await google.maps.importLibrary('places');
   if(serial!==requestSerial)return false;
   let response;
-  if(type==='text'||openNow){
+  if(alongRoute){
+   // Maps JavaScript Place.searchByText does not accept searchAlongRouteParameters.
+   // Search a bounded set of circles, then keep only results near the drawn route.
+   const path=(routeData?.path||[]).map(geoPoint).filter(Boolean);
+   if(path.length<2)throw new Error('Bitte zuerst eine Route berechnen.');
+   if(!Place?.searchByText)throw new Error('Google Places Textsuche nicht verfügbar');
+   const sampleCenters=corridorCenters(path,current||routeOrigin||center);
+   const found=[],seen=new Set();
+   for(const location of sampleCenters){
+    const res=await Place.searchByText({
+     textQuery:searchText,
+     fields:['id','displayName','formattedAddress','location','types'],
+     locationBias:{center:location,radius:14000},maxResultCount:12,isOpenNow:openNow,
+     rankPreference:sort==='distance'?(SearchByTextRankPreference?.DISTANCE||'DISTANCE'):
+      (SearchByTextRankPreference?.RELEVANCE||'RELEVANCE'),
+     ...(types[type]?{includedType:types[type]}:{})
+    });
+    if(serial!==requestSerial)return false;
+    for(const place of res.places||[]){
+     const loc=geoPoint(place.location);
+     if(!loc||nearestDistanceToPath(loc,path)>8000)continue;
+     const k=place.id||loc.lat.toFixed(5)+','+loc.lng.toFixed(5);
+     if(seen.has(k))continue;seen.add(k);
+     found.push(place);
+    }
+   }
+   if(sort==='distance')found.sort((a,b)=>nearestDistanceToPath(geoPoint(a.location),path)-
+      nearestDistanceToPath(geoPoint(b.location),path));
+   response={places:found.slice(0,20)};
+  }else if(type==='text'||openNow){
    if(!Place?.searchByText)throw Error('Google Places Textsuche nicht verfügbar');
    response=await Place.searchByText({
     textQuery:searchText,
@@ -398,6 +427,31 @@ async function webPoi(type,searchText,origin,options={}){
   poiLoading=false;poiError='Google Places: '+String(e.message||e);
   poiResults=[];refreshResults();return false;
  }
+}
+/** Points spread along the remaining path, with at most four Places requests.
+ * This approximates a corridor, NOT Google's native detour-based search.
+ */
+function corridorCenters(path,from){
+ if(path.length<2)return [];
+ let start=0;
+ if(from){
+  let best=Infinity;
+  path.forEach((p,i)=>{const dist=distanceBetween(from,p);if(dist<best){best=dist;start=i}});
+ }
+ const remaining=path.slice(start),total=remaining.slice(1).reduce((sum,p,i)=>sum+distanceBetween(remaining[i],p),0);
+ if(!total)return [remaining[0]];
+ const count=total<12000?1:total<40000?2:total<90000?3:4;
+ const cumulative=[0];for(let i=1;i<remaining.length;i++)cumulative.push(cumulative[i-1]+distanceBetween(remaining[i-1],remaining[i]));
+ const out=[];
+ for(let i=0;i<count;i++){
+  const target=total*((i+.5)/count);
+  let idx=1;while(idx<cumulative.length-1&&cumulative[idx]<target)idx++;
+  const prev=cumulative[idx-1],len=cumulative[idx]-prev;
+  const t=len>0?Math.max(0,Math.min(1,(target-prev)/len)):0;
+  out.push({lat:remaining[idx-1].lat+(remaining[idx].lat-remaining[idx-1].lat)*t,
+   lng:remaining[idx-1].lng+(remaining[idx].lng-remaining[idx-1].lng)*t});
+ }
+ return out;
 }
 /** Place Details (Enterprise fields) fetched ONLY when the place sheet opens. */
 async function webPlaceDetails(kind,index){
@@ -496,7 +550,7 @@ async function pick(kind,index,options={}){
 function webData(){
  return {favorites:cache.favorites.slice(),recent:cache.recent.slice(),slots:{...cache.slots},
   suggestions:poiActive?poiResults.map(p=>({...p})):suggestions.map(s=>({name:s.placePrediction?.text?.toString?.()||'',address:'Google Places'})),
-  poiResults:poiActive?poiResults.map(p=>({...p})):[],poiLoading,poiError,poiActive,
+  poiResults:poiActive?poiResults.map(p=>({...p})):[],poiLoading,poiError,poiActive,poiAlongRoute:!!poiRequest?.alongRoute,
   origin:current||manualOrigin||null,query,error};
 }
 function webWrite(changes={}){
