@@ -348,15 +348,24 @@ async function webPoi(type,searchText,origin){
  try{
   await load();
   const {Place,SearchNearbyRankPreference}=await google.maps.importLibrary('places');
-  if(!Place?.searchNearby)throw Error('Nearby search not supported');
   const center=origin||current||manualOrigin||map?.getCenter()?.toJSON?.()||FALLBACK_CENTER;
-  const response=await Place.searchNearby({
-   fields:['displayName','formattedAddress','location'],
-   locationRestriction:{center,radius:16000},
-   includedPrimaryTypes:[types[type]||'restaurant'],
-   maxResultCount:15,
-   rankPreference:SearchNearbyRankPreference?.DISTANCE||'DISTANCE'
-  });
+  let response;
+  if(type==='text'){
+   if(!Place?.searchByText)throw Error('Google Places Textsuche nicht verfügbar');
+   response=await Place.searchByText({
+    textQuery:searchText,fields:['displayName','formattedAddress','location'],
+    locationBias:center,maxResultCount:15
+   });
+  }else{
+   if(!Place?.searchNearby)throw Error('Nearby search not supported');
+   response=await Place.searchNearby({
+    fields:['displayName','formattedAddress','location'],
+    locationRestriction:{center,radius:16000},
+    includedPrimaryTypes:[types[type]||'restaurant'],
+    maxResultCount:15,
+    rankPreference:SearchNearbyRankPreference?.DISTANCE||'DISTANCE'
+   });
+  }
   if(serial!==requestSerial)return;
   const found=(response.places||[]).map(p=>{const point=p.location?.toJSON?.()||p.location;return {name:p.displayName||p.formattedAddress||'Ort',address:p.formattedAddress||'',lat:point?.lat,lng:point?.lng,placeId:p.id||'',fetchedAt:Date.now()}}).filter(valid);
   if(found.length){clearTimeout(timer);requestSerial++;poiResults=found;suggestions=[];error='';refreshResults()}
