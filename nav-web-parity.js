@@ -48,7 +48,7 @@ function rows(kind,manage=false){
 }
 const categories=[['home','Zuhause','home'],['work','Arbeit','work'],['fuel','Tanken','Tankstelle'],['charge','Laden','Ladestation'],['parking','Parken','Parkplatz'],['food','Essen','Restaurant'],['cafe','Café','Café'],['cart','Einkaufen','Supermarkt']];
 function chips(){return '<div class="mg-parity-chips" aria-label="Schnellziele und POI-Kategorien">'+categories.map(([icon,label,q],i)=>
- '<button type="button" onclick="'+(i<2?'MeviWebNavParity.slot(\''+icon+'\')':'MeviWebNavParity.poi(\''+q+'\')')+'">'+ico(icon)+'<span>'+label+'</span></button>').join('')+'</div>'}
+ '<button type="button" onclick="'+(i<2?'MeviWebNavParity.slot(\''+icon+'\')':'MeviWebNavParity.poi(\''+icon+'\',\''+q+'\')')+'">'+ico(icon)+'<span>'+label+'</span></button>').join('')+'</div>'}
 function tabs(){return '<div class="mg-parity-tabs"><button type="button" class="'+(tab==='recent'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button><button type="button" class="'+(tab==='favorites'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button></div>'}
 function searchRows(){
  const d=data(),q=(s.query||'').trim();
@@ -116,8 +116,9 @@ function slot(k){
  pendingSlot=k;view='search';s.query='';nav.changeQuery('');rerender();
  document.getElementById('searchInput')?.focus({preventScroll:true});
 }
-function poi(query){
+function poi(type,query){
  view='search';s.query=query;nav.changeQuery(query);rerender();
+ if(nav.webPoi)void nav.webPoi(type,query,gps||null);
 }
 function book(){view='book';s.nav='search';s.keyboard=false;filter='';rerender()}
 function bookBack(){view='search';s.query='';nav.changeQuery('');rerender()}
