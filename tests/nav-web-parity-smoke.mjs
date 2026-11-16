@@ -54,4 +54,23 @@ const native={MeviNativeBridge:{postMessage(){}},MeviGoogleNav:win.MeviGoogleNav
 runInNewContext(core,{window:native});
 runInNewContext(js,{window:native,s,navigator:{},document:{}});
 assert.equal(native.MeviWebNavParity,undefined,'Native hybrid must not be overridden');
-console.log('Web search and address-book parity smoke: passed; native unchanged.');
+// Future Android branch can inject a provider without copying HTML/CSS or changing the current APK.
+const injectedCalls=[];
+const preview={
+ MeviNativeBridge:{postMessage(){}},
+ browseOverlay:()=>'<div class="inner"></div>',render:()=>{},
+ MeviSharedNavigationProvider:{
+  isReady:()=>true,read:()=>state,write:delta=>Object.assign(state,delta),
+  search:q=>{state.query=q},choose:(kind,i)=>injectedCalls.push([kind,i]),
+  saveSlot:()=>true,saveFavorite:()=>true,searchNearby:()=>{}
+ }
+};
+const previewState={app:'nav',mode:'map',nav:'browse',query:'',keyboard:false};
+runInNewContext(core,{window:preview});
+runInNewContext(js,{window:preview,s:previewState,navigator:{},document:{getElementById:()=>null,querySelector:()=>null},console});
+preview.MeviWebNavParity.open();
+assert(preview.searchOverlay().includes('Zuletzt'));
+assert(preview.searchOverlay().includes('Erlangen'));
+await preview.MeviWebNavParity.choose('recent',0);
+assert.equal(injectedCalls[0][0],'recent');
+console.log('Shared search UI smoke: browser works, native remains unchanged until provider opt-in.');
