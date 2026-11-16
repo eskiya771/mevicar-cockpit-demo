@@ -3,13 +3,18 @@
 (function(){
 'use strict';
 const KEY='mevicar-next-google-maps-key-v1', DATA='mevicar-next-destinations-v1';
+const MAX_SAVED=200,MAX_RECENT=30;
 const FALLBACK_CENTER={lat:49.59,lng:11.005}; // Erlangen: initial map view only, not a navigation origin.
 const text=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const valid=d=>d&&typeof d.name==='string'&&Number.isFinite(d.lat)&&Number.isFinite(d.lng)&&Math.abs(d.lat)<=90&&Math.abs(d.lng)<=180;
-const keyOf=d=>d.lat.toFixed(5)+','+d.lng.toFixed(5);
-const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!valid(x))return false;let k=keyOf(x);if(keys.has(k))return false;keys.add(k);return true}).slice(0,max)};
-let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],100),recent:unique(d.recent||[],20),slots:{home:valid(d.slots?.home)?d.slots.home:null,work:valid(d.slots?.work)?d.slots.work:null}}}catch{}
-let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,suggestions=[],poiResults=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
+const hasPlaceId=d=>d&&typeof d.name==='string'&&typeof d.placeId==='string'&&/^[A-Za-z0-9_-]{1,300}$/.test(d.placeId);
+const savedValid=d=>valid(d)||hasPlaceId(d);
+const keyOf=d=>hasPlaceId(d)?'p:'+d.placeId:'c:'+d.lat.toFixed(5)+','+d.lng.toFixed(5);
+const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!savedValid(x))return false;let k=keyOf(x);if(keys.has(k))return false;keys.add(k);return true}).slice(0,max)};
+let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],MAX_SAVED),recent:unique(d.recent||[],MAX_RECENT).filter(valid),slots:{home:savedValid(d.slots?.home)?d.slots.home:null,work:savedValid(d.slots?.work)?d.slots.work:null}}}catch{}
+function capBook(){const occupied=Number(!!cache.slots.home)+Number(!!cache.slots.work);cache.favorites=cache.favorites.slice(0,MAX_SAVED-occupied)}
+capBook();
+let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,pendingSave=null,suggestions=[],poiResults=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
 // Native Navigation SDK is available only in the hybrid Android APK.
 // The Web/PWA keeps its own GPS guidance and never needs an Android API key.
 const nativeRequests=new Map();
@@ -321,7 +326,7 @@ async function mount(nextState){
 function mark(place){if(!map||!place)return;if(marker)marker.setMap(null);marker=new google.maps.Marker({map,position:{lat:place.lat,lng:place.lng},title:place.name});map.panTo({lat:place.lat,lng:place.lng});map.setZoom(15)}
 function changeQuery(value){
  query=String(value||'').trim();clearTimeout(timer);requestSerial++;
- suggestions=[];poiResults=null;if(query.length<3||!key()){refreshResults();return}
+ suggestions=[];poiResults=null;if(query.length<2||!key()){refreshResults();return}
  const serial=requestSerial;timer=setTimeout(()=>search(query,serial),320);
  refreshResults();
 }
@@ -340,23 +345,32 @@ async function search(q,serial){
 /** Actual nearby POIs via Google Places (New). Autocomplete remains the fallback. */
 async function webPoi(type,searchText,origin){
  if(nativeMode())return;
- const types={gas:'gas_station',charge:'electric_vehicle_charging_station',parking:'parking',food:'restaurant',cafe:'cafe',cart:'supermarket'};
+ const types={fuel:'gas_station',charge:'electric_vehicle_charging_station',parking:'parking',food:'restaurant',cafe:'cafe',cart:'supermarket',rest:'rest_stop',wrench:'car_repair'};
  changeQuery(searchText);
  const serial=requestSerial;
  try{
   await load();
   const {Place,SearchNearbyRankPreference}=await google.maps.importLibrary('places');
-  if(!Place?.searchNearby)throw Error('Nearby search not supported');
   const center=origin||current||manualOrigin||map?.getCenter()?.toJSON?.()||FALLBACK_CENTER;
-  const response=await Place.searchNearby({
-   fields:['displayName','formattedAddress','location'],
-   locationRestriction:{center,radius:16000},
-   includedPrimaryTypes:[types[type]||'restaurant'],
-   maxResultCount:15,
-   rankPreference:SearchNearbyRankPreference?.DISTANCE||'DISTANCE'
-  });
+  let response;
+  if(type==='text'){
+   if(!Place?.searchByText)throw Error('Google Places Textsuche nicht verfügbar');
+   response=await Place.searchByText({
+    textQuery:searchText,fields:['displayName','formattedAddress','location'],
+    locationBias:center,maxResultCount:15
+   });
+  }else{
+   if(!Place?.searchNearby)throw Error('Nearby search not supported');
+   response=await Place.searchNearby({
+    fields:['displayName','formattedAddress','location'],
+    locationRestriction:{center,radius:16000},
+    includedPrimaryTypes:[types[type]||'restaurant'],
+    maxResultCount:15,
+    rankPreference:SearchNearbyRankPreference?.DISTANCE||'DISTANCE'
+   });
+  }
   if(serial!==requestSerial)return;
-  const found=(response.places||[]).map(p=>{const point=p.location?.toJSON?.()||p.location;return {name:p.displayName||p.formattedAddress||'Ort',address:p.formattedAddress||'',lat:point?.lat,lng:point?.lng}}).filter(valid);
+  const found=(response.places||[]).map(p=>{const point=p.location?.toJSON?.()||p.location;return {name:p.displayName||p.formattedAddress||'Ort',address:p.formattedAddress||'',lat:point?.lat,lng:point?.lng,placeId:p.id||'',fetchedAt:Date.now()}}).filter(valid);
   if(found.length){clearTimeout(timer);requestSerial++;poiResults=found;suggestions=[];error='';refreshResults()}
  }catch(e){
   if(serial!==requestSerial)return;
@@ -367,13 +381,13 @@ function refreshResults(){const e=document.getElementById('suggestions');if(e)e.
 function item(d,i,kind){return '<button type="button" class="suggestion mg-result" onclick="MeviGoogleNav.pick(\''+kind+'\','+i+')" aria-label="'+text(d.name)+' auswählen"><span class="circle">⌖</span><span><strong>'+text(d.name)+'</strong><small>'+text(d.address||'Google Maps')+'</small></span><span class="suggestion-chevron">›</span></button>'}
 function resultsHTML(){
  if(!key())return '<div class="mg-search-message">Bitte zuerst Google Maps unter Settings → Zugänge einrichten.</div>';
- if(query.length>=3){if(suggestions.length)return suggestions.map((s,i)=>item({name:s.placePrediction.text.toString(),address:'Google Places'},i,'suggest')).join('');return '<div class="mg-search-message">'+text(error||'Google Places sucht Adressen …')+'</div>'}
+ if(query.length>=2){if(suggestions.length)return suggestions.map((s,i)=>item({name:s.placePrediction.text.toString(),address:'Google Places'},i,'suggest')).join('');return '<div class="mg-search-message">'+text(error||'Google Places sucht Adressen …')+'</div>'}
  const all=unique([...cache.favorites,...cache.recent],12);
  return all.length?all.map((d,i)=>item(d,i,'stored')).join(''):'<div class="mg-search-message">Gib mindestens drei Zeichen ein, um eine Adresse zu suchen.</div>';
 }
 function list(kind){return kind==='favorites'?cache.favorites:cache.recent}
 function buttons(kind,limit=6){return list(kind).slice(0,limit).map((d,i)=>item(d,i,kind)).join('')||'<span class="mg-search-message">Noch keine Ziele gespeichert.</span>'}
-async function pick(kind,index){
+async function pick(kind,index,options={}){
  let d;
  if(kind==='suggest'){
   if(poiResults?.length){d=poiResults[index];if(!valid(d))return;poiResults=null}
@@ -383,20 +397,43 @@ async function pick(kind,index){
     const place=prediction.toPlace();
     await place.fetchFields({fields:['displayName','formattedAddress','location']});
     const p=place.location?.toJSON?.()||place.location;
-    d={name:place.displayName||place.formattedAddress||prediction.text.toString(),address:place.formattedAddress||'',lat:p?.lat,lng:p?.lng};
+    d={name:place.displayName||place.formattedAddress||prediction.text.toString(),address:place.formattedAddress||'',lat:p?.lat,lng:p?.lng,placeId:place.id||'',fetchedAt:Date.now()};
     token=null;
   }catch(e){status('Ziel konnte nicht geladen werden: '+(e.message||e));return}
   }
  }else d=kind==='home'||kind==='work'?cache.slots?.[kind]:kind==='stored'?unique([...cache.favorites,...cache.recent],12)[index]:list(kind)[index];
- if(!valid(d))return;
+ if(d&&!valid(d)&&hasPlaceId(d)){
+  // Android exports can contain only a Place ID. Resolve the coordinate on use,
+  // retaining the original name, role, note, icon and place ID in the Web book.
+  try{
+   await load();
+   const {Place}=await google.maps.importLibrary('places');
+   const place=new Place({id:d.placeId});
+   await place.fetchFields({fields:['location','formattedAddress']});
+   const p=place.location?.toJSON?.()||place.location;
+   const updated={...d,lat:p?.lat,lng:p?.lng,fetchedAt:Date.now(),address:d.address||place.formattedAddress||''};
+   if(!valid(updated))throw new Error('Google hat keine gültige Position zurückgegeben.');
+   d=updated;
+   cache.favorites=cache.favorites.map(item=>hasPlaceId(item)&&item.placeId===d.placeId?d:item);
+   for(const slot of ['home','work'])if(cache.slots[slot]?.placeId===d.placeId)cache.slots[slot]={...cache.slots[slot],lat:d.lat,lng:d.lng,fetchedAt:d.fetchedAt};
+   persist();
+  }catch(e){status('Gespeichertes Ziel konnte nicht geladen werden: '+(e.message||e),'places');return}
+ }
+ if(!valid(d))return false;
+ if(options?.saveOnly&&!nativeMode()){
+  // Android save mode does not cancel an active route. Keep the candidate separate
+  // so Road Assist rerouting still targets the running guidance destination.
+  pendingSave=d;return true;
+ }
  if(nativeMode()){
-  selected=d;cache.recent=unique([d,...cache.recent],20);persist();
+  selected=d;cache.recent=unique([d,...cache.recent],MAX_RECENT);persist();
   try{await startNativeNavigation()}
   catch(e){status('Android-Navigation: '+(e.message||e))}
   return;
  }
  stopGuidance();selected=d;routeData=null;clearLines();mark(d);
  window.meviGoogleDestination?.(d.name,d.address);
+ return true;
 }
 
 /** Browser-only destination book adapter. The native APK never calls these. */
@@ -407,20 +444,21 @@ function webData(){
 }
 function webWrite(changes={}){
  if(nativeMode())return false;
- if(Object.prototype.hasOwnProperty.call(changes,'favorites'))cache.favorites=unique(changes.favorites||[],100);
- if(Object.prototype.hasOwnProperty.call(changes,'recent'))cache.recent=unique(changes.recent||[],20);
+ if(Object.prototype.hasOwnProperty.call(changes,'favorites'))cache.favorites=unique(changes.favorites||[],MAX_SAVED);
+ if(Object.prototype.hasOwnProperty.call(changes,'recent'))cache.recent=unique(changes.recent||[],MAX_RECENT).filter(valid);
  if(Object.prototype.hasOwnProperty.call(changes,'slots')){
   const input=changes.slots||{};
-  cache.slots={home:valid(input.home)?input.home:null,work:valid(input.work)?input.work:null};
+  cache.slots={home:savedValid(input.home)?input.home:null,work:savedValid(input.work)?input.work:null};
  }
- persist();window.meviGoogleRerender?.();return true;
+ capBook();persist();window.meviGoogleRerender?.();return true;
 }
 function webSaveSelectedSlot(slot){
- if(nativeMode()||!['home','work'].includes(slot)||!valid(selected))return false;
- cache.slots[slot]={...selected};persist();return true;
+ const candidate=pendingSave||selected;
+ if(nativeMode()||!['home','work'].includes(slot)||!valid(candidate))return false;
+ cache.slots[slot]={...candidate};pendingSave=null;capBook();persist();return true;
 }
 function favoritesHTML(){return '<div class="favs mg-favorites">'+cache.favorites.map((d,i)=>'<button type="button" class="fav" onclick="MeviGoogleNav.pick(\'favorites\','+i+')" aria-label="'+text(d.name)+' auswählen"><span class="bubble">⌖</span><span>'+text(d.name)+'</span></button>').join('')+'</div>'}
-function saveFavorite(){if(!selected)return;cache.favorites=unique([selected,...cache.favorites.filter(x=>keyOf(x)!==keyOf(selected))],100);persist();syncNativeLayout(true);window.meviGoogleRerender?.()}
+function saveFavorite(){const candidate=pendingSave||selected;if(!valid(candidate))return;cache.favorites=unique([candidate,...cache.favorites.filter(x=>keyOf(x)!==keyOf(candidate))],MAX_SAVED);pendingSave=null;capBook();persist();syncNativeLayout(true);window.meviGoogleRerender?.()}
 function removeFavorite(){if(!selected)return;cache.favorites=cache.favorites.filter(x=>keyOf(x)!==keyOf(selected));persist();syncNativeLayout(true);window.meviGoogleRerender?.()}
 function isFavorite(){return !!selected&&cache.favorites.some(x=>keyOf(x)===keyOf(selected))}
 function selectedAddress(){return selected?.address||'Bitte gültige Adresse auswählen'}
