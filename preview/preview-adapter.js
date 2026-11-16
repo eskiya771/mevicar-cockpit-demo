@@ -9,7 +9,7 @@ const demo={
   work:{id:'demo-work',name:'Arbeit',address:'Erlangen',lat:49.5951,lng:11.0038}
  },
  favorites:[
-  {id:'demo-cafe',name:'Café am Markt',address:'Marktplatz, Erlangen',lat:49.596,lng:11.004,icon:'cafe',note:'Beispiel-Favorit'},
+  {id:'demo-cafe',name:'Café am Markt',address:'Marktplatz, Erlangen',lat:49.596,lng:11.004,icon:'food',note:'Beispiel-Favorit'},
   {id:'demo-park',name:'Parkhaus Zentrum',address:'Erlangen',lat:49.597,lng:11.006,icon:'parking'}
  ],
  recent:[
