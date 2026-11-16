@@ -17,6 +17,8 @@ assert(html.includes('<link rel="stylesheet" href="./nav-web-parity.css">'));
 assert(pages.includes('navigation-shared-core.js nav-web-parity.js nav-web-parity.css'));
 assert(sw.includes("'./navigation-shared-core.js'")&&sw.includes("'./nav-web-parity.js'")&&sw.includes("'./nav-web-parity.css'"));
 assert(nav.includes('function webPoi(')&&nav.includes('function webSaveSelectedSlot('));
+assert(nav.includes("fuel:'gas_station'")&&nav.includes("wrench:'car_repair'"),'POI buttons must map to correct Google place types');
+assert(nav.includes("if(query.length<2||!key())"),'Web autocomplete must match Android 2-character threshold');
 assert(css.includes('position:fixed')&&css.includes('.mg-parity-chips'));
 const state={
  favorites:[{name:'Gymnasium',address:'Bergstraße 4',lat:49.71,lng:10.82}],
@@ -26,9 +28,10 @@ const state={
 };
 const calls=[];
 const win={
+ confirm:()=>true,
  browseOverlay:()=>'<div class="inner"></div>',render:()=>{},
  MeviGoogleNav:{
-  hasKey:()=>true,changeQuery:value=>{state.query=value;state.suggestions=value.length>=3?[{name:value,address:'Testadresse'}]:[]},
+  hasKey:()=>true,changeQuery:value=>{state.query=value;state.suggestions=value.length>=2?[{name:value,address:'Testadresse'}]:[]},
   webData:()=>state,webPoi:(...args)=>calls.push(args),pick:async()=>{},
   webWrite:delta=>Object.assign(state,delta),webSaveSelectedSlot:()=>true,saveFavorite:()=>{}
  }
@@ -38,13 +41,38 @@ runInNewContext(core,{window:win});
 runInNewContext(js,{window:win,s,navigator:{},document:{getElementById:()=>null,querySelector:()=>null},console});
 win.openSearch();
 let output=win.searchOverlay();
-for(const term of ['Adresse, Ort oder POI','Tanken','Laden','Parken','Essen','Café','Einkaufen','Zuletzt','Gespeichert','Arbeit'])assert(output.includes(term),term);
+for(const term of ['Adresse, Ort oder POI','Tanken','Laden','Parken','Essen','Café','Einkaufen','Rastplatz','Werkstatt','Zuletzt','Gespeichert','Arbeit'])assert(output.includes(term),term);
 win.MeviWebNavParity.tab('favorites');
 output=win.searchOverlay();
 assert(output.includes('Gymnasium')&&output.includes('Zuhause'));
 win.MeviWebNavParity.book();
 output=win.searchOverlay();
 for(const term of ['Adressbuch filtern','Hinzufügen','Exportieren','Importieren','Verlauf löschen'])assert(output.includes(term),term);
+// Address-book editing mirrors the native APK: icon, note, role, ordering and role replacement.
+win.MeviWebNavParity.edit('favorites',0);
+output=win.searchOverlay();
+for(const term of ['Ziel bearbeiten','Notiz (optional)','SYMBOL','VERWENDEN ALS','Löschen'])assert(output.includes(term),term);
+win.MeviWebNavParity.editField('name','Gymnasium neu');
+win.MeviWebNavParity.editField('note','Haupteingang');
+win.MeviWebNavParity.editIcon('heart');
+win.MeviWebNavParity.editSlot('work');
+win.MeviWebNavParity.saveEdit();
+assert.equal(state.slots.work.name,'Gymnasium neu');
+assert.equal(state.slots.work.note,'Haupteingang');
+assert.equal(state.slots.work.icon,'heart');
+assert.equal(state.favorites.length,0);
+win.MeviWebNavParity.edit('work',0);
+win.MeviWebNavParity.editSlot('');
+win.MeviWebNavParity.saveEdit();
+assert.equal(state.slots.work,null);
+assert.equal(state.favorites.length,1);
+state.favorites.push({name:'Bäckerei',lat:49.74,lng:10.85});
+win.MeviWebNavParity.move(1,-1);
+assert.equal(state.favorites[0].name,'Bäckerei');
+win.MeviWebNavParity.filter('Haupteingang');
+output=win.searchOverlay();
+assert(output.includes('Gymnasium neu'),'Filter should search notes as Android does');
+assert(!output.includes('Bäckerei'),'Filtered address book should hide nonmatches');
 win.MeviWebNavParity.bookBack();
 win.MeviWebNavParity.poi('fuel','Tankstelle');
 assert.equal(calls[0][0],'fuel');
