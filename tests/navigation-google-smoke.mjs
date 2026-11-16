@@ -120,6 +120,20 @@ function harness(gps='timeout',initialFavorites=[destination]){
  assert.equal(h.api.webData().favorites[0].icon,'heart');
  assert.equal(h.api.webData().favorites[0].placeId,'ChIJPlaceId_123');
 }
+{
+ // In Android's save mode, assigning Home/Work must not stop a running route.
+ const nextDestination={name:'Bamberg',address:'Bamberg',lat:49.894,lng:10.883};
+ const h=harness('ok',[destination,nextDestination]);
+ await h.api.pick('favorites',0);
+ assert.equal(await h.api.calculateRoute(),true);
+ assert.equal(await h.api.startGuidance(),true);
+ const before=h.api.routeInfo();
+ assert.equal(await h.api.pick('favorites',1,{saveOnly:true}),true);
+ assert.equal(h.api.guidanceRunning(),true,'Save-only selection must not stop active guidance');
+ assert.equal(h.api.webSaveSelectedSlot('work'),true);
+ assert.equal(h.api.webData().slots.work.name,'Bamberg');
+ assert.equal(h.api.routeInfo(),before,'Changing saved Work must not change the active route');
+}
 assert.equal(written.includes('mevicar-next-destinations-native-import-v1'),false,
  'The browser keeps its own favourites: no takeover without the APK bridge');
 {
