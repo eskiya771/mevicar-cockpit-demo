@@ -727,6 +727,7 @@ async function startGuidance(){
   geoWatch=geo.watchPosition(updatePosition,e=>status('GPS-Signal: '+(e.code===3?'Zeitüberschreitung':e.message),'gps'),
    {enableHighAccuracy:true,maximumAge:2000,timeout:12000});
   followPosition(actual);markCurrent(actual);
+  cache.recent=unique([selected,...cache.recent],20);persist();
   paintGuidance();speech('Navigation gestartet. '+(guidanceSteps[0]?.instructions||'Der Route folgen'));
   return true;
  }catch(e){status('Navigation nicht gestartet: '+(e.message||e),'gps');return false}
