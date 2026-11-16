@@ -13,9 +13,9 @@ function destination(value){
  const result={name:value.name.trim().slice(0,120),address:String(value.address??'').slice(0,200)};
  if(coords){result.lat=lat;result.lng=lng}
  if(placeId)result.placeId=placeId;
- for(const [key,limit] of [['id',120],['placeId',250],['icon',60],['note',500]]){
-  if(typeof value[key]==='string'&&value[key])result[key]=value[key].slice(0,limit);
- }
+ if(typeof value.id==='string'&&/^[A-Za-z0-9-]{1,64}$/.test(value.id))result.id=value.id;
+ if(typeof value.icon==='string'&&ICONS.includes(value.icon))result.icon=value.icon;
+ if(typeof value.note==='string')result.note=value.note.slice(0,200);
  for(const key of ['fetchedAt','usedAt','count']){
   if(Number.isFinite(value[key])&&value[key]>=0)result[key]=value[key];
  }
