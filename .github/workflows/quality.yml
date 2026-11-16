@@ -115,6 +115,15 @@ jobs:
           theme_css = pathlib.Path('themes.css').read_text()
           assert '.app-home-grid' in theme_css and '.app-illustration' in theme_css
           html = html.replace(css_link, '<style id="mevicar-versioned-themes">' + theme_css + '</style>')
+          # Bundle the credentials JavaScript together with the displayed build.
+          # Otherwise a cache-first PWA may load the current HTML (build number)
+          # but execute old Settings logic from the previous service worker cache.
+          credentials_script = '<script src="./credential-settings.js"></script>'
+          assert credentials_script in html, 'Credential settings JavaScript tag missing'
+          credentials_js = pathlib.Path('credential-settings.js').read_text()
+          assert 'MeviCredentials' in credentials_js and 'HA_WEB_TOKEN_KEY' in credentials_js
+          assert '</script' not in credentials_js.lower(), 'Credential script may not close inline HTML'
+          html = html.replace(credentials_script, '<script id="mevicar-versioned-credentials-script">' + credentials_js + '</script>')
           saver_css_link = '<link rel="stylesheet" href="./screensaver.css">'
           saver_js_tag = '<script src="./screensaver.js"></script>'
           assert saver_css_link in html and saver_js_tag in html, 'Screensaver assets missing'
