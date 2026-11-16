@@ -36,6 +36,7 @@ jobs:
       - name: Test Google Maps route and GPS fallback
         run: |
           node tests/navigation-google-smoke.mjs
+          node tests/navigation-shared-core-smoke.mjs
           node tests/navigation-google-native-smoke.mjs
       - name: Test Home Assistant dashboard and REST access
         run: node tests/homeassistant-smoke.mjs
@@ -151,6 +152,20 @@ jobs:
           assert 'MeviGoogleNav' in nav_js and '.mg-map' in nav_css
           html = html.replace(nav_css_link, '<style id="mevicar-navigation-styles">' + nav_css + '</style>')
           html = html.replace(nav_script_tag, '<script id="mevicar-navigation-script">' + nav_js + '</script>')
+          # Shared search and address book must travel atomically with the new build.
+          shared_script = '<script src="./navigation-shared-core.js"></script>'
+          parity_script = '<script src="./nav-web-parity.js"></script>'
+          parity_css_link = '<link rel="stylesheet" href="./nav-web-parity.css">'
+          assert shared_script in html and parity_script in html and parity_css_link in html
+          shared_js = pathlib.Path('navigation-shared-core.js').read_text()
+          parity_js = pathlib.Path('nav-web-parity.js').read_text()
+          parity_css = pathlib.Path('nav-web-parity.css').read_text()
+          assert 'MeviNavigationShared' in shared_js and 'MeviWebNavParity' in parity_js
+          assert '.mg-parity-shade' in parity_css
+          assert all('</script' not in js.lower() for js in (shared_js, parity_js))
+          html = html.replace(shared_script, '<script id="mevicar-shared-navigation-script">' + shared_js + '</script>')
+          html = html.replace(parity_script, '<script id="mevicar-navigation-parity-script">' + parity_js + '</script>')
+          html = html.replace(parity_css_link, '<style id="mevicar-navigation-parity-styles">' + parity_css + '</style>')
           # Home Assistant: bundle the dashboard and REST client in the same versioned shell.
           weather_css_link = '<link rel="stylesheet" href="./weather-next.css">'
           assert weather_css_link in html, 'Weather wrapper stylesheet missing'
@@ -307,7 +322,7 @@ jobs:
           cp vendor/hls-LICENSE.txt dist/vendor/
           mkdir -p dist/weather
           cp -R weather/. dist/weather/
-          cp native-updates.js native-updates.css credential-settings.js credential-settings.css xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css weristschuld.js weristschuld.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
+          cp native-updates.js native-updates.css credential-settings.js credential-settings.css xtream.js tv.js mkv-index-probe.mjs tv.css tetris.js tetris.css weristschuld.js weristschuld.css manifest.webmanifest sw.js themes.css screensaver.css screensaver.js mevidarts-parallax.js mevidarts-showcase.js mevidarts-light-renderer.js mevimedia.js mevimedia.css spotify.js spotify.css navigation-google.js navigation-google.css navigation-shared-core.js nav-web-parity.js nav-web-parity.css homeassistant.js homeassistant.css calendar.js calendar.css whatsapp.js whatsapp.css youtube.js youtube.css stocks.js stocks.css roadassist.js roadassist.css weather-next.css lightshow.js lightshow.css sudoku.js sudoku.css speedometer.js speedometer.css display-profiles.css tacho-next.js tacho-next.css dist/
           test -s dist/credential-settings.js && test -s dist/credential-settings.css
           test -s dist/native-updates.js && test -s dist/native-updates.css
           python3 -m pip install --quiet --break-system-packages pillow
