@@ -160,7 +160,8 @@ const settle=async()=>{for(let i=0;i<6;i++)await new Promise(done=>setImmediate(
  assert.equal(r.model().native,false);
  assert.equal(r.model().hits.length,2);
  r.onGuidanceStart(false);
- assert.equal(r.model().trips[0].outcome,'active');
+ assert.equal(r.model().trips.length,0,'A running guidance is not listed among the past trips');
+ assert.match(r.appHTML(false),/Noch keine Fahrt/);
  assert.equal(h.stores.length,0,'A running trip is not written to storage');
  r.onPosition({lat:49.6,lng:11.0080},{accuracy:8,timestamp:now});
  assert.equal(r.model().hits.map(x=>x.passed).join(),'true,false','Passed cameras are marked along the route');
@@ -181,7 +182,13 @@ const settle=async()=>{for(let i=0;i<6;i++)await new Promise(done=>setImmediate(
  assert.equal(JSON.parse(h.stores.filter(([key])=>key===TRIP_KEY).at(-1)[1]).length,0);
  r.onRoute({path:route});r.onGuidanceStart(true);r.onGuidanceStop();
  assert.equal(r.model().trips.length,0,'Demo guidance must not create a trip');
+ const writes=h.stores.length;
  r.onGuidanceStart(false);r.onGuidanceStop();
+ assert.equal(r.model().trips.length,0,'A guidance that was never driven is no trip');
+ assert.equal(h.stores.length,writes,'and is not written to storage');
+ r.onGuidanceStart(false);
+ r.onPosition({lat:49.6,lng:11.0080},{accuracy:8,timestamp:now});
+ r.onGuidanceStop();
  assert.equal(r.model().trips.length,1);
  r.clearTrips();
  assert.match(r.appHTML(false),/Wirklich alle löschen\?/);
@@ -210,7 +217,9 @@ const settle=async()=>{for(let i=0;i<6;i++)await new Promise(done=>setImmediate(
   hits:[{id:'n1',title:'A73',street:'A73',city:'Fürth',label:'Fester Blitzer',meters:5200,passed:false,limit:100}]};
  let nativeTrips=[{id:'abc',startedAt:now-3600000,endedAt:now-1800000,destination:'Bamberg',plannedMeters:40000,
   drivenMeters:39900,outcome:'arrived',dataAvailable:true,
-  cameras:[{title:'B4',city:'',label:'Mobiler Blitzer',meters:1000,passed:true}]}];
+  cameras:[{title:'B4',city:'',label:'Mobiler Blitzer',meters:1000,passed:true}]},
+  {id:'run',startedAt:now-60000,endedAt:0,destination:'Nürnberg',plannedMeters:18400,drivenMeters:0,
+   outcome:'active',dataAvailable:true,cameras:[]}];
  const nativeRequest=async(action,fields)=>{
   calls.push({action,fields});
   if(action==='capabilities')return{ok:true,capabilities:{roadAssistNative:1}};
@@ -238,6 +247,8 @@ const settle=async()=>{for(let i=0;i<6;i++)await new Promise(done=>setImmediate(
  assert.match(host.innerHTML,/A73/);
  assert.match(host.innerHTML,/Zielführung aktiv/);
  assert.match(host.innerHTML,/Bamberg/);
+ assert.equal(h.app.model().trips.length,1,'The running native guidance is not listed among the past trips');
+ assert.doesNotMatch(host.innerHTML,/läuft/);
  h.app.setVoice(false);await settle();
  assert.equal(calls.filter(c=>c.action==='roadassist.settings').at(-1).fields.voice,false);
  h.app.toggleTrip(0);

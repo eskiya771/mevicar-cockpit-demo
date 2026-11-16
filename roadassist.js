@@ -522,6 +522,7 @@ function saveTrips(){
  try{localStorage.setItem(TRIPS,JSON.stringify(trips))}catch{}
 }
 /* Browser only: in the APK the web guidance never starts, Android records the trips itself. */
+const MIN_TRIP_METERS=100;
 function startTrip(){
  endTrip();
  if(demo||nativeOn||route.length<2)return;
@@ -530,7 +531,10 @@ function startTrip(){
 }
 function endTrip(){
  if(!trip)return;
- trips=[tripJson(trip,Date.now()),...trips].slice(0,MAX_TRIPS);trip=null;
+ const done=tripJson(trip,Date.now());trip=null;
+ // A guidance that was started but never driven is no trip.
+ if(done.outcome==='stopped'&&done.drivenMeters<MIN_TRIP_METERS){paintApp();return}
+ trips=[done,...trips].slice(0,MAX_TRIPS);
  saveTrips();paintApp();
 }
 function model(){
@@ -539,11 +543,11 @@ function model(){
   return{native:true,enabled:st.enabled!==false,voice:st.voice!==false,connected:!!st.connected,
    cameraCount:Number(st.cameraCount)||0,route:!!st.route,guiding:!!st.guiding,
    destination:String(st.destination||'').slice(0,120),plannedMeters:Math.max(0,Number(st.plannedMeters)||0),
-   hits:st.hits.map(cleanHit),trips:nativeTrips};
+   hits:st.hits.map(cleanHit),trips:nativeTrips.filter(t=>t.outcome!=='active')};
  }
  return{native:false,enabled:settings.enabled,voice:settings.voice,connected,cameraCount:haCount,
   route:route.length>1,guiding:guiding&&!demo,destination:destinationName(),plannedMeters:Math.round(routeLength),
-  hits:webHits(trip?trip.driven:positionOnRoute?.progress),trips:trip?[tripJson(trip),...trips]:trips};
+  hits:webHits(trip?trip.driven:positionOnRoute?.progress),trips};
 }
 function appStatus(m){
  if(!m.route)return 'Keine Route geplant';
@@ -610,7 +614,7 @@ function appInner(){
   (past?'<button type="button" class="ra-quiet" onclick="MeviRoadAssist.clearTrips()">'+
    (clearArmed?'Wirklich alle löschen?':'Alle löschen')+'</button>':'')+'</div>'+
   (m.trips.length?'<ul class="ra-trips">'+m.trips.map(tripHTML).join('')+'</ul>':
-   '<p class="ra-empty">Noch keine Fahrt aufgezeichnet. Eine Fahrt entsteht mit gestarteter Zielführung; '+
+   '<p class="ra-empty">Noch keine Fahrt aufgezeichnet. Eine Fahrt erscheint hier, sobald die Zielführung beendet ist; '+
    'gespeichert werden Ziel, Strecke und Blitzer – keine Koordinaten.</p>')+'</section>'+
   '<section class="ra-card ra-diag"><button type="button" class="ra-fold" aria-expanded="'+diagOpen+
   '" onclick="MeviRoadAssist.toggleDiag()"><b>Diagnose &amp; Routenscan</b><i aria-hidden="true">'+(diagOpen?'▾':'▸')+'</i></button>'+
