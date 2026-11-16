@@ -9,7 +9,7 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
-let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null;
+let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='';
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths={
  back:'<path d="m15 18-6-6 6-6"/><path d="M9 12h12"/>',
@@ -27,7 +27,12 @@ const paths={
  edit:'<path d="m14 5 5 5M3 21l5-1 12-12-4-4L4 16l-1 5z"/>',
  remove:'<path d="M5 7h14M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/>',
  search:'<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',
- plus:'<path d="M12 5v14M5 12h14"/>'
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ heart:'<path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 1 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/>',
+ wrench:'<path d="M14.7 6.3a5 5 0 0 0-6.4 6.4L3 18l3 3 5.3-5.3a5 5 0 0 0 6.4-6.4l-3 3-3-3 3-3z"/>',
+ up:'<path d="m6 15 6-6 6 6"/>',
+ down:'<path d="m6 9 6 6 6-6"/>',
+ rest:'<path d="M5 4h14M5 20h14M8 4v16M16 4v16M8 10h8M8 15h8"/>'
 };
 function ico(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.pin)+'</svg>'}
 function data(){return provider.read()}
@@ -40,25 +45,30 @@ function distance(d){
  return (km<10?km.toLocaleString('de-DE',{maximumFractionDigits:1}):Math.round(km).toLocaleString('de-DE'))+' km';
 }
 function row(d,kind,i,manage){
- const glyph=kind==='recent'?'clock':kind==='home'?'home':kind==='work'?'work':'pin';
+ const glyph=kind==='recent'?'clock':shared.effectiveIcon(d,kind==='favorites'?'':kind);
+ const detail=[d.address||'',d.note||''].filter(Boolean).join(' · ');
+ const editControls=manage&&kind!=='recent'?
+   (kind==='favorites'?'<button type="button" class="mg-parity-inline" '+(i===0?'disabled ':'')+'onclick="MeviWebNavParity.move('+i+',-1)" aria-label="Nach oben">'+ico('up')+'</button>'+
+    '<button type="button" class="mg-parity-inline" '+(i>=data().favorites.length-1?'disabled ':'')+'onclick="MeviWebNavParity.move('+i+',1)" aria-label="Nach unten">'+ico('down')+'</button>':'')+
+   '<button type="button" class="mg-parity-inline" onclick="MeviWebNavParity.edit(\''+kind+'\','+i+')" aria-label="'+safe(d.name)+' bearbeiten">'+ico('edit')+'</button>':'';
+ const removeControl=manage?'<button type="button" class="mg-parity-inline" onclick="MeviWebNavParity.remove(\''+kind+'\','+i+')" aria-label="'+safe(d.name)+' entfernen">'+ico('remove')+'</button>':'';
  return '<div class="mg-parity-row"><button type="button" class="mg-parity-entry" onclick="MeviWebNavParity.choose(\''+kind+'\','+i+')" aria-label="'+safe(d.name)+' auswählen">'+
  '<span class="mg-parity-symbol">'+ico(glyph)+'</span><span class="mg-parity-description"><strong>'+safe(d.name)+'</strong>'+
- (d.address?'<small>'+safe(d.address)+'</small>':'')+'</span><span class="mg-parity-distance">'+safe(distance(d))+'</span></button>'+
- (manage?'<button type="button" class="mg-parity-inline" onclick="MeviWebNavParity.rename(\''+kind+'\','+i+')" aria-label="Umbenennen">'+ico('edit')+'</button>'+
- '<button type="button" class="mg-parity-inline" onclick="MeviWebNavParity.remove(\''+kind+'\','+i+')" aria-label="Entfernen">'+ico('remove')+'</button>':'')+'</div>';
+ (detail?'<small>'+safe(detail)+'</small>':'')+'</span><span class="mg-parity-distance">'+safe(distance(d))+'</span></button>'+
+ editControls+removeControl+'</div>';
 }
 function rows(kind,manage=false){
  const d=data(), items=kind==='recent'?d.recent:kind==='favorites'?d.favorites:d.slots[kind]?[d.slots[kind]]:[];
  return items.length?items.map((item,i)=>row(item,kind,i,manage)).join(''):'<div class="mg-parity-empty">'+(kind==='recent'?'Noch keine Ziele gefahren.':'Noch keine Ziele gespeichert.')+'</div>';
 }
-const categories=[['home','Zuhause','home'],['work','Arbeit','work'],['fuel','Tanken','Tankstelle'],['charge','Laden','Ladestation'],['parking','Parken','Parkplatz'],['food','Essen','Restaurant'],['cafe','Café','Café'],['cart','Einkaufen','Supermarkt']];
+const categories=[['home','Zuhause','home'],['work','Arbeit','work'],['fuel','Tanken','Tankstelle'],['charge','Laden','Ladestation'],['parking','Parken','Parkplatz'],['food','Essen','Restaurant'],['cafe','Café','Café'],['cart','Einkaufen','Supermarkt'],['rest','Rastplatz','Rastplatz WC'],['wrench','Werkstatt','Autowerkstatt']];
 function chips(){return '<div class="mg-parity-chips" aria-label="Schnellziele und POI-Kategorien">'+categories.map(([icon,label,q],i)=>
  '<button type="button" onclick="'+(i<2?'MeviWebNavParity.slot(\''+icon+'\')':'MeviWebNavParity.poi(\''+icon+'\',\''+q+'\')')+'">'+ico(icon)+'<span>'+label+'</span></button>').join('')+'</div>'}
 function tabs(){return '<div class="mg-parity-tabs"><button type="button" class="'+(tab==='recent'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button><button type="button" class="'+(tab==='favorites'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button></div>'}
 function searchRows(){
  const d=data(),q=(s.query||'').trim();
  if(q){
-  if(q.length<3)return '<div class="mg-parity-empty">Mindestens drei Zeichen eingeben.</div>';
+  if(q.length<2)return '<div class="mg-parity-empty">Mindestens zwei Zeichen eingeben.</div>';
   return d.suggestions.length?d.suggestions.map((item,i)=>row({name:item.name,address:item.address||'Google Places'},'suggest',i,false)).join(''):'<div class="mg-parity-empty">'+safe(d.error||'Google Places sucht Adressen …')+'</div>';
  }
  if(tab==='recent')return rows('recent');
@@ -74,14 +84,19 @@ function searchHTML(){
  '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
 }
 function bookItems(items,kind){
- const q=filter.toLocaleLowerCase('de-DE');
- return items.map((d,i)=>({d,i})).filter(x=>!q||(x.d.name+' '+(x.d.address||'')).toLocaleLowerCase('de-DE').includes(q))
+ const q=filter.toLocaleLowerCase('de-DE').trim();
+ return items.map((d,i)=>({d,i})).filter(x=>!q||(x.d.name+' '+(x.d.address||'')+' '+(x.d.note||'')).toLocaleLowerCase('de-DE').includes(q))
  .map(x=>row(x.d,kind,x.i,true)).join('')||'<div class="mg-parity-empty">Keine passenden Ziele.</div>';
 }
 function bookBody(){
  const d=data(),slots=['home','work'];
  return '<div class="mg-parity-book-grid"><section><h3>SCHNELLZIELE</h3>'+
- slots.map(k=>d.slots[k]?row(d.slots[k],k,0,true):'<button type="button" class="mg-parity-empty-slot" onclick="MeviWebNavParity.slot(\''+k+'\')">'+ico(k)+' '+(k==='home'?'Zuhause':'Arbeit')+' festlegen</button>').join('')+
+ slots.map(k=>{
+  const item=d.slots[k];
+  if(filter&&!item)return '';
+  if(item&&filter&&!(item.name+' '+item.address+' '+(item.note||'')).toLocaleLowerCase('de-DE').includes(filter.toLocaleLowerCase('de-DE')))return '';
+  return item?row(item,k,0,true):'<button type="button" class="mg-parity-empty-slot" onclick="MeviWebNavParity.slot(\''+k+'\')">'+ico(k)+' '+(k==='home'?'Zuhause':'Arbeit')+' festlegen</button>';
+ }).join('')+
  '<h3>FAVORITEN ('+d.favorites.length+')</h3>'+bookItems(d.favorites,'favorites')+'</section><section><div class="mg-parity-book-row"><h3>ZULETZT ('+d.recent.length+')</h3><button type="button" onclick="MeviWebNavParity.clearHistory()">Verlauf löschen</button></div>'+bookItems(d.recent,'recent')+'</section></div>';
 }
 function bookHTML(){
@@ -94,14 +109,66 @@ function bookHTML(){
  '<button type="button" onclick="document.getElementById(\'mg-parity-import\').click()">Importieren</button>'+
  '<input id="mg-parity-import" type="file" accept=".json,application/json" hidden onchange="MeviWebNavParity.importBook(this.files[0])"></div></div></div>';
 }
+function editHTML(){
+ if(!editor)return bookHTML();
+ const glyphs=shared.ICONS.map(k=>'<button type="button" title="'+safe(k)+'" aria-label="Symbol '+safe(k)+'" aria-pressed="'+(editor.icon===k)+'" class="'+(editor.icon===k?'selected':'')+'" onclick="MeviWebNavParity.editIcon(\''+k+'\')">'+ico(k)+'</button>').join('');
+ const roles=[['','Favorit'],['home','Zuhause'],['work','Arbeit']].map(([key,label])=>
+  '<button type="button" class="'+(editor.slot===key?'selected':'')+'" aria-pressed="'+(editor.slot===key)+'" onclick="MeviWebNavParity.editSlot(\''+key+'\')">'+label+'</button>').join('');
+ const original=editor.item;
+ return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Ziel bearbeiten"><div class="mg-parity-layout mg-parity-editor">'+
+ '<div class="mg-parity-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.cancelEdit()" aria-label="Zurück">'+ico('back')+'</button><strong>Ziel bearbeiten</strong></div>'+
+ '<div class="mg-parity-edit-scroll"><label>Name<input id="mg-edit-name" maxlength="120" autocomplete="off" value="'+safe(editor.name)+'" oninput="MeviWebNavParity.editField(\'name\',this.value)"></label>'+
+ '<label>Notiz (optional)<input id="mg-edit-note" maxlength="200" autocomplete="off" value="'+safe(editor.note)+'" oninput="MeviWebNavParity.editField(\'note\',this.value)"></label>'+
+ '<p class="mg-parity-edit-address">'+safe(original.address||'')+'</p>'+
+ '<h3>SYMBOL</h3><div class="mg-parity-edit-icons">'+glyphs+'</div>'+
+ '<h3>VERWENDEN ALS</h3><div class="mg-parity-edit-roles">'+roles+'</div>'+
+ '<p class="mg-parity-edit-error" role="alert">'+safe(editError)+'</p></div>'+
+ '<div class="mg-parity-edit-actions"><button type="button" onclick="MeviWebNavParity.cancelEdit()">Abbrechen</button>'+
+ '<button type="button" class="mg-parity-edit-save" onclick="MeviWebNavParity.saveEdit()">Speichern</button>'+
+ '<button type="button" onclick="MeviWebNavParity.removeEdited()">Löschen</button></div></div></div>';
+}
+function edit(kind,index){
+ if(!['home','work','favorites'].includes(kind))return;
+ const book=data(),item=kind==='favorites'?book.favorites[index]:book.slots[kind];
+ if(!item)return;
+ editor={kind,index,item,name:item.name,note:item.note||'',slot:kind==='favorites'?'':kind,icon:shared.effectiveIcon(item,kind==='favorites'?'':kind)};
+ editError='';view='edit';rerender();
+}
+function editField(field,value){if(editor&&['name','note'].includes(field))editor[field]=String(value);}
+function editIcon(icon){if(editor&&shared.ICONS.includes(icon)){editor.icon=icon;rerender()}}
+function editSlot(slot){
+ if(!editor||!shared.SLOTS.includes(slot))return;
+ if(editor.icon===shared.defaultIcon(editor.slot))editor.icon=shared.defaultIcon(slot);
+ editor.slot=slot;rerender();
+}
+function cancelEdit(){editor=null;editError='';view='book';rerender()}
+function saveEdit(){
+ if(!editor)return;
+ try{
+  const book=data();
+  const changes=shared.editSaved(book,editor.kind,editor.index,editor);
+  const occupied=editor.slot&&book.slots[editor.slot]&&editor.slot!==editor.kind;
+  if(occupied&&!window.confirm((editor.slot==='home'?'Zuhause':'Arbeit')+' ist bereits „'+book.slots[editor.slot].name+'“. Dieses Schnellziel ersetzen?'))return;
+  editor=null;editError='';view='book';write(changes);
+ }catch(e){editError=String(e.message||e);rerender()}
+}
+function removeEdited(){
+ if(!editor)return;
+ const {kind,index}=editor;
+ editor=null;editError='';view='book';remove(kind,index);
+}
+function move(index,delta){
+ const changes=shared.moveFavorite(data(),index,delta);
+ write(changes);
+}
 function rerender(){window.render?.()}
 function open(){
  if(!provider.isReady()){window.openCredentialSettings?.();return}
- view='search';tab='recent';filter='';s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
+ view='search';tab='recent';filter='';editor=null;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
-function close(){pendingSlot='';pendingFavorite=false;view='search';s.nav='browse';s.keyboard=false;rerender()}
+function close(){pendingSlot='';pendingFavorite=false;editor=null;view='search';s.nav='browse';s.keyboard=false;rerender()}
 function input(value){
  s.query=String(value||'');provider.search(s.query);
  const controls=document.getElementById('mg-parity-controls');if(controls)controls.hidden=!!s.query.trim();
@@ -126,7 +193,7 @@ function poi(type,query){
  void provider.searchNearby(type,query,gps||null);
 }
 function book(){view='book';s.nav='search';s.keyboard=false;filter='';rerender()}
-function bookBack(){view='search';s.query='';provider.search('');rerender()}
+function bookBack(){editor=null;view='search';s.query='';provider.search('');rerender()}
 function add(){pendingFavorite=true;view='search';s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
 function write(changes){provider.write(changes);rerender()}
 function remove(kind,i){
@@ -134,14 +201,6 @@ function remove(kind,i){
  if(kind==='home'||kind==='work'){if(!window.confirm('Schnellziel entfernen?'))return;delete d.slots[kind];write({slots:d.slots});return}
  if(!arr[i]||!window.confirm('„'+arr[i].name+'“ entfernen?'))return;
  arr.splice(i,1);write({[kind]:arr});
-}
-function rename(kind,i){
- const d=data(),item=kind==='home'||kind==='work'?d.slots[kind]:(kind==='recent'?d.recent:d.favorites)[i];
- if(!item)return;
- const value=window.prompt('Zielname bearbeiten',item.name);if(value===null)return;
- const name=value.trim();if(!name||name.length>120)return;
- if(kind==='home'||kind==='work'){d.slots[kind]={...item,name};write({slots:d.slots});return}
- const arr=kind==='recent'?d.recent:d.favorites;arr[i]={...item,name};write({[kind]:arr});
 }
 function clearHistory(){if(window.confirm('Alle zuletzt gefahrenen Ziele entfernen?'))write({recent:[]})}
 function exportBook(){
@@ -166,7 +225,7 @@ window.browseOverlay=function(){
  return html.replace('<div class="inner">','<div class="inner"><div class="mg-parity-browse-actions"><button type="button" onclick="MeviWebNavParity.open()">Ziel / POI</button><button type="button" onclick="MeviWebNavParity.book()">Adressbuch</button></div>');
 };
 window.openSearch=open;
-window.searchOverlay=function(){return view==='book'?bookHTML():searchHTML()};
-window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,book,bookBack,add,remove,rename,clearHistory,exportBook,importBook,filter:filterBook,resultsHTML:()=>view==='search'?searchRows():''};
+window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():searchHTML()};
+window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,filter:filterBook,resultsHTML:()=>view==='search'?searchRows():''};
 window.render?.();
 })();
