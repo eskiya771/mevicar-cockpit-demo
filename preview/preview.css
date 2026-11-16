@@ -1,0 +1,30 @@
+/* Standalone navigation prototype. No stable cockpit assets, keys or caches. */
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c081a;color:#f4eaf4;font-family:Roboto,"Segoe UI",system-ui,sans-serif}
+button,input{font:inherit}
+button{cursor:pointer}
+#previewRoot{width:100%;height:100dvh;overflow:hidden;display:grid;place-items:center}
+.preview-home{width:min(900px,95vw);max-height:95dvh;overflow-y:auto;display:flex;flex-direction:column;align-items:flex-start;gap:clamp(9px,2.4vh,20px);padding:clamp(15px,4vw,55px);background:linear-gradient(155deg,#241238,#110b23);border:1px solid #573562;border-radius:24px}
+.preview-label{letter-spacing:.12em;color:#55e5f6;font-size:clamp(12px,1.8vw,16px);font-weight:700}
+.preview-home h1{font-size:clamp(24px,4vw,44px);margin:0;line-height:1.12}
+.preview-home h2{font-size:clamp(17px,2.6vw,23px);margin:0}
+.preview-home p{font-size:clamp(13px,1.8vw,18px);margin:0;line-height:1.45;color:#d2bad6}
+.preview-controls{display:flex;gap:12px;flex-wrap:wrap}
+.preview-home button{background:#342146;color:#f8eaf8;border:1px solid #835d95;border-radius:12px;padding:12px 20px;min-height:46px;font-weight:600}
+.preview-home button:first-child,.preview-controls button:first-child{background:#55e5f6;color:#091b2a;border-color:#55e5f6}
+.preview-api{border-top:1px solid #5c4065;padding-top:15px;width:100%;display:flex;flex-direction:column;gap:10px}
+.preview-key-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.preview-key-row input{min-width:200px;flex:1;padding:12px 16px;background:#0b1c28;color:#f3f4fa;border:1px solid #486274;border-radius:12px;min-height:48px}
+#previewStatus{font-size:14px;color:#9cd8cb}
+.preview-home .preview-caution{color:#e1a9c1}
+.preview-home .preview-reset{font-size:13px;background:transparent;color:#d4bedf;padding:10px 15px}
+#previewFlag{position:fixed;bottom:max(9px,env(safe-area-inset-bottom));right:max(9px,env(safe-area-inset-right));z-index:2147480120;background:#4b1c52ed;color:#fff;border:1px solid #8d5c93;border-radius:9px;font-size:11px;letter-spacing:.035em;font-weight:700;padding:5px 9px;pointer-events:none;opacity:.93;box-shadow:0 4px 12px #0005}
+.mg-navigation .mg-parity-shade{z-index:2147480000}
+@media(max-height:440px){
+ .preview-home{max-width:92vw;padding:12px 20px;gap:7px;max-height:95dvh}
+ .preview-home h1{font-size:24px}
+ .preview-home p{font-size:13px}
+ .preview-home button{min-height:38px;padding:7px 13px}
+ .preview-api{padding-top:8px;gap:5px}
+ .preview-key-row input{min-height:36px}
+}
