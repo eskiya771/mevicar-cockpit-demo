@@ -9,7 +9,7 @@ const valid=d=>d&&typeof d.name==='string'&&Number.isFinite(d.lat)&&Number.isFin
 const keyOf=d=>d.lat.toFixed(5)+','+d.lng.toFixed(5);
 const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!valid(x))return false;let k=keyOf(x);if(keys.has(k))return false;keys.add(k);return true}).slice(0,max)};
 let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],100),recent:unique(d.recent||[],20),slots:{home:valid(d.slots?.home)?d.slots.home:null,work:valid(d.slots?.work)?d.slots.work:null}}}catch{}
-let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,suggestions=[],query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
+let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,suggestions=[],poiResults=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
 // Native Navigation SDK is available only in the hybrid Android APK.
 // The Web/PWA keeps its own GPS guidance and never needs an Android API key.
 const nativeRequests=new Map();
@@ -321,7 +321,7 @@ async function mount(nextState){
 function mark(place){if(!map||!place)return;if(marker)marker.setMap(null);marker=new google.maps.Marker({map,position:{lat:place.lat,lng:place.lng},title:place.name});map.panTo({lat:place.lat,lng:place.lng});map.setZoom(15)}
 function changeQuery(value){
  query=String(value||'').trim();clearTimeout(timer);requestSerial++;
- suggestions=[];if(query.length<3||!key()){refreshResults();return}
+ suggestions=[];poiResults=null;if(query.length<3||!key()){refreshResults();return}
  const serial=requestSerial;timer=setTimeout(()=>search(query,serial),320);
  refreshResults();
 }
@@ -337,6 +337,32 @@ async function search(q,serial){
    error='';refreshResults();
  }catch(e){if(serial!==requestSerial)return;suggestions=[];status('Adressvorschläge nicht verfügbar: '+(e.message||e));refreshResults()}
 }
+/** Actual nearby POIs via Google Places (New). Autocomplete remains the fallback. */
+async function webPoi(type,searchText,origin){
+ if(nativeMode())return;
+ const types={gas:'gas_station',charge:'electric_vehicle_charging_station',parking:'parking',food:'restaurant',cafe:'cafe',cart:'supermarket'};
+ changeQuery(searchText);
+ const serial=requestSerial;
+ try{
+  await load();
+  const {Place,SearchNearbyRankPreference}=await google.maps.importLibrary('places');
+  if(!Place?.searchNearby)throw Error('Nearby search not supported');
+  const center=origin||current||manualOrigin||map?.getCenter()?.toJSON?.()||FALLBACK_CENTER;
+  const response=await Place.searchNearby({
+   fields:['displayName','formattedAddress','location'],
+   locationRestriction:{center,radius:16000},
+   includedPrimaryTypes:[types[type]||'restaurant'],
+   maxResultCount:15,
+   rankPreference:SearchNearbyRankPreference?.DISTANCE||'DISTANCE'
+  });
+  if(serial!==requestSerial)return;
+  const found=(response.places||[]).map(p=>{const point=p.location?.toJSON?.()||p.location;return {name:p.displayName||p.formattedAddress||'Ort',address:p.formattedAddress||'',lat:point?.lat,lng:point?.lng}}).filter(valid);
+  if(found.length){clearTimeout(timer);requestSerial++;poiResults=found;suggestions=[];error='';refreshResults()}
+ }catch(e){
+  if(serial!==requestSerial)return;
+  // The regular address suggestions are still available if Nearby is not enabled.
+ }
+}
 function refreshResults(){const e=document.getElementById('suggestions');if(e)e.innerHTML=window.MeviWebNavParity?.resultsHTML?.()||resultsHTML()}
 function item(d,i,kind){return '<button type="button" class="suggestion mg-result" onclick="MeviGoogleNav.pick(\''+kind+'\','+i+')" aria-label="'+text(d.name)+' auswählen"><span class="circle">⌖</span><span><strong>'+text(d.name)+'</strong><small>'+text(d.address||'Google Maps')+'</small></span><span class="suggestion-chevron">›</span></button>'}
 function resultsHTML(){
@@ -350,6 +376,8 @@ function buttons(kind,limit=6){return list(kind).slice(0,limit).map((d,i)=>item(
 async function pick(kind,index){
  let d;
  if(kind==='suggest'){
+  if(poiResults?.length){d=poiResults[index];if(!valid(d))return;poiResults=null}
+  else {
   const prediction=suggestions[index]?.placePrediction;if(!prediction)return;
   try{
     const place=prediction.toPlace();
@@ -358,6 +386,7 @@ async function pick(kind,index){
     d={name:place.displayName||place.formattedAddress||prediction.text.toString(),address:place.formattedAddress||'',lat:p?.lat,lng:p?.lng};
     token=null;
   }catch(e){status('Ziel konnte nicht geladen werden: '+(e.message||e));return}
+  }
  }else d=kind==='home'||kind==='work'?cache.slots?.[kind]:kind==='stored'?unique([...cache.favorites,...cache.recent],12)[index]:list(kind)[index];
  if(!valid(d))return;
  if(nativeMode()){
@@ -373,7 +402,7 @@ async function pick(kind,index){
 /** Browser-only destination book adapter. The native APK never calls these. */
 function webData(){
  return {favorites:cache.favorites.slice(),recent:cache.recent.slice(),slots:{...cache.slots},
-  suggestions:suggestions.map(s=>({name:s.placePrediction?.text?.toString?.()||'',address:'Google Places'})),
+  suggestions:poiResults?.length?poiResults.map(p=>({name:p.name,address:p.address})):suggestions.map(s=>({name:s.placePrediction?.text?.toString?.()||'',address:'Google Places'})),
   origin:current||manualOrigin||null,query,error};
 }
 function webWrite(changes={}){
@@ -765,7 +794,7 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={webData,webWrite,webSaveSelectedSlot,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={webData,webWrite,webSaveSelectedSlot,webPoi,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
