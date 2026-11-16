@@ -255,7 +255,7 @@ function open(){
   return;
  }
  const context=provider.routeContext();
- returnNav=context.nativeOwned?'browse':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
+ returnNav=context.nativeOwned?'browse':s.nav==='preview'?'preview':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
  view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();window.MeviAndroidSharedNav?.setOpen(true);
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
@@ -423,6 +423,11 @@ function book(){
   void window.MeviAndroidSharedNav.connect().then(book).catch(e=>window.MeviAndroidSharedNav.showError?.(e));
   return;
  }
+ if(s.nav!=='search'){
+  returnNav=provider.routeContext().nativeOwned?'browse':s.nav;
+  s.query='';stopMode=false;stopError='';pendingSlot='';pendingFavorite=false;editor=null;
+  provider.search('');
+ }
  view='book';s.nav='search';s.keyboard=false;filter='';rerender();window.MeviAndroidSharedNav?.setOpen(true)
 }
 function bookBack(){editor=null;view='search';s.query='';provider.search('');rerender()}
@@ -464,11 +469,6 @@ function refreshBook(){const el=document.getElementById('mg-parity-book-body');i
 function filterBook(q){filter=q;refreshBook()}
 function nativeFailure(e){window.MeviAndroidSharedNav?.showError?.(e);window.alert?.('Adressbuch: '+(e?.message||e))}
 function nativeImport(){if(provider.importPicker)void provider.importPicker().catch(nativeFailure)}
-const originalBrowse=window.browseOverlay;
-window.browseOverlay=function(){
- const html=originalBrowse?.()||'';
- return html.replace('<div class="inner">','<div class="inner"><div class="mg-parity-browse-actions"><button type="button" onclick="MeviWebNavParity.open()">Ziel / POI</button><button type="button" onclick="MeviWebNavParity.book()">Adressbuch</button></div>');
-};
 window.openSearch=open;
 window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
 window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};

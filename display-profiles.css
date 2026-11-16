@@ -741,7 +741,8 @@ html,body{min-height:0;overscroll-behavior:none}
 .cockpit .map.searchmode .keyboard .keyrow{position:relative;z-index:1}
 
 /* Native Android actions share the cockpit header in standalone navigation. */
-.cockpit.nav-status-only .workspace:has(> .mg-native-header) { gap: 2px; }
+.cockpit.nav-status-only .workspace:has(> .mg-native-header),
+.cockpit.mg-web-header .workspace { gap: 2px; }
 #mg-native-header-slot { display: none; }
 /* Next manoeuvre and arrival time while another app covers the native map. */
 #mg-native-trip {
@@ -775,7 +776,8 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 .cockpit.mg-trip-active:not(.nav-status-only) .workspace > .status > :not(#mg-native-trip) { display: none !important; }
 .cockpit.mg-trip-active:not(.nav-status-only) #mg-native-trip { flex: 0 1 auto; text-align: center; }
-.cockpit.nav-status-only .workspace > .status.mg-native-header {
+.cockpit.nav-status-only .workspace > .status.mg-native-header,
+.cockpit.mg-web-header .workspace > .status {
  position: static !important;
  width: auto;
  max-width: none;
@@ -795,7 +797,8 @@ html,body{min-height:0;overscroll-behavior:none}
  flex: 0 0 clamp(220px, 33%, 440px);
  align-self: stretch;
 }
-.cockpit .status.mg-native-header #meviPlatformHeader {
+.cockpit .status.mg-native-header #meviPlatformHeader,
+.cockpit.mg-web-header .status #meviPlatformHeader {
  display: block;
  margin-left: auto;
  min-width: 0;
@@ -803,12 +806,14 @@ html,body{min-height:0;overscroll-behavior:none}
  overflow: hidden;
  text-overflow: ellipsis;
 }
-.status.mg-native-header .status-right {
+.status.mg-native-header .status-right,
+.cockpit.mg-web-header .status-right {
  flex: 0 1 auto;
  min-width: 0;
  white-space: nowrap;
 }
-.status.mg-native-header #updateMessage {
+.status.mg-native-header #updateMessage,
+.cockpit.mg-web-header #updateMessage {
  min-width: 0;
  overflow: hidden;
  text-overflow: ellipsis;
@@ -816,4 +821,48 @@ html,body{min-height:0;overscroll-behavior:none}
 @media (max-width: 700px) {
  .status.mg-native-header #updateMessage,
  .status.mg-native-header .status-chip { display: none; }
+}
+
+.mg-web-nav-actions { display: none; }
+.cockpit.mg-web-header {
+ --nav-header-ink: #edf9ff;
+ --nav-header-stroke: #448899;
+ --nav-header-fill: #101b2c;
+}
+html[data-theme="cyberpunk"] .cockpit.mg-web-header {
+ --nav-header-ink: #ffe8fb;
+ --nav-header-stroke: #b03a9c;
+ --nav-header-fill: #120820;
+}
+html[data-theme="liquidglass"] .cockpit.mg-web-header {
+ --nav-header-ink: #f4f8ff;
+ --nav-header-stroke: #7fa9c9;
+ --nav-header-fill: #152842;
+}
+.cockpit.mg-web-header .mg-web-nav-actions {
+ display: flex;
+ order: -1;
+ flex: 0 0 auto;
+ align-items: center;
+ gap: clamp(4px, .55vw, 9px);
+}
+.mg-web-nav-actions button {
+ min-height: 36px;
+ padding: 4px clamp(7px, .8vw, 14px);
+ border: 1px solid var(--nav-header-stroke);
+ border-radius: 13px;
+ color: var(--nav-header-ink);
+ background: var(--nav-header-fill);
+ white-space: nowrap;
+ font-size: clamp(12px, 1.9vh, 17px);
+}
+@media (max-width: 700px), (orientation: portrait) {
+ .cockpit.mg-web-header .status #meviPlatformHeader,
+ .cockpit.mg-web-header .status-chip { display: none; }
+ .cockpit.mg-web-header .status-right { margin-left: auto; }
+}
+@media (max-width: 440px) {
+ .cockpit.mg-web-header #buildVersion,
+ .cockpit.mg-web-header #updateMessage,
+ .cockpit.mg-web-header .status-time { display: none; }
 }
