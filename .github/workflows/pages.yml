@@ -47,6 +47,7 @@ jobs:
           node tests/navigation-google-smoke.mjs
           node tests/navigation-shared-core-smoke.mjs
           node tests/nav-web-parity-smoke.mjs
+          node tests/nav-poi-details-smoke.mjs
           node tests/navigation-google-native-smoke.mjs
       - name: Test Home Assistant dashboard and REST access
         run: node tests/homeassistant-smoke.mjs

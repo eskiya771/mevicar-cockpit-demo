@@ -37,6 +37,9 @@ function snapshot(input){
   favorites:distinct(source.favorites,200),recent:distinct(source.recent,30).filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng)),
   slots:{home:destination(rawSlots.home),work:destination(rawSlots.work)},
   suggestions:Array.isArray(source.suggestions)?source.suggestions:[],
+  poiResults:Array.isArray(source.poiResults)?source.poiResults:[],
+  poiLoading:source.poiLoading===true,poiActive:source.poiActive===true,
+  poiError:String(source.poiError||''),
   origin:source.origin||null,
   query:String(source.query||''),error:String(source.error||'')
  };
@@ -45,7 +48,11 @@ function createProvider(methods){
  const required=['isReady','read','search','choose','saveSlot','saveFavorite','searchNearby','write'];
  if(!methods||required.some(key=>typeof methods[key]!=='function'))throw new TypeError('Navigation provider: missing method');
  // The UI communicates solely through this interface, not through any Google SDK.
- return Object.freeze(Object.fromEntries(required.map(key=>[key,(...args)=>methods[key](...args)])));
+ // Place details are optional for older/injected providers (the APK keeps native dialogs).
+ const adapter=Object.fromEntries(required.map(key=>[key,(...args)=>methods[key](...args)]));
+ adapter.details=typeof methods.details==='function'?(...args)=>methods.details(...args):async()=>null;
+ adapter.startRoute=typeof methods.startRoute==='function'?(...args)=>methods.startRoute(...args):async()=>false;
+ return Object.freeze(adapter);
 }
 function createBrowserProvider(navigation){
  if(!navigation||typeof navigation.webData!=='function'||typeof navigation.webWrite!=='function')throw new TypeError('Browser navigation unavailable');
@@ -56,7 +63,9 @@ function createBrowserProvider(navigation){
   choose:(kind,index,options)=>navigation.pick(kind,index,options),
   saveSlot:slot=>navigation.webSaveSelectedSlot?.(slot),
   saveFavorite:()=>navigation.saveFavorite?.(),
-  searchNearby:(type,query,origin)=>navigation.webPoi?.(type,query,origin),
+  searchNearby:(type,query,origin,options)=>navigation.webPoi?.(type,query,origin,options),
+  details:(kind,index)=>navigation.webPlaceDetails?.(kind,index),
+  startRoute:()=>root.startRoute?.()??false,
   write:changes=>navigation.webWrite(changes)
  });
 }

@@ -14,7 +14,7 @@ const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!save
 let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],MAX_SAVED),recent:unique(d.recent||[],MAX_RECENT).filter(valid),slots:{home:savedValid(d.slots?.home)?d.slots.home:null,work:savedValid(d.slots?.work)?d.slots.work:null}}}catch{}
 function capBook(){const occupied=Number(!!cache.slots.home)+Number(!!cache.slots.work);cache.favorites=cache.favorites.slice(0,MAX_SAVED-occupied)}
 capBook();
-let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,pendingSave=null,suggestions=[],poiResults=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
+let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,pendingSave=null,suggestions=[],poiResults=null,poiLoading=false,poiError='',poiActive=false,poiRequest=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
 // Native Navigation SDK is available only in the hybrid Android APK.
 // The Web/PWA keeps its own GPS guidance and never needs an Android API key.
 const nativeRequests=new Map();
@@ -326,7 +326,7 @@ async function mount(nextState){
 function mark(place){if(!map||!place)return;if(marker)marker.setMap(null);marker=new google.maps.Marker({map,position:{lat:place.lat,lng:place.lng},title:place.name});map.panTo({lat:place.lat,lng:place.lng});map.setZoom(15)}
 function changeQuery(value){
  query=String(value||'').trim();clearTimeout(timer);requestSerial++;
- suggestions=[];poiResults=null;if(query.length<2||!key()){refreshResults();return}
+ suggestions=[];poiResults=null;poiActive=false;poiLoading=false;poiError='';if(query.length<2||!key()){refreshResults();return}
  const serial=requestSerial;timer=setTimeout(()=>search(query,serial),320);
  refreshResults();
 }
@@ -342,39 +342,95 @@ async function search(q,serial){
    error='';refreshResults();
  }catch(e){if(serial!==requestSerial)return;suggestions=[];status('Adressvorschläge nicht verfügbar: '+(e.message||e));refreshResults()}
 }
-/** Actual nearby POIs via Google Places (New). Autocomplete remains the fallback. */
-async function webPoi(type,searchText,origin){
- if(nativeMode())return;
- const types={fuel:'gas_station',charge:'electric_vehicle_charging_station',parking:'parking',food:'restaurant',cafe:'cafe',cart:'supermarket',rest:'rest_stop',wrench:'car_repair'};
+/** Android-style POI list: one cheap list request and a distinct detail request
+    only when a result is opened. Do not fetch ratings for every list entry. */
+async function webPoi(type,searchText,origin,options={}){
+ if(nativeMode())return false;
+ const types={fuel:'gas_station',charge:'electric_vehicle_charging_station',parking:'parking',
+  food:'restaurant',cafe:'cafe',cart:'supermarket',rest:'rest_stop',wrench:'car_repair'};
+ const openNow=!!options.openNow,sort=options.sort==='relevance'?'relevance':'distance';
  changeQuery(searchText);
- const serial=requestSerial;
+ clearTimeout(timer);
+ const serial=++requestSerial;
+ poiActive=true;poiResults=[];poiLoading=true;poiError='';error='';
+ poiRequest={type,searchText,openNow,sort};
+ suggestions=[];refreshResults();
+ const center=origin||current||manualOrigin||map?.getCenter()?.toJSON?.()||FALLBACK_CENTER;
  try{
   await load();
-  const {Place,SearchNearbyRankPreference}=await google.maps.importLibrary('places');
-  const center=origin||current||manualOrigin||map?.getCenter()?.toJSON?.()||FALLBACK_CENTER;
+  const {Place,SearchNearbyRankPreference,SearchByTextRankPreference}=await google.maps.importLibrary('places');
+  if(serial!==requestSerial)return false;
   let response;
-  if(type==='text'){
+  if(type==='text'||openNow){
    if(!Place?.searchByText)throw Error('Google Places Textsuche nicht verfügbar');
    response=await Place.searchByText({
-    textQuery:searchText,fields:['displayName','formattedAddress','location'],
-    locationBias:center,maxResultCount:15
+    textQuery:searchText,
+    fields:['id','displayName','formattedAddress','location','types'],
+    locationBias:center,maxResultCount:20,isOpenNow:openNow,
+    rankPreference:sort==='distance'?(SearchByTextRankPreference?.DISTANCE||'DISTANCE'):(SearchByTextRankPreference?.RELEVANCE||'RELEVANCE'),
+    ...(openNow&&types[type]?{includedType:types[type]}:{})
    });
   }else{
-   if(!Place?.searchNearby)throw Error('Nearby search not supported');
-   response=await Place.searchNearby({
-    fields:['displayName','formattedAddress','location'],
-    locationRestriction:{center,radius:16000},
-    includedPrimaryTypes:[types[type]||'restaurant'],
-    maxResultCount:15,
-    rankPreference:SearchNearbyRankPreference?.DISTANCE||'DISTANCE'
-   });
+   if(!Place?.searchNearby)throw Error('Google Places Umgebungssuche nicht verfügbar');
+   // Android expands nearby searches from 5 to 15 to 50 km when empty.
+   for(const radius of [5000,15000,50000]){
+    response=await Place.searchNearby({
+     fields:['id','displayName','formattedAddress','location','types'],
+     locationRestriction:{center,radius},
+     includedPrimaryTypes:[types[type]||'restaurant'],
+     maxResultCount:20,
+     rankPreference:sort==='distance'?(SearchNearbyRankPreference?.DISTANCE||'DISTANCE'):(SearchNearbyRankPreference?.POPULARITY||'POPULARITY')
+    });
+    if(serial!==requestSerial)return false;
+    if(response.places?.length)break;
+   }
   }
-  if(serial!==requestSerial)return;
-  const found=(response.places||[]).map(p=>{const point=p.location?.toJSON?.()||p.location;return {name:p.displayName||p.formattedAddress||'Ort',address:p.formattedAddress||'',lat:point?.lat,lng:point?.lng,placeId:p.id||'',fetchedAt:Date.now()}}).filter(valid);
-  if(found.length){clearTimeout(timer);requestSerial++;poiResults=found;suggestions=[];error='';refreshResults()}
+  if(serial!==requestSerial)return false;
+  poiResults=(response?.places||[]).map(p=>{
+   const point=p.location?.toJSON?.()||p.location;
+   return {name:p.displayName||p.formattedAddress||'Ort',address:p.formattedAddress||'',lat:point?.lat,lng:point?.lng,
+    placeId:p.id||'',types:Array.isArray(p.types)?p.types:[]};
+  }).filter(valid);
+  poiLoading=false;poiError=poiResults.length?'':'Keine passenden Orte gefunden.';
+  refreshResults();return true;
  }catch(e){
-  if(serial!==requestSerial)return;
-  // The regular address suggestions are still available if Nearby is not enabled.
+  if(serial!==requestSerial)return false;
+  poiLoading=false;poiError='Google Places: '+String(e.message||e);
+  poiResults=[];refreshResults();return false;
+ }
+}
+/** Place Details (Enterprise fields) fetched ONLY when the place sheet opens. */
+async function webPlaceDetails(kind,index){
+ if(nativeMode())return null;
+ const base=kind==='suggest'?(poiActive?poiResults?.[index]:null):null;
+ const prediction=kind==='suggest'&&!poiActive?suggestions[index]?.placePrediction:null;
+ if(!base&&!prediction)return null;
+ const result={name:base?.name||prediction?.text?.toString?.()||'Ort',
+  address:base?.address||'',lat:base?.lat,lng:base?.lng,placeId:base?.placeId||'',types:base?.types||[]};
+ try{
+  await load();
+  const {Place}=await google.maps.importLibrary('places');
+  const place=prediction?.toPlace?.()||(result.placeId?new Place({id:result.placeId}):null);
+  if(!place)return result;
+  await place.fetchFields({fields:['id','displayName','formattedAddress','location','types',
+   'rating','userRatingCount','internationalPhoneNumber','currentOpeningHours']});
+  const point=place.location?.toJSON?.()||place.location;
+  const hours=place.currentOpeningHours;
+  let openNow=null;
+  // isOpen() is available only in some Google Maps JS channels.
+  if(typeof place.isOpen==='function'){
+   try{const opened=await place.isOpen();if(typeof opened==='boolean')openNow=opened}catch{}
+  }
+  return {...result,name:place.displayName||result.name,address:place.formattedAddress||result.address,
+   lat:Number.isFinite(point?.lat)?point.lat:result.lat,lng:Number.isFinite(point?.lng)?point.lng:result.lng,
+   placeId:place.id||result.placeId,types:Array.isArray(place.types)?place.types:result.types,
+   rating:Number.isFinite(place.rating)?place.rating:null,
+   ratingCount:Number.isInteger(place.userRatingCount)?place.userRatingCount:null,
+   phone:typeof place.internationalPhoneNumber==='string'?place.internationalPhoneNumber:'',
+   openNow,hours:Array.isArray(hours?.weekdayDescriptions)?hours.weekdayDescriptions.slice(0,7):[]};
+ }catch(e){
+  // Keep basic fields usable even if expensive details cannot be loaded.
+  return {...result,detailError:'Zusatzdaten nicht verfügbar: '+String(e.message||e)};
  }
 }
 function refreshResults(){const e=document.getElementById('suggestions');if(e)e.innerHTML=window.MeviWebNavParity?.resultsHTML?.()||resultsHTML()}
@@ -439,7 +495,8 @@ async function pick(kind,index,options={}){
 /** Browser-only destination book adapter. The native APK never calls these. */
 function webData(){
  return {favorites:cache.favorites.slice(),recent:cache.recent.slice(),slots:{...cache.slots},
-  suggestions:poiResults?.length?poiResults.map(p=>({name:p.name,address:p.address})):suggestions.map(s=>({name:s.placePrediction?.text?.toString?.()||'',address:'Google Places'})),
+  suggestions:poiActive?poiResults.map(p=>({...p})):suggestions.map(s=>({name:s.placePrediction?.text?.toString?.()||'',address:'Google Places'})),
+  poiResults:poiActive?poiResults.map(p=>({...p})):[],poiLoading,poiError,poiActive,
   origin:current||manualOrigin||null,query,error};
 }
 function webWrite(changes={}){
@@ -832,7 +889,7 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={webData,webWrite,webSaveSelectedSlot,webPoi,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();

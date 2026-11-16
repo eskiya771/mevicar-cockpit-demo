@@ -116,3 +116,42 @@
  .mg-parity-edit-actions{gap:5px}
  .mg-navigation .mg-parity-edit-actions button{padding:6px 12px}
 }
+
+/* POI results and details, adapted to the five landscape profiles.
+   List actions stay visible while results scroll independently. */
+.mg-poi-title{flex:1;min-width:0;font-size:clamp(17px,3.4vh,29px);font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mg-poi-google{flex:0 0 auto;color:#bfa9d1;font-size:clamp(11px,1.9vh,15px);white-space:nowrap}
+.mg-poi-chips{display:flex;align-items:center;gap:clamp(4px,1vw,12px);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;flex:0 0 auto}
+.mg-poi-chips::-webkit-scrollbar{display:none}
+.mg-navigation .mg-poi-chips button,.mg-navigation .mg-poi-retry{min-height:clamp(43px,10vh,57px);padding:5px clamp(10px,1.5vw,22px);background:#211332;color:#f4e3f3;border:2px solid transparent;border-radius:12px;font-size:clamp(13px,2.3vh,19px);white-space:nowrap}
+.mg-navigation .mg-poi-chips button.selected{background:#23405a;color:#b7f7ff;border-color:#55e5f6}
+.mg-poi-results{padding:0 1px 4px}
+.mg-poi-hit{display:flex;align-items:stretch;flex:0 0 auto;gap:0;min-height:clamp(54px,13vh,83px);background:#201332;border-radius:12px;overflow:hidden}
+.mg-navigation .mg-poi-hit-main{display:flex;flex:1;min-width:0;align-items:center;text-align:left;background:transparent;border:0;padding:6px clamp(9px,1.2vw,18px);gap:clamp(7px,1.1vw,14px);color:#f8e5f4;border-radius:0}
+.mg-poi-number{display:grid;place-items:center;flex:0 0 clamp(26px,5vh,34px);height:clamp(26px,5vh,34px);border-radius:50%;background:#55e5f6;color:#122b38;font-size:clamp(13px,2.2vh,17px);font-weight:750}
+.mg-poi-desc{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.mg-poi-desc strong{font-size:clamp(14px,2.65vh,22px);white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.mg-poi-desc small{font-size:clamp(12px,2.1vh,17px);color:#cba9c8;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.mg-navigation .mg-poi-route{flex:0 0 clamp(46px,9.8vh,60px);background:transparent;color:#55e5f6;border:0;border-left:1px solid #56335c;display:grid;place-items:center;border-radius:0}
+.mg-poi-route svg{height:clamp(22px,4.6vh,31px);width:clamp(22px,4.6vh,31px)}
+.mg-poi-detail-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:clamp(8px,1.4vw,20px);display:flex;flex-direction:column;gap:clamp(7px,1.5vh,14px)}
+.mg-poi-detail-body h2{font-size:clamp(21px,4.3vh,35px);line-height:1.2;overflow-wrap:anywhere;margin:0}
+.mg-poi-detail-body p{font-size:clamp(14px,2.7vh,21px);line-height:1.32;margin:0;overflow-wrap:anywhere}
+.mg-poi-detail-body p svg{height:1.15em;width:1.15em;vertical-align:middle}
+.mg-poi-detail-body a{color:#a5f8ff}
+.mg-poi-muted{color:#c9adcf}
+.mg-poi-opening{color:#a9eeca}
+.mg-poi-warning{color:#fac7bc}
+.mg-navigation .mg-poi-warning button{border:1px solid #9d6377;border-radius:10px;padding:6px 12px;background:#2e2034;color:#ffe9ee}
+.mg-poi-hours summary{font-weight:650;color:#d3eaff;cursor:pointer;min-height:32px}
+.mg-poi-hours>div{font-size:clamp(12px,2.1vh,17px);padding:3px 0}
+.mg-poi-detail-actions{flex:0 0 auto;display:flex;gap:clamp(6px,1vw,14px)}
+.mg-navigation .mg-poi-detail-actions button{flex:1;min-width:0;min-height:clamp(46px,10vh,64px);background:#281b3b;color:#f8e4f5;border:1px solid #70567c;border-radius:13px;font-size:clamp(15px,2.7vh,22px);font-weight:650;padding:6px 12px}
+.mg-navigation .mg-poi-detail-actions button.mg-poi-action-route{background:#55e5f6;color:#112a36;border-color:#55e5f6}
+@media(max-width:850px),(max-height:440px){
+ .mg-poi-detail-body{padding:5px 7px;gap:5px}
+ .mg-poi-detail-body h2{font-size:clamp(18px,4vh,24px)}
+ .mg-poi-chips{gap:5px}
+ .mg-navigation .mg-poi-chips button{padding:4px 9px}
+ .mg-poi-google{font-size:11px}
+}

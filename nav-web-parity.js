@@ -9,7 +9,7 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
-let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='';
+let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='';
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths={
  back:'<path d="m15 18-6-6 6-6"/><path d="M9 12h12"/>',
@@ -82,6 +82,79 @@ function searchHTML(){
  '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
  '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+tabs()+'</div>'+
  '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
+}
+/* POI list and place card mirror Fable's NavPoiListPanel / NavPlaceSheet.
+   Details are fetched only after one item is opened (Google Enterprise billing). */
+const placeTypes={gas_station:'Tankstelle',electric_vehicle_charging_station:'Ladestation',parking:'Parkplatz',
+ restaurant:'Restaurant',fast_food_restaurant:'Schnellrestaurant',cafe:'Café',bakery:'Bäckerei',
+ supermarket:'Supermarkt',shopping_mall:'Einkaufszentrum',rest_stop:'Rastplatz',
+ public_bathroom:'WC',car_repair:'Werkstatt'};
+function placeKind(types){
+ const labels=(Array.isArray(types)?types:[]).map(t=>placeTypes[t]).filter(Boolean);
+ return labels[0]||'';
+}
+function poiRows(){
+ const d=data();
+ if(d.poiLoading)return '<p class="mg-parity-empty" role="status">Google Places sucht Orte …</p>';
+ if(d.poiError)return '<div class="mg-parity-empty" role="status">'+safe(d.poiError)+
+  '<button type="button" class="mg-poi-retry" onclick="MeviWebNavParity.retryPoi()">Erneut versuchen</button></div>';
+ if(!d.poiResults.length)return '<div class="mg-parity-empty">Keine passenden Orte gefunden.</div>';
+ return d.poiResults.map((item,i)=>{
+  const detail=[placeKind(item.types),distance(item),item.address].filter(Boolean).join(' · ');
+  return '<div class="mg-poi-hit"><button class="mg-poi-hit-main" type="button" onclick="MeviWebNavParity.showPlace('+i+')" aria-label="'+safe(item.name)+' Details öffnen">'+
+   '<span class="mg-poi-number">'+(i+1)+'</span><span class="mg-poi-desc"><strong>'+safe(item.name)+'</strong>'+
+   '<small>'+safe(detail)+'</small></span></button>'+
+   '<button type="button" class="mg-poi-route" onclick="MeviWebNavParity.routeResult('+i+')" aria-label="Route zu '+safe(item.name)+'">'+ico('pin')+'</button></div>';
+ }).join('');
+}
+function poiHTML(){
+ const d=data(),sort=poiState?.sort||'distance',openNow=!!poiState?.openNow;
+ return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="POI-Suchergebnisse">'+
+ '<div class="mg-parity-layout"><div class="mg-parity-top">'+
+ '<button type="button" class="mg-parity-back" onclick="MeviWebNavParity.backToSearch()" aria-label="Zurück zur Suche">'+ico('back')+'</button>'+
+ '<strong class="mg-poi-title">'+safe(poiState?.query||'Orte')+'</strong><span class="mg-poi-google">Google Maps</span></div>'+
+ '<div class="mg-poi-chips" aria-label="Treffer sortieren und filtern">'+
+ '<button type="button" class="'+(sort==='distance'?'selected':'')+'" aria-pressed="'+(sort==='distance')+'" onclick="MeviWebNavParity.poiSort(\'distance\')">Entfernung</button>'+
+ '<button type="button" class="'+(sort==='relevance'?'selected':'')+'" aria-pressed="'+(sort==='relevance')+'" onclick="MeviWebNavParity.poiSort(\'relevance\')">Relevanz</button>'+
+ '<button type="button" class="'+(openNow?'selected':'')+'" aria-pressed="'+openNow+'" onclick="MeviWebNavParity.poiOpenNow()">Jetzt geöffnet</button></div>'+
+ '<div id="suggestions" class="mg-parity-results mg-poi-results" aria-live="polite">'+poiRows()+'</div></div></div>';
+}
+function placeKey(p){
+ return p?.placeId?'p:'+p.placeId:Number.isFinite(p?.lat)&&Number.isFinite(p?.lng)?'c:'+p.lat.toFixed(5)+','+p.lng.toFixed(5):'';
+}
+function isPlaceSaved(){
+ const key=placeKey(placeState);
+ return !!key&&data().favorites.some(item=>placeKey(item)===key);
+}
+function placeHTML(){
+ const p=placeState||{},name=p.name||'Ort',point=Number.isFinite(p.lat)&&Number.isFinite(p.lng);
+ const label=placeKind(p.types),rating=Number.isFinite(p.rating)&&p.rating>=1&&p.rating<=5?
+  p.rating.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+
+  (Number.isInteger(p.ratingCount)&&p.ratingCount>0?' ('+p.ratingCount.toLocaleString('de-DE')+')':''):'';
+ const phone=typeof p.phone==='string'&&/^[+0-9 ()/-]{3,32}$/.test(p.phone)?p.phone:'';
+ const saved=isPlaceSaved();
+ const hours=Array.isArray(p.hours)?p.hours.filter(x=>typeof x==='string').slice(0,7):[];
+ const opening=p.openNow===true?'Geöffnet':p.openNow===false?'Geschlossen':'';
+ return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Ortsdetails">'+
+ '<div class="mg-parity-layout"><div class="mg-parity-top">'+
+ '<button type="button" class="mg-parity-back" onclick="MeviWebNavParity.backFromPlace()" aria-label="Zurück zu den Treffern">'+ico('back')+'</button>'+
+ '<strong class="mg-poi-title">Ortsdetails</strong><span class="mg-poi-google">Google Maps</span></div>'+
+ '<div class="mg-poi-detail-body" aria-live="polite"><h2>'+safe(name)+'</h2>'+
+ (label?'<p class="mg-poi-muted">'+safe(label)+'</p>':'')+
+ (p.address?'<p>'+safe(p.address)+'</p>':'')+
+ (point?'<p class="mg-poi-muted">'+safe(distance(p))+(distance(p)?' Luftlinie':'')+'</p>':'')+
+ (opening?'<p class="mg-poi-opening">'+safe(opening)+'</p>':'')+
+ (rating?'<p>'+ico('star')+' '+safe(rating)+'</p>':'')+
+ (phone?'<p>'+ico('pin')+' <a href="tel:'+safe(phone.replace(/[^0-9+]/g,''))+'">'+safe(phone)+'</a></p>':'')+
+ (hours.length?'<details class="mg-poi-hours"><summary>Öffnungszeiten</summary>'+hours.map(h=>'<div>'+safe(h)+'</div>').join('')+'</details>':'')+
+ (placeLoading?'<p class="mg-poi-muted">Google-Ortsdaten werden geladen …</p>':'')+
+ (placeError||p.detailError?'<p class="mg-poi-warning">'+safe(placeError||p.detailError)+
+  ' <button type="button" onclick="MeviWebNavParity.retryPlace()">Erneut versuchen</button></p>':'')+
+ '</div><div class="mg-poi-detail-actions">'+
+ (point?'<button type="button" class="mg-poi-action-route" onclick="MeviWebNavParity.routePlace()">'+
+ (window.MeviGoogleNav?.guidanceRunning?.()?'Neue Route':'Route')+'</button>':'')+
+ (point||p.placeId?'<button type="button" onclick="MeviWebNavParity.savePlace()">'+(saved?'Gespeichert ✓':'Speichern')+'</button>':'')+
+ '</div></div></div>';
 }
 function bookItems(items,kind){
  const q=filter.toLocaleLowerCase('de-DE').trim();
@@ -164,11 +237,11 @@ function move(index,delta){
 function rerender(){window.render?.()}
 function open(){
  if(!provider.isReady()){window.openCredentialSettings?.();return}
- view='search';tab='recent';filter='';editor=null;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
+ view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
-function close(){pendingSlot='';pendingFavorite=false;editor=null;view='search';s.nav='browse';s.keyboard=false;rerender()}
+function close(){pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;view='search';s.nav='browse';s.keyboard=false;rerender()}
 function input(value){
  s.query=String(value||'');provider.search(s.query);
  const controls=document.getElementById('mg-parity-controls');if(controls)controls.hidden=!!s.query.trim();
@@ -180,6 +253,7 @@ function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
 async function choose(kind,index){
  const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
  const saveOnly=!!(savingSlot||savingFavorite);
+ if(kind==='suggest'&&!saveOnly){await showPlace(index);return}
  const success=await provider.choose(kind,index,{saveOnly});
  if(success===false)return;
  if(savingSlot)provider.saveSlot(savingSlot);
@@ -197,9 +271,74 @@ function slot(k){
  document.getElementById('searchInput')?.focus({preventScroll:true});
 }
 function poi(type,query){
- view='search';s.query=query;provider.search(query);rerender();
- void provider.searchNearby(type,query,gps||null);
+ poiState={type,query,sort:'distance',openNow:false};
+ view='results';s.nav='search';s.keyboard=false;s.query=query;
+ provider.search(query);
+ void provider.searchNearby(type,query,gps||null,{sort:'distance',openNow:false});
+ rerender();
 }
+function retryPoi(){
+ if(!poiState)return;
+ s.query=poiState.query;
+ void provider.searchNearby(poiState.type,poiState.query,gps||null,{sort:poiState.sort,openNow:poiState.openNow});
+ rerender();
+}
+function poiSort(sort){
+ if(!poiState||!['distance','relevance'].includes(sort)||poiState.sort===sort)return;
+ poiState={...poiState,sort};retryPoi();
+}
+function poiOpenNow(){
+ if(!poiState)return;
+ poiState={...poiState,openNow:!poiState.openNow};retryPoi();
+}
+function backToSearch(){
+ placeSerial++;placeState=null;poiState=null;view='search';s.query='';
+ provider.search('');rerender();
+}
+async function showPlace(index){
+ const items=view==='results'?data().poiResults:data().suggestions;
+ if(!Number.isInteger(index)||!items?.[index])return;
+ placeBack=view==='place'?placeBack:view==='results'?'results':'search';
+ placeState={...items[index]};placeIndex=index;view='place';s.nav='search';
+ placeLoading=true;placeError='';const serial=++placeSerial;rerender();
+ try{
+  const detail=await provider.details('suggest',index);
+  if(serial!==placeSerial||view!=='place')return;
+  if(detail)placeState={...placeState,...detail};
+  else placeError='Google-Ortsdetails sind nicht verfügbar.';
+ }catch(e){
+  if(serial!==placeSerial||view!=='place')return;
+  placeError='Ortsdaten konnten nicht geladen werden: '+String(e.message||e);
+ }
+ if(serial===placeSerial&&view==='place'){placeLoading=false;rerender()}
+}
+function retryPlace(){
+ if(view==='place'&&placeIndex>=0)void showPlace(placeIndex);
+}
+function backFromPlace(){placeSerial++;placeLoading=false;placeState=null;view=placeBack;rerender()}
+function savePlace(){
+ if(!placeState)return;
+ const clean=shared.destination(placeState);
+ if(!clean)return;
+ const book=data(),key=placeKey(clean);
+ if(isPlaceSaved())write({favorites:book.favorites.filter(item=>placeKey(item)!==key)});
+ else{
+  const item={...clean,id:clean.id||'web-'+Date.now()};
+  write({favorites:shared.distinct([item,...book.favorites],200)});
+ }
+}
+async function routeResult(index){
+ const success=await provider.choose('suggest',index);
+ if(success===false)return;
+ placeSerial++;placeState=null;view='search';s.keyboard=false;
+ if(s.nav==='search'){s.nav='browse';rerender()}
+ await provider.startRoute();
+}
+async function routePlace(){
+ if(!placeState||!Number.isFinite(placeState.lat)||!Number.isFinite(placeState.lng))return;
+ await routeResult(placeIndex);
+}
+
 function submitSearch(){
  const q=String(s.query||'').trim();
  if(q.length<2)return;
@@ -238,7 +377,7 @@ window.browseOverlay=function(){
  return html.replace('<div class="inner">','<div class="inner"><div class="mg-parity-browse-actions"><button type="button" onclick="MeviWebNavParity.open()">Ziel / POI</button><button type="button" onclick="MeviWebNavParity.book()">Adressbuch</button></div>');
 };
 window.openSearch=open;
-window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():searchHTML()};
-window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,filter:filterBook,resultsHTML:()=>view==='search'?searchRows():''};
+window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
+window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
