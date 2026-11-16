@@ -158,7 +158,7 @@ function placeHTML(){
  '</div><div class="mg-poi-detail-actions">'+
  (route.hasRoute&&point&&route.stops.length<route.maxStops?'<button type="button" class="mg-poi-action-stop" onclick="MeviWebNavParity.addStopPlace()">＋ Als Stopp hinzufügen</button>':'')+
  (point?'<button type="button" class="mg-poi-action-route" onclick="MeviWebNavParity.routePlace()">'+
- (window.MeviGoogleNav?.guidanceRunning?.()?'Neue Route':'Route')+'</button>':'')+
+ (route.active?'Neue Route':'Route')+'</button>':'')+
  (point||p.placeId?'<button type="button" onclick="MeviWebNavParity.savePlace()">'+(saved?'Gespeichert ✓':'Speichern')+'</button>':'')+
  '</div></div></div>';
 }
