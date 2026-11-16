@@ -58,7 +58,7 @@ assert.equal(state.poiResults[0].placeId,'ChIJFUEL001');
 assert.equal(state.poiResults[0].types[0],'gas_station');
 assert.equal(logs.filter(x=>x.kind==='detail').length,0,'Do not fetch details for list entries');
 assert.equal(logs[0].kind,'nearby');
-assert.deepEqual(logs[0].request.fields,['id','displayName','formattedAddress','location','types']);
+assert.deepEqual(Array.from(logs[0].request.fields),['id','displayName','formattedAddress','location','types']);
 assert.equal(logs[0].request.rankPreference,'DISTANCE');
 assert.match(display.innerHTML,/Test-Tankstelle/,'Results are rendered by live provider');
 
