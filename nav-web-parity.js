@@ -237,11 +237,11 @@ function move(index,delta){
 function rerender(){window.render?.()}
 function open(){
  if(!provider.isReady()){window.openCredentialSettings?.();return}
- view='search';tab='recent';filter='';editor=null;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
+ view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
-function close(){pendingSlot='';pendingFavorite=false;editor=null;view='search';s.nav='browse';s.keyboard=false;rerender()}
+function close(){pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;view='search';s.nav='browse';s.keyboard=false;rerender()}
 function input(value){
  s.query=String(value||'');provider.search(s.query);
  const controls=document.getElementById('mg-parity-controls');if(controls)controls.hidden=!!s.query.trim();
@@ -253,6 +253,7 @@ function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
 async function choose(kind,index){
  const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
  const saveOnly=!!(savingSlot||savingFavorite);
+ if(kind==='suggest'&&!saveOnly){await showPlace(index);return}
  const success=await provider.choose(kind,index,{saveOnly});
  if(success===false)return;
  if(savingSlot)provider.saveSlot(savingSlot);
@@ -270,9 +271,74 @@ function slot(k){
  document.getElementById('searchInput')?.focus({preventScroll:true});
 }
 function poi(type,query){
- view='search';s.query=query;provider.search(query);rerender();
- void provider.searchNearby(type,query,gps||null);
+ poiState={type,query,sort:'distance',openNow:false};
+ view='results';s.nav='search';s.keyboard=false;s.query=query;
+ provider.search(query);
+ void provider.searchNearby(type,query,gps||null,{sort:'distance',openNow:false});
+ rerender();
 }
+function retryPoi(){
+ if(!poiState)return;
+ s.query=poiState.query;
+ void provider.searchNearby(poiState.type,poiState.query,gps||null,{sort:poiState.sort,openNow:poiState.openNow});
+ rerender();
+}
+function poiSort(sort){
+ if(!poiState||!['distance','relevance'].includes(sort)||poiState.sort===sort)return;
+ poiState={...poiState,sort};retryPoi();
+}
+function poiOpenNow(){
+ if(!poiState)return;
+ poiState={...poiState,openNow:!poiState.openNow};retryPoi();
+}
+function backToSearch(){
+ placeSerial++;placeState=null;poiState=null;view='search';s.query='';
+ provider.search('');rerender();
+}
+async function showPlace(index){
+ const items=view==='results'?data().poiResults:data().suggestions;
+ if(!Number.isInteger(index)||!items?.[index])return;
+ placeBack=view==='place'?placeBack:view==='results'?'results':'search';
+ placeState={...items[index]};placeIndex=index;view='place';s.nav='search';
+ placeLoading=true;placeError='';const serial=++placeSerial;rerender();
+ try{
+  const detail=await provider.details('suggest',index);
+  if(serial!==placeSerial||view!=='place')return;
+  if(detail)placeState={...placeState,...detail};
+  else placeError='Google-Ortsdetails sind nicht verfügbar.';
+ }catch(e){
+  if(serial!==placeSerial||view!=='place')return;
+  placeError='Ortsdaten konnten nicht geladen werden: '+String(e.message||e);
+ }
+ if(serial===placeSerial&&view==='place'){placeLoading=false;rerender()}
+}
+function retryPlace(){
+ if(view==='place'&&placeIndex>=0)void showPlace(placeIndex);
+}
+function backFromPlace(){placeSerial++;placeLoading=false;placeState=null;view=placeBack;rerender()}
+function savePlace(){
+ if(!placeState)return;
+ const clean=shared.destination(placeState);
+ if(!clean)return;
+ const book=data(),key=placeKey(clean);
+ if(isPlaceSaved())write({favorites:book.favorites.filter(item=>placeKey(item)!==key)});
+ else{
+  const item={...clean,id:clean.id||'web-'+Date.now()};
+  write({favorites:shared.distinct([item,...book.favorites],200)});
+ }
+}
+async function routeResult(index){
+ const success=await provider.choose('suggest',index);
+ if(success===false)return;
+ placeSerial++;placeState=null;view='search';s.keyboard=false;
+ if(s.nav==='search'){s.nav='browse';rerender()}
+ await provider.startRoute();
+}
+async function routePlace(){
+ if(!placeState||!Number.isFinite(placeState.lat)||!Number.isFinite(placeState.lng))return;
+ await routeResult(placeIndex);
+}
+
 function submitSearch(){
  const q=String(s.query||'').trim();
  if(q.length<2)return;
@@ -311,7 +377,7 @@ window.browseOverlay=function(){
  return html.replace('<div class="inner">','<div class="inner"><div class="mg-parity-browse-actions"><button type="button" onclick="MeviWebNavParity.open()">Ziel / POI</button><button type="button" onclick="MeviWebNavParity.book()">Adressbuch</button></div>');
 };
 window.openSearch=open;
-window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():searchHTML()};
-window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,filter:filterBook,resultsHTML:()=>view==='search'?searchRows():''};
+window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
+window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
