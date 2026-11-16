@@ -81,6 +81,7 @@ function searchHTML(){
  '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="search" placeholder="Adresse, Ort oder POI" aria-label="Adresse, Ort oder POI" autocomplete="off" spellcheck="false" maxlength="200" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
  '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
  '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+tabs()+'</div>'+
+ (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
  '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
 }
 /* POI list and place card mirror Fable's NavPoiListPanel / NavPlaceSheet.
