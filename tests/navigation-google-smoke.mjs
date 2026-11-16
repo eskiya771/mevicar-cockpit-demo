@@ -116,5 +116,6 @@ const cockpit=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(cockpit,/Navigation starten/,'Classic-like navigation start action is visible');
 assert.match(cockpit,/beginNavigation\(\)/,'Start action calls the GPS guidance engine');
 assert.match(cockpit,/Demo-Fahrt/,'Desktop test mode is visibly distinguished from live navigation');
+assert.match(source,/computeRouteFrom\(point,\{reroute:true\}\)/,'Route recalculation preserves the Road Assist trip');
 console.log('Google navigation: ready state, turn cards, live start/stop, voice control and demo tested.');
 console.log('Google Maps navigation: manual origin, GPS retry, permissions and route rendering contract passed.');
