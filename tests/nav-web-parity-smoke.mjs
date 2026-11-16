@@ -19,6 +19,7 @@ assert(sw.includes("'./navigation-shared-core.js'")&&sw.includes("'./nav-web-par
 assert(nav.includes('function webPoi(')&&nav.includes('function webSaveSelectedSlot('));
 assert(nav.includes("fuel:'gas_station'")&&nav.includes("wrench:'car_repair'"),'POI buttons must map to correct Google place types');
 assert(nav.includes("if(query.length<2||!key())"),'Web autocomplete must match Android 2-character threshold');
+assert(nav.includes("Place.searchByText("),'Free-text Enter must invoke real Google Places text search');
 assert(css.includes('position:fixed')&&css.includes('.mg-parity-chips'));
 const state={
  favorites:[{name:'Gymnasium',address:'Bergstraße 4',lat:49.71,lng:10.82}],
@@ -77,6 +78,11 @@ win.MeviWebNavParity.bookBack();
 win.MeviWebNavParity.poi('fuel','Tankstelle');
 assert.equal(calls[0][0],'fuel');
 assert.equal(s.query,'Tankstelle');
+win.MeviWebNavParity.input('Apotheke');
+win.MeviWebNavParity.submitSearch();
+assert(calls.some(c=>c[0]==='text'&&c[1]==='Apotheke'),'Enter should search places by text');
+assert(win.searchOverlay().includes('MeviWebNavParity.submitSearch()'),'Search input must support Enter');
+
 win.MeviWebNavParity.book();
 win.MeviWebNavParity.add();
 await win.MeviWebNavParity.choose('recent',0);
