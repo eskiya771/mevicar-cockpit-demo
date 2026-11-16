@@ -165,4 +165,16 @@ assert.match(settingsCss,/\.mevi-credentials\s*\{[^}]*overflow-y:auto/s,
  'Large labels must scroll without overflowing the cockpit');
 assert.match(workflow,/mevicar-versioned-credentials/,
  'Credential CSS must be embedded in every versioned HTML release');
+for(const file of ['.github/workflows/pages.yml','.github/workflows/quality.yml']){
+ const config=read(file);
+ assert.match(config,/mevicar-versioned-credentials-script/,
+  'Credential JS must be inlined in the versioned HTML: '+file);
+ assert.match(config,/credentials_script = '<script src="\.\/credential-settings\.js"><\/script>'/,
+  'Bundle must replace the original credentials JS tag: '+file);
+ assert.match(config,/html = html\.replace\(credentials_script/,
+  'Bundle must actually replace the credentials JS tag: '+file);
+}
+assert(index.includes('<script src="./credential-settings.js"></script>'));
+assert.match(code,/HA_WEB_TOKEN_KEY/);
+assert.doesNotMatch(code,/Der Browser bewahrt den Token nur bis zum Neuladen im Arbeitsspeicher auf/);
 console.log('Central credentials: browser HA token persistence, restart, removal, origin isolation, native vault and UI OK');
