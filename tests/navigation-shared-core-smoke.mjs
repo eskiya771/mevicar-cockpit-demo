@@ -54,6 +54,46 @@ assert.throws(()=>core.importAddressBook([],{}),/Ungültiges Adressbuch/);
 assert.throws(()=>core.importAddressBook({unexpected:true},{}),/Ziellisten/);
 assert.throws(()=>core.importAddressBook({saved:new Array(2001).fill(gym)},{}),/Zu viele Ziele/);
 
+// Native DestinationBook parity: edit name, note, icon and slot without losing metadata.
+const addressBook={
+ favorites:[
+  {...gym,id:'gym',icon:'heart',note:'Nordtor'},
+  {id:'cafe',name:'Café',address:'Marktplatz',lat:49.72,lng:10.83}
+ ],
+ recent:[],slots:{home,work:{id:'work',name:'Arbeit',lat:49.6,lng:11}}
+};
+const immutable=JSON.stringify(addressBook);
+let changed=core.editSaved(addressBook,'favorites',0,{
+ name:'Gymnasium neu',note:'Haupteingang',icon:'wrench',slot:''
+});
+assert.equal(changed.favorites[0].name,'Gymnasium neu');
+assert.equal(changed.favorites[0].note,'Haupteingang');
+assert.equal(changed.favorites[0].icon,'wrench');
+assert.equal(changed.favorites[0].id,'gym');
+assert.equal(changed.favorites[0].address,'Schulstraße 3');
+assert.equal(JSON.stringify(addressBook),immutable,'editing must not mutate source');
+changed=core.editSaved(addressBook,'favorites',0,{
+ name:'Arbeit neu',note:'Parkplatz',icon:'work',slot:'work'
+});
+assert.equal(changed.favorites.length,1,'assigned favourite leaves favourites');
+assert.equal(changed.slots.work.name,'Arbeit neu','new work slot replaces existing work slot');
+assert.equal(changed.slots.work.icon||'','', 'default icon is represented as an empty string');
+changed=core.editSaved(addressBook,'home',0,{
+ name:'Mein Haus',note:'Garageneinfahrt',icon:'home',slot:''
+});
+assert.equal(changed.slots.home,null,'home slot becomes empty when moved to favourites');
+assert.equal(changed.favorites.at(-1).name,'Mein Haus');
+assert.equal(changed.favorites.at(-1).note,'Garageneinfahrt');
+assert.equal(changed.favorites.at(-1).placeId,'abc-123');
+const reordered=core.moveFavorite(addressBook,1,-1);
+assert.equal(reordered.favorites[0].name,'Café','move up changes only favourite order');
+assert.equal(addressBook.favorites[0].name,'Gymnasium','move must not mutate source');
+assert.equal(core.moveFavorite(addressBook,0,-1).favorites[0].name,'Gymnasium','boundary must be a no-op');
+assert.throws(()=>core.editSaved(addressBook,'favorites',0,{name:'',slot:''}),/gültigen Namen/);
+assert.throws(()=>core.editSaved(addressBook,'favorites',0,{name:'A',icon:'invalid',slot:''}),/Zielsymbol/);
+assert.throws(()=>core.editSaved(addressBook,'favorites',0,{name:'A',note:'x'.repeat(201)}),/200 Zeichen/);
+assert.throws(()=>core.editSaved(addressBook,'recent',0,{name:'Nope'}),/nicht bearbeitet/);
+
 const calls=[];
 const fakeNav={
  hasKey:()=>true,webData:()=>current,webWrite:delta=>{calls.push(['write',delta]);return true},
