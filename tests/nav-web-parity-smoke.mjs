@@ -4,16 +4,18 @@ import {readFileSync} from 'node:fs';
 import {runInNewContext,Script} from 'node:vm';
 
 const js=readFileSync(new URL('../nav-web-parity.js',import.meta.url),'utf8');
+const core=readFileSync(new URL('../navigation-shared-core.js',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../nav-web-parity.css',import.meta.url),'utf8');
 const nav=readFileSync(new URL('../navigation-google.js',import.meta.url),'utf8');
 const pages=readFileSync(new URL('../.github/workflows/pages.yml',import.meta.url),'utf8');
 const sw=readFileSync(new URL('../sw.js',import.meta.url),'utf8');
 new Script(js);
-assert(html.includes('<script src="./nav-web-parity.js"></script>'));
+new Script(core);
+assert(html.includes('<script src="./navigation-shared-core.js"></script><script src="./nav-web-parity.js"></script>'));
 assert(html.includes('<link rel="stylesheet" href="./nav-web-parity.css">'));
-assert(pages.includes('nav-web-parity.js nav-web-parity.css'));
-assert(sw.includes("'./nav-web-parity.js'")&&sw.includes("'./nav-web-parity.css'"));
+assert(pages.includes('navigation-shared-core.js nav-web-parity.js nav-web-parity.css'));
+assert(sw.includes("'./navigation-shared-core.js'")&&sw.includes("'./nav-web-parity.js'")&&sw.includes("'./nav-web-parity.css'"));
 assert(nav.includes('function webPoi(')&&nav.includes('function webSaveSelectedSlot('));
 assert(css.includes('position:fixed')&&css.includes('.mg-parity-chips'));
 const state={
@@ -32,6 +34,7 @@ const win={
  }
 };
 const s={app:'nav',mode:'map',nav:'browse',query:'',keyboard:false};
+runInNewContext(core,{window:win});
 runInNewContext(js,{window:win,s,navigator:{},document:{getElementById:()=>null,querySelector:()=>null},console});
 win.openSearch();
 let output=win.searchOverlay();
@@ -48,6 +51,7 @@ assert.equal(calls[0][0],'fuel');
 assert.equal(s.query,'Tankstelle');
 assert(win.browseOverlay().includes('Adressbuch'));
 const native={MeviNativeBridge:{postMessage(){}},MeviGoogleNav:win.MeviGoogleNav};
+runInNewContext(core,{window:native});
 runInNewContext(js,{window:native,s,navigator:{},document:{}});
 assert.equal(native.MeviWebNavParity,undefined,'Native hybrid must not be overridden');
 console.log('Web search and address-book parity smoke: passed; native unchanged.');
