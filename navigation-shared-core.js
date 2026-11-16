@@ -54,6 +54,45 @@ function createBrowserProvider(navigation){
   write:changes=>navigation.webWrite(changes)
  });
 }
+/* Address-book rules mirror DestinationBook.save()/move() from the native beta.
+   Keep them pure so both UI implementations use identical transformations. */
+const ICONS=Object.freeze(['star','home','work','heart','place','wrench','fuel','food','cart','parking']);
+const SLOTS=Object.freeze(['','home','work']);
+function defaultIcon(slot){return slot==='home'?'home':slot==='work'?'work':'star'}
+function effectiveIcon(entry,slot){return ICONS.includes(entry?.icon)?entry.icon:defaultIcon(slot)}
+function editSaved(source,kind,index,patch){
+ const book=snapshot(source);
+ if(!['favorites','home','work'].includes(kind))throw new Error('Dieses Ziel kann nicht bearbeitet werden.');
+ const original=kind==='favorites'?book.favorites[index]:book.slots[kind];
+ if(!original)throw new Error('Das Ziel ist nicht mehr vorhanden.');
+ const nextSlot=patch?.slot??(kind==='favorites'?'':kind);
+ const name=String(patch?.name??original.name).trim();
+ const note=String(patch?.note??original.note??'').trim();
+ const icon=String(patch?.icon??effectiveIcon(original,kind==='favorites'?'':kind));
+ if(!SLOTS.includes(nextSlot))throw new Error('Ungültige Zielkategorie.');
+ if(!ICONS.includes(icon))throw new Error('Ungültiges Zielsymbol.');
+ if(!name||name.length>120||/[\x00-\x1f\x7f]/.test(name))throw new Error('Bitte einen gültigen Namen eingeben.');
+ if(note.length>200||/[\x00-\x1f\x7f]/.test(note))throw new Error('Die Notiz darf höchstens 200 Zeichen enthalten.');
+ const next={...original,name,note,icon:icon===defaultIcon(nextSlot)?'':icon};
+ const slots={...book.slots},favorites=[...book.favorites];
+ if(kind==='favorites')favorites.splice(index,1);else slots[kind]=null;
+ if(nextSlot){
+  slots[nextSlot]=next; // Native semantics: the previous slot occupant is replaced.
+ }else{
+  // Native semantics: an existing favourite for the same place is replaced.
+  const key=item=>item.placeId?'p:'+item.placeId:'c:'+item.lat.toFixed(5)+','+item.lng.toFixed(5);
+  const old=favorites.findIndex(x=>key(x)===key(next));
+  if(old>=0)favorites.splice(old,1);
+  favorites.splice(kind==='favorites'?Math.min(index,favorites.length):favorites.length,0,next);
+ }
+ return {slots,favorites};
+}
+function moveFavorite(source,index,delta){
+ const favorites=[...snapshot(source).favorites],target=index+delta;
+ if(!Number.isInteger(index)||![-1,1].includes(delta)||index<0||target<0||target>=favorites.length)return {favorites};
+ [favorites[index],favorites[target]]=[favorites[target],favorites[index]];
+ return {favorites};
+}
 function exportAddressBook(source){
  const data=snapshot(source),saved=[
   ...['home','work'].filter(slot=>data.slots[slot]).map(slot=>({...data.slots[slot],slot})),
@@ -90,6 +129,6 @@ function importAddressBook(payload,current){
  return {changes:{slots,favorites:distinct(favorites,100),recent:distinct(history,20)},added,skipped};
 }
 root.MeviNavigationShared=Object.freeze({
- destination,distinct,snapshot,createProvider,createBrowserProvider,exportAddressBook,importAddressBook
+ destination,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
 });
 })(window);
