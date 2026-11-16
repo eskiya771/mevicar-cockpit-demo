@@ -3,6 +3,7 @@
 (function(){
 'use strict';
 const KEY='mevicar-next-google-maps-key-v1', DATA='mevicar-next-destinations-v1';
+const MAX_SAVED=200,MAX_RECENT=30;
 const FALLBACK_CENTER={lat:49.59,lng:11.005}; // Erlangen: initial map view only, not a navigation origin.
 const text=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const valid=d=>d&&typeof d.name==='string'&&Number.isFinite(d.lat)&&Number.isFinite(d.lng)&&Math.abs(d.lat)<=90&&Math.abs(d.lng)<=180;
@@ -10,7 +11,9 @@ const hasPlaceId=d=>d&&typeof d.name==='string'&&typeof d.placeId==='string'&&/^
 const savedValid=d=>valid(d)||hasPlaceId(d);
 const keyOf=d=>hasPlaceId(d)?'p:'+d.placeId:'c:'+d.lat.toFixed(5)+','+d.lng.toFixed(5);
 const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!savedValid(x))return false;let k=keyOf(x);if(keys.has(k))return false;keys.add(k);return true}).slice(0,max)};
-let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],100),recent:unique(d.recent||[],20).filter(valid),slots:{home:savedValid(d.slots?.home)?d.slots.home:null,work:savedValid(d.slots?.work)?d.slots.work:null}}}catch{}
+let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],MAX_SAVED),recent:unique(d.recent||[],MAX_RECENT).filter(valid),slots:{home:savedValid(d.slots?.home)?d.slots.home:null,work:savedValid(d.slots?.work)?d.slots.work:null}}}catch{}
+function capBook(){const occupied=Number(!!cache.slots.home)+Number(!!cache.slots.work);cache.favorites=cache.favorites.slice(0,MAX_SAVED-occupied)}
+capBook();
 let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,pendingSave=null,suggestions=[],poiResults=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
 // Native Navigation SDK is available only in the hybrid Android APK.
 // The Web/PWA keeps its own GPS guidance and never needs an Android API key.
@@ -423,7 +426,7 @@ async function pick(kind,index,options={}){
   pendingSave=d;return true;
  }
  if(nativeMode()){
-  selected=d;cache.recent=unique([d,...cache.recent],20);persist();
+  selected=d;cache.recent=unique([d,...cache.recent],MAX_RECENT);persist();
   try{await startNativeNavigation()}
   catch(e){status('Android-Navigation: '+(e.message||e))}
   return;
@@ -441,21 +444,21 @@ function webData(){
 }
 function webWrite(changes={}){
  if(nativeMode())return false;
- if(Object.prototype.hasOwnProperty.call(changes,'favorites'))cache.favorites=unique(changes.favorites||[],100);
- if(Object.prototype.hasOwnProperty.call(changes,'recent'))cache.recent=unique(changes.recent||[],20).filter(valid);
+ if(Object.prototype.hasOwnProperty.call(changes,'favorites'))cache.favorites=unique(changes.favorites||[],MAX_SAVED);
+ if(Object.prototype.hasOwnProperty.call(changes,'recent'))cache.recent=unique(changes.recent||[],MAX_RECENT).filter(valid);
  if(Object.prototype.hasOwnProperty.call(changes,'slots')){
   const input=changes.slots||{};
   cache.slots={home:savedValid(input.home)?input.home:null,work:savedValid(input.work)?input.work:null};
  }
- persist();window.meviGoogleRerender?.();return true;
+ capBook();persist();window.meviGoogleRerender?.();return true;
 }
 function webSaveSelectedSlot(slot){
  const candidate=pendingSave||selected;
  if(nativeMode()||!['home','work'].includes(slot)||!valid(candidate))return false;
- cache.slots[slot]={...candidate};pendingSave=null;persist();return true;
+ cache.slots[slot]={...candidate};pendingSave=null;capBook();persist();return true;
 }
 function favoritesHTML(){return '<div class="favs mg-favorites">'+cache.favorites.map((d,i)=>'<button type="button" class="fav" onclick="MeviGoogleNav.pick(\'favorites\','+i+')" aria-label="'+text(d.name)+' auswählen"><span class="bubble">⌖</span><span>'+text(d.name)+'</span></button>').join('')+'</div>'}
-function saveFavorite(){const candidate=pendingSave||selected;if(!valid(candidate))return;cache.favorites=unique([candidate,...cache.favorites.filter(x=>keyOf(x)!==keyOf(candidate))],100);pendingSave=null;persist();syncNativeLayout(true);window.meviGoogleRerender?.()}
+function saveFavorite(){const candidate=pendingSave||selected;if(!valid(candidate))return;cache.favorites=unique([candidate,...cache.favorites.filter(x=>keyOf(x)!==keyOf(candidate))],MAX_SAVED);pendingSave=null;capBook();persist();syncNativeLayout(true);window.meviGoogleRerender?.()}
 function removeFavorite(){if(!selected)return;cache.favorites=cache.favorites.filter(x=>keyOf(x)!==keyOf(selected));persist();syncNativeLayout(true);window.meviGoogleRerender?.()}
 function isFavorite(){return !!selected&&cache.favorites.some(x=>keyOf(x)===keyOf(selected))}
 function selectedAddress(){return selected?.address||'Bitte gültige Adresse auswählen'}
