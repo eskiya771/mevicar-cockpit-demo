@@ -1,11 +1,14 @@
-/* Web-only visual parity for Fable's native destination search. Never change the hybrid APK. */
+/* One destination search / address-book UI for Web and future Android WebView.
+   Native opt-in requires an explicitly injected provider; existing hybrid APK is unchanged. */
 (function(){
 'use strict';
-if(window.MeviNativeBridge?.postMessage)return;
+const native=!!window.MeviNativeBridge?.postMessage;
+const injected=window.MeviSharedNavigationProvider;
+if(native&&!injected)return; // Fable's current native dialogs remain the default.
 const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
-if(!nav||!shared)return;
-const provider=shared.createBrowserProvider(nav);
+if(!shared||(!nav&&!injected))return;
+const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null;
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths={
