@@ -52,6 +52,10 @@ function createProvider(methods){
  const adapter=Object.fromEntries(required.map(key=>[key,(...args)=>methods[key](...args)]));
  adapter.details=typeof methods.details==='function'?(...args)=>methods.details(...args):async()=>null;
  adapter.startRoute=typeof methods.startRoute==='function'?(...args)=>methods.startRoute(...args):async()=>false;
+ adapter.routeContext=typeof methods.routeContext==='function'?(...args)=>methods.routeContext(...args):
+  ()=>({hasRoute:false,active:false,stops:[],maxStops:8});
+ adapter.addStop=typeof methods.addStop==='function'?(...args)=>methods.addStop(...args):async()=>false;
+ adapter.removeStop=typeof methods.removeStop==='function'?(...args)=>methods.removeStop(...args):async()=>false;
  return Object.freeze(adapter);
 }
 function createBrowserProvider(navigation){
@@ -66,6 +70,9 @@ function createBrowserProvider(navigation){
   searchNearby:(type,query,origin,options)=>navigation.webPoi?.(type,query,origin,options),
   details:(kind,index)=>navigation.webPlaceDetails?.(kind,index),
   startRoute:()=>root.startRoute?.()??false,
+  routeContext:()=>navigation.routeContext?.()||{hasRoute:false,active:false,stops:[],maxStops:8},
+  addStop:place=>navigation.addRouteStop?.(place),
+  removeStop:index=>navigation.removeRouteStop?.(index),
   write:changes=>navigation.webWrite(changes)
  });
 }
