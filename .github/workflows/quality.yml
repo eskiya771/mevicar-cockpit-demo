@@ -31,6 +31,8 @@ jobs:
         run: node tests/lightshow-smoke.mjs
       - name: Test navigation and UX quality
         run: node tests/ui-quality-smoke.mjs
+      - name: Test isolated navigation preview shell
+        run: node tests/nav-preview-smoke.mjs
       - name: Test Google Maps route and GPS fallback
         run: |
           node tests/navigation-google-smoke.mjs
