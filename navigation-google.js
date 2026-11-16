@@ -112,7 +112,7 @@ function syncNativeLayout(force=false,settling=false){
  const header=el?syncNativeHeader():null;
  const rect=el?.getBoundingClientRect?.();
  const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
- const usable=rect&&rect.width>=1&&rect.height>=1&&vw>0&&vh>0;
+ const usable=!window.MeviAndroidSharedNav?.isOpen?.()&&rect&&rect.width>=1&&rect.height>=1&&vw>0&&vh>0;
  nativeMapShown=!!usable;
  watchTrip(!usable);
  const fields=usable?{
@@ -236,6 +236,11 @@ function toggleNativeActions(){
 }
 async function openNativeSearch(){
  try{
+  if(window.MeviAndroidSharedNav?.isOptedIn?.()){
+   await window.MeviAndroidSharedNav.connect();
+   window.MeviWebNavParity?.open();
+   return true;
+  }
   const caps=await nativeRequest('capabilities');
   if(!caps.capabilities?.nativePlacesSearch)throw new Error('Die installierte APK unterstützt die native Zielsuche noch nicht.');
   await nativeRequest('navigation.search');

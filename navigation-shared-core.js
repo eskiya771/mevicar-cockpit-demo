@@ -57,7 +57,10 @@ function createProvider(methods){
  adapter.addStop=typeof methods.addStop==='function'?(...args)=>methods.addStop(...args):async()=>false;
  adapter.removeStop=typeof methods.removeStop==='function'?(...args)=>methods.removeStop(...args):async()=>false;
  adapter.resolveStop=typeof methods.resolveStop==='function'?(...args)=>methods.resolveStop(...args):async()=>null;
- return Object.freeze(adapter);
+ for(const key of ['editSaved','moveFavorite','removeEntry','clearHistory','importPicker','exportPicker','cancel','savePlace']){
+   if(typeof methods[key]==='function')adapter[key]=(...args)=>methods[key](...args);
+  }
+  return Object.freeze(adapter);
 }
 function createBrowserProvider(navigation){
  if(!navigation||typeof navigation.webData!=='function'||typeof navigation.webWrite!=='function')throw new TypeError('Browser navigation unavailable');

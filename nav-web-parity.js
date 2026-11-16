@@ -186,8 +186,9 @@ function bookHTML(){
  '<button type="button" class="mg-parity-add" onclick="MeviWebNavParity.add()">'+ico('plus')+' Hinzufügen</button></div>'+
  '<div class="mg-parity-book-content" id="mg-parity-book-body">'+bookBody()+'</div>'+
  '<div class="mg-parity-footer"><button type="button" onclick="MeviWebNavParity.exportBook()">Exportieren</button>'+
+ (provider.importPicker?'<button type="button" onclick="MeviWebNavParity.nativeImport()">Importieren</button>':
  '<button type="button" onclick="document.getElementById(\'mg-parity-import\').click()">Importieren</button>'+
- '<input id="mg-parity-import" type="file" accept=".json,application/json" hidden onchange="MeviWebNavParity.importBook(this.files[0])"></div></div></div>';
+ '<input id="mg-parity-import" type="file" accept=".json,application/json" hidden onchange="MeviWebNavParity.importBook(this.files[0])">')+'</div></div></div>';
 }
 function editHTML(){
  if(!editor)return bookHTML();
@@ -222,14 +223,16 @@ function editSlot(slot){
  editor.slot=slot;rerender();
 }
 function cancelEdit(){editor=null;editError='';view='book';rerender()}
-function saveEdit(){
+async function saveEdit(){
  if(!editor)return;
  try{
-  const book=data();
-  const changes=shared.editSaved(book,editor.kind,editor.index,editor);
-  const occupied=editor.slot&&book.slots[editor.slot]&&editor.slot!==editor.kind;
-  if(occupied&&!window.confirm((editor.slot==='home'?'Zuhause':'Arbeit')+' ist bereits „'+book.slots[editor.slot].name+'“. Dieses Schnellziel ersetzen?'))return;
-  editor=null;editError='';view='book';write(changes);
+  const book=data(),current=editor;
+  const changes=shared.editSaved(book,current.kind,current.index,current);
+  const occupied=current.slot&&book.slots[current.slot]&&current.slot!==current.kind;
+  if(occupied&&!window.confirm((current.slot==='home'?'Zuhause':'Arbeit')+' ist bereits „'+book.slots[current.slot].name+'“. Dieses Schnellziel ersetzen?'))return;
+  if(provider.editSaved)await provider.editSaved(current.kind,current.index,current);
+  else write(changes);
+  editor=null;editError='';view='book';rerender();
  }catch(e){editError=String(e.message||e);rerender()}
 }
 function removeEdited(){
@@ -237,19 +240,30 @@ function removeEdited(){
  const {kind,index}=editor;
  editor=null;editError='';view='book';remove(kind,index);
 }
-function move(index,delta){
- const changes=shared.moveFavorite(data(),index,delta);
- write(changes);
+async function move(index,delta){
+ try{
+  if(provider.moveFavorite){await provider.moveFavorite(index,delta);rerender()}
+  else write(shared.moveFavorite(data(),index,delta));
+ }catch(e){nativeFailure(e)}
 }
 function rerender(){window.render?.()}
 function open(){
- if(!provider.isReady()){window.openCredentialSettings?.();return}
- returnNav=provider.routeContext().active?'driving':provider.routeContext().hasRoute?'ready':'browse';stopMode=false;stopError='';
+ if(!provider.isReady()){
+  if(window.MeviAndroidSharedNav?.isOptedIn?.()){
+   void window.MeviAndroidSharedNav.connect().then(open).catch(e=>window.MeviAndroidSharedNav.showError?.(e));
+  }else window.openCredentialSettings?.();
+  return;
+ }
+ const context=provider.routeContext();
+ returnNav=context.nativeOwned?'browse':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
  view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
- provider.search('');rerender();
+ provider.search('');rerender();window.MeviAndroidSharedNav?.setOpen(true);
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
-function close(){pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;rerender()}
+function close(){
+ pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
+ rerender();window.MeviAndroidSharedNav?.setOpen(false);provider.cancel?.();
+}
 function input(value){
  s.query=String(value||'');provider.search(s.query);
  const controls=document.getElementById('mg-parity-controls');if(controls)controls.hidden=!!s.query.trim();
@@ -259,27 +273,28 @@ function input(value){
 function clear(){s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
 function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
 async function choose(kind,index){
- const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
- const saveOnly=!!(savingSlot||savingFavorite);
- if(kind==='suggest'&&!saveOnly){await showPlace(index);return}
- // A stored favorite or recent target selected from "Stopp suchen" must never
- // replace the final destination or end live GPS/Road Assist guidance.
- if(stopMode&&!saveOnly){
-  const book=data();
-  const place=kind==='favorites'?book.favorites[index]:kind==='recent'?book.recent[index]:
-   (kind==='home'||kind==='work')?book.slots[kind]:null;
-  if(place)await finishStop(place);
-  return;
- }
- const success=await provider.choose(kind,index,{saveOnly});
- if(success===false)return;
- if(savingSlot)provider.saveSlot(savingSlot);
- if(savingFavorite)provider.saveFavorite();
- if(saveOnly){
-  pendingSlot='';pendingFavorite=false;
-  view=savingFavorite?'book':'search';s.nav='search';s.query='';
-  provider.search('');rerender();
- }
+ try{
+  const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
+  const saveOnly=!!(savingSlot||savingFavorite);
+  if(kind==='suggest'&&!saveOnly){await showPlace(index);return}
+  // Stored stops cannot replace an active final destination.
+  if(stopMode&&!saveOnly){
+   const book=data();
+   const place=kind==='favorites'?book.favorites[index]:kind==='recent'?book.recent[index]:
+    (kind==='home'||kind==='work')?book.slots[kind]:null;
+   if(place)await finishStop(place);
+   return;
+  }
+  const success=await provider.choose(kind,index,{saveOnly});
+  if(success===false)return;
+  if(savingSlot)await provider.saveSlot(savingSlot);
+  if(savingFavorite)await provider.saveFavorite();
+  if(saveOnly){
+   pendingSlot='';pendingFavorite=false;
+   view=savingFavorite?'book':'search';s.nav='search';s.query='';
+   provider.search('');rerender();
+  }
+ }catch(e){nativeFailure(e)}
 }
 function slot(k){
  const d=data().slots[k];
@@ -316,7 +331,7 @@ function openStopSearch(){
  const context=provider.routeContext();
  if(!context.hasRoute)return;
  if(context.stops.length>=context.maxStops){stopError='Maximal acht Zwischenstopps möglich.';return}
- returnNav=context.active?'driving':'ready';stopMode=true;stopError='';pendingSlot='';pendingFavorite=false;
+ returnNav=context.nativeOwned?'browse':context.active?'driving':'ready';stopMode=true;stopError='';pendingSlot='';pendingFavorite=false;
  view='search';tab='recent';s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();
 }
@@ -372,6 +387,11 @@ function retryPlace(){
 function backFromPlace(){placeSerial++;placeLoading=false;placeState=null;view=placeBack;rerender()}
 function savePlace(){
  if(!placeState)return;
+ if(provider.savePlace){
+  // Android: the native book accepts single validated operations only.
+  void Promise.resolve(provider.savePlace({...placeState},isPlaceSaved())).then(rerender).catch(nativeFailure);
+  return;
+ }
  const clean=shared.destination(placeState);
  if(!clean)return;
  const book=data(),key=placeKey(clean);
@@ -398,18 +418,35 @@ function submitSearch(){
  if(q.length<2)return;
  poi('text',q);
 }
-function book(){view='book';s.nav='search';s.keyboard=false;filter='';rerender()}
+function book(){
+ if(!provider.isReady()&&window.MeviAndroidSharedNav?.isOptedIn?.()){
+  void window.MeviAndroidSharedNav.connect().then(book).catch(e=>window.MeviAndroidSharedNav.showError?.(e));
+  return;
+ }
+ view='book';s.nav='search';s.keyboard=false;filter='';rerender();window.MeviAndroidSharedNav?.setOpen(true)
+}
 function bookBack(){editor=null;view='search';s.query='';provider.search('');rerender()}
 function add(){pendingFavorite=true;view='search';s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
 function write(changes){provider.write(changes);rerender()}
-function remove(kind,i){
+async function remove(kind,i){
  const d=data(),arr=kind==='recent'?d.recent:kind==='favorites'?d.favorites:[];
- if(kind==='home'||kind==='work'){if(!window.confirm('Schnellziel entfernen?'))return;delete d.slots[kind];write({slots:d.slots});return}
+ if(kind==='home'||kind==='work'){
+  if(!window.confirm('Schnellziel entfernen?'))return;
+  if(provider.removeEntry){try{await provider.removeEntry(kind,0);rerender()}catch(e){nativeFailure(e)}}
+  else{d.slots[kind]=null;write({slots:d.slots})}
+  return;
+ }
  if(!arr[i]||!window.confirm('„'+arr[i].name+'“ entfernen?'))return;
- arr.splice(i,1);write({[kind]:arr});
+ if(provider.removeEntry){try{await provider.removeEntry(kind,i);rerender()}catch(e){nativeFailure(e)}}
+ else{arr.splice(i,1);write({[kind]:arr})}
 }
-function clearHistory(){if(window.confirm('Alle zuletzt gefahrenen Ziele entfernen?'))write({recent:[]})}
+async function clearHistory(){
+ if(!window.confirm('Alle zuletzt gefahrenen Ziele entfernen?'))return;
+ try{if(provider.clearHistory){await provider.clearHistory();rerender()}else write({recent:[]})}
+ catch(e){nativeFailure(e)}
+}
 function exportBook(){
+ if(provider.exportPicker){void provider.exportPicker().catch(nativeFailure);return}
  const payload=shared.exportAddressBook(data());
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MeviCar-Adressbuch.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
@@ -425,6 +462,8 @@ async function importBook(file){
 }
 function refreshBook(){const el=document.getElementById('mg-parity-book-body');if(el)el.innerHTML=bookBody()}
 function filterBook(q){filter=q;refreshBook()}
+function nativeFailure(e){window.MeviAndroidSharedNav?.showError?.(e);window.alert?.('Adressbuch: '+(e?.message||e))}
+function nativeImport(){if(provider.importPicker)void provider.importPicker().catch(nativeFailure)}
 const originalBrowse=window.browseOverlay;
 window.browseOverlay=function(){
  const html=originalBrowse?.()||'';
@@ -432,6 +471,6 @@ window.browseOverlay=function(){
 };
 window.openSearch=open;
 window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
-window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
