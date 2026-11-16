@@ -23,17 +23,20 @@ assert(nav.includes("Place.searchByText("),'Free-text Enter must invoke real Goo
 assert(css.includes('position:fixed')&&css.includes('.mg-parity-chips'));
 const state={
  favorites:[{name:'Gymnasium',address:'Bergstraße 4',lat:49.71,lng:10.82}],
+ poiActive:false,poiLoading:false,poiError:'',poiResults:[],
  recent:[{name:'Arbeit',address:'Erlangen',lat:49.60,lng:11}],
  slots:{home:{name:'Zuhause',address:'Privat',lat:49.75,lng:10.84}},
  suggestions:[],query:''
 };
 const calls=[];
+let detailRequests=0,routeStarts=0;
 const win={
+ startRoute:async()=>{routeStarts++;return true},
  confirm:()=>true,
  browseOverlay:()=>'<div class="inner"></div>',render:()=>{},
  MeviGoogleNav:{
   hasKey:()=>true,changeQuery:value=>{state.query=value;state.suggestions=value.length>=2?[{name:value,address:'Testadresse'}]:[]},
-  webData:()=>state,webPoi:(...args)=>calls.push(args),pick:async (...args)=>{calls.push(['pick',...args]);return true},
+  webData:()=>state,webPoi:(...args)=>{calls.push(args);state.poiActive=true;state.poiResults=[{name:'Tankstelle am Markt',address:'Erlangen',lat:49.72,lng:10.82,placeId:'ChIJPlace',types:['gas_station']}];state.poiLoading=false;state.poiError='';return Promise.resolve(true)},webPlaceDetails:async()=>{detailRequests++;return {name:'Tankstelle am Markt',address:'Erlangen',lat:49.72,lng:10.82,placeId:'ChIJPlace',types:['gas_station'],rating:4.5,ratingCount:123,phone:'+49913112345',openNow:true,hours:['Montag 06:00–22:00']}},pick:async (...args)=>{calls.push(['pick',...args]);return true},
   webWrite:delta=>Object.assign(state,delta),webSaveSelectedSlot:slot=>{calls.push(['slot',slot]);return true},saveFavorite:()=>calls.push(['favorite'])
  }
 };
@@ -77,7 +80,11 @@ assert(!output.includes('Bäckerei'),'Filtered address book should hide nonmatch
 win.MeviWebNavParity.bookBack();
 win.MeviWebNavParity.poi('fuel','Tankstelle');
 assert.equal(calls[0][0],'fuel');
+assert.equal(detailRequests,0,'POI list must not request paid Place Details until opened');
+assert(win.searchOverlay().includes('Entfernung')&&win.searchOverlay().includes('Jetzt geöffnet'));
+assert(win.searchOverlay().includes('Tankstelle am Markt'),'POI result list must show real provider hits');
 assert.equal(s.query,'Tankstelle');
+win.MeviWebNavParity.backToSearch();
 win.MeviWebNavParity.input('Apotheke');
 win.MeviWebNavParity.submitSearch();
 assert(calls.some(c=>c[0]==='text'&&c[1]==='Apotheke'),'Enter should search places by text');
@@ -94,6 +101,32 @@ state.slots.home=null;
 win.MeviWebNavParity.slot('home');
 await win.MeviWebNavParity.choose('recent',0);
 assert(calls.some(call=>call[0]==='slot'&&call[1]==='home'),'Quick-destination save calls shared provider');
+
+win.MeviWebNavParity.poi('fuel','Tankstelle');
+assert.equal(detailRequests,0,'List results are cheap: no detail fetch');
+win.MeviWebNavParity.poiSort('relevance');
+assert.equal(calls.at(-1)[3].sort,'relevance','Changing sort must requery Google Places');
+win.MeviWebNavParity.poiOpenNow();
+assert.equal(calls.at(-1)[3].openNow,true,'Now-open filter must requery Google Places');
+await win.MeviWebNavParity.showPlace(0);
+output=win.searchOverlay();
+for(const term of ['Ortsdetails','Tankstelle am Markt','4,5','123','Geöffnet','+49913112345','Öffnungszeiten','Route','Speichern']){
+ assert(output.includes(term),'Expected place detail: '+term);
+}
+assert.equal(detailRequests,1,'Place Details fetched only once a hit opens');
+const callsBeforeSave=calls.length;
+win.MeviWebNavParity.savePlace();
+assert(state.favorites.some(item=>item.placeId==='ChIJPlace'),'Save must write to existing address book');
+assert.equal(calls.length,callsBeforeSave,'Save must not launch native navigation or a route');
+assert(win.searchOverlay().includes('Gespeichert ✓'));
+win.MeviWebNavParity.savePlace();
+assert(!state.favorites.some(item=>item.placeId==='ChIJPlace'),'Saved place can be removed again');
+win.MeviWebNavParity.backFromPlace();
+assert(win.searchOverlay().includes('Entfernung'),'Back returns to results list');
+await win.MeviWebNavParity.routeResult(0);
+assert(calls.some(call=>call[0]==='pick'&&call[1]==='suggest'&&call[2]===0),'Route selects the correct result');
+assert.equal(routeStarts,1,'Explicit Route button must call the existing web routing');
+
 
 assert(win.browseOverlay().includes('Adressbuch'));
 const native={MeviNativeBridge:{postMessage(){}},MeviGoogleNav:win.MeviGoogleNav};
