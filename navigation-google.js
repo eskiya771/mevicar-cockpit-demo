@@ -6,9 +6,11 @@ const KEY='mevicar-next-google-maps-key-v1', DATA='mevicar-next-destinations-v1'
 const FALLBACK_CENTER={lat:49.59,lng:11.005}; // Erlangen: initial map view only, not a navigation origin.
 const text=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const valid=d=>d&&typeof d.name==='string'&&Number.isFinite(d.lat)&&Number.isFinite(d.lng)&&Math.abs(d.lat)<=90&&Math.abs(d.lng)<=180;
-const keyOf=d=>d.lat.toFixed(5)+','+d.lng.toFixed(5);
-const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!valid(x))return false;let k=keyOf(x);if(keys.has(k))return false;keys.add(k);return true}).slice(0,max)};
-let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],100),recent:unique(d.recent||[],20),slots:{home:valid(d.slots?.home)?d.slots.home:null,work:valid(d.slots?.work)?d.slots.work:null}}}catch{}
+const hasPlaceId=d=>d&&typeof d.name==='string'&&typeof d.placeId==='string'&&/^[A-Za-z0-9_-]{1,300}$/.test(d.placeId);
+const savedValid=d=>valid(d)||hasPlaceId(d);
+const keyOf=d=>hasPlaceId(d)?'p:'+d.placeId:'c:'+d.lat.toFixed(5)+','+d.lng.toFixed(5);
+const unique=(items,max)=>{const keys=new Set();return items.filter(x=>{if(!savedValid(x))return false;let k=keyOf(x);if(keys.has(k))return false;keys.add(k);return true}).slice(0,max)};
+let cache={favorites:[],recent:[],slots:{}};try{let d=JSON.parse(localStorage.getItem(DATA)||'{}');cache={favorites:unique(d.favorites||[],100),recent:unique(d.recent||[],20).filter(valid),slots:{home:savedValid(d.slots?.home)?d.slots.home:null,work:savedValid(d.slots?.work)?d.slots.work:null}}}catch{}
 let map=null,mapElement=null,mapLoading=null,geoWatch=null,current=null,marker=null,routeLines=[],routeData=null,selected=null,suggestions=[],poiResults=null,query='',timer=null,requestSerial=0,token=null,error='',errorKind='',manualOrigin=null,originMarker=null,positionMarker=null,choosingOrigin=false,state='browse',mounted=false,stage='setup',guidanceActive=false,simulation=false,guidanceSteps=[],stepIndex=0,spokenThresholds=new Set(),lastSpokenStep=-1,offRouteCount=0,lastRerouteAt=0,reRouting=false,simulationTimer=null,voiceMuted=false,currentSpeed=null,lastGpsAccuracy=null,followCamera=true;
 // Native Navigation SDK is available only in the hybrid Android APK.
 // The Web/PWA keeps its own GPS guidance and never needs an Android API key.
@@ -388,6 +390,23 @@ async function pick(kind,index){
   }catch(e){status('Ziel konnte nicht geladen werden: '+(e.message||e));return}
   }
  }else d=kind==='home'||kind==='work'?cache.slots?.[kind]:kind==='stored'?unique([...cache.favorites,...cache.recent],12)[index]:list(kind)[index];
+ if(d&&!valid(d)&&hasPlaceId(d)){
+  // Android exports can contain only a Place ID. Resolve the coordinate on use,
+  // retaining the original name, role, note, icon and place ID in the Web book.
+  try{
+   await load();
+   const {Place}=await google.maps.importLibrary('places');
+   const place=new Place({id:d.placeId});
+   await place.fetchFields({fields:['location','formattedAddress']});
+   const p=place.location?.toJSON?.()||place.location;
+   const updated={...d,lat:p?.lat,lng:p?.lng,fetchedAt:Date.now(),address:d.address||place.formattedAddress||''};
+   if(!valid(updated))throw new Error('Google hat keine gültige Position zurückgegeben.');
+   d=updated;
+   cache.favorites=cache.favorites.map(item=>hasPlaceId(item)&&item.placeId===d.placeId?d:item);
+   for(const slot of ['home','work'])if(cache.slots[slot]?.placeId===d.placeId)cache.slots[slot]={...cache.slots[slot],lat:d.lat,lng:d.lng,fetchedAt:d.fetchedAt};
+   persist();
+  }catch(e){status('Gespeichertes Ziel konnte nicht geladen werden: '+(e.message||e),'places');return}
+ }
  if(!valid(d))return;
  if(nativeMode()){
   selected=d;cache.recent=unique([d,...cache.recent],20);persist();
@@ -408,10 +427,10 @@ function webData(){
 function webWrite(changes={}){
  if(nativeMode())return false;
  if(Object.prototype.hasOwnProperty.call(changes,'favorites'))cache.favorites=unique(changes.favorites||[],100);
- if(Object.prototype.hasOwnProperty.call(changes,'recent'))cache.recent=unique(changes.recent||[],20);
+ if(Object.prototype.hasOwnProperty.call(changes,'recent'))cache.recent=unique(changes.recent||[],20).filter(valid);
  if(Object.prototype.hasOwnProperty.call(changes,'slots')){
   const input=changes.slots||{};
-  cache.slots={home:valid(input.home)?input.home:null,work:valid(input.work)?input.work:null};
+  cache.slots={home:savedValid(input.home)?input.home:null,work:savedValid(input.work)?input.work:null};
  }
  persist();window.meviGoogleRerender?.();return true;
 }
