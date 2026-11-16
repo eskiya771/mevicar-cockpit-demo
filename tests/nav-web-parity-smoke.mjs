@@ -86,9 +86,10 @@ assert(win.searchOverlay().includes('Tankstelle am Markt'),'POI result list must
 assert.equal(s.query,'Tankstelle');
 win.MeviWebNavParity.backToSearch();
 win.MeviWebNavParity.input('Apotheke');
+assert(win.searchOverlay().includes('MeviWebNavParity.submitSearch()'),'Search input must support Enter');
 win.MeviWebNavParity.submitSearch();
 assert(calls.some(c=>c[0]==='text'&&c[1]==='Apotheke'),'Enter should search places by text');
-assert(win.searchOverlay().includes('MeviWebNavParity.submitSearch()'),'Search input must support Enter');
+assert(win.searchOverlay().includes('Entfernung'),'Pressing Enter must navigate into POI result mode');
 
 win.MeviWebNavParity.book();
 win.MeviWebNavParity.add();
