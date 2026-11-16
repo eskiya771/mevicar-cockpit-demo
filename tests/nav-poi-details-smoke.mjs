@@ -60,7 +60,7 @@ assert.equal(logs.filter(x=>x.kind==='detail').length,0,'Do not fetch details fo
 assert.equal(logs[0].kind,'nearby');
 assert.deepEqual(Array.from(logs[0].request.fields),['id','displayName','formattedAddress','location','types']);
 assert.equal(logs[0].request.rankPreference,'DISTANCE');
-assert.match(display.innerHTML,/Test-Tankstelle/,'Results are rendered by live provider');
+assert.equal(api.webData().poiResults[0].name,'Test-Tankstelle','POI list data is exposed to the shared Web UI');
 
 const detail=await api.webPlaceDetails('suggest',0);
 assert.equal(detail.rating,4.5);
