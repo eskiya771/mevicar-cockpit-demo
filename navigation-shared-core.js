@@ -56,6 +56,7 @@ function createProvider(methods){
   ()=>({hasRoute:false,active:false,stops:[],maxStops:8});
  adapter.addStop=typeof methods.addStop==='function'?(...args)=>methods.addStop(...args):async()=>false;
  adapter.removeStop=typeof methods.removeStop==='function'?(...args)=>methods.removeStop(...args):async()=>false;
+ adapter.resolveStop=typeof methods.resolveStop==='function'?(...args)=>methods.resolveStop(...args):async()=>null;
  return Object.freeze(adapter);
 }
 function createBrowserProvider(navigation){
@@ -73,6 +74,7 @@ function createBrowserProvider(navigation){
   routeContext:()=>navigation.routeContext?.()||{hasRoute:false,active:false,stops:[],maxStops:8},
   addStop:place=>navigation.addRouteStop?.(place),
   removeStop:index=>navigation.removeRouteStop?.(index),
+  resolveStop:place=>navigation.webResolveStop?.(place),
   write:changes=>navigation.webWrite(changes)
  });
 }

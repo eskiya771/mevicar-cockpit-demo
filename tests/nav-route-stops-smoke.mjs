@@ -39,6 +39,8 @@ const Google={maps:{
      location:{lat:far.lat,lng:far.lng},types:['gas_station']}
    ]};
   }
+  constructor({id}){this.id=id}
+  async fetchFields(){this.location={lat:49.74,lng:10.97};this.formattedAddress='Importierter Zwischenhalt'}
  },SearchByTextRankPreference:{DISTANCE:'DISTANCE',RELEVANCE:'RELEVANCE'}}:{}
 }};
 const status={textContent:'',hidden:false,classList:{add(){}}};
@@ -65,6 +67,12 @@ assert.equal(api.routeContext().hasRoute,true);
 assert.equal(api.routeContext().stops.length,0);
 assert.equal(api.routeContext().destination.name,original.name);
 assert.equal(routeRequests.length,1);
+const imported=await api.webResolveStop({name:'Importierter Favorit',placeId:'ChIJImportedOnly'});
+assert.equal(imported.lat,49.74,'Resolve imported Android Place-ID-only entry');
+assert.equal(imported.lng,10.97);
+assert.equal(api.routeContext().destination.name,original.name,'Place resolution must not replace destination');
+assert.equal(api.routeContext().stops.length,0);
+assert.equal(routeRequests.length,1,'Place resolution must not calculate a new route by itself');
 
 assert.equal(await api.addRouteStop(waypoint),true,'Accept valid stop');
 assert.equal(routeRequests.length,2,'Adding stop must request real Google route');

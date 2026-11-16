@@ -25,12 +25,14 @@ const W={
  render:()=>{},confirm:()=>true,
  MeviSharedNavigationProvider:{
   isReady:()=>true,read:()=>state,write:()=>true,search:query=>{state.query=query;state.poiResults=[]},
-  choose:async()=>true,saveSlot:()=>true,saveFavorite:()=>true,
+  choose:async()=>{calls.push({action:'choose'});return true},saveSlot:()=>true,saveFavorite:()=>true,
   routeContext:()=>ctx,addStop:async stop=>{
    calls.push({action:'add',stop});if(failNext)return false;
    ctx.stops.push(stop);return true;
   },
   removeStop:async index=>ctx.stops.splice(index,1),
+  resolveStop:async place=>{calls.push({action:'resolve',place});return place.placeId==='ChIJImported'?
+   {...place,lat:49.66,lng:11.04}:null},
   searchNearby:async (type,query,origin,options)=>{
    calls.push({action:'poi',type,query,options});
    state.poiResults=[place];state.poiActive=true;state.poiLoading=false;return true;
@@ -67,12 +69,40 @@ assert.equal(ctx.stops.length,1,'Add stop must route through platform provider')
 assert.equal(s.nav,'driving','After stop addition resume running guidance');
 assert.equal(calls.filter(c=>c.action==='route').length,0,'Adding stop does not start a new unrelated route');
 
+// Favorites and recent targets must be added as intermediate waypoints, not
+// treated as an ordinary destination (which would stop active Road Assist).
+state.favorites=[
+ {name:'Zuhause',address:'Adelsdorf',lat:49.71,lng:10.90,placeId:'ChIJHome'},
+ {name:'Importiertes Ziel',address:'Bamberg',placeId:'ChIJImported'},
+ {name:'Ungültiges Ziel',address:'Ohne Position',placeId:'ChIJMissing'}
+];
+state.recent=[{name:'Werkstatt',address:'Forchheim',lat:49.72,lng:11.04}];
+ui.openStopSearch();
+await ui.choose('favorites',0);
+assert.equal(ctx.stops.length,2,'Saved favorite becomes an intermediate stop');
+assert.equal(ctx.destination.name,initial.name,'Final destination must not change');
+assert.equal(s.nav,'driving','Resume guidance after adding a saved favorite');
+ui.openStopSearch();
+await ui.choose('recent',0);
+assert.equal(ctx.stops.length,3,'Recent target becomes an intermediate stop');
+ui.openStopSearch();
+await ui.choose('favorites',1);
+assert.equal(ctx.stops.length,4,'Place-ID-only imported favorite is resolved and added');
+assert(calls.some(c=>c.action==='resolve'&&c.place.placeId==='ChIJImported'));
+assert.equal(calls.filter(c=>c.action==='choose').length,0,
+ 'Saved stops must never call choose() and terminate running navigation');
+ui.openStopSearch();
+assert.equal(await ui.choose('favorites',2),undefined);
+assert.equal(ctx.stops.length,4,'Unresolvable Place ID preserves route');
+assert(W.searchOverlay().includes('bisherige Route bleibt bestehen'));
+ui.close();
+
 failNext=true;
 ui.openStopSearch();
 ui.poi('fuel','Tankstelle');
 assert.equal(await ui.addStopResult(0),false);
 assert.equal(s.nav,'search','On failed route computation remain in POI sheet');
-assert.equal(ctx.stops.length,1,'Do not mutate waypoint list on failed add');
+assert.equal(ctx.stops.length,4,'Do not mutate waypoint list on failed add');
 assert(W.searchOverlay().includes('bisherige Route bleibt bestehen'),'Show visible failure and rollback');
 failNext=false;
 ui.close();
