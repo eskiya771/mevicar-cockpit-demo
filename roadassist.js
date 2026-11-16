@@ -20,6 +20,9 @@ try{
 let route=[],segments=[],routeLength=0,matched=[],connected=false,haCount=0,haUpdated=0,scanCameras=[];
 let routeSerial=0,guiding=false,demo=false,fix=null,fixAt=0,fixAccuracy=null,positionOnRoute=null;
 let currentMatch=null,scanState='idle',scanNote='',scanProgress=0,scanTotal=0,scanCoverage='nicht geprüft',scanCancel=null;
+// Route query at Home Assistant for every newly planned route (planSerial counts the Android plans).
+let planSerial=0,scanWanted=false,autoTimer=null,scanRev=0,scanReportKey='';
+const AUTO_DELAY=1200;
 let notified=new Set(),scanSerial=0,lastAudioAt=0,lastCameraId='',lastHARefresh=0,pollTimer=null;
 const point=p=>{
  if(!p)return null;
@@ -116,6 +119,7 @@ function updateFromHA(){
  matched=connected?cameraMatches([...snapshot.cameras,...scanCameras]):[];
  detectNative();pushCameras();
  updateMatch();paint();
+ if(scanWanted&&!autoTimer)autoScan();
 }
 function onHAChange(){updateFromHA()}
 function onRoute(raw){
@@ -126,6 +130,7 @@ function onRoute(raw){
  guiding=false;demo=false;fix=null;fixAt=0;positionOnRoute=null;currentMatch=null;notified.clear();lastAudioAt=0;
  scanCameras=[];scanState='idle';scanNote='';scanProgress=0;scanTotal=0;scanCoverage='nicht geprüft';
  cancelScan();updateFromHA();
+ if(!nativeOn&&route.length>=2)wantScan();
  // Home Assistant is never contacted if not connected. Refresh stale camera data once.
  const h=window.MeviHA;
  if(h?.debug?.().connected&&Date.now()-lastHARefresh>30000){
@@ -239,12 +244,14 @@ function refresh(){
  if(!h?.debug?.().connected){updateFromHA();return Promise.resolve(false)}
  return Promise.resolve(h.refresh()).then(()=>{updateFromHA();return true},()=>{updateFromHA();return false});
 }
-function setEnabled(value){settings.enabled=!!value;persist();nativeSetting();updateMatch();paint()}
+function setEnabled(value){settings.enabled=!!value;persist();nativeSetting();updateMatch();paint();if(scanWanted&&!autoTimer)autoScan()}
 function setVoice(value){settings.voice=!!value;persist();nativeSetting();paint()}
 function setConfigId(value){
  const val=String(value||'').trim().toUpperCase();
  if(val&&!/^[0-9A-HJKMNP-TV-Z]{26}$/.test(val))return false;
- settings.configId=val;persist();paint();return true;
+ settings.configId=val;persist();paint();
+ if(val&&scanWanted&&!autoTimer)autoScan();
+ return true;
 }
 function infoHTML(){
  const m=model();
@@ -262,7 +269,7 @@ function infoHTML(){
    '<p class="mevi-ra-hint">Blitzer.de-Konfigurations-ID wird unter Settings → Zugänge &amp; Schlüssel verwaltet.</p>'+
    '<button type="button" onclick="meviOpenCredentialSettings()">Blitzer-ID in Settings öffnen</button>'+
    '<p class="mevi-ra-hint">Der Routenscan setzt zeitweise den Home-Assistant-Tracker '+TRACKER+
-   ' und ruft den Dienst blitzer.refresh_controls an mehreren Routenpunkten auf. Nur bewusst starten; keine automatische Aktivierung.</p>'+
+   ' und ruft den Dienst blitzer.refresh_controls an mehreren Routenpunkten auf. Er startet nach dem Planen einer Route von selbst, sobald Home Assistant verbunden und die Blitzer-ID gespeichert ist; hier lässt er sich wiederholen.</p>'+
    '<div class="mevi-ra-tool-actions">'+
    '<button onclick="MeviRoadAssist.scan()" '+(!m.connected||!m.route||scanState==='running'?'disabled':'')+'>Routenscan starten</button>'+
    (scanState==='running'?'<button onclick="MeviRoadAssist.cancelScan()">Abbrechen</button>':'')+
@@ -314,8 +321,46 @@ function responseCameras(payload){
   lat:x.latitude,lng:x.longitude,name:x.street||'Blitzer',street:x.street,city:x.city,
   type:x.type||'unknown',vmax:x.vmax})).filter(Boolean);
 }
-async function scan(){
+function wantScan(){
+ scanWanted=true;
+ clearTimeout(autoTimer);
+ autoTimer=setTimeout(autoScan,AUTO_DELAY);
+}
+// Starts the route query on its own once everything it needs is there; otherwise it stays wanted.
+function autoScan(){
+ autoTimer=null;
+ if(!scanWanted||scanState==='running'||!settings.enabled)return;
+ const native=!!window.MeviGoogleNav?.isNativeMode?.();
+ if(native&&!nativeOn){detectNative();return}
+ if(!native&&route.length<2){scanWanted=false;return}
+ if(!window.MeviHA?.debug?.().connected){reportScan('offline');return}
+ if(!settings.configId){reportScan('noconfig');return}
+ scan(true);
+}
+// Android shows the progress in its route overview; a report for an older plan is dropped there.
+function reportScan(state){
+ if(!nativeOn)return;
+ const key=[planSerial,state,scanProgress,scanTotal].join('|');
+ if(key===scanReportKey)return;
+ scanReportKey=key;
+ nativeCall('roadassist.scan',{plan:planSerial,state,progress:scanProgress,total:scanTotal})
+  .then(takeStatus).catch(()=>{scanReportKey=''});
+}
+// Android planned another route (or dropped it): forget the old result and query the new route.
+function nativePlan(serial,hasRoute){
+ serial=Number(serial);
+ if(!Number.isInteger(serial)||serial===planSerial)return;
+ cancelScan();
+ planSerial=serial;scanReportKey='';
+ scanCameras=[];scanRev++;scanState='idle';scanNote='';scanProgress=0;scanTotal=0;scanCoverage='nicht geprüft';
+ clearTimeout(autoTimer);autoTimer=null;scanWanted=false;
+ detectNative();updateFromHA();
+ if(hasRoute)wantScan();
+}
+window.meviRoadAssistNativeRoute=(serial,hasRoute)=>nativePlan(serial,hasRoute);
+async function scan(auto=false){
  if(scanState==='running')return false;
+ scanWanted=false;
  const h=window.MeviHA;
  if(!h?.debug?.().connected){scanNote='Home Assistant ist nicht verbunden.';scanState='error';paint();return false}
  if(!nativeOn&&route.length<2){scanNote='Bitte zuerst eine Route berechnen.';scanState='error';paint();return false}
@@ -327,7 +372,9 @@ async function scan(){
   try{
    const reply=await nativeCall('roadassist.scanpoints');
    tasks=(Array.isArray(reply?.points)?reply.points:[]).map(point).filter(Boolean).slice(0,MAX_SAMPLES);
+   if(Number.isInteger(reply?.plan)&&reply.plan!==planSerial){planSerial=reply.plan;scanReportKey=''}
   }catch{tasks=[]}
+  if(!tasks.length&&auto)return false;
   if(!tasks.length){scanNote='Bitte zuerst eine Route berechnen.';scanState='error';paint();return false}
   if(scanState==='running')return false;
  }else tasks=sampleRoute();
@@ -336,7 +383,8 @@ async function scan(){
  scanState='running';scanProgress=0;scanTotal=tasks.length;scanCoverage='nicht bestätigt';
  scanNote='Routenscan begonnen: '+tasks.length+' Suchpunkte. Home Assistant Tracker wird vorübergehend verändert.';
  const results=new Map(),startedRoute=routeSerial,signal=scanCancel.signal;
- paint();
+ let confirmed=0;
+ reportScan('running');paint();
  try{
   for(let i=0;i<tasks.length;i++){
    if(signal.aborted||serial!==scanSerial||startedRoute!==routeSerial)throw new Error('Scan abgebrochen');
@@ -349,29 +397,33 @@ async function scan(){
    const tr=point({lat:Number(tracker?.attributes?.latitude),lng:Number(tracker?.attributes?.longitude)});
    if(!tr||distance(p,tr)>=100){
     scanNote='Suchpunkt '+(i+1)+': Tracker-Position nicht bestätigt; Meldungen übersprungen.';
-    scanProgress=i+1;paint();continue;
+    scanProgress=i+1;reportScan('running');paint();continue;
    }
+   confirmed++;
    const data=await h.requestService('/api/services/blitzer/refresh_controls?return_response',{
     method:'POST',body:{config_entry_id:settings.configId}
    });
    for(const c of responseCameras(data))results.set(cameraKey(c),c);
    scanProgress=i+1;scanNote='Suchpunkt '+(i+1)+'/'+tasks.length+' · '+results.size+' Meldungen';
-   paint();
+   reportScan('running');paint();
   }
   if(serial!==scanSerial||startedRoute!==routeSerial)return false;
-  scanCameras=[...results.values()];
-  scanState='completed';scanCoverage=scanTotal===tasks.length?'Suchpunkte abgefragt; Integrationsergebnis nicht garantiert':'teilweise';
+  if(!confirmed)throw new Error('Kein Suchpunkt bestätigt: Home Assistant hat die Tracker-Position nicht übernommen.');
+  scanCameras=[...results.values()];scanRev++;
+  scanState='completed';scanCoverage=confirmed===tasks.length?'Suchpunkte abgefragt; Integrationsergebnis nicht garantiert':'teilweise ('+confirmed+'/'+tasks.length+' Suchpunkte)';
   scanNote='Routenscan abgeschlossen · '+scanCameras.length+' gefundene Meldungen. Ergebnisse gelten nur für diese Route.';
-  updateFromHA();paint();return true;
+  // Cameras first, then the final state: the route overview then shows the complete number.
+  updateFromHA();reportScan(confirmed===tasks.length?'done':'failed');paint();return true;
  }catch(e){
   if(serial!==scanSerial)return false;
-  scanState=signal.aborted?'cancelled':'error';scanNote=String(e?.message||e).slice(0,210);paint();return false;
+  scanState=signal.aborted?'cancelled':'error';scanNote=String(e?.message||e).slice(0,210);
+  reportScan('failed');paint();return false;
  }finally{if(serial===scanSerial)scanCancel=null}
 }
 function cancelScan(){
  scanSerial++;
  if(scanCancel){scanCancel.abort();scanCancel=null}
- if(scanState==='running'){scanState='cancelled';scanNote='Routenscan abgebrochen.'}
+ if(scanState==='running'){scanState='cancelled';scanNote='Routenscan abgebrochen.';reportScan('idle')}
  paint();
 }
 function routeState(){
@@ -413,12 +465,14 @@ function detectNative(){
  if(nativeOn||nativeProbe||!n?.isNativeMode?.()||typeof n.nativeRequest!=='function')return;
  nativeProbe=nativeCall('capabilities').then(result=>{
   nativeOn=!!result?.capabilities?.roadAssistNative;
-  if(nativeOn){pushCameras();nativeSetting();pollNative()}
+  if(nativeOn){pushCameras();nativeSetting();pollNative();if(scanWanted&&!autoTimer)autoScan()}
  }).catch(()=>{nativeProbe=null});
 }
 function takeStatus(reply){
  if(!reply||reply.ok===false||!Array.isArray(reply.hits))return;
  nativeStatus=reply;paintApp();
+ // Missed plan event (page loaded later): the result of an earlier query is gone, so query again.
+ if(Number.isInteger(reply.planSerial)&&reply.planSerial!==planSerial)nativePlan(reply.planSerial,!!reply.route);
 }
 function takeTrips(reply){
  if(!reply||reply.ok===false||!Array.isArray(reply.trips))return;
@@ -436,7 +490,7 @@ function pushCameras(){
   list.push(item);
   if(list.length>=NATIVE_MAX_CAMERAS)break;
  }
- const key=[snapshot.connected,snapshot.updatedAt,list.length,scanCameras.length].join('|');
+ const key=[snapshot.connected,snapshot.updatedAt,list.length,scanCameras.length,scanRev].join('|');
  if(key===nativePushKey)return;
  nativePushKey=key;
  nativeCall('roadassist.cameras',{cameras:list,connected:snapshot.connected,updatedAt:snapshot.updatedAt})

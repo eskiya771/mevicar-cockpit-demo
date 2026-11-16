@@ -37,7 +37,7 @@ function harness(cameras=[],options={}){
  runInNewContext(js,{window,document,localStorage,Intl,Date:FakeDate,AbortController,
   setTimeout:(cb)=>{queueMicrotask(cb);return 1},clearTimeout(){},
   setInterval:()=>37,clearInterval(){},console,Number,Math,Map,Set});
- return{app:window.MeviRoadAssist,ha:fakeHA,services,announcements,elements,stores,
+ return{app:window.MeviRoadAssist,window,ha:fakeHA,services,announcements,elements,stores,
   setConnected:v=>{connected=v},setCameras:v=>{latest=v;updatedAt=now}};
 }
 const route=[
@@ -140,6 +140,7 @@ const camera=(id,lat,lng,vmax=80)=>({id,lat,lng,vmax,type:'fixed',street:'Testst
  assert.equal(h.app.routeState().scanTotal,1,'Short route only samples start');
  assert.equal(h.app.routeState().settings.configSet,true);
 }
+const PREFS_KEY='mevicar-next-roadassist-v1';
 const TRIP_KEY='mevicar-next-roadassist-trips-v1';
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(done=>setImmediate(done))};
 {
@@ -252,6 +253,75 @@ const settle=async()=>{for(let i=0;i<6;i++)await new Promise(done=>setImmediate(
  h.app.unmount();
 }
 {
+ // Browser: a planned route is queried at Home Assistant on its own once id and connection exist.
+ const stored={'mevicar-next-roadassist-v1':JSON.stringify({configId:'01M6C1Y358N92TR48VGWX9R5EZ'})};
+ const pointRoute=[{lat:49.6,lng:11.0},{lat:49.6,lng:11.0005}];
+ const h=harness([],{stored:{[PREFS_KEY]:stored['mevicar-next-roadassist-v1']}});
+ h.app.onRoute({path:route});await settle();
+ assert.equal(h.app.routeState().scanState,'completed','A new route starts the route query without a tap');
+ assert.equal(h.app.model().hits.length,1,'Cameras found by the automatic query count for the route');
+ const before=h.services.length;
+ h.app.onHAChange();await settle();
+ assert.equal(h.services.length,before,'The automatic query runs once per route');
+ const off=harness([],{connected:false,stored:{[PREFS_KEY]:stored['mevicar-next-roadassist-v1']}});
+ off.app.onRoute({path:pointRoute});await settle();
+ assert.equal(off.services.length,0,'No query while Home Assistant is disconnected');
+ off.setConnected(true);off.app.onHAChange();await settle();
+ assert.equal(off.app.routeState().scanState,'completed','The query follows once Home Assistant is connected');
+ const noId=harness([]);
+ noId.app.onRoute({path:pointRoute});await settle();
+ assert.equal(noId.services.length,0,'No query without the configuration id');
+ assert.equal(noId.app.setConfigId('01M6C1Y358N92TR48VGWX9R5EZ'),true);await settle();
+ assert.equal(noId.app.routeState().scanState,'completed','Saving the id starts the pending query');
+}
+{
+ // APK: Android announces a newly planned route; the web side queries it and reports the progress.
+ const calls=[];
+ let plan=0,hasRoute=false;
+ const status=()=>({ok:true,enabled:true,voice:true,connected:true,updatedAt:now,cameraCount:0,route:hasRoute,guiding:false,
+  destination:'',plannedMeters:0,onRoute:false,planSerial:plan,scan:'idle',hits:[]});
+ const nativeRequest=async(action,fields)=>{
+  calls.push({action,fields});
+  if(action==='capabilities')return{ok:true,capabilities:{roadAssistNative:1}};
+  if(action==='roadassist.scanpoints')return{ok:true,plan,points:hasRoute?[{lat:49.6,lng:11.0}]:[]};
+  if(action.startsWith('roadassist.trips'))return{ok:true,trips:[]};
+  return status();
+ };
+ const reports=()=>calls.filter(c=>c.action==='roadassist.scan').map(c=>c.fields.plan+':'+c.fields.state+':'+c.fields.progress+'/'+c.fields.total);
+ const h=harness([],{nav:{isNativeMode:()=>true,nativeRequest}});
+ h.app.onHAChange();await settle();
+ plan=1;hasRoute=true;
+ h.window.meviRoadAssistNativeRoute(1,true);await settle();
+ assert.equal(reports().join(),'1:noconfig:0/0','Without the id Android is told why no query runs');
+ assert.equal(h.services.length,0);
+ assert.equal(h.app.setConfigId('01M6C1Y358N92TR48VGWX9R5EZ'),true);await settle();
+ assert.equal(reports().slice(1).join(),'1:running:0/1,1:running:1/1,1:done:1/1');
+ const pushes=calls.filter(c=>c.action==='roadassist.cameras');
+ assert.equal(pushes.at(-1).fields.cameras.length,1,'Cameras of the route query reach Android');
+ assert.ok(calls.indexOf(pushes.at(-1))<calls.findIndex(c=>c.action==='roadassist.scan'&&c.fields.state==='done'),
+  'Cameras arrive before the final state');
+ h.window.meviRoadAssistNativeRoute(1,true);await settle();
+ assert.equal(reports().length,4,'The same plan is not queried twice');
+ plan=2;
+ h.window.meviRoadAssistNativeRoute(2,true);await settle();
+ assert.equal(reports().slice(4).join(),'2:running:0/1,2:running:1/1,2:done:1/1','Each new plan gets its own query');
+ plan=3;hasRoute=false;
+ h.window.meviRoadAssistNativeRoute(3,false);await settle();
+ assert.equal(reports().length,7,'A dropped route is not queried');
+ assert.equal(calls.filter(c=>c.action==='roadassist.cameras').at(-1).fields.cameras.length,0,'Old query results leave Android');
+ // Page loaded after the plan: the status reveals the plan number and the query follows.
+ calls.length=0;plan=7;hasRoute=true;
+ const late=harness([],{stored:{[PREFS_KEY]:JSON.stringify({configId:'01M6C1Y358N92TR48VGWX9R5EZ'})},nav:{isNativeMode:()=>true,nativeRequest}});
+ late.app.onHAChange();await settle();
+ assert.equal(reports().at(-1),'7:done:1/1');
+ // Disconnected Home Assistant: reported, nothing sent to it.
+ calls.length=0;plan=8;
+ const off=harness([],{connected:false,stored:{[PREFS_KEY]:JSON.stringify({configId:'01M6C1Y358N92TR48VGWX9R5EZ'})},nav:{isNativeMode:()=>true,nativeRequest}});
+ off.app.onHAChange();await settle();
+ assert.equal(reports().join(),'8:offline:0/0');
+ assert.equal(off.services.length,0);
+}
+{
  // APK without the capability: no native Road Assist calls, the web engine stays in charge.
  const calls=[];
  const h=harness([],{nav:{isNativeMode:()=>true,nativeRequest:async action=>{calls.push(action);return{ok:true,capabilities:{}}}}});
@@ -285,4 +355,4 @@ assert.match(nav,/announceRoadAssist/);
 assert.match(css,/\.mevi-ra-urgent/);
 assert.match(pages,/tests\/roadassist-smoke\.mjs/);
 assert.match(quality,/tests\/roadassist-smoke\.mjs/);
-console.log('Road Assist smoke passed: 35m corridor, 500m/35m alerts, GPS quality, ahead-only, HA disconnect, opt-in scanner, own app with trips, native bridge.');
+console.log('Road Assist smoke passed: 35m corridor, 500m/35m alerts, GPS quality, ahead-only, HA disconnect, manual and automatic route query, own app with trips, native bridge.');
