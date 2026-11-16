@@ -19,6 +19,9 @@ assert(!adapter.includes('mevicar-next-google-maps-key-v1'),'Preview must not to
 assert(adapter.includes("mevicar-nav-preview-book-v1"),'Test storage must have its own key');
 assert(!adapter.includes('MeviNativeBridge'),'Preview cannot invoke Android bridge');
 assert(css.includes('#previewFlag'),'Test preview status must remain visible');
+const stableSW=readFileSync('sw.js','utf8');
+assert(stableSW.includes("u.pathname.includes('/nav-preview/')"),
+ 'Stable service worker must never cache preview HTML as stable index');
 
 const files=['preview-adapter.js','navigation-shared-core.js','nav-web-parity.js'];
 for(const f of files)if(existsSync(join(folder,f)))new Script(read(f),{filename:f});
