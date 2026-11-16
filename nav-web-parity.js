@@ -170,4 +170,5 @@ window.browseOverlay=function(){
 window.openSearch=open;
 window.searchOverlay=function(){return view==='book'?bookHTML():searchHTML()};
 window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,book,bookBack,add,remove,rename,clearHistory,exportBook,importBook,filter:filterBook,resultsHTML:()=>view==='search'?searchRows():''};
+window.render?.();
 })();
