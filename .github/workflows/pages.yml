@@ -311,6 +311,25 @@ jobs:
           python3 scripts/make-offline-bundle.py dist
           test -s dist/offline-bundle.zip
           test -s dist/offline-bundle.json
+      - name: Build isolated navigation UI preview from development branch
+        run: |
+          # Add only feature-branch UI assets to /nav-preview/, never the site root.
+          git fetch --no-tags --depth=1 origin refs/heads/feature/shared-navigation-ui
+          PREVIEW_SHA="$(git rev-parse FETCH_HEAD)"
+          mkdir -p dist/nav-preview
+          cp preview/index.html preview/preview-adapter.js preview/preview.css dist/nav-preview/
+          for file in navigation-shared-core.js nav-web-parity.js nav-web-parity.css; do
+            git show "FETCH_HEAD:$file" > "dist/nav-preview/$file"
+            test -s "dist/nav-preview/$file"
+          done
+          sed -i "s/__PREVIEW_COMMIT_SHORT__/${PREVIEW_SHA:0:8}/g; s/__PREVIEW_COMMIT__/${PREVIEW_SHA}/g" dist/nav-preview/index.html
+          node --check dist/nav-preview/navigation-shared-core.js
+          node --check dist/nav-preview/nav-web-parity.js
+          node --check dist/nav-preview/preview-adapter.js
+          node tests/nav-preview-smoke.mjs dist/nav-preview
+          # Preview has no service worker; stable PWA /sw.js remains unchanged.
+          test ! -f dist/nav-preview/sw.js
+          echo "Navigation preview source: ${PREVIEW_SHA}"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
