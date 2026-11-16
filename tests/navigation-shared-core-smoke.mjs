@@ -111,6 +111,12 @@ assert.equal(importedNative.changes.favorites[0].icon,'wrench');
 assert.equal(core.destination({name:'Invalid',lat:91,lng:11,placeId:'ChIJValid'}),null,
  'A Place ID must never hide bad supplied coordinates');
 
+// Match native DestinationBook capacities (200 saved entries, 30 recent uses).
+const many=Array.from({length:210},(_,i)=>({name:'Ort '+i,lat:49+i/10000,lng:10+i/10000}));
+const bounded=core.snapshot({favorites:many,recent:many});
+assert.equal(bounded.favorites.length,200);
+assert.equal(bounded.recent.length,30);
+
 const calls=[];
 const fakeNav={
  hasKey:()=>true,webData:()=>current,webWrite:delta=>{calls.push(['write',delta]);return true},
