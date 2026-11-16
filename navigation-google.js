@@ -509,7 +509,7 @@ function stepsHTML(limit=5){
  if(!guidanceSteps.length)return '<span class="mg-empty-steps">Google hat keine einzelnen Fahranweisungen geliefert.</span>';
  return guidanceSteps.slice(0,limit).map((step,i)=>'<div class="mg-step-item"><span class="mg-step-icon">'+guidanceSymbol(step)+'</span><span>'+text(step.instructions)+'</span><small>'+metersLabel(step.distanceMeters)+'</small></div>').join('');
 }
-async function computeRouteFrom(from){
+async function computeRouteFrom(from,options={}){
  await load();
  const {Route}=await google.maps.importLibrary('routes');
  const {routes}=await Route.computeRoutes({
@@ -518,7 +518,7 @@ async function computeRouteFrom(from){
   fields:['path','distanceMeters','durationMillis','legs']
  });
  if(!routes?.length)throw new Error('Keine Fahrroute gefunden.');
- routeData=routes[0];window.MeviRoadAssist?.onRoute?.(routeData);guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';
+ routeData=routes[0];window.MeviRoadAssist?.onRoute?.(routeData,options);guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';
  const km=(routeData.distanceMeters||0)/1000;
  const minutes=Math.round((routeData.durationMillis||0)/60000);
  routeSummary=new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(km)+' km · '+minutes+' Min.';
@@ -646,7 +646,7 @@ async function reroute(point){
  reRouting=true;lastRerouteAt=now;const generation=guidanceGeneration;
  status('Route wird ab dem aktuellen Standort neu berechnet …','route');
  try{
-  await computeRouteFrom(point);
+  await computeRouteFrom(point,{reroute:true});
   if(generation!==guidanceGeneration)return;
   offRouteCount=0;clearStatus();
   window.MeviRoadAssist?.onGuidanceStart?.(false);

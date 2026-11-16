@@ -140,6 +140,42 @@ const camera=(id,lat,lng,vmax=80)=>({id,lat,lng,vmax,type:'fixed',street:'Testst
  assert.equal(h.app.routeState().scanTotal,1,'Short route only samples start');
  assert.equal(h.app.routeState().settings.configSet,true);
 }
+
+{
+ // A recalculation continues the same browser drive, including the passed cameras.
+ const h=harness([camera('passed',49.6,11.005),camera('ahead',49.6,11.015)],
+  {nav:{destinationName:()=>'Erlangen Zentrum'}});
+ const r=h.app;
+ r.onRoute({path:route});r.onGuidanceStart(false);
+ r.onPosition({lat:49.6,lng:11.0078},{accuracy:8,timestamp:now});
+ const replacement=[{lat:49.6,lng:11.008},{lat:49.6,lng:11.016},{lat:49.6,lng:11.02}];
+ r.onRoute({path:replacement},{reroute:true});
+ assert.equal(r.model().guiding,true,'A reroute must not end guidance');
+ assert.equal(r.model().trips.length,0,'A reroute must not complete the current trip');
+ assert.ok(!h.stores.some(([key])=>key===TRIP_KEY),'The trip stays in memory while driving');
+ r.onGuidanceStart(false);
+ r.onPosition({lat:49.6,lng:11.015},{accuracy:8,timestamp:now});
+ r.onGuidanceStop();
+ assert.equal(r.model().trips.length,1,'The whole drive is saved once');
+ const trip=r.model().trips[0];
+ assert.ok(trip.drivenMeters>1000,'Distance is cumulative across the reroute');
+ assert.equal(trip.destination,'Erlangen Zentrum');
+ assert.ok(trip.cameras.some(c=>c.passed&&c.meters<700),'Passed cameras are retained');
+ assert.ok(trip.cameras.some(c=>c.meters>700),'The replacement route uses the cumulative kilometre mark');
+}
+{
+ const h=harness([camera('a',49.6,11.005),camera('b',49.6,11.0056)]);
+ const r=h.app;
+ r.onRoute({path:route});r.onGuidanceStart(false);
+ r.onPosition({lat:49.6,lng:11.0048},{accuracy:8,timestamp:now});
+ assert.equal(h.announcements.length,1);
+ r.onPosition({lat:49.6,lng:11.0053},{accuracy:8,timestamp:now});
+ assert.equal(h.announcements.length,1,'Clustered alerts are rate-limited');
+ now+=1500;
+ r.onPosition({lat:49.6,lng:11.0053},{accuracy:8,timestamp:now});
+ assert.equal(h.announcements.length,2,'Skipped alerts are retried after the pause');
+ r.onGuidanceStop();
+}
 const PREFS_KEY='mevicar-next-roadassist-v1';
 const TRIP_KEY='mevicar-next-roadassist-trips-v1';
 const settle=async()=>{for(let i=0;i<6;i++)await new Promise(done=>setImmediate(done))};

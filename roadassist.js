@@ -122,12 +122,21 @@ function updateFromHA(){
  if(scanWanted&&!autoTimer)autoScan();
 }
 function onHAChange(){updateFromHA()}
-function onRoute(raw){
+function onRoute(raw,options={}){
  const path=raw?.path||raw||[];
- endTrip();
  const built=buildRoute(path);
+ // A browser reroute changes the remaining route, not the current drive.
+ const preserveTrip=options.reroute===true&&built.points.length>=2&&guiding&&!demo&&!!trip&&!nativeOn;
+ const previousHits=preserveTrip?webHits(trip.driven,trip.base||0).filter(hit=>hit.passed):[];
+ if(!preserveTrip)endTrip();
+ if(preserveTrip){
+  trip.pastCameras.push(...previousHits);
+  trip.base=trip.driven;
+  trip.plannedMeters=Math.round(trip.driven+built.length);
+  trip.dataAvailable=trip.dataAvailable||connected;
+ }
  route=built.points;segments=built.segments;routeLength=built.length;routeSerial++;
- guiding=false;demo=false;fix=null;fixAt=0;positionOnRoute=null;currentMatch=null;notified.clear();lastAudioAt=0;
+ guiding=preserveTrip;demo=false;fix=null;fixAt=0;positionOnRoute=null;currentMatch=null;notified.clear();lastAudioAt=0;
  scanCameras=[];scanState='idle';scanNote='';scanProgress=0;scanTotal=0;scanCoverage='nicht geprüft';
  cancelScan();updateFromHA();
  if(!nativeOn&&route.length>=2)wantScan();
@@ -149,7 +158,7 @@ function onGuidanceStart(isDemo=false){
   },30000);
   if(Date.now()-haUpdated>=30000&&window.MeviHA?.debug?.().connected)refresh().catch(()=>{});
  }
- startTrip();
+ if(!trip)startTrip();
  paint();
 }
 function onGuidanceStop(){
@@ -170,7 +179,7 @@ function onPosition(p,options={}){
  }
  const projected=project(position);
  positionOnRoute=projected&&projected.lateral<=FIX_CORRIDOR?projected:null;
- if(trip&&positionOnRoute)trip.driven=Math.max(trip.driven,positionOnRoute.progress);
+ if(trip&&positionOnRoute)trip.driven=Math.max(trip.driven,(trip.base||0)+positionOnRoute.progress);
  updateMatch();
  maybeSpeak();paint();
 }
@@ -190,13 +199,13 @@ function maybeSpeak(){
  const stage=dist<=FINAL_WARN?'final':dist<=PREWARN?'early':null;
  if(!stage)return;
  const key=id+'|'+stage;if(notified.has(key))return;
- notified.add(key);
  if(!window.MeviGoogleNav?.announceRoadAssist)return;
  const label=messageFor(currentMatch.camera);
  const speed=currentMatch.camera.vmax?', erlaubt '+currentMatch.camera.vmax+' km/h':'';
  // When first position jumps straight to close range, do not speak a late 500m warning.
  const say=stage==='final'?'Achtung! '+label+' jetzt'+speed+'.':'Achtung, '+label+' in '+formatMeters(dist)+speed+'.';
- if(Date.now()-lastAudioAt<1400){return} // no speech spam from clustered controls
+ if(Date.now()-lastAudioAt<1400)return; // retry the warning on the next valid fix
+ notified.add(key);
  lastAudioAt=Date.now();window.MeviGoogleNav.announceRoadAssist(say);
 }
 function routeStatus(){
@@ -508,15 +517,16 @@ function nativeSetting(){
 function destinationName(){
  try{return String(window.MeviGoogleNav?.destinationName?.()||'').slice(0,120)}catch{return ''}
 }
-function webHits(driven){
+function webHits(driven,base=0){
  return matched.map(m=>cleanHit({title:m.camera.street||messageFor(m.camera),city:m.camera.city,
-  label:messageFor(m.camera),meters:m.progress,passed:finite(driven)&&m.progress<=driven,limit:m.camera.vmax}));
+  label:messageFor(m.camera),meters:base+m.progress,passed:finite(driven)&&base+m.progress<=driven,limit:m.camera.vmax}));
 }
 function tripJson(t,endedAt=0){
  return{id:t.id,startedAt:t.startedAt,endedAt,destination:t.destination,plannedMeters:t.plannedMeters,
   drivenMeters:Math.round(t.driven),
   outcome:!endedAt?'active':t.plannedMeters>0&&t.driven>=t.plannedMeters-150?'arrived':'stopped',
-  dataAvailable:t.dataAvailable&&connected,cameras:webHits(t.driven)};
+  dataAvailable:t.dataAvailable&&connected,
+  cameras:[...(t.pastCameras||[]),...webHits(t.driven,t.base||0)].slice(0,200)};
 }
 function saveTrips(){
  try{localStorage.setItem(TRIPS,JSON.stringify(trips))}catch{}
@@ -527,7 +537,7 @@ function startTrip(){
  endTrip();
  if(demo||nativeOn||route.length<2)return;
  trip={id:'w'+Date.now(),startedAt:Date.now(),destination:destinationName(),
-  plannedMeters:Math.round(routeLength),driven:0,dataAvailable:connected};
+  plannedMeters:Math.round(routeLength),driven:0,base:0,pastCameras:[],dataAvailable:connected};
 }
 function endTrip(){
  if(!trip)return;
@@ -547,7 +557,7 @@ function model(){
  }
  return{native:false,enabled:settings.enabled,voice:settings.voice,connected,cameraCount:haCount,
   route:route.length>1,guiding:guiding&&!demo,destination:destinationName(),plannedMeters:Math.round(routeLength),
-  hits:webHits(trip?trip.driven:positionOnRoute?.progress),trips};
+  hits:webHits(trip?trip.driven:positionOnRoute?.progress,trip?.base||0),trips};
 }
 function appStatus(m){
  if(!m.route)return 'Keine Route geplant';
