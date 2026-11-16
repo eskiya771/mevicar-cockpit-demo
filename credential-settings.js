@@ -1,7 +1,8 @@
 /* Central configuration UI. Never embed entered secrets into HTML or logs.
    Browser API keys / OAuth client identifiers retain their legacy local keys for compatibility.
-   HA token stays in session memory. The MeviTV PIN uses Android Keystore when supported
-   by the APK, otherwise localStorage in the Web app and older hybrid APKs. */
+   HA token is persisted only in the standalone Web browser, scoped to the HA origin.
+   Android keeps its existing native Keystore flow. The MeviTV PIN uses Android
+   Keystore when supported by the APK, otherwise localStorage. */
 (function(global){
 'use strict';
 const MAPS_KEY='mevicar-next-google-maps-key-v1';
@@ -9,6 +10,7 @@ const SPOTIFY_KEY='mevicar-spotify-client-v1';
 const CAL_KEY='mevicar-next-calendar-settings-v1';
 const ROAD_KEY='mevicar-next-roadassist-v1';
 const TV_PIN_KEY='mevicar-next-tv-pin-v1';
+const HA_WEB_TOKEN_KEY='mevicar-next-ha-web-token-v1';
 let tvPin='', feedback='', nativeStatus=null, requestNumber=0;
 let tvPinLoad=null,nativePinAvailable=false;
 const pending=new Map();
@@ -32,6 +34,37 @@ function row(id,title,placeholder,status,description,options={}){
   '<small class="mevi-cred-status">'+escapeHTML(status)+'</small><p>'+escapeHTML(description)+'</p></div>';
 }
 function nativeAvailable(){return !!(global.MeviNativeBridge?.postMessage || global.Capacitor?.Plugins?.MeviSecureSettings)}
+// This opt-in is Web-only: do not copy an Android Keystore secret into localStorage.
+function webHaRecord(){
+ if(nativeAvailable())return null;
+ try{
+  const record=JSON.parse(localStorage.getItem(HA_WEB_TOKEN_KEY)||'null');
+  if(!record||typeof record.origin!=='string'||typeof record.token!=='string'||
+      record.token.length<20||/\s/.test(record.token))return null;
+  return record;
+ }catch{return null}
+}
+async function restoreWebHaToken(){
+ const record=webHaRecord();
+ const ha=global.MeviHA;
+ if(!record||!ha?.debug||!ha?.connectWithToken)return false;
+ // Never send a saved bearer token to a different HA installation.
+ if(record.origin!==ha.debug().origin)return false;
+ if(ha.debug().connected)return true;
+ try{
+  await ha.connectWithToken(record.token);
+  return !!ha.debug().connected;
+ }catch(e){
+  // Offline and CORS failures must not erase the saved token.
+  if(/HTTP 40[13]\b/.test(String(e?.message||e))){
+   try{localStorage.removeItem(HA_WEB_TOKEN_KEY)}catch{}
+  }
+  return false;
+ }
+}
+if(typeof global.addEventListener==='function'){
+ global.addEventListener('load',()=>{void restoreWebHaToken()});
+}
 function nativeCall(action,name,secret){
  const plugin=global.Capacitor?.Plugins?.MeviSecureSettings;
  if(plugin){
@@ -78,6 +111,7 @@ function html(){
  const ha=global.MeviHA?.debug?.()||{};
  const cal=json(CAL_KEY),road=json(ROAD_KEY);
  const android=nativeAvailable();
+ const haSaved=!android&&!!webHaRecord();
  const groups=[
   '<h3>Google-Dienste</h3>',
   ...(android?[
@@ -104,8 +138,8 @@ function html(){
       android?'Die neue Android-APK speichert die PIN verschlüsselt. Bei älteren APK-Versionen kann die PIN im WebView-Speicher liegen.':'Der PIN bleibt auf diesem Gerät im Browser-Speicher; dort ist er nicht verschlüsselt.',{secret:true,pin:true}),
   '<h3>Home Assistant</h3>',
   row('ha','Home Assistant · Long-Lived Access Token','Neuen HA-Token einfügen',
-      ha.connected?'API verbunden':ha.tokenPresent?'Token in dieser Sitzung vorhanden':'Nicht verbunden',
-      'Der Browser bewahrt den Token nur bis zum Neuladen im Arbeitsspeicher auf.',{secret:true}),
+      ha.connected?(haSaved?'API verbunden · im Browser gespeichert':'API verbunden'):haSaved?'Im Browser gespeichert · nicht verbunden':ha.tokenPresent?'Token in dieser Sitzung vorhanden':'Nicht verbunden',
+      android?'Die Android-APK nutzt ihren bisherigen geschützten Gerätespeicher.':'Der Token bleibt nach einem Neustart in diesem Browser gespeichert (nicht verschlüsselt). Nur auf einem privaten PC verwenden; mit „Entfernen“ wieder löschen.',{secret:true}),
   '<div class="mevi-cred-row"><label for="mevi-cred-ha-origin">Home Assistant · HTTPS-Adresse</label>'+
   '<div class="mevi-cred-form"><input id="mevi-cred-ha-origin" type="url" spellcheck="false" value="'+escapeHTML(ha.origin||'')+'" placeholder="https://homeassistant.example">'+
   '<button type="button" onclick="MeviCredentials.save(\'ha-origin\')">Adresse speichern</button></div>'+
@@ -126,7 +160,8 @@ function html(){
   '<p class="mevi-cred-note">'+(android?
    'Android: Google-Navigation und Places verwenden ausschließlich den Android-API-Key im verschlüsselten Android Keystore; ein Browser-Key wird nicht benötigt.':
    'Web-App: Google Maps nutzt einen auf diese Website eingeschränkten Browser-API-Key.')+
-   ' Der MeviTV-PIN wird in der aktuellen Android-APK verschlüsselt, in der Web-App lokal gespeichert. Home-Assistant-Token bleiben im Arbeitsspeicher.</p>'+
+   ' Der MeviTV-PIN wird in der aktuellen Android-APK verschlüsselt, in der Web-App lokal gespeichert. '+
+   (android?'Die Android-APK verwaltet HA-Zugänge weiterhin separat.':'Der HA-Token wird lokal und unverschlüsselt in diesem Browser gespeichert, nicht auf GitHub.')+'</p>'+
   '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div></div>';
 }
 async function save(id){
@@ -161,10 +196,22 @@ async function save(id){
     await global.MeviHA?.connectWithToken?.(v);
     if(!global.MeviHA?.debug?.().connected)throw new Error('HA-Verbindung fehlgeschlagen. URL, Token und CORS prüfen.');
     if(nativeAvailable())await nativeCall('settings.set','haToken',v).catch(()=>null);
+    else{
+     const origin=global.MeviHA.debug().origin;
+     if(typeof origin!=='string'||!origin.startsWith('https://'))throw new Error('Ungültige Home-Assistant-Adresse.');
+     const record=JSON.stringify({origin,token:v});
+     localStorage.setItem(HA_WEB_TOKEN_KEY,record);
+     if(localStorage.getItem(HA_WEB_TOKEN_KEY)!==record)throw new Error('Der HA-Token konnte nicht dauerhaft gespeichert werden.');
+    }
     break;
    case 'ha-origin':{
     const origin=value('ha-origin'),path=value('ha-path');
+    const previousOrigin=global.MeviHA?.debug?.().origin;
     global.MeviHA?.configureEndpoint(origin,path);
+    // An old token must never be replayed after changing the server address.
+    if(!nativeAvailable()&&previousOrigin!==global.MeviHA?.debug?.().origin){
+     localStorage.removeItem(HA_WEB_TOKEN_KEY);
+    }
     break;
    }
    case 'android-maps':
@@ -196,7 +243,12 @@ async function clear(id){
     await tvPinReady();
     if(nativePinAvailable)await nativeCall('settings.clear','tvPin');
     localStorage.removeItem(TV_PIN_KEY);tvPin='';break;
-   case 'ha':global.MeviHA?.disconnect?.();if(nativeAvailable())await nativeCall('settings.clear','haToken').catch(()=>null);break;
+   case 'ha':
+    global.MeviHA?.disconnect?.();
+    // Clear any browser copy even when an old hybrid had used the same WebView origin.
+    localStorage.removeItem(HA_WEB_TOKEN_KEY);
+    if(nativeAvailable())await nativeCall('settings.clear','haToken').catch(()=>null);
+    break;
    case 'android-maps':await nativeCall('settings.clear','mapsKey');nativeStatus={...nativeStatus,mapsKey:false};break;
    case 'github-token':await nativeCall('settings.clear','githubToken');nativeStatus={...nativeStatus,githubToken:false};break;
    default:throw new Error('Einstellung nicht bekannt.');
