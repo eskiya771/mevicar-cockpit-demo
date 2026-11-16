@@ -32,8 +32,8 @@ const win={
  browseOverlay:()=>'<div class="inner"></div>',render:()=>{},
  MeviGoogleNav:{
   hasKey:()=>true,changeQuery:value=>{state.query=value;state.suggestions=value.length>=2?[{name:value,address:'Testadresse'}]:[]},
-  webData:()=>state,webPoi:(...args)=>calls.push(args),pick:async()=>{},
-  webWrite:delta=>Object.assign(state,delta),webSaveSelectedSlot:()=>true,saveFavorite:()=>{}
+  webData:()=>state,webPoi:(...args)=>calls.push(args),pick:async (...args)=>{calls.push(['pick',...args]);return true},
+  webWrite:delta=>Object.assign(state,delta),webSaveSelectedSlot:slot=>{calls.push(['slot',slot]);return true},saveFavorite:()=>calls.push(['favorite'])
  }
 };
 const s={app:'nav',mode:'map',nav:'browse',query:'',keyboard:false};
@@ -77,6 +77,18 @@ win.MeviWebNavParity.bookBack();
 win.MeviWebNavParity.poi('fuel','Tankstelle');
 assert.equal(calls[0][0],'fuel');
 assert.equal(s.query,'Tankstelle');
+win.MeviWebNavParity.book();
+win.MeviWebNavParity.add();
+await win.MeviWebNavParity.choose('recent',0);
+const savePick=calls.find(call=>call[0]==='pick'&&call[3]?.saveOnly===true);
+assert.equal(savePick?.[1],'recent','Web favourites use save-only intent without starting a route');
+assert(calls.some(call=>call[0]==='favorite'),'Web must save selected destination as favourite');
+assert.equal(s.nav,'search','After saving favourite stay in address-book/search flow');
+state.slots.home=null;
+win.MeviWebNavParity.slot('home');
+await win.MeviWebNavParity.choose('recent',0);
+assert(calls.some(call=>call[0]==='slot'&&call[1]==='home'),'Quick-destination save calls shared provider');
+
 assert(win.browseOverlay().includes('Adressbuch'));
 const native={MeviNativeBridge:{postMessage(){}},MeviGoogleNav:win.MeviGoogleNav};
 runInNewContext(core,{window:native});
