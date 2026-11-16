@@ -94,6 +94,23 @@ assert.throws(()=>core.editSaved(addressBook,'favorites',0,{name:'A',icon:'inval
 assert.throws(()=>core.editSaved(addressBook,'favorites',0,{name:'A',note:'x'.repeat(201)}),/200 Zeichen/);
 assert.throws(()=>core.editSaved(addressBook,'recent',0,{name:'Nope'}),/nicht bearbeitet/);
 
+// Android Native v2 exports can save Place IDs without lat/lng. Never discard them.
+const unresolved={id:'android-unresolved',placeId:'ChIJPlaceId_123',name:'Unaufgelöster Ort',
+ address:'Hauptstraße',note:'Haus 3',icon:'wrench'};
+const nativePayload=core.exportAddressBook({favorites:[unresolved],recent:[],slots:{}});
+assert.equal(nativePayload.saved.length,1);
+assert.equal(nativePayload.saved[0].placeId,'ChIJPlaceId_123');
+assert.equal(Object.hasOwn(nativePayload.saved[0],'lat'),false,'Native parser rejects explicit JSON null for missing coordinates');
+assert.equal(Object.hasOwn(nativePayload.saved[0],'lng'),false);
+const importedNative=core.importAddressBook(JSON.parse(JSON.stringify(nativePayload)),{});
+assert.equal(importedNative.added,1);
+assert.equal(importedNative.skipped,0);
+assert.equal(importedNative.changes.favorites[0].placeId,'ChIJPlaceId_123');
+assert.equal(importedNative.changes.favorites[0].note,'Haus 3');
+assert.equal(importedNative.changes.favorites[0].icon,'wrench');
+assert.equal(core.destination({name:'Invalid',lat:91,lng:11,placeId:'ChIJValid'}),null,
+ 'A Place ID must never hide bad supplied coordinates');
+
 const calls=[];
 const fakeNav={
  hasKey:()=>true,webData:()=>current,webWrite:delta=>{calls.push(['write',delta]);return true},
