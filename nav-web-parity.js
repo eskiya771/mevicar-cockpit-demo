@@ -261,6 +261,15 @@ async function choose(kind,index){
  const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
  const saveOnly=!!(savingSlot||savingFavorite);
  if(kind==='suggest'&&!saveOnly){await showPlace(index);return}
+ // A stored favorite or recent target selected from "Stopp suchen" must never
+ // replace the final destination or end live GPS/Road Assist guidance.
+ if(stopMode&&!saveOnly){
+  const book=data();
+  const place=kind==='favorites'?book.favorites[index]:kind==='recent'?book.recent[index]:
+   (kind==='home'||kind==='work')?book.slots[kind]:null;
+  if(place)await finishStop(place);
+  return;
+ }
  const success=await provider.choose(kind,index,{saveOnly});
  if(success===false)return;
  if(savingSlot)provider.saveSlot(savingSlot);
@@ -306,13 +315,24 @@ function openStopSearch(){
  const context=provider.routeContext();
  if(!context.hasRoute)return;
  if(context.stops.length>=context.maxStops){stopError='Maximal acht Zwischenstopps möglich.';return}
- returnNav=context.active?'driving':'ready';stopMode=true;stopError='';
+ returnNav=context.active?'driving':'ready';stopMode=true;stopError='';pendingSlot='';pendingFavorite=false;
  view='search';tab='recent';s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();
 }
 async function finishStop(place){
- if(!place||!Number.isFinite(place.lat)||!Number.isFinite(place.lng))return false;
- stopError='';const ok=await provider.addStop(place);
+ if(!place)return false;
+ stopError='';
+ // Imported Android address books may contain a Place ID but no coordinates.
+ // Resolve it without calling provider.choose(), which would stop navigation.
+ let target=place;
+ if(!Number.isFinite(target.lat)||!Number.isFinite(target.lng)){
+  try{target=await provider.resolveStop(place)}catch{target=null}
+ }
+ if(!target||!Number.isFinite(target.lat)||!Number.isFinite(target.lng)){
+  stopError='Für dieses gespeicherte Ziel konnte keine Position ermittelt werden. Die bisherige Route bleibt bestehen.';
+  rerender();return false;
+ }
+ const ok=await provider.addStop(target);
  if(ok){
   close();return true;
  }
