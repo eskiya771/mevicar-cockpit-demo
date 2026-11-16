@@ -34,7 +34,7 @@ function distinct(values,max){
 function snapshot(input){
  const source=input&&typeof input==='object'?input:{},rawSlots=source.slots||{};
  return {
-  favorites:distinct(source.favorites,100),recent:distinct(source.recent,20).filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng)),
+  favorites:distinct(source.favorites,200),recent:distinct(source.recent,30).filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng)),
   slots:{home:destination(rawSlots.home),work:destination(rawSlots.work)},
   suggestions:Array.isArray(source.suggestions)?source.suggestions:[],
   origin:source.origin||null,
@@ -132,7 +132,7 @@ function importAddressBook(payload,current){
   added++;
  }
  for(const item of recent){const clean=destination(item);if(clean)history.push(clean);else skipped++}
- return {changes:{slots,favorites:distinct(favorites,100),recent:distinct(history,20)},added,skipped};
+ return {changes:{slots,favorites:distinct(favorites,200),recent:distinct(history,30)},added,skipped};
 }
 root.MeviNavigationShared=Object.freeze({
  destination,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
