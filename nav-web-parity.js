@@ -3,7 +3,9 @@
 'use strict';
 if(window.MeviNativeBridge?.postMessage)return;
 const nav=window.MeviGoogleNav;
-if(!nav)return;
+const shared=window.MeviNavigationShared;
+if(!nav||!shared)return;
+const provider=shared.createBrowserProvider(nav);
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null;
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths={
@@ -25,7 +27,7 @@ const paths={
  plus:'<path d="M12 5v14M5 12h14"/>'
 };
 function ico(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(paths[name]||paths.pin)+'</svg>'}
-function data(){return nav.webData?.()||{favorites:[],recent:[],slots:{},suggestions:[],query:''}}
+function data(){return provider.read()}
 function distance(d){
  const p=gps||data().origin;
  if(!p||!Number.isFinite(p.lat)||!Number.isFinite(p.lng)||!Number.isFinite(d.lat)||!Number.isFinite(d.lng))return '';
@@ -91,39 +93,39 @@ function bookHTML(){
 }
 function rerender(){window.render?.()}
 function open(){
- if(!nav.hasKey?.()){window.openCredentialSettings?.();return}
+ if(!provider.isReady()){window.openCredentialSettings?.();return}
  view='search';tab='recent';filter='';s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
- nav.changeQuery('');rerender();
+ provider.search('');rerender();
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
 function close(){pendingSlot='';pendingFavorite=false;view='search';s.nav='browse';s.keyboard=false;rerender()}
 function input(value){
- s.query=String(value||'');nav.changeQuery(s.query);
+ s.query=String(value||'');provider.search(s.query);
  const controls=document.getElementById('mg-parity-controls');if(controls)controls.hidden=!!s.query.trim();
  const clear=document.querySelector('.mg-parity-clear');
  if(clear)clear.hidden=!s.query;
 }
-function clear(){s.query='';nav.changeQuery('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
+function clear(){s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
 function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
 async function choose(kind,index){
- await nav.pick(kind,index);
- if(pendingSlot){nav.webSaveSelectedSlot?.(pendingSlot);pendingSlot=''}
- if(pendingFavorite){nav.saveFavorite();pendingFavorite=false}
+ await provider.choose(kind,index);
+ if(pendingSlot){provider.saveSlot(pendingSlot);pendingSlot=''}
+ if(pendingFavorite){provider.saveFavorite();pendingFavorite=false}
 }
 function slot(k){
  const d=data().slots[k];
  if(d){void choose(k,0);return}
- pendingSlot=k;view='search';s.query='';nav.changeQuery('');rerender();
+ pendingSlot=k;view='search';s.query='';provider.search('');rerender();
  document.getElementById('searchInput')?.focus({preventScroll:true});
 }
 function poi(type,query){
- view='search';s.query=query;nav.changeQuery(query);rerender();
- if(nav.webPoi)void nav.webPoi(type,query,gps||null);
+ view='search';s.query=query;provider.search(query);rerender();
+ void provider.searchNearby(type,query,gps||null);
 }
 function book(){view='book';s.nav='search';s.keyboard=false;filter='';rerender()}
-function bookBack(){view='search';s.query='';nav.changeQuery('');rerender()}
-function add(){pendingFavorite=true;view='search';s.query='';nav.changeQuery('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
-function write(changes){nav.webWrite?.(changes);rerender()}
+function bookBack(){view='search';s.query='';provider.search('');rerender()}
+function add(){pendingFavorite=true;view='search';s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
+function write(changes){provider.write(changes);rerender()}
 function remove(kind,i){
  const d=data(),arr=kind==='recent'?d.recent:kind==='favorites'?d.favorites:[];
  if(kind==='home'||kind==='work'){if(!window.confirm('Schnellziel entfernen?'))return;delete d.slots[kind];write({slots:d.slots});return}
@@ -140,9 +142,7 @@ function rename(kind,i){
 }
 function clearHistory(){if(window.confirm('Alle zuletzt gefahrenen Ziele entfernen?'))write({recent:[]})}
 function exportBook(){
- const d=data(),saved=[...['home','work'].map(k=>d.slots[k]?{...d.slots[k],slot:k}:null).filter(Boolean),...d.favorites.map(x=>({...x,slot:''}))];
- const payload={version:2,saved:saved.map((x,i)=>({id:'web-'+(i+1),placeId:'',name:x.name,address:x.address||'',lat:x.lat,lng:x.lng,fetchedAt:0,slot:x.slot,icon:'',note:'',order:i})),
- recent:d.recent.map(x=>({placeId:'',name:x.name,address:x.address||'',lat:x.lat,lng:x.lng,usedAt:Date.now(),count:1}))};
+ const payload=shared.exportAddressBook(data());
  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='MeviCar-Adressbuch.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
@@ -150,15 +150,9 @@ async function importBook(file){
  if(!file)return;
  try{
   if(file.size>1000000)throw Error('Datei ist zu groß.');
-  const book=JSON.parse(await file.text());
-  const saved=Array.isArray(book.saved)?book.saved:Array.isArray(book.favorites)?book.favorites:[];
-  const recent=Array.isArray(book.recent)?book.recent:[];
-  const clean=x=>x&&typeof x.name==='string'&&Number.isFinite(x.lat)&&Number.isFinite(x.lng)&&Math.abs(x.lat)<=90&&Math.abs(x.lng)<=180?{name:x.name.slice(0,120),address:String(x.address||'').slice(0,200),lat:x.lat,lng:x.lng}:null;
-  const slots={...data().slots},favorites=[...data().favorites],history=[...data().recent];let added=0,skipped=0;
-  for(const item of saved){const x=clean(item);if(!x){skipped++;continue}if(item.slot==='home'||item.slot==='work')slots[item.slot]=x;else favorites.push(x);added++}
-  for(const item of recent){const x=clean(item);if(x)history.push(x);else skipped++}
-  write({slots,favorites,recent:history});
-  window.alert(added+' Ziele importiert'+(skipped?' · '+skipped+' ohne nutzbare Koordinaten übersprungen':'')+'.');
+  const result=shared.importAddressBook(JSON.parse(await file.text()),data());
+  write(result.changes);
+  window.alert(result.added+' Ziele importiert'+(result.skipped?' · '+result.skipped+' ohne nutzbare Koordinaten übersprungen':'')+'.');
  }catch(e){window.alert('Adressbuch konnte nicht importiert werden: '+(e.message||e))}
 }
 function refreshBook(){const el=document.getElementById('mg-parity-book-body');if(el)el.innerHTML=bookBody()}
