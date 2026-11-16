@@ -5,8 +5,14 @@
 function destination(value){
  if(!value||typeof value!=='object'||typeof value.name!=='string'||!value.name.trim())return null;
  const lat=value.lat,lng=value.lng;
- if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)return null;
- const result={name:value.name.trim().slice(0,120),address:String(value.address??'').slice(0,200),lat,lng};
+ const coords=Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180;
+ const placeId=typeof value.placeId==='string'&&/^[A-Za-z0-9_-]{1,300}$/.test(value.placeId)?value.placeId:'';
+ const hasExplicitCoords=(lat!=null||lng!=null);
+ if(!coords&&(hasExplicitCoords||!placeId))return null;
+ // Native Android may store a Google place ID before its coordinates are fetched.
+ const result={name:value.name.trim().slice(0,120),address:String(value.address??'').slice(0,200)};
+ if(coords){result.lat=lat;result.lng=lng}
+ if(placeId)result.placeId=placeId;
  for(const [key,limit] of [['id',120],['placeId',250],['icon',60],['note',500]]){
   if(typeof value[key]==='string'&&value[key])result[key]=value[key].slice(0,limit);
  }
@@ -19,7 +25,7 @@ function distinct(values,max){
  const seen=new Set(),out=[];
  for(const value of Array.isArray(values)?values:[]){
   const item=destination(value);if(!item)continue;
-  const id=item.lat.toFixed(5)+','+item.lng.toFixed(5);
+  const id=item.placeId?'p:'+item.placeId:'c:'+item.lat.toFixed(5)+','+item.lng.toFixed(5);
   if(seen.has(id))continue;seen.add(id);out.push(item);
   if(out.length>=max)break;
  }
@@ -28,7 +34,7 @@ function distinct(values,max){
 function snapshot(input){
  const source=input&&typeof input==='object'?input:{},rawSlots=source.slots||{};
  return {
-  favorites:distinct(source.favorites,100),recent:distinct(source.recent,20),
+  favorites:distinct(source.favorites,100),recent:distinct(source.recent,20).filter(item=>Number.isFinite(item.lat)&&Number.isFinite(item.lng)),
   slots:{home:destination(rawSlots.home),work:destination(rawSlots.work)},
   suggestions:Array.isArray(source.suggestions)?source.suggestions:[],
   origin:source.origin||null,
@@ -101,7 +107,7 @@ function exportAddressBook(source){
  return {version:2,
   saved:saved.map((item,index)=>({
    id:item.id||'web-'+(index+1),placeId:item.placeId||'',name:item.name,
-   address:item.address,lat:item.lat,lng:item.lng,fetchedAt:item.fetchedAt||0,
+   address:item.address,...(Number.isFinite(item.lat)&&Number.isFinite(item.lng)?{lat:item.lat,lng:item.lng}:{}),fetchedAt:item.fetchedAt||0,
    slot:item.slot,icon:item.icon||'',note:item.note||'',order:index
   })),
   recent:data.recent.map(item=>({
