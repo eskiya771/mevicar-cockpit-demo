@@ -213,3 +213,89 @@ html[data-theme="liquidglass"] .mg-navigation .mg-guidance-banner{
  .mg-navigation.mg-first-run .mg-setup strong{font-size:17px}
  .mg-navigation.mg-first-run .mg-setup p{font-size:12px}
 }
+
+.mg-route-preview-layout {
+ --route-pane-width: clamp(360px, 40%, 420px);
+ --route-pane-bg: #0a1721;
+ --route-control: #152837;
+ --route-ink: #edf9ff;
+ --route-muted: #b8d1dd;
+ --route-accent: #8beaff;
+ --route-divider: #448899;
+}
+html[data-theme="cyberpunk"] .mg-route-preview-layout {
+ --route-pane-bg: #0b0815;
+ --route-control: #1c1030;
+ --route-ink: #ffe8fb;
+ --route-muted: #e7a6d8;
+ --route-accent: #64eaff;
+ --route-divider: #b03a9c;
+}
+html[data-theme="liquidglass"] .mg-route-preview-layout {
+ --route-pane-bg: #102033;
+ --route-control: #1b3350;
+ --route-ink: #f4f8ff;
+ --route-muted: #d5e6f4;
+ --route-accent: #b3edff;
+ --route-divider: #7fa9c9;
+}
+.mg-navigation.mg-route-preview-layout .mg-map {
+ left:var(--route-pane-width); width:calc(100% - var(--route-pane-width));
+}
+.mg-native-route-preview .mg-native-setup { display:none; }
+.mg-route-preview-pane {
+ position:absolute; inset:0 auto 0 0; width:var(--route-pane-width); z-index:3;
+ display:flex; flex-direction:column; min-width:0; min-height:0; box-sizing:border-box;
+ gap:clamp(5px,1vh,10px);
+ /* Keep native-style side controls outside the iPhone landscape cutout. */
+ padding:max(7px,env(safe-area-inset-top,0px)) 9px
+   max(8px,env(safe-area-inset-bottom,0px)) max(9px,env(safe-area-inset-left,0px));
+ background:var(--route-pane-bg); color:var(--route-ink);
+ font-size:clamp(13px,2.15vh,23px);
+}
+.mg-route-preview-heading,.mg-route-preview-actions,.mg-route-preview-options {
+ display:flex; align-items:center; gap:clamp(4px,.7vw,10px);
+}
+.mg-route-preview-heading { justify-content:space-between; flex:0 0 auto; min-height:44px; }
+.mg-route-preview-trip { flex:0 0 auto; min-height:0; }
+.mg-route-preview-actions { flex:0 0 auto; padding-top:5px; }
+.mg-route-preview-heading h2 { margin:0; font-size:clamp(15px,2.7vh,28px); }
+.mg-route-preview-scroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; }
+.mg-route-preview-summary { display:block; font-size:clamp(18px,3.1vh,34px); }
+.mg-route-preview-meta,.mg-route-preview-destination p { margin:.24em 0 .5em; }
+.mg-route-preview-meta,.mg-route-preview-options>span { color:var(--route-muted); }
+.mg-route-preview-options { margin-top:.55em; flex-wrap:nowrap; min-width:0; }
+.mg-route-preview-options button { padding-inline:3px!important; font-size:clamp(11px,1.85vh,15px); min-height:44px!important; }
+.mg-route-preview-options>span { flex:0 0 auto; white-space:nowrap; }
+.mg-route-preview-destination { border-top:1px solid var(--route-divider); margin-top:.5em; padding-top:.4em; }
+.mg-navigation .mg-route-preview-pane button {
+ background:var(--route-control); color:var(--route-ink); border:0;
+ border-radius:clamp(8px,1.8vh,20px); min-height:clamp(36px,7vh,68px);
+ padding:4px clamp(5px,.8vw,14px); line-height:1.15;
+}
+.mg-route-preview-options button,.mg-route-preview-actions button { flex:1; min-width:0; }
+.mg-navigation .mg-route-preview-pane button[aria-pressed="true"],
+.mg-navigation .mg-route-preview-pane .mg-route-preview-start { background:var(--route-accent); color:#091823; font-weight:650; }
+.mg-navigation .mg-route-preview-actions button { min-height:56px; font-size:clamp(13px,2.2vh,18px); }
+.mg-navigation .mg-route-preview-start { font-weight:750; font-size:clamp(18px,3vh,22px)!important; }
+.mg-navigation .mg-route-preview-pane .mg-route-preview-demo { min-height:32px; font-size:.8em; }
+@media(max-width:720px) {
+ .mg-route-preview-layout { --route-pane-width: min(52%, 420px); }
+ .mg-route-preview-options { flex-wrap:wrap; }
+ .mg-route-preview-options>span { flex-basis:100%; }
+}
+
+/* The browser and native bridge use the same readyRouteOverlay markup. */
+@media (orientation:landscape) and (max-height:480px){
+ .mg-navigation.mg-route-preview-layout .mg-map{min-width:0}
+ .mg-navigation .mg-route-preview-pane{gap:4px}
+ .mg-route-preview-heading{min-height:42px}
+ .mg-route-preview-trip .mg-route-preview-summary{font-size:clamp(17px,4.6vh,22px)}
+ .mg-route-preview-trip .mg-route-preview-meta{
+  font-size:clamp(11px,2.4vh,14px);line-height:1.22;margin:3px 0 5px;
+ }
+ .mg-route-preview-scroll{padding-bottom:4px}
+ .mg-route-preview-options{gap:4px}
+ .mg-route-preview-options>span{font-size:12px}
+ .mg-navigation .mg-route-preview-actions button{min-height:56px}
+}
