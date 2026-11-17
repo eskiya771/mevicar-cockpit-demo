@@ -65,7 +65,7 @@ function rows(kind,manage=false){
 const categories=[['home','Zuhause','home'],['work','Arbeit','work'],['fuel','Tanken','Tankstelle'],['charge','Laden','Ladestation'],['parking','Parken','Parkplatz'],['food','Essen','Restaurant'],['cafe','Café','Café'],['cart','Einkaufen','Supermarkt'],['rest','Rastplatz','Rastplatz WC'],['wrench','Werkstatt','Autowerkstatt']];
 function chips(){return '<div class="mg-parity-chips" aria-label="Schnellziele und POI-Kategorien">'+categories.map(([icon,label,q],i)=>
  '<button type="button" onclick="'+(i<2?'MeviWebNavParity.slot(\''+icon+'\')':'MeviWebNavParity.poi(\''+icon+'\',\''+q+'\')')+'">'+ico(icon)+'<span>'+label+'</span></button>').join('')+'</div>'}
-function tabs(){return '<div class="mg-parity-tabs"><button type="button" class="'+(tab==='recent'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button><button type="button" class="'+(tab==='favorites'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button></div>'}
+function tabs(){return '<div class="mg-parity-tabs"><button type="button" class="'+(tab==='recent'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button><button type="button" class="'+(tab==='favorites'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button><button type="button" class="mg-parity-book-tab" onclick="MeviWebNavParity.book()">Adressbuch</button></div>'}
 function searchRows(){
  const d=data(),q=(s.query||'').trim();
  if(q){
@@ -74,7 +74,7 @@ function searchRows(){
  }
  if(tab==='recent')return rows('recent');
  return '<div class="mg-parity-slot-rows">'+(d.slots.home?row(d.slots.home,'home',0,false):'')+(d.slots.work?row(d.slots.work,'work',0,false):'')+'</div>'+
- rows('favorites')+'<button type="button" class="mg-parity-book-link" onclick="MeviWebNavParity.book()">Adressbuch öffnen</button>';
+ rows('favorites');
 }
 function searchHTML(){
  return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Ziel suchen"><div class="mg-parity-layout">'+
