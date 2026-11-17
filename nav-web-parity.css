@@ -30,7 +30,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  --nav-search-dim:#d5e6f4;
  --nav-search-accent:#b3edff;
 }
-.mg-parity-layout{height:100%;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,10px);margin-left:clamp(0px,3.55vw,54px)}
+.mg-parity-layout{height:100%;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,10px);margin-left:clamp(90px,7.6vw,118px)}
 .mg-parity-top{display:flex;gap:clamp(6px,0.65vw,11px);align-items:center;min-width:0;flex:0 0 auto;height:clamp(48px,11.5vh,80px)}
 .mg-navigation .mg-parity-back,.mg-navigation .mg-parity-field{
  height:100%;border:0;border-radius:clamp(12px,2vh,22px);background:var(--nav-search-surface);color:var(--nav-search-ink)
@@ -87,7 +87,6 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-empty-slot{display:flex;align-items:center;gap:8px}
 .mg-parity-empty-slot svg{width:20px;height:20px}
 @media(max-width:850px), (max-height:440px){
- .mg-parity-layout{margin-left:0}
  .mg-navigation .mg-parity-shade{padding: max(4px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))}
  .mg-parity-field>svg{display:none}
  .mg-parity-book-grid{grid-template-columns:1fr;gap:6px;height:auto}
@@ -97,12 +96,13 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .mg-parity-top{height:clamp(42px,10.5vh,56px)}
  .mg-parity-row{min-height:clamp(47px,12.3vh,68px)}
 }
-/* The compact landscape cockpit paints the map behind a floating app dock.
-   Fullscreen navigation dialogs must keep their controls to the right of that
-   dock; the shade already accounts for the device's left safe-area inset. */
-@media(orientation:landscape) and (min-width:600px) and (max-height:440px){
- .cockpit .mg-parity-layout{margin-left:clamp(64px,7.4vw,76px)}
- /* Destination search can deliberately hide the dock; reclaim that space. */
+/* Fullscreen map artwork continues underneath the floating app dock.
+   Dialog controls instead need a dock-safe lane: the shade's own padding
+   already includes the iPhone's safe-area inset. Reuse this for search,
+   address book, POI results and detail sheets at every landscape profile. */
+@media(orientation:landscape) and (max-width:1024px){
+ .cockpit .mg-parity-layout{margin-left:clamp(76px,8.5vw,94px)}
+ /* Legacy address-search mode hides the app dock intentionally. */
  .cockpit:has(.nav-search) .mg-parity-layout{margin-left:0}
 }
 @media(orientation:portrait){
