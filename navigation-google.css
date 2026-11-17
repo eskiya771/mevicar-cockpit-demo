@@ -213,3 +213,236 @@ html[data-theme="liquidglass"] .mg-navigation .mg-guidance-banner{
  .mg-navigation.mg-first-run .mg-setup strong{font-size:17px}
  .mg-navigation.mg-first-run .mg-setup p{font-size:12px}
 }
+
+.mg-route-preview-layout {
+ --route-pane-width: clamp(360px, 40%, 420px);
+ --route-pane-bg: #0a1721;
+ --route-control: #152837;
+ --route-ink: #edf9ff;
+ --route-muted: #b8d1dd;
+ --route-accent: #8beaff;
+ --route-divider: #448899;
+}
+html[data-theme="cyberpunk"] .mg-route-preview-layout {
+ --route-pane-bg: #0b0815;
+ --route-control: #1c1030;
+ --route-ink: #ffe8fb;
+ --route-muted: #e7a6d8;
+ --route-accent: #64eaff;
+ --route-divider: #b03a9c;
+}
+html[data-theme="liquidglass"] .mg-route-preview-layout {
+ --route-pane-bg: #102033;
+ --route-control: #1b3350;
+ --route-ink: #f4f8ff;
+ --route-muted: #d5e6f4;
+ --route-accent: #b3edff;
+ --route-divider: #7fa9c9;
+}
+.mg-navigation.mg-route-preview-layout .mg-map {
+ left:var(--route-pane-width); width:calc(100% - var(--route-pane-width));
+}
+.mg-native-route-preview .mg-native-setup { display:none; }
+.mg-route-preview-pane {
+ position:absolute; inset:0 auto 0 0; width:var(--route-pane-width); z-index:3;
+ display:flex; flex-direction:column; min-width:0; min-height:0; box-sizing:border-box;
+ gap:clamp(5px,1vh,10px);
+ /* Keep native-style side controls outside the iPhone landscape cutout. */
+ padding:max(7px,env(safe-area-inset-top,0px)) 9px
+   max(8px,env(safe-area-inset-bottom,0px)) max(9px,env(safe-area-inset-left,0px));
+ background:var(--route-pane-bg); color:var(--route-ink);
+ font-size:clamp(13px,2.15vh,23px);
+}
+.mg-route-preview-heading,.mg-route-preview-actions,.mg-route-preview-options {
+ display:flex; align-items:center; gap:clamp(4px,.7vw,10px);
+}
+.mg-route-preview-heading { justify-content:space-between; flex:0 0 auto; min-height:44px; }
+.mg-route-preview-trip { flex:0 0 auto; min-height:0; }
+.mg-route-preview-actions { flex:0 0 auto; padding-top:5px; }
+.mg-route-preview-heading h2 { margin:0; font-size:clamp(15px,2.7vh,28px); }
+.mg-route-preview-scroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; }
+.mg-route-preview-summary { display:block; font-size:clamp(18px,3.1vh,34px); }
+.mg-route-preview-meta,.mg-route-preview-destination p { margin:.24em 0 .5em; }
+.mg-route-preview-meta,.mg-route-preview-options>span { color:var(--route-muted); }
+.mg-route-preview-options { margin-top:.55em; flex-wrap:nowrap; min-width:0; }
+.mg-route-preview-options button { padding-inline:3px!important; font-size:clamp(11px,1.85vh,15px); min-height:44px!important; }
+.mg-route-preview-options>span { flex:0 0 auto; white-space:nowrap; }
+.mg-route-preview-destination { border-top:1px solid var(--route-divider); margin-top:.5em; padding-top:.4em; }
+.mg-navigation .mg-route-preview-pane button {
+ background:var(--route-control); color:var(--route-ink); border:0;
+ border-radius:clamp(8px,1.8vh,20px); min-height:clamp(36px,7vh,68px);
+ padding:4px clamp(5px,.8vw,14px); line-height:1.15;
+}
+.mg-route-preview-options button,.mg-route-preview-actions button { flex:1; min-width:0; }
+.mg-navigation .mg-route-preview-pane button[aria-pressed="true"],
+.mg-navigation .mg-route-preview-pane .mg-route-preview-start { background:var(--route-accent); color:#091823; font-weight:650; }
+.mg-navigation .mg-route-preview-actions button { min-height:56px; font-size:clamp(13px,2.2vh,18px); }
+.mg-navigation .mg-route-preview-start { font-weight:750; font-size:clamp(18px,3vh,22px)!important; }
+.mg-navigation .mg-route-preview-pane .mg-route-preview-demo { min-height:32px; font-size:.8em; }
+@media(max-width:720px) {
+ .mg-route-preview-layout { --route-pane-width: min(52%, 420px); }
+ .mg-route-preview-options { flex-wrap:wrap; }
+ .mg-route-preview-options>span { flex-basis:100%; }
+}
+
+/* The browser and native bridge use the same readyRouteOverlay markup. */
+@media (orientation:landscape) and (max-height:480px){
+ .mg-navigation.mg-route-preview-layout .mg-map{min-width:0}
+ .mg-navigation .mg-route-preview-pane{gap:4px}
+ .mg-route-preview-heading{min-height:42px}
+ .mg-route-preview-trip .mg-route-preview-summary{font-size:clamp(17px,4.6vh,22px)}
+ .mg-route-preview-trip .mg-route-preview-meta{
+  font-size:clamp(11px,2.4vh,14px);line-height:1.22;margin:3px 0 5px;
+ }
+ .mg-route-preview-scroll{padding-bottom:4px}
+ .mg-route-preview-options{gap:4px}
+ .mg-route-preview-options>span{font-size:12px}
+ .mg-navigation .mg-route-preview-actions button{min-height:56px}
+}
+
+/* Native-style Web guidance: Google JS provides the maneuver, the same route state
+   feeds the slim NavTripBar-equivalent. The Kotlin APK retains NavigationView. */
+.mg-navigation.mg-web-driving .mg-web-guidance{
+ --guidance-panel:#102332;--guidance-border:#4f92a4c9;--guidance-accent:#7cefff;
+ --guidance-text:#eff9ff;--guidance-muted:#c4d8e6;
+ position:absolute;inset:0;z-index:5;pointer-events:none;
+ color:var(--guidance-text);
+}
+html[data-theme="cyberpunk"] .mg-navigation.mg-web-driving .mg-web-guidance{
+ --guidance-panel:#261432;--guidance-border:#bd45d5c7;
+ --guidance-accent:#5ee8ff;--guidance-text:#ffeaff;--guidance-muted:#d8b3df;
+}
+html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
+ --guidance-panel:#142a42;--guidance-border:#91cdf7b0;
+ --guidance-accent:#b3efff;--guidance-text:#f5faff;--guidance-muted:#d7e8f6;
+}
+.mg-web-guidance .mg-guidance-cue{
+ position:absolute;z-index:6;top:max(7px,env(safe-area-inset-top,0px));
+ left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ width:min(395px,calc(100% - 145px));box-sizing:border-box;
+ padding:10px 13px;pointer-events:auto;overflow:hidden;
+ border-radius:14px;border:1px solid var(--guidance-border);
+ background:var(--guidance-panel);box-shadow:0 7px 22px #06132180;
+}
+.mg-web-guidance .mg-guidance-turn{
+ display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;
+ align-items:center;min-width:0;
+}
+.mg-web-guidance .mg-guidance-turn #mg-next-arrow{
+ font-size:52px;color:var(--guidance-accent);font-weight:800;
+ text-align:center;line-height:1;
+}
+.mg-web-guidance .mg-guidance-instruction{min-width:0;display:flex;flex-direction:column;gap:2px}
+.mg-web-guidance #mg-next-distance{font-size:clamp(19px,3.3vh,29px);line-height:1.05;color:#fff}
+.mg-web-guidance #mg-next-turn{
+ font-size:clamp(13px,2.15vh,18px);line-height:1.16;
+ display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+ overflow:hidden;overflow-wrap:anywhere;
+}
+.mg-navigation.mg-web-driving .mg-guidance-trip{
+ position:absolute;z-index:8;left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ right:auto;width:max-content;max-width:calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px)));
+ bottom:max(7px,env(safe-area-inset-bottom,0px));
+ height:56px;display:flex;gap:6px;box-sizing:border-box;
+ padding:4px 10px;align-items:center;
+ border:1px solid var(--guidance-border);border-radius:14px;
+ background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
+ pointer-events:auto;
+}
+.mg-navigation .mg-guidance-trip button{
+ border:0;border-radius:11px;color:var(--guidance-text);
+ cursor:pointer;font:inherit;min-height:44px;
+}
+.mg-guidance-trip-main{
+ display:flex;align-items:center;gap:clamp(7px,1.5vw,18px);
+ min-width:0;flex:1;text-align:left;background:transparent;
+ padding:5px 8px;overflow:hidden;
+}
+.mg-guidance-trip-main strong{flex:0 0 auto;font-size:clamp(13px,2.6vh,18px);white-space:nowrap}
+.mg-guidance-trip-main span{
+ font-size:clamp(12px,2vh,15px);white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;color:var(--guidance-muted);
+}
+.mg-guidance-trip-main #mg-trip-next-stop{color:var(--guidance-accent);flex:1;min-width:0}
+.mg-guidance-trip-main #mg-trip-muted{color:var(--guidance-muted)}
+.mg-navigation .mg-guidance-menu{
+ position:absolute;z-index:9;top:max(7px,env(safe-area-inset-top,0px));
+ bottom:calc(70px + env(safe-area-inset-bottom,0px));
+ left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ width:min(405px,43%);max-width:calc(100% - 130px);
+ padding:8px;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
+ background:var(--guidance-panel);border:1px solid var(--guidance-border);
+ border-radius:14px;box-shadow:0 11px 30px #0008;pointer-events:auto;
+}
+.mg-guidance-menu[hidden],.mg-guidance-menu [hidden]{display:none!important}
+.mg-guidance-menu-heading{
+ display:flex;align-items:center;gap:9px;min-height:44px;
+ margin-bottom:5px;font-size:18px;
+}
+.mg-navigation .mg-guidance-menu button{
+ display:block;width:100%;min-height:44px;margin:4px 0;
+ padding:8px 13px;text-align:left;font:inherit;font-weight:650;
+ background:#1b394c;color:var(--guidance-text);
+ border:1px solid #5e91a18c;border-radius:10px;cursor:pointer;
+}
+.mg-navigation .mg-guidance-menu-heading button{width:46px;flex:0 0 46px;text-align:center}
+.mg-navigation .mg-guidance-menu .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
+.mg-guidance-details-content{font-size:13px;line-height:1.4}
+.mg-guidance-details-steps{display:flex;flex-direction:column;gap:2px}
+.mg-guidance-details-summary{font-weight:750;margin:4px 0 8px}
+.mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
+ bottom:calc(70px + env(safe-area-inset-bottom,0px));
+ /* Do not clip Road Assist warnings; they have priority over the map. */
+}
+.mg-navigation.mg-web-driving .mg-my-location{
+ bottom:auto;top:calc(8px + env(safe-area-inset-top,0px));
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-web-guidance .mg-guidance-cue{padding:6px 9px;width:min(380px,calc(100% - 145px))}
+ .mg-web-guidance .mg-guidance-turn{grid-template-columns:40px minmax(0,1fr);gap:6px}
+ .mg-web-guidance .mg-guidance-turn #mg-next-arrow{font-size:39px}
+ .mg-web-guidance #mg-next-distance{font-size:19px}
+ .mg-web-guidance #mg-next-turn{font-size:13px;-webkit-line-clamp:2}
+ .mg-navigation.mg-web-driving .mg-guidance-trip{height:50px}
+ .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+ .mg-guidance-trip-main{gap:8px}
+ .mg-guidance-trip-main strong{font-size:12px}
+ .mg-guidance-trip-main span{font-size:11px}
+ .mg-navigation .mg-guidance-menu{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+}
+@media(orientation:portrait){
+ .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
+ .mg-navigation.mg-web-driving .mg-guidance-trip{left:max(8px,env(safe-area-inset-left,0px))}
+ .mg-navigation .mg-guidance-menu{left:8px;width:calc(100% - 16px);max-width:none}
+}
+
+/* Route detail rows mirror NavRouteDetails.rows labels and order. One Web
+   guidance panel, not a competing turn-list dialog. */
+.mg-navigation .mg-guidance-menu{
+ background:var(--guidance-panel);backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;isolation:isolate;
+}
+.mg-navigation .mg-guidance-menu-details,
+.mg-guidance-details-content{min-height:0}
+.mg-guidance-detail-list{display:flex;flex-direction:column;margin:0;padding:0}
+.mg-guidance-detail-row{
+ display:grid;grid-template-columns:minmax(94px,38%) minmax(0,1fr);
+ gap:10px;align-items:start;padding:9px 5px;
+ border-bottom:1px solid #789ab54a;font-size:clamp(12px,1.85vh,15px);
+ line-height:1.4;
+}
+.mg-guidance-detail-row dt{font-weight:650;color:var(--guidance-muted);hyphens:auto;overflow-wrap:anywhere}
+.mg-guidance-detail-row dd{margin:0;font-weight:650;color:var(--guidance-text);
+ overflow-wrap:anywhere;white-space:pre-line}
+.mg-navigation.mg-web-driving .mg-my-location[hidden]{display:none!important}
+/* Real Road Assist warnings use the native banner position, not a permanent
+   right-hand status box. Empty/no-alert states now render no overlay at all. */
+.mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
+ right:auto!important;left:50%!important;transform:translateX(-50%);
+ width:min(350px,calc(100% - 160px));
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-guidance-detail-row{padding:7px 4px;gap:7px;font-size:12px}
+ .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{width:min(330px,calc(100% - 150px))}
+}
+

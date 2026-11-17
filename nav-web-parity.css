@@ -30,7 +30,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  --nav-search-dim:#d5e6f4;
  --nav-search-accent:#b3edff;
 }
-.mg-parity-layout{height:100%;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,10px);margin-left:clamp(0px,3.55vw,54px)}
+.mg-parity-layout{height:100%;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,10px);margin-left:clamp(90px,7.6vw,118px)}
 .mg-parity-top{display:flex;gap:clamp(6px,0.65vw,11px);align-items:center;min-width:0;flex:0 0 auto;height:clamp(48px,11.5vh,80px)}
 .mg-navigation .mg-parity-back,.mg-navigation .mg-parity-field{
  height:100%;border:0;border-radius:clamp(12px,2vh,22px);background:var(--nav-search-surface);color:var(--nav-search-ink)
@@ -87,7 +87,6 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-empty-slot{display:flex;align-items:center;gap:8px}
 .mg-parity-empty-slot svg{width:20px;height:20px}
 @media(max-width:850px), (max-height:440px){
- .mg-parity-layout{margin-left:0}
  .mg-navigation .mg-parity-shade{padding: max(4px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))}
  .mg-parity-field>svg{display:none}
  .mg-parity-book-grid{grid-template-columns:1fr;gap:6px;height:auto}
@@ -97,6 +96,14 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .mg-parity-top{height:clamp(42px,10.5vh,56px)}
  .mg-parity-row{min-height:clamp(47px,12.3vh,68px)}
 }
+/* Match the native Android address-entry flow: the map stays edge-to-edge,
+   but opening the shared search/address book/POI/editor dialogs temporarily
+   hides the app dock. This makes the full safe-area width available for controls.
+   Closing the dialog restores the dock automatically (no separate JS state). */
+.cockpit:has(.mg-parity-shade) .dock{display:none!important}
+.cockpit:has(.mg-parity-shade) .body{gap:0!important}
+.cockpit:has(.mg-parity-shade) .mg-parity-layout{margin-left:0!important}
+
 @media(orientation:portrait){
  .mg-parity-layout{margin-left:0}
  .mg-parity-top{height:clamp(46px,9vh,72px)}
@@ -195,4 +202,32 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 @media(max-width:850px),(max-height:440px){
  .mg-navigation .mg-poi-detail-actions button{padding:5px 8px;min-height:38px;min-width:95px}
  .mg-waypoint-list{max-height:60px}
+}
+
+/* Shared selected destination is drawn from the same Place sheet as POIs.
+   Show it next to the map as Android does, rather than the old Web preview. */
+.mg-navigation .mg-parity-shade.mg-parity-selected{
+ position:absolute;inset:0 auto 0 0;z-index:8;
+ width:min(46%,720px);max-width:calc(100% - 12px);
+ border-radius:0 16px 16px 0;padding:clamp(6px,1.1vh,12px);
+}
+.mg-navigation .mg-parity-selected .mg-parity-layout{margin-left:0!important}
+.mg-parity-selected .mg-poi-detail-actions{flex-wrap:nowrap}
+.mg-navigation .mg-parity-selected .mg-poi-detail-actions button{min-width:0;flex:1}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-navigation .mg-parity-shade.mg-parity-selected{
+  left:max(4px,env(safe-area-inset-left,0px));
+  top:max(4px,env(safe-area-inset-top,0px));
+  bottom:max(4px,env(safe-area-inset-bottom,0px));
+  width:min(46vw,640px);border-radius:16px;
+ }
+ .mg-parity-selected .mg-poi-detail-body{padding:6px 9px;gap:5px}
+ .mg-parity-selected .mg-poi-detail-body h2{font-size:clamp(18px,4.5vh,26px)}
+ .mg-parity-selected .mg-parity-top{height:46px}
+ .mg-parity-selected .mg-poi-detail-actions button{min-height:48px!important}
+}
+@media(orientation:portrait){
+ .mg-navigation .mg-parity-shade.mg-parity-selected{
+  left:0;top:0;bottom:0;width:100%;max-width:100%;border-radius:0;
+ }
 }

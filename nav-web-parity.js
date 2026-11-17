@@ -9,6 +9,7 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
+let selectedReturnView='search';
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths={
@@ -132,18 +133,19 @@ function isPlaceSaved(){
  return !!key&&data().favorites.some(item=>placeKey(item)===key);
 }
 function placeHTML(){
- const p=placeState||{},name=p.name||'Ort',point=Number.isFinite(p.lat)&&Number.isFinite(p.lng);
+ const selectedMode=s.nav==='preview';
+ const p=selectedMode?(nav?.selectedDestination?.()||{}):(placeState||{}),name=p.name||'Ort',point=Number.isFinite(p.lat)&&Number.isFinite(p.lng);
  const label=placeKind(p.types),rating=Number.isFinite(p.rating)&&p.rating>=1&&p.rating<=5?
   p.rating.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+
   (Number.isInteger(p.ratingCount)&&p.ratingCount>0?' ('+p.ratingCount.toLocaleString('de-DE')+')':''):'';
  const phone=typeof p.phone==='string'&&/^[+0-9 ()/-]{3,32}$/.test(p.phone)?p.phone:'';
- const saved=isPlaceSaved(),route=provider.routeContext();
+ const saved=selectedMode?!!nav?.isFavorite?.():isPlaceSaved(),route=provider.routeContext();
  const hours=Array.isArray(p.hours)?p.hours.filter(x=>typeof x==='string').slice(0,7):[];
  const opening=p.openNow===true?'Geöffnet':p.openNow===false?'Geschlossen':'';
- return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Ortsdetails">'+
+ return '<div class="mg-parity-shade'+(selectedMode?' mg-parity-selected':'')+'" role="dialog" aria-modal="true" aria-label="Ortsdetails">'+
  '<div class="mg-parity-layout"><div class="mg-parity-top">'+
  '<button type="button" class="mg-parity-back" onclick="MeviWebNavParity.backFromPlace()" aria-label="Zurück zu den Treffern">'+ico('back')+'</button>'+
- '<strong class="mg-poi-title">Ortsdetails</strong><span class="mg-poi-google">Google Maps</span></div>'+
+ (selectedMode?'':'<strong class="mg-poi-title">Ortsdetails</strong>')+'<span class="mg-poi-google">Google Maps</span></div>'+
  '<div class="mg-poi-detail-body" aria-live="polite"><h2>'+safe(name)+'</h2>'+
  (label?'<p class="mg-poi-muted">'+safe(label)+'</p>':'')+
  (p.address?'<p>'+safe(p.address)+'</p>':'')+
@@ -152,9 +154,9 @@ function placeHTML(){
  (rating?'<p>'+ico('star')+' '+safe(rating)+'</p>':'')+
  (phone?'<p>'+ico('pin')+' <a href="tel:'+safe(phone.replace(/[^0-9+]/g,''))+'">'+safe(phone)+'</a></p>':'')+
  (hours.length?'<details class="mg-poi-hours"><summary>Öffnungszeiten</summary>'+hours.map(h=>'<div>'+safe(h)+'</div>').join('')+'</details>':'')+
- (placeLoading?'<p class="mg-poi-muted">Google-Ortsdaten werden geladen …</p>':'')+
- (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
- (placeError||p.detailError?'<p class="mg-poi-warning">'+safe(placeError||p.detailError)+
+ (!selectedMode&&placeLoading?'<p class="mg-poi-muted">Google-Ortsdaten werden geladen …</p>':'')+
+ (!selectedMode&&stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
+ (!selectedMode&&(placeError||p.detailError)?'<p class="mg-poi-warning">'+safe(placeError||p.detailError)+
   ' <button type="button" onclick="MeviWebNavParity.retryPlace()">Erneut versuchen</button></p>':'')+
  '</div><div class="mg-poi-detail-actions">'+
  (route.hasRoute&&point&&route.stops.length<route.maxStops?'<button type="button" class="mg-poi-action-stop" onclick="MeviWebNavParity.addStopPlace()">＋ Als Stopp hinzufügen</button>':'')+
@@ -285,7 +287,12 @@ async function choose(kind,index){
    if(place)await finishStop(place);
    return;
   }
-  const success=await provider.choose(kind,index,{saveOnly});
+  if(!saveOnly)selectedReturnView=view==='book'?'book':'search';
+  // The Android APK routes stored targets immediately. Match that flow in
+  // the Web browser, without showing the intermediate Place-details dialog.
+  // Search hits, stop selection, saving and native bridge paths are unchanged.
+  const directRoute=!native&&!saveOnly&&['home','work','favorites','recent'].includes(kind);
+  const success=await provider.choose(kind,index,{saveOnly,skipPreview:directRoute});
   if(success===false)return;
   if(savingSlot)await provider.saveSlot(savingSlot);
   if(savingFavorite)await provider.saveFavorite();
@@ -293,6 +300,11 @@ async function choose(kind,index){
    pendingSlot='';pendingFavorite=false;
    view=savingFavorite?'book':'search';s.nav='search';s.query='';
    provider.search('');rerender();
+  }else if(directRoute){
+   s.nav='browse';s.keyboard=false;s.mode='map';rerender();
+   const ready=await provider.startRoute();
+   // Keep the selected destination available if route calculation fails.
+   if(ready===false){s.nav='preview';rerender()}
   }
  }catch(e){nativeFailure(e)}
 }
@@ -384,8 +396,18 @@ async function showPlace(index){
 function retryPlace(){
  if(view==='place'&&placeIndex>=0)void showPlace(placeIndex);
 }
-function backFromPlace(){placeSerial++;placeLoading=false;placeState=null;view=placeBack;rerender()}
+function backFromPlace(){
+ if(s.nav==='preview'){
+  placeSerial++;placeLoading=false;placeState=null;view=selectedReturnView;
+  s.nav='search';s.keyboard=false;s.query='';provider.search('');rerender();return;
+ }
+ placeSerial++;placeLoading=false;placeState=null;view=placeBack;rerender();
+}
 function savePlace(){
+ if(s.nav==='preview'){
+  if(nav?.isFavorite?.())nav.removeFavorite?.();else nav?.saveFavorite?.();
+  rerender();return;
+ }
  if(!placeState)return;
  if(provider.savePlace){
   // Android: the native book accepts single validated operations only.
@@ -409,6 +431,7 @@ async function routeResult(index){
  await provider.startRoute();
 }
 async function routePlace(){
+ if(s.nav==='preview'){await window.startRoute?.();return}
  if(!placeState||!Number.isFinite(placeState.lat)||!Number.isFinite(placeState.lng))return;
  await routeResult(placeIndex);
 }
@@ -471,6 +494,6 @@ function nativeFailure(e){window.MeviAndroidSharedNav?.showError?.(e);window.ale
 function nativeImport(){if(provider.importPicker)void provider.importPicker().catch(nativeFailure)}
 window.openSearch=open;
 window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
-window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
