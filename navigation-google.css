@@ -448,19 +448,41 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 
 
 
-/* During Navi-Dashboard split, keep the bottom trip field (and its only Web
-   navigation-menu trigger) visible on the narrower left-side map. */
-.screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-guidance-trip{
- left:max(6px,env(safe-area-inset-left,0px));
- max-width:calc(100% - 12px);
+/* The iPhone's fixed map extends behind the left dock while a right split
+   is open. Its overlay coordinates therefore start at the viewport edge, not
+   the visible map edge. Always retain the dock + notch offset for all three
+   navigation surfaces, including the bottom trip/menu entry. */
+.screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-web-guidance{
+ --mg-split-nav-left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ --mg-split-nav-right:max(8px,env(safe-area-inset-right,0px));
 }
 .screen:has(> .mg-nav-dashboard-side) .mg-web-guidance .mg-guidance-cue{
- left:max(6px,env(safe-area-inset-left,0px));
- width:min(395px,calc(100% - 12px));
+ left:var(--mg-split-nav-left);
+ width:min(395px,calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right)));
+}
+.screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-guidance-trip{
+ left:var(--mg-split-nav-left);
+ max-width:calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right));
 }
 .screen:has(> .mg-nav-dashboard-side) .mg-navigation .mg-guidance-menu{
- left:max(6px,env(safe-area-inset-left,0px));
- width:min(405px,calc(100% - 12px));max-width:calc(100% - 12px);
+ left:var(--mg-split-nav-left);
+ width:min(405px,calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right)));
+ max-width:calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right));
+}
+/* In compact iPhone landscape, the map is position:fixed at 100vw. Its
+   apparent width is NOT the space beside the 40%-wide dashboard. Also limit
+   the guidance panels before they can extend under the right split. */
+@media(orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .screen:has(> .mg-nav-dashboard-side) .mg-web-guidance .mg-guidance-cue{
+  width:min(395px,calc(60vw - var(--mg-split-nav-left) - 8px));
+ }
+ .screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-guidance-trip{
+  max-width:calc(60vw - var(--mg-split-nav-left) - 8px);
+ }
+ .screen:has(> .mg-nav-dashboard-side) .mg-navigation .mg-guidance-menu{
+  width:min(405px,calc(60vw - var(--mg-split-nav-left) - 8px));
+  max-width:calc(60vw - var(--mg-split-nav-left) - 8px);
+ }
 }
 .mg-guidance-trip-main .mg-trip-menu-hint{
  flex:0 0 auto;
