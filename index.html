@@ -900,240 +900,7 @@ html[data-theme="liquidglass"] .mg-navigation .mg-guidance-banner{
  .mg-navigation.mg-first-run .mg-setup strong{font-size:17px}
  .mg-navigation.mg-first-run .mg-setup p{font-size:12px}
 }
-
-.mg-route-preview-layout {
- --route-pane-width: clamp(360px, 40%, 420px);
- --route-pane-bg: #0a1721;
- --route-control: #152837;
- --route-ink: #edf9ff;
- --route-muted: #b8d1dd;
- --route-accent: #8beaff;
- --route-divider: #448899;
-}
-html[data-theme="cyberpunk"] .mg-route-preview-layout {
- --route-pane-bg: #0b0815;
- --route-control: #1c1030;
- --route-ink: #ffe8fb;
- --route-muted: #e7a6d8;
- --route-accent: #64eaff;
- --route-divider: #b03a9c;
-}
-html[data-theme="liquidglass"] .mg-route-preview-layout {
- --route-pane-bg: #102033;
- --route-control: #1b3350;
- --route-ink: #f4f8ff;
- --route-muted: #d5e6f4;
- --route-accent: #b3edff;
- --route-divider: #7fa9c9;
-}
-.mg-navigation.mg-route-preview-layout .mg-map {
- left:var(--route-pane-width); width:calc(100% - var(--route-pane-width));
-}
-.mg-native-route-preview .mg-native-setup { display:none; }
-.mg-route-preview-pane {
- position:absolute; inset:0 auto 0 0; width:var(--route-pane-width); z-index:3;
- display:flex; flex-direction:column; min-width:0; min-height:0; box-sizing:border-box;
- gap:clamp(5px,1vh,10px);
- /* Keep native-style side controls outside the iPhone landscape cutout. */
- padding:max(7px,env(safe-area-inset-top,0px)) 9px
-   max(8px,env(safe-area-inset-bottom,0px)) max(9px,env(safe-area-inset-left,0px));
- background:var(--route-pane-bg); color:var(--route-ink);
- font-size:clamp(13px,2.15vh,23px);
-}
-.mg-route-preview-heading,.mg-route-preview-actions,.mg-route-preview-options {
- display:flex; align-items:center; gap:clamp(4px,.7vw,10px);
-}
-.mg-route-preview-heading { justify-content:space-between; flex:0 0 auto; min-height:44px; }
-.mg-route-preview-trip { flex:0 0 auto; min-height:0; }
-.mg-route-preview-actions { flex:0 0 auto; padding-top:5px; }
-.mg-route-preview-heading h2 { margin:0; font-size:clamp(15px,2.7vh,28px); }
-.mg-route-preview-scroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; }
-.mg-route-preview-summary { display:block; font-size:clamp(18px,3.1vh,34px); }
-.mg-route-preview-meta,.mg-route-preview-destination p { margin:.24em 0 .5em; }
-.mg-route-preview-meta,.mg-route-preview-options>span { color:var(--route-muted); }
-.mg-route-preview-options { margin-top:.55em; flex-wrap:nowrap; min-width:0; }
-.mg-route-preview-options button { padding-inline:3px!important; font-size:clamp(11px,1.85vh,15px); min-height:44px!important; }
-.mg-route-preview-options>span { flex:0 0 auto; white-space:nowrap; }
-.mg-route-preview-destination { border-top:1px solid var(--route-divider); margin-top:.5em; padding-top:.4em; }
-.mg-navigation .mg-route-preview-pane button {
- background:var(--route-control); color:var(--route-ink); border:0;
- border-radius:clamp(8px,1.8vh,20px); min-height:clamp(36px,7vh,68px);
- padding:4px clamp(5px,.8vw,14px); line-height:1.15;
-}
-.mg-route-preview-options button,.mg-route-preview-actions button { flex:1; min-width:0; }
-.mg-navigation .mg-route-preview-pane button[aria-pressed="true"],
-.mg-navigation .mg-route-preview-pane .mg-route-preview-start { background:var(--route-accent); color:#091823; font-weight:650; }
-.mg-navigation .mg-route-preview-actions button { min-height:56px; font-size:clamp(13px,2.2vh,18px); }
-.mg-navigation .mg-route-preview-start { font-weight:750; font-size:clamp(18px,3vh,22px)!important; }
-.mg-navigation .mg-route-preview-pane .mg-route-preview-demo { min-height:32px; font-size:.8em; }
-@media(max-width:720px) {
- .mg-route-preview-layout { --route-pane-width: min(52%, 420px); }
- .mg-route-preview-options { flex-wrap:wrap; }
- .mg-route-preview-options>span { flex-basis:100%; }
-}
-
-/* The browser and native bridge use the same readyRouteOverlay markup. */
-@media (orientation:landscape) and (max-height:480px){
- .mg-navigation.mg-route-preview-layout .mg-map{min-width:0}
- .mg-navigation .mg-route-preview-pane{gap:4px}
- .mg-route-preview-heading{min-height:42px}
- .mg-route-preview-trip .mg-route-preview-summary{font-size:clamp(17px,4.6vh,22px)}
- .mg-route-preview-trip .mg-route-preview-meta{
-  font-size:clamp(11px,2.4vh,14px);line-height:1.22;margin:3px 0 5px;
- }
- .mg-route-preview-scroll{padding-bottom:4px}
- .mg-route-preview-options{gap:4px}
- .mg-route-preview-options>span{font-size:12px}
- .mg-navigation .mg-route-preview-actions button{min-height:56px}
-}
-
-/* Native-style Web guidance: Google JS provides the maneuver, the same route state
-   feeds the slim NavTripBar-equivalent. The Kotlin APK retains NavigationView. */
-.mg-navigation.mg-web-driving .mg-web-guidance{
- --guidance-panel:#102332;--guidance-border:#4f92a4c9;--guidance-accent:#7cefff;
- --guidance-text:#eff9ff;--guidance-muted:#c4d8e6;
- position:absolute;inset:0;z-index:5;pointer-events:none;
- color:var(--guidance-text);
-}
-html[data-theme="cyberpunk"] .mg-navigation.mg-web-driving .mg-web-guidance{
- --guidance-panel:#261432;--guidance-border:#bd45d5c7;
- --guidance-accent:#5ee8ff;--guidance-text:#ffeaff;--guidance-muted:#d8b3df;
-}
-html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
- --guidance-panel:#142a42;--guidance-border:#91cdf7b0;
- --guidance-accent:#b3efff;--guidance-text:#f5faff;--guidance-muted:#d7e8f6;
-}
-.mg-web-guidance .mg-guidance-cue{
- position:absolute;z-index:6;top:max(7px,env(safe-area-inset-top,0px));
- left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
- width:min(395px,calc(100% - 145px));box-sizing:border-box;
- padding:10px 13px;pointer-events:auto;overflow:hidden;
- border-radius:14px;border:1px solid var(--guidance-border);
- background:var(--guidance-panel);box-shadow:0 7px 22px #06132180;
-}
-.mg-web-guidance .mg-guidance-turn{
- display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;
- align-items:center;min-width:0;
-}
-.mg-web-guidance .mg-guidance-turn #mg-next-arrow{
- font-size:52px;color:var(--guidance-accent);font-weight:800;
- text-align:center;line-height:1;
-}
-.mg-web-guidance .mg-guidance-instruction{min-width:0;display:flex;flex-direction:column;gap:2px}
-.mg-web-guidance #mg-next-distance{font-size:clamp(19px,3.3vh,29px);line-height:1.05;color:#fff}
-.mg-web-guidance #mg-next-turn{
- font-size:clamp(13px,2.15vh,18px);line-height:1.16;
- display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
- overflow:hidden;overflow-wrap:anywhere;
-}
-.mg-navigation.mg-web-driving .mg-guidance-trip{
- position:absolute;z-index:8;left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
- right:auto;width:max-content;max-width:calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px)));
- bottom:max(7px,env(safe-area-inset-bottom,0px));
- height:56px;display:flex;gap:6px;box-sizing:border-box;
- padding:4px 10px;align-items:center;
- border:1px solid var(--guidance-border);border-radius:14px;
- background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
- pointer-events:auto;
-}
-.mg-navigation .mg-guidance-trip button{
- border:0;border-radius:11px;color:var(--guidance-text);
- cursor:pointer;font:inherit;min-height:44px;
-}
-.mg-guidance-trip-main{
- display:flex;align-items:center;gap:clamp(7px,1.5vw,18px);
- min-width:0;flex:1;text-align:left;background:transparent;
- padding:5px 8px;overflow:hidden;
-}
-.mg-guidance-trip-main strong{flex:0 0 auto;font-size:clamp(13px,2.6vh,18px);white-space:nowrap}
-.mg-guidance-trip-main span{
- font-size:clamp(12px,2vh,15px);white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis;color:var(--guidance-muted);
-}
-.mg-guidance-trip-main #mg-trip-next-stop{color:var(--guidance-accent);flex:1;min-width:0}
-.mg-guidance-trip-main #mg-trip-muted{color:var(--guidance-muted)}
-.mg-navigation .mg-guidance-menu{
- position:absolute;z-index:9;top:max(7px,env(safe-area-inset-top,0px));
- bottom:calc(70px + env(safe-area-inset-bottom,0px));
- left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
- width:min(405px,43%);max-width:calc(100% - 130px);
- padding:8px;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
- background:var(--guidance-panel);border:1px solid var(--guidance-border);
- border-radius:14px;box-shadow:0 11px 30px #0008;pointer-events:auto;
-}
-.mg-guidance-menu[hidden],.mg-guidance-menu [hidden]{display:none!important}
-.mg-guidance-menu-heading{
- display:flex;align-items:center;gap:9px;min-height:44px;
- margin-bottom:5px;font-size:18px;
-}
-.mg-navigation .mg-guidance-menu button{
- display:block;width:100%;min-height:44px;margin:4px 0;
- padding:8px 13px;text-align:left;font:inherit;font-weight:650;
- background:#1b394c;color:var(--guidance-text);
- border:1px solid #5e91a18c;border-radius:10px;cursor:pointer;
-}
-.mg-navigation .mg-guidance-menu-heading button{width:46px;flex:0 0 46px;text-align:center}
-.mg-navigation .mg-guidance-menu .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
-.mg-guidance-details-content{font-size:13px;line-height:1.4}
-.mg-guidance-details-steps{display:flex;flex-direction:column;gap:2px}
-.mg-guidance-details-summary{font-weight:750;margin:4px 0 8px}
-.mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
- bottom:calc(70px + env(safe-area-inset-bottom,0px));
- /* Do not clip Road Assist warnings; they have priority over the map. */
-}
-.mg-navigation.mg-web-driving .mg-my-location{
- bottom:auto;top:calc(8px + env(safe-area-inset-top,0px));
-}
-@media(orientation:landscape) and (max-height:480px){
- .mg-web-guidance .mg-guidance-cue{padding:6px 9px;width:min(380px,calc(100% - 145px))}
- .mg-web-guidance .mg-guidance-turn{grid-template-columns:40px minmax(0,1fr);gap:6px}
- .mg-web-guidance .mg-guidance-turn #mg-next-arrow{font-size:39px}
- .mg-web-guidance #mg-next-distance{font-size:19px}
- .mg-web-guidance #mg-next-turn{font-size:13px;-webkit-line-clamp:2}
- .mg-navigation.mg-web-driving .mg-guidance-trip{height:50px}
- .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
- .mg-guidance-trip-main{gap:8px}
- .mg-guidance-trip-main strong{font-size:12px}
- .mg-guidance-trip-main span{font-size:11px}
- .mg-navigation .mg-guidance-menu{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
-}
-@media(orientation:portrait){
- .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
- .mg-navigation.mg-web-driving .mg-guidance-trip{left:max(8px,env(safe-area-inset-left,0px))}
- .mg-navigation .mg-guidance-menu{left:8px;width:calc(100% - 16px);max-width:none}
-}
-
-/* Route detail rows mirror NavRouteDetails.rows labels and order. One Web
-   guidance panel, not a competing turn-list dialog. */
-.mg-navigation .mg-guidance-menu{
- background:var(--guidance-panel);backdrop-filter:none!important;
- -webkit-backdrop-filter:none!important;isolation:isolate;
-}
-.mg-navigation .mg-guidance-menu-details,
-.mg-guidance-details-content{min-height:0}
-.mg-guidance-detail-list{display:flex;flex-direction:column;margin:0;padding:0}
-.mg-guidance-detail-row{
- display:grid;grid-template-columns:minmax(94px,38%) minmax(0,1fr);
- gap:10px;align-items:start;padding:9px 5px;
- border-bottom:1px solid #789ab54a;font-size:clamp(12px,1.85vh,15px);
- line-height:1.4;
-}
-.mg-guidance-detail-row dt{font-weight:650;color:var(--guidance-muted);hyphens:auto;overflow-wrap:anywhere}
-.mg-guidance-detail-row dd{margin:0;font-weight:650;color:var(--guidance-text);
- overflow-wrap:anywhere;white-space:pre-line}
-.mg-navigation.mg-web-driving .mg-my-location[hidden]{display:none!important}
-/* Real Road Assist warnings use the native banner position, not a permanent
-   right-hand status box. Empty/no-alert states now render no overlay at all. */
-.mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
- right:auto!important;left:50%!important;transform:translateX(-50%);
- width:min(350px,calc(100% - 160px));
-}
-@media(orientation:landscape) and (max-height:480px){
- .mg-guidance-detail-row{padding:7px 4px;gap:7px;font-size:12px}
- .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{width:min(330px,calc(100% - 150px))}
-}
-
-</style><link rel="stylesheet" href="./nav-dashboard.css"><style id="mevicar-navigation-parity-styles">/* Shared destination search and address book. */
+</style><style id="mevicar-navigation-parity-styles">/* Shared destination search and address book. */
 .mg-navigation .mg-parity-shade{
  position:fixed;inset:0;z-index:2147480000;font-family:Roboto,"Segoe UI",system-ui,sans-serif;
  box-shadow:none;border:0;border-radius:0;overflow:hidden;
@@ -1165,7 +932,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  --nav-search-dim:#d5e6f4;
  --nav-search-accent:#b3edff;
 }
-.mg-parity-layout{height:100%;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,10px);margin-left:clamp(90px,7.6vw,118px)}
+.mg-parity-layout{height:100%;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,10px);margin-left:clamp(0px,3.55vw,54px)}
 .mg-parity-top{display:flex;gap:clamp(6px,0.65vw,11px);align-items:center;min-width:0;flex:0 0 auto;height:clamp(48px,11.5vh,80px)}
 .mg-navigation .mg-parity-back,.mg-navigation .mg-parity-field{
  height:100%;border:0;border-radius:clamp(12px,2vh,22px);background:var(--nav-search-surface);color:var(--nav-search-ink)
@@ -1222,6 +989,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-empty-slot{display:flex;align-items:center;gap:8px}
 .mg-parity-empty-slot svg{width:20px;height:20px}
 @media(max-width:850px), (max-height:440px){
+ .mg-parity-layout{margin-left:0}
  .mg-navigation .mg-parity-shade{padding: max(4px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))}
  .mg-parity-field>svg{display:none}
  .mg-parity-book-grid{grid-template-columns:1fr;gap:6px;height:auto}
@@ -1231,14 +999,6 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .mg-parity-top{height:clamp(42px,10.5vh,56px)}
  .mg-parity-row{min-height:clamp(47px,12.3vh,68px)}
 }
-/* Match the native Android address-entry flow: the map stays edge-to-edge,
-   but opening the shared search/address book/POI/editor dialogs temporarily
-   hides the app dock. This makes the full safe-area width available for controls.
-   Closing the dialog restores the dock automatically (no separate JS state). */
-.cockpit:has(.mg-parity-shade) .dock{display:none!important}
-.cockpit:has(.mg-parity-shade) .body{gap:0!important}
-.cockpit:has(.mg-parity-shade) .mg-parity-layout{margin-left:0!important}
-
 @media(orientation:portrait){
  .mg-parity-layout{margin-left:0}
  .mg-parity-top{height:clamp(46px,9vh,72px)}
@@ -1338,35 +1098,6 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .mg-navigation .mg-poi-detail-actions button{padding:5px 8px;min-height:38px;min-width:95px}
  .mg-waypoint-list{max-height:60px}
 }
-
-/* Shared selected destination is drawn from the same Place sheet as POIs.
-   Show it next to the map as Android does, rather than the old Web preview. */
-.mg-navigation .mg-parity-shade.mg-parity-selected{
- position:absolute;inset:0 auto 0 0;z-index:8;
- width:min(46%,720px);max-width:calc(100% - 12px);
- border-radius:0 16px 16px 0;padding:clamp(6px,1.1vh,12px);
-}
-.mg-navigation .mg-parity-selected .mg-parity-layout{margin-left:0!important}
-.mg-parity-selected .mg-poi-detail-actions{flex-wrap:nowrap}
-.mg-navigation .mg-parity-selected .mg-poi-detail-actions button{min-width:0;flex:1}
-@media(orientation:landscape) and (max-height:480px){
- .mg-navigation .mg-parity-shade.mg-parity-selected{
-  left:max(4px,env(safe-area-inset-left,0px));
-  top:max(4px,env(safe-area-inset-top,0px));
-  bottom:max(4px,env(safe-area-inset-bottom,0px));
-  width:min(46vw,640px);border-radius:16px;
- }
- .mg-parity-selected .mg-poi-detail-body{padding:6px 9px;gap:5px}
- .mg-parity-selected .mg-poi-detail-body h2{font-size:clamp(18px,4.5vh,26px)}
- .mg-parity-selected .mg-parity-top{height:46px}
- .mg-parity-selected .mg-poi-detail-actions button{min-height:48px!important}
-}
-@media(orientation:portrait){
- .mg-navigation .mg-parity-shade.mg-parity-selected{
-  left:0;top:0;bottom:0;width:100%;max-width:100%;border-radius:0;
- }
-}
-
 </style><style id="mevicar-homeassistant-styles">/* Home Assistant Next – independent, no-scroll cockpit app.
    The dashboard uses HA's native frontend authentication; the REST views
    use a session-memory token (never localStorage or GitHub). */
@@ -5638,95 +5369,6 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
  .cockpit.mg-web-header #updateMessage,
  .cockpit.mg-web-header .status-time { display: none; }
 }
-
-/* Compact landscape navigation: reserve the full viewport for a ready-route
-   sheet (Android-style), then restore the app dock after the sheet closes.
-   During live guidance the dock stays available, so turn instructions are
-   shifted beyond the physical dock and the device's left safe-area inset. */
-@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
- .cockpit:has(.mg-route-preview-pane) .dock,
- .cockpit:has(.mg-route-banner.mg-route-ready) .dock{display:none!important}
- .cockpit:has(.mg-route-preview-pane) .body,
- .cockpit:has(.mg-route-banner.mg-route-ready) .body{gap:0!important}
- .cockpit:has(.mg-route-preview-pane) .workspace,
- .cockpit:has(.mg-route-banner.mg-route-ready) .workspace{min-width:0;width:100%}
- .cockpit .mg-navigation .mg-route-banner.mg-route-ready{
-   max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain;
- }
- .cockpit .mg-navigation .mg-guidance-banner{
-   left:calc(max(4px,env(safe-area-inset-left,0px)) + 76px)!important;
- }
-}
-
-/* Driving status stays readable over the Google map. Uses the SAME status
-   elements as browse/update; only layout changes, never a second version label. */
-.cockpit.mg-driving-status .workspace > .status{
- display:flex!important;position:fixed!important;
- z-index:24;top:max(7px,env(safe-area-inset-top,0px));
- right:max(7px,env(safe-area-inset-right,0px));left:auto;
- width:auto;height:36px;min-height:36px;max-width:min(43vw,390px);
- box-sizing:border-box;align-items:center;justify-content:flex-end;
- gap:10px;padding:3px 11px;
- border:1px solid #5c99ac;background:#091b2a!important;color:#e8f9ff!important;
- border-radius:12px;box-shadow:0 5px 15px #071521a6;
- backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
- font-size:12px;white-space:nowrap;overflow:hidden;
- pointer-events:auto;
-}
-.cockpit.mg-driving-status .status #meviPlatformHeader{
- display:block!important;overflow:hidden;text-overflow:ellipsis;min-width:0;
- font-size:11px;font-weight:750;letter-spacing:.03em;color:#e8f9ff;
-}
-.cockpit.mg-driving-status .status .status-right{display:flex;align-items:center;min-width:0;gap:5px}
-.cockpit.mg-driving-status .status #buildVersion{
- display:inline!important;font-size:11px;color:#fff;white-space:nowrap;opacity:1;
-}
-.cockpit.mg-driving-status .status .mg-web-nav-actions,
-.cockpit.mg-driving-status .status #mg-native-header-slot,
-.cockpit.mg-driving-status .status #updateBtn,
-.cockpit.mg-driving-status .status #updateMessage,
-.cockpit.mg-driving-status .status .status-chip,
-.cockpit.mg-driving-status .status .status-time{display:none!important}
-@media(orientation:landscape) and (max-height:480px){
- .cockpit.mg-driving-status .workspace > .status{height:32px;min-height:32px;max-width:min(43vw,350px);padding:3px 8px}
- .cockpit.mg-driving-status .status #meviPlatformHeader,
- .cockpit.mg-driving-status .status #buildVersion{font-size:10px}
-}
-
-
-/* Browse uses the same title/update elements as guidance. Opaque surfaces are
-   required over the bright map in every theme, including the idle update state. */
-.cockpit.mg-web-header .workspace > .status{
- height:44px;min-height:44px;gap:6px;
-}
-.cockpit.mg-web-header .status #meviPlatformHeader,
-.cockpit.mg-web-header .status .status-right{
- background:var(--nav-header-fill)!important;color:var(--nav-header-ink)!important;
- border:1px solid var(--nav-header-stroke);border-radius:12px;
- box-shadow:0 4px 12px #07152180;opacity:1;
- min-height:44px;box-sizing:border-box;padding:0 10px;
-}
-.cockpit.mg-web-header .status #meviPlatformHeader{
- line-height:42px;font-weight:750;
-}
-.cockpit.mg-web-header .status .status-right{display:flex;align-items:center;gap:7px}
-.cockpit.mg-web-header .status #buildVersion,
-.cockpit.mg-web-header .status #updateMessage{color:var(--nav-header-ink);opacity:1}
-.cockpit.mg-web-header .status #updateBtn{
- color:var(--nav-header-ink)!important;opacity:1!important;
- width:44px;min-width:44px;height:44px;
-}
-@media(orientation:landscape) and (max-height:480px){
- .cockpit.mg-web-header .status .status-chip,
- .cockpit.mg-web-header .status .status-time{display:none}
- .cockpit.mg-web-header .status #meviPlatformHeader{font-size:10px;padding-inline:8px}
- .cockpit.mg-web-header .status #buildVersion,
- .cockpit.mg-web-header .status #updateMessage{font-size:10px}
-}
-.cockpit.mg-web-header .status #updateBtn .toolbar-icon{
- width:22px;height:22px;color:var(--nav-header-ink);--app-icon-second:var(--nav-header-ink);
-}
-.cockpit.mg-web-header .status #updateBtn .app-illustration{opacity:1}
 </style><style id="mevicar-versioned-credentials">/* Shared Settings typography and touch targets for ALL tabs (Design, Screensaver,
    Credentials and APK Updates). Credentials alone retain independent scrolling. */
 /* The SETTINGS heading and sidebar labels belong to the same control surface. */
@@ -5887,7 +5529,7 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
 }
 </style><link rel="stylesheet" href="./native-updates.css"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"></head><body><div class="shell"><div class="toolbar"><div><h1>MeviCar Next · Cockpit</h1><div class="sub">Google Maps Navigation · Vollbild-Cockpit · Querformat</div></div><div class="actions"><button id="leftBtn" class="active" onclick="setDock('left')">Dock links</button><button id="bottomBtn" onclick="setDock('bottom')">Dock unten</button><button onclick="reset()">↻ Reset</button></div></div><div id="cockpit" class="cockpit"><div class="body" id="body"><nav class="dock left" id="dock"></nav><div class="workspace"><div class="status"><span id="meviPlatformHeader">MEVICAR <b>NEXT WEB</b></span><div id="mg-native-header-slot" aria-hidden="true"></div><div class="mg-web-nav-actions" role="group" aria-label="Navigation"><button type="button" onclick="openSearch()">Ziel / POI</button><button type="button" onclick="MeviWebNavParity.book()">Adressbuch</button><button type="button" id="fullscreenBtn" onclick="toggleFullscreen()" hidden>Vollbild</button></div><span class="status-right"><span class="small" id="buildVersion" aria-label="Geladene Buildnummer">Build –</span><button type="button" id="updateBtn" class="status-action" title="Web-App aktualisieren" aria-label="Web-App auf Updates prüfen" onclick="checkForUpdate()"></button><span id="updateMessage" aria-live="polite"></span><span class="status-chip" title="GPS-Sensorstatus im Tacho prüfen"><span id="gpsSignalIcon" class="status-icon" aria-hidden="true"></span><span>GPS</span></span><span class="status-chip" title="LTE: Demo-Anzeige, kein Live-Mobilfunkstatus"><span id="cellSignalIcon" class="status-icon" aria-hidden="true"></span><span>LTE</span></span><time id="statusClock" class="status-time" aria-label="Aktuelle Uhrzeit">--:--</time></span></div><main class="screen" id="screen"></main></div></div></div><div class="note" id="statusline">Google Maps ist nach der Einrichtung eines Web-API-Keys verfügbar.</div></div><script>
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const fixed=[['nav','Navi','➤'],['audio','Audio','♫'],['phone','Telefon','☎'],['tachonext','Tacho','◉']];const extras=[['speed','Tacho Classic','◉'],['weather','Wetter','☁'],['ha','Home Assistant','⌂'],['roadassist','Road Assist','◈'],['obd','OBD','◈'],['whatsapp','WhatsApp','✉'],['youtube','YouTube','▶'],['teams','Teams','▣'],['trips','Fahrtenbuch','↝'],['calendar','Kalender','▦'],['stocks','Aktienkurse','↗'],['calculator','Rechner','🧮'],['sudoku','Sudoku','▦'],['tetris','Tetris','▦'],['guilty','Wer ist schuld?','↻'],['tv','TV','▣'],['clock','Uhr','🕒'],['lightshow','Lichtshow','✦'],['settings','Settings','⚙']];const all=[...fixed,...extras,['apps','Apps','▦']];const info=id=>all.find(x=>x[0]===id)||['slot','Zusatz','＋'];const places=[['Erlangen-Nord','Zuletzt angesehen'],['Erlangen Arcaden','Nürnberger Straße, Erlangen'],['Erlangen Hauptbahnhof','Bahnhofsplatz, Erlangen'],['Höchstadt an der Aisch','91315 Höchstadt'],['Adelsdorf','91325 Adelsdorf'],['Nürnberg Hauptbahnhof','Bahnhofsplatz, Nürnberg'],['Herzogenaurach','91074 Herzogenaurach'],['Siemens Erlangen','Erlangen']];const THEME_STORAGE_KEY='mevicar-next-theme';function readSavedTheme(){try{const saved=localStorage.getItem(THEME_STORAGE_KEY);return ['default','cyberpunk','liquidglass'].includes(saved)?saved:'default'}catch{return 'default'}}const initial=()=>({dock:'left',app:'nav',mode:'map',nav:'browse',keyboard:false,query:'',destination:'',routeChoice:0,route:false,extra:'weather',recents:['Erlangen-Nord','Erlangen Arcaden','Höchstadt an der Aisch'],favorites:['Privat','Arbeit','Gymnasium','İzmir'],audio:'radio',playing:false,station:'Mevi FM',call:'idle',returnApp:'nav',returnMode:'map',light:true,trip:false,tripKm:12.4,stock:'Siemens',theme:readSavedTheme(),settingsTab:'design'});let s=initial();function setTheme(theme){if(!['default','cyberpunk','liquidglass'].includes(theme))return;s.theme=theme;try{localStorage.setItem(THEME_STORAGE_KEY,theme)}catch{}render()}function setDock(v){s.dock=v;render()}function reset(){s=initial();render()}const calcState={display:'0',stored:null,operator:null,fresh:false};function calcPress(k){let a=calcState;if(k==='C'){a.display='0';a.stored=null;a.operator=null;a.fresh=false}else if(k==='⌫'){a.display=a.display.length>1?a.display.slice(0,-1):'0';if(a.display==='-'||a.display==='')a.display='0'}else if(k==='±'){if(a.display!=='0')a.display=a.display.startsWith('-')?a.display.slice(1):'-'+a.display}else if(k==='%'){a.display=String(Number(a.display)/100)}else if('0123456789.'.includes(k)&&k.length===1){if(a.fresh){a.display='0';a.fresh=false}if(k==='.'&&a.display.includes('.'))return;if(a.display.replace(/[^0-9]/g,'').length>=12)return;a.display=k==='.'?a.display+'.':a.display==='0'?k:a.display+k}else if(['+','−','×','÷','='].includes(k)){let v=Number(a.display);if(a.operator!==null&&a.stored!==null&&!a.fresh){let n=a.operator==='+'?a.stored+v:a.operator==='−'?a.stored-v:a.operator==='×'?a.stored*v:v===0?NaN:a.stored/v;if(!Number.isFinite(n)){a.display='Fehler';a.stored=null;a.operator=null;a.fresh=true;render();return}a.display=String(Number(n.toPrecision(11)));v=Number(a.display)}a.stored=k==='='?null:v;a.operator=k==='='?null:k;a.fresh=true}render()}function calcHTML(){const keys=['C','⌫','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','±','0','.','='];return '<div class="calculator-layout"><div class="calculator-display" aria-live="polite">'+esc(calcState.display)+'</div><div class="calculator-keys">'+keys.map(k=>'<button type="button" onclick="calcPress(\''+k+'\')">'+k+'</button>').join('')+'</div></div>'}
-function openApp(id){if(id==='slot')id=s.extra||'apps';if(id==='nav'){const again=s.app==='nav'&&s.mode==='map';if(again&&s.nav==='driving'&&!window.MeviGoogleNav?.isNativeMode?.()){toggleGuidanceMenu();return} s.app='nav';s.mode='map';if(again)window.MeviGoogleNav?.toggleNativeActions?.()}else if(s.app===id){s.mode=s.mode==='full'?'split':'full'}else{s.app=id;s.mode='full'}if(extras.some(x=>x[0]===id))s.extra=id;s.keyboard=false;render()}function launch(id){s.extra=id;s.app=id;s.mode='full';s.keyboard=false;render()}
+function openApp(id){if(id==='slot')id=s.extra||'apps';if(id==='nav'){const again=s.app==='nav'&&s.mode==='map';s.app='nav';s.mode='map';if(again)window.MeviGoogleNav?.toggleNativeActions?.()}else if(s.app===id){s.mode=s.mode==='full'?'split':'full'}else{s.app=id;s.mode='full'}if(extras.some(x=>x[0]===id))s.extra=id;s.keyboard=false;render()}function launch(id){s.extra=id;s.app=id;s.mode='full';s.keyboard=false;render()}
 // Two-finger vertical gesture changes the right split-screen app only.
 const splitSwipeApps=()=>['audio','phone','tachonext',...extras.filter(x=>x[0]!=='settings').map(x=>x[0])];
 function swipeSplitApp(direction){
@@ -5921,113 +5563,50 @@ document.addEventListener('touchstart',onSplitTwoFingerStart,{passive:true});
 document.addEventListener('touchmove',onSplitTwoFingerMove,{passive:true});
 document.addEventListener('touchend',onSplitTwoFingerEnd,{passive:true});
 document.addEventListener('touchcancel',()=>{twoFingerStart=null},{passive:true});
-let navCaret=0;function openSearch(){if(window.MeviGoogleNav?.isNativeMode?.()){void window.MeviGoogleNav.openNativeSearch();return}if(!window.MeviGoogleNav?.hasKey?.()){openCredentialSettings();return}window.MeviGoogleNav?.changeQuery('');navCaret=0;s.numericKeyboard=false;s.keyShift=true;s.app='nav';s.mode='map';s.nav='search';s.keyboard=true;s.query='';render();setTimeout(()=>{const e=$('searchInput');if(e)e.focus({preventScroll:true})},0)}window.meviGoogleDestination=(name,address,options={})=>{s.destination=name;s.query=name;if(options.skipPreview)return;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviGoogleRouteReady=()=>{};window.meviGoogleRerender=()=>render();window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};function navCaretHTML(){const q=s.query||'';const pos=Math.min(navCaret,q.length);return '<span class="nav-entry-before">'+esc(q.slice(0,pos))+'</span><span class="nav-entry-caret" aria-hidden="true"></span><span class="nav-entry-after">'+esc(q.slice(pos))+'</span>'}function syncNavCaret(){const mirror=$('navEntryMirror');if(mirror)mirror.innerHTML=navCaretHTML();const placeholder=$('navEntryPlaceholder');if(placeholder)placeholder.hidden=!!s.query}function positionNavCaret(event){const mirror=$('navEntryMirror');if(!mirror)return;const rect=mirror.getBoundingClientRect();const x=Math.max(0,event.clientX-rect.left);const ctx=document.createElement('canvas').getContext('2d');const style=getComputedStyle(mirror);ctx.font=style.font;let best=0,dist=Infinity;for(let i=0;i<=s.query.length;i++){const d=Math.abs(ctx.measureText(s.query.slice(0,i)).width-x);if(d<dist){dist=d;best=i}}navCaret=best;syncNavCaret();if(!s.keyboard)showKeyboard()}function updateQuery(v){s.query=v;window.MeviGoogleNav?.changeQuery(v);syncNavCaret();const e=$('suggestions');if(e)e.innerHTML=resultsHTML();const clear=$('navClearQuery');if(clear)clear.hidden=!s.query;const heading=$('navResultHeading');if(heading)heading.textContent=s.query.trim()?'Suchergebnisse':'Vorschläge und letzte Ziele'}function clearNavQuery(){s.query='';navCaret=0;const input=$('searchInput');if(input)input.value='';updateQuery('');if(!s.keyboard)showKeyboard()}function key(k){navCaret=Math.min(navCaret,s.query.length);if(k==='back'){if(navCaret>0){s.query=s.query.slice(0,navCaret-1)+s.query.slice(navCaret);navCaret--}}else{const value=k==='space'?' ':(s.keyShift?k:k.toLowerCase());s.query=s.query.slice(0,navCaret)+value+s.query.slice(navCaret);navCaret+=value.length}const e=$('searchInput');if(e){e.value=s.query;e.focus({preventScroll:true})}updateQuery(s.query);if(s.keyShift&&k!=='back'&&k!=='space'&&!s.numericKeyboard){s.keyShift=false;refreshKeyboard()}}function hideKeyboard(){s.keyboard=false;render()}function showKeyboard(){s.keyboard=true;render();setTimeout(()=>{$('searchInput')?.focus({preventScroll:true})},0)}function selectPlace(name){window.MeviGoogleNav?.selectName(name)}async function startRoute(){const n=window.MeviGoogleNav;if(!n)return false;const ready=await n.calculateRoute();if(!ready)return false;if(ready==='native')return true;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render();return true}
+let navCaret=0;function openSearch(){if(window.MeviGoogleNav?.isNativeMode?.()){void window.MeviGoogleNav.openNativeSearch();return}if(!window.MeviGoogleNav?.hasKey?.()){openCredentialSettings();return}window.MeviGoogleNav?.changeQuery('');navCaret=0;s.numericKeyboard=false;s.keyShift=true;s.app='nav';s.mode='map';s.nav='search';s.keyboard=true;s.query='';render();setTimeout(()=>{const e=$('searchInput');if(e)e.focus({preventScroll:true})},0)}window.meviGoogleDestination=(name,address)=>{s.destination=name;s.query=name;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviGoogleRouteReady=()=>{};window.meviGoogleRerender=()=>render();window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};function navCaretHTML(){const q=s.query||'';const pos=Math.min(navCaret,q.length);return '<span class="nav-entry-before">'+esc(q.slice(0,pos))+'</span><span class="nav-entry-caret" aria-hidden="true"></span><span class="nav-entry-after">'+esc(q.slice(pos))+'</span>'}function syncNavCaret(){const mirror=$('navEntryMirror');if(mirror)mirror.innerHTML=navCaretHTML();const placeholder=$('navEntryPlaceholder');if(placeholder)placeholder.hidden=!!s.query}function positionNavCaret(event){const mirror=$('navEntryMirror');if(!mirror)return;const rect=mirror.getBoundingClientRect();const x=Math.max(0,event.clientX-rect.left);const ctx=document.createElement('canvas').getContext('2d');const style=getComputedStyle(mirror);ctx.font=style.font;let best=0,dist=Infinity;for(let i=0;i<=s.query.length;i++){const d=Math.abs(ctx.measureText(s.query.slice(0,i)).width-x);if(d<dist){dist=d;best=i}}navCaret=best;syncNavCaret();if(!s.keyboard)showKeyboard()}function updateQuery(v){s.query=v;window.MeviGoogleNav?.changeQuery(v);syncNavCaret();const e=$('suggestions');if(e)e.innerHTML=resultsHTML();const clear=$('navClearQuery');if(clear)clear.hidden=!s.query;const heading=$('navResultHeading');if(heading)heading.textContent=s.query.trim()?'Suchergebnisse':'Vorschläge und letzte Ziele'}function clearNavQuery(){s.query='';navCaret=0;const input=$('searchInput');if(input)input.value='';updateQuery('');if(!s.keyboard)showKeyboard()}function key(k){navCaret=Math.min(navCaret,s.query.length);if(k==='back'){if(navCaret>0){s.query=s.query.slice(0,navCaret-1)+s.query.slice(navCaret);navCaret--}}else{const value=k==='space'?' ':(s.keyShift?k:k.toLowerCase());s.query=s.query.slice(0,navCaret)+value+s.query.slice(navCaret);navCaret+=value.length}const e=$('searchInput');if(e){e.value=s.query;e.focus({preventScroll:true})}updateQuery(s.query);if(s.keyShift&&k!=='back'&&k!=='space'&&!s.numericKeyboard){s.keyShift=false;refreshKeyboard()}}function hideKeyboard(){s.keyboard=false;render()}function showKeyboard(){s.keyboard=true;render();setTimeout(()=>{$('searchInput')?.focus({preventScroll:true})},0)}function selectPlace(name){window.MeviGoogleNav?.selectName(name)}async function startRoute(){const n=window.MeviGoogleNav;if(!n)return;const ready=await n.calculateRoute();if(!ready||ready==='native')return;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render()}
 async function beginNavigation(){const n=window.MeviGoogleNav;if(!n)return;const started=await n.startGuidance();if(!started)return;if(started==='native'){s.nav='ready';s.mode='map';s.app='nav';return} s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function beginNavigationDemo(){const n=window.MeviGoogleNav;if(!n?.startDemo())return;s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function returnToRoute(){window.MeviGoogleNav?.stopGuidance({keepRoute:true});s.nav='ready';s.route=true;s.app='nav';s.mode='map';render()}
 function stopRoute(){window.MeviGoogleNav?.stopGuidance();s.route=false;s.nav='browse';s.mode='map';s.app='nav';s.destination='';render()}function backToBrowse(){s.nav='browse';s.keyboard=false;s.mode='map';render()}function toggleFav(){const n=window.MeviGoogleNav;if(!n)return;n.isFavorite()?n.removeFavorite():n.saveFavorite()}function startCall(){s.returnApp=s.app;s.returnMode=s.mode;s.call='ring';s.app='phone';s.mode='split';render()}function endCall(){s.call='idle';s.app=s.returnApp;s.mode=s.returnMode;render()}function btn(text,action,cls=''){return `<button class="${cls}" onclick="${action}">${text}</button>`}function placeButton(name,sub,icon='nav'){return `<button type="button" class="suggestion" aria-label="${esc(name)} auswählen" onclick="selectPlace(decodeURIComponent('${encodeURIComponent(name)}'))"><span class="circle" aria-hidden="true">${appVector(icon==='clock'?'clock':'nav')}</span><span><strong>${esc(name)}</strong><small>${esc(sub)}</small></span><span class="suggestion-chevron" aria-hidden="true">›</span></button>`}function resultsHTML(){return window.MeviGoogleNav?.resultsHTML()||'<div class="mg-search-message">Google Maps wird geladen …</div>'}function favHTML(){return window.MeviGoogleNav?.favoritesHTML()||''}function keyboardHTML(){const lines=s.numericKeyboard?['1234567890','@#€%&-+()/','.,:;!?']:['QWERTZUIOPÜ','ASDFGHJKLÖÄ','YXCVBNM'];return `<div class="keyboard" aria-label="Deutsche Bildschirmtastatur">${lines.map((line,i)=>`<div class="keyrow">${!s.numericKeyboard&&i===2?btn('⇧',`toggleKeyShift()`,'special keywide'):''}${[...line].map(k=>btn(s.keyShift&&!s.numericKeyboard?k:k.toLowerCase(),`key('${k}')`)).join('')}${i===2?btn('⌫',`key('back')`,'special keywide'):''}</div>`).join('')}<div class="keyrow">${btn(s.numericKeyboard?'ABC':'123',`toggleNumericKeyboard()`,'special keywide')}${btn('Leerzeichen',`key('space')`,'special keyspace')}${btn('Suchen',`submitKeyboardSearch()`,'go keywide')}</div></div>`}function toggleNumericKeyboard(){s.numericKeyboard=!s.numericKeyboard;refreshKeyboard()}function toggleKeyShift(){s.keyShift=!s.keyShift;refreshKeyboard()}function refreshKeyboard(){const el=document.querySelector('.keyboard');if(el)el.outerHTML=keyboardHTML()}function submitKeyboardSearch(){const first=document.querySelector('#suggestions button');if(first&&s.query.trim())first.click();else hideKeyboard()}function searchOverlay(){return `<div class="overlay glass nav-search"><div class="inner"><div class="row"><b class="nav-overlay-title">Ziel suchen</b>${btn(toolIcon('back','Zurück'),'backToBrowse()','tool-control')}</div><div class="searchbox nav-search-field"><span class="nav-search-symbol" aria-hidden="true">${appVector("search")}</span><input id="searchInput" readonly inputmode="none" autocomplete="off" aria-label="Zieladresse eingeben" placeholder="" value="${esc(s.query)}" onclick="positionNavCaret(event)"><span class="nav-entry-visual" id="navEntryMirror" aria-hidden="true">${navCaretHTML()}</span><span class="nav-entry-placeholder" id="navEntryPlaceholder" ${s.query?"hidden":""}>Ort oder Adresse</span><button class="iconbtn nav-clear" id="navClearQuery" type="button" aria-label="Suche löschen" onclick="clearNavQuery()" ${s.query?"":"hidden"}>×</button></div><div class="row nav-search-heading"><b id="navResultHeading">${s.query.trim()?"Suchergebnisse":"Vorschläge und letzte Ziele"}</b></div><div id="suggestions" class="list nav-suggestions" ontouchmove="scrollResults()" onwheel="scrollResults()" onscroll="scrollResults()">${resultsHTML()}</div></div></div>${s.keyboard?keyboardHTML():''}`}
-document.addEventListener('keydown',e=>{if(s.nav!=='search'||s.app!=='nav'||e.ctrlKey||e.metaKey||e.altKey)return;if(e.key==='Backspace'){e.preventDefault();key('back')}else if(e.key===' '){e.preventDefault();key('space')}else if(e.key.length===1){e.preventDefault();key(e.key)}else if(e.key==='Escape'){hideKeyboard()}else if(e.key==='Enter'&&s.query.trim()){e.preventDefault();submitKeyboardSearch()}});function scrollResults(){if(s.keyboard){s.keyboard=false;$('searchInput')?.blur();const k=document.querySelector('.keyboard');if(k)k.remove();document.querySelector('.map')?.classList.remove('searchmode')}}function destinationAddress(){return window.MeviGoogleNav?.selectedAddress()||'Kein Ziel ausgewählt'}function previewHTML(){return window.MeviWebNavParity?.selectedDestinationHTML?.()||''}function routeStopsHTML(ctx){
- if(!ctx?.stops?.length)return '';
+document.addEventListener('keydown',e=>{if(s.nav!=='search'||s.app!=='nav'||e.ctrlKey||e.metaKey||e.altKey)return;if(e.key==='Backspace'){e.preventDefault();key('back')}else if(e.key===' '){e.preventDefault();key('space')}else if(e.key.length===1){e.preventDefault();key(e.key)}else if(e.key==='Escape'){hideKeyboard()}else if(e.key==='Enter'&&s.query.trim()){e.preventDefault();submitKeyboardSearch()}});function scrollResults(){if(s.keyboard){s.keyboard=false;$('searchInput')?.blur();const k=document.querySelector('.keyboard');if(k)k.remove();document.querySelector('.map')?.classList.remove('searchmode')}}function destinationAddress(){return window.MeviGoogleNav?.selectedAddress()||'Kein Ziel ausgewählt'}function previewHTML(){const n=window.MeviGoogleNav;return `<div class="preview glass nav-preview"><div class="row"><b class="nav-preview-destination">${esc(s.destination)}</b>${btn(toolIcon('close','Schließen'),'backToBrowse()','tool-control close-control')}</div><span class="nav-preview-address">${esc(destinationAddress())}</span><span class="small">Google Maps · ${esc(n?.originDescription()||'Startpunkt: GPS')}</span><div class="row nav-preview-actions">${btn(n?.isFavorite()?'★ Gespeichert':'☆ Favorit','toggleFav()')}${btn('➤ Route berechnen','startRoute()','primary')}</div><div class="row mg-manual-origin-actions">${btn(n?.isManualOrigin()?'⌖ Startpunkt ändern':'⌖ Startpunkt auf Karte wählen','MeviGoogleNav.selectOriginOnMap()','mg-origin-button')}</div></div>`}function routeStopsHTML(){
+ const ctx=window.MeviGoogleNav?.routeContext?.();if(!ctx?.stops?.length)return '';
  return '<div class="mg-waypoint-list"><strong>Zwischenstopps ('+ctx.stops.length+'/'+ctx.maxStops+')</strong>'+
  ctx.stops.map((item,i)=>'<div class="mg-waypoint-row"><span>'+(i+1)+'. '+esc(item.name||item.address||'Zwischenstopp')+
- '</span><button type="button" onclick="MeviGoogleNav.previewRemoveStop('+i+')" aria-label="Zwischenstopp entfernen: '+esc(item.name||'Ziel')+'">×</button></div>').join('')+'</div>';
+ '</span><button type="button" onclick="MeviGoogleNav.removeRouteStop('+i+')" aria-label="Zwischenstopp entfernen: '+esc(item.name||'Ziel')+'">×</button></div>').join('')+'</div>';
 }
-function readyRouteOverlay(ctx){
- const seconds=Math.max(0,Number(ctx.seconds)||0),meters=Math.max(0,Number(ctx.meters)||0);
- const stops=Array.isArray(ctx.stops)?ctx.stops:[];
- const maxStops=Number.isInteger(ctx.maxStops)?ctx.maxStops:8;
- const km=new Intl.NumberFormat('de-DE',{maximumFractionDigits:meters>=10000?0:1}).format(meters/1000);
- const totalMinutes=Math.max(1,Math.round(seconds/60));
- const duration=totalMinutes>=60?Math.floor(totalMinutes/60)+' h '+totalMinutes%60+' min':totalMinutes+' min';
- const arrival=ctx.arrival||'';
- const detail=[arrival,'Gewählte Route',ctx.alternatives?'Alternativen auf der Karte antippen':''].filter(Boolean).join(' · ');
- const name=ctx.destination?.name||s.destination;
- const options=[['avoidTolls','Maut','Mautstraßen meiden'],['avoidHighways','Autobahn','Autobahnen meiden'],['avoidFerries','Fähren','Fähren meiden']];
- return `<aside class="mg-route-preview-pane" aria-labelledby="mg-route-preview-title">
-  <div class="mg-route-preview-heading"><h2 id="mg-route-preview-title">Routenvorschau</h2><button type="button" onclick="MeviGoogleNav.previewEnd()">Beenden</button></div>
-  <div class="mg-route-preview-trip" aria-label="Gewählte Route">
-   <strong class="mg-route-preview-summary">${duration} · ${km} km</strong>
-   <p class="mg-route-preview-meta">${esc(detail)}</p>
+function readyRouteOverlay(){
+ const n=window.MeviGoogleNav;
+ return `<div class="navbanner mg-route-banner mg-route-ready">
+  <div class="mg-route-eyebrow">GOOGLE MAPS · ROUTE BEREIT</div>
+  <strong class="mg-route-destination">${esc(s.destination)}</strong>
+  <div class="mg-ready-meta">${esc(n?.routeInfo()||'Route berechnet')}</div>
+  ${n?.routeReadyHTML()||''}
+  ${routeStopsHTML()}
+  <div id="mevi-ra-summary">${window.MeviRoadAssist?.summaryHTML()||''}</div>
+  <div class="mg-guidance-actions">
+   ${btn('＋ Stopp suchen','MeviWebNavParity.openStopSearch()','mg-add-stop')}
+   ${btn('➤ Navigation starten','beginNavigation()','mg-start-navigation')}
+   ${btn('▶ Demo-Fahrt','beginNavigationDemo()','mg-demo-start')}
+   ${btn('Löschen','stopRoute()','mg-stop-navigation')}
   </div>
-  <div class="mg-route-preview-scroll">
-   <div id="mevi-ra-summary">${ctx.native?esc(ctx.roadNote||''):window.MeviRoadAssist?.summaryHTML()||''}</div>
-   <div class="mg-route-preview-options"><span>Meiden</span>${options.map(([key,label,description])=>`<button type="button" aria-label="${description}" aria-pressed="${!!ctx.options?.[key]}" onclick="MeviGoogleNav.previewToggleOption('${key}')">${label}</button>`).join('')}</div>
-   <div class="mg-route-preview-destination">${routeStopsHTML(ctx)}<p>Ziel: ${esc(name)}</p></div>
-   ${ctx.native?'':'<button type="button" class="mg-route-preview-demo" onclick="beginNavigationDemo()">Demo-Fahrt</button>'}
-  </div>
-  <div class="mg-route-preview-actions">
-   ${stops.length<maxStops?'<button type="button" onclick="MeviWebNavParity.openStopSearch()">Stopp hinzufügen</button>':''}
-   <button type="button" class="mg-route-preview-start" onclick="MeviGoogleNav.previewStart()" aria-label="Navigation starten">Los</button>
-  </div>
- </aside>`;
-}
-/* One Web guidance surface for full-map and split-mode driving. In the APK,
-   the native NavigationView and NavTripBar are authoritative; this HTML only
-   renders Google Maps JavaScript guidance, with matching actions and flow. */
-function toggleGuidanceMenu(force){
- const sheet=$('mg-guidance-menu');
- if(!sheet)return;
- const opening=typeof force==='boolean'?force:sheet.hidden;
- sheet.hidden=!opening;
- if(opening){
-  const actions=$('mg-guidance-menu-actions'),details=$('mg-guidance-menu-details');
-  if(actions)actions.hidden=false;
-  if(details)details.hidden=true;
-  const dashboard=$('mg-guidance-menu-dashboard');if(dashboard)dashboard.hidden=true;
-  sheet.classList.remove('mg-dashboard-open');
- }
-}
-function showGuidanceDetails(){
- const actions=$('mg-guidance-menu-actions'),details=$('mg-guidance-menu-details');
- if(!actions||!details)return;
- actions.hidden=true;details.hidden=false;
- const dashboard=$('mg-guidance-menu-dashboard');if(dashboard)dashboard.hidden=true;
- $('mg-guidance-menu')?.classList.remove('mg-dashboard-open');
-}
-function showGuidanceDashboard(){
- const sheet=$('mg-guidance-menu'),actions=$('mg-guidance-menu-actions');
- const details=$('mg-guidance-menu-details'),dashboard=$('mg-guidance-menu-dashboard');
- if(!sheet||!actions||!details||!dashboard)return;
- actions.hidden=true;details.hidden=true;dashboard.hidden=false;
- sheet.classList.add('mg-dashboard-open');
- window.MeviNavDashboard?.paint(dashboard,window.MeviGoogleNav?.guidanceDashboardData?.());
+  <small class="mg-route-hint">Für echte Zielführung benötigt MeviCar den aktuellen GPS-Standort. Die Demo simuliert die Fahrt.</small>
+ </div>`;
 }
 function activeGuidanceOverlay(compact=false){
- const n=window.MeviGoogleNav,trip=n?.guidanceTrip?.()||{};
- return `<div class="mg-web-guidance ${compact?'mg-web-guidance-split':''}">
-  <section class="mg-guidance-cue" role="status" aria-live="polite" aria-label="Nächste Fahranweisung">
-   <div class="mg-guidance-turn"><span id="mg-next-arrow" aria-hidden="true">↑</span>
-    <div class="mg-guidance-instruction"><b id="mg-next-distance">–</b>
-     <strong id="mg-next-turn">Der Route folgen</strong></div></div>
-  </section>
-  ${compact?'':`
-  <div class="mg-guidance-trip" role="group" aria-label="Aktive Navigation">
-   <button type="button" class="mg-guidance-trip-main" onclick="toggleGuidanceMenu()" aria-label="Fahrtwerte, Navigationsmenü öffnen">
-    <strong id="mg-trip-arrival">${esc(trip.arrival||'Ankunft –')}</strong>
-    <span id="mg-trip-summary">${esc(trip.summary||'Reststrecke wird ermittelt')}</span>
-    <span id="mg-trip-next-stop" hidden></span>
-    <span id="mg-trip-muted" hidden>Ton aus</span>
-   </button>
-  </div>
-  <aside id="mg-guidance-menu" class="mg-guidance-menu" aria-label="Navigationsmenü" hidden>
-   <div id="mg-guidance-menu-actions">
-    <div class="mg-guidance-menu-heading"><button type="button" onclick="toggleGuidanceMenu(false)" aria-label="Zurück zur Karte">←</button><strong>Navigation</strong></div>
-    <button type="button" onclick="MeviWebNavParity.openStopSearch()">Stopp suchen</button>
-    <button type="button" onclick="showGuidanceDashboard()">Dashboard</button>
-    <button type="button" onclick="showGuidanceDetails()">Routendetails</button>
-    <button type="button" id="mg-voice-toggle" aria-pressed="true" onclick="MeviGoogleNav.toggleVoice()">Ton: an</button>
-    <button type="button" onclick="toggleGuidanceMenu(false);MeviGoogleNav.showOverview()">Übersicht</button>
-    <button type="button" class="mg-guidance-menu-stop" onclick="stopRoute()">Navigation beenden</button>
-   </div>
-   <div id="mg-guidance-menu-details" hidden>
-    <div class="mg-guidance-menu-heading"><button type="button" onclick="toggleGuidanceMenu(true)" aria-label="Zurück zum Navigationsmenü">←</button><strong>Routendetails</strong></div>
-    <div class="mg-guidance-details-content">${n?.guidanceDetailsHTML?.()||''}</div>
-   </div>
-   <div id="mg-guidance-menu-dashboard" class="mg-guidance-menu-dashboard" hidden>
-    <div class="mg-guidance-menu-heading"><button type="button" onclick="toggleGuidanceMenu(false)" aria-label="Zurück zur Karte">←</button><strong>Dashboard</strong></div>
-    ${window.MeviNavDashboard?.html?.()||''}
-   </div>
-  </aside>`}
+ const n=window.MeviGoogleNav;
+ return `<div class="navbanner mg-guidance-banner ${compact?'mg-guidance-compact':''}">
+  <div class="mg-guidance-header"><span id="mg-guidance-state">NAVIGATION AKTIV</span><span id="mg-remaining">${esc(n?.routeInfo()||'')}</span></div>
+  <div class="mg-guidance-turn"><span id="mg-next-arrow">↑</span><div class="mg-guidance-instruction">
+   <b id="mg-next-distance">–</b>
+   <strong id="mg-next-turn">Der Route folgen</strong>
+  </div></div>
+  <div class="mg-guidance-footer"><span id="mg-live-gps">GPS wird ermittelt …</span><span class="mg-guidance-target">${esc(s.destination)}</span></div>
+  ${compact?'':`<div class="mg-guidance-actions">
+   ${btn('Ton ausschalten','MeviGoogleNav.toggleVoice()','mg-voice-button" id="mg-voice-toggle')}
+   ${btn('Übersicht','MeviGoogleNav.showOverview()','mg-overview-button')}
+   ${btn('＋ Stopp suchen','MeviWebNavParity.openStopSearch()','mg-add-stop')}
+   ${btn('Beenden','returnToRoute()','mg-stop-navigation')}
+  </div>`}
  </div>`;
 }
 function mapHTML(){
@@ -6037,8 +5616,6 @@ function mapHTML(){
   // Opt-in shared search UI: drawn by the Web layer while the native map is hidden.
   if(window.MeviAndroidSharedNav?.isOptedIn?.()&&s.app==='nav'&&s.nav==='search')
    return `<div class="map mg-navigation mg-native-shared-search ${s.keyboard?'searchmode':''}"><div id="mg-map" class="mg-map mg-native-map" aria-hidden="true"></div>${searchOverlay()}</div>`;
-  const preview=s.app==='nav'&&s.mode==='map'?n.nativeRoutePreview?.():null;
-  if(preview)return `<div class="map mg-navigation mg-route-preview-layout mg-native-route-preview">${n.mapBackdrop()}${readyRouteOverlay(preview)}</div>`;
   return `<div class="map mg-navigation mg-first-run mg-native-only">${n.mapBackdrop()}</div>`;
  }
  // First-run setup occupies the whole map: no search, favorites,
@@ -6049,10 +5626,9 @@ function mapHTML(){
   return `<div class="map mg-navigation mg-first-run">${n?.mapBackdrop()||'<section class="mg-setup"><strong>Google Maps einrichten</strong><button onclick="openCredentialSettings()">Zugänge öffnen</button></section>'}</div>`;
  }
  const search=s.nav==='search';
- const preview=s.app==='nav'&&s.nav==='ready'?n.browserRoutePreview?.():null;
  const panel=s.nav==='driving'?activeGuidanceOverlay(s.app!=='nav'):
-  s.app==='nav'?(search?searchOverlay():s.nav==='preview'?previewHTML():preview?readyRouteOverlay(preview):''):'';
- return `<div class="map mg-navigation ${search&&s.keyboard?'searchmode':''} ${preview?'mg-route-preview-layout':''} ${s.nav==='driving'?'mg-web-driving':''}">${n.mapBackdrop()}${n.locationButton()}${panel}${s.nav==='driving'?`<div class="mevi-ra-overlay-shell" id="mevi-ra-overlay">${window.MeviRoadAssist?.overlayHTML()||''}</div>`:''}</div>`;
+  s.app==='nav'?(search?searchOverlay():s.nav==='preview'?previewHTML():s.nav==='ready'?readyRouteOverlay():''):'';
+ return `<div class="map mg-navigation ${search&&s.keyboard?'searchmode':''}">${n.mapBackdrop()}${n.locationButton()}${panel}${s.nav==='driving'?`<div class="mevi-ra-overlay-shell" id="mevi-ra-overlay">${window.MeviRoadAssist?.overlayHTML()||''}</div>`:''}</div>`;
 }
 const gpsData={watch:null,active:false,speed:null,accuracy:null,altitude:null,course:null,heading:null,lastFix:null,error:'GPS noch nicht gestartet'};
 function gpsStart(){if(typeof window.meviSpeedGps==='function')window.meviSpeedGps(true)}
@@ -6089,8 +5665,8 @@ function displayAppName(id){return id==='audio'?audioSourceName():info(id)[1]}
 DOCK_COLORS.lightshow='#dc7dff';DOCK_COLORS.tachonext='#23eaff';DOCK_COLORS.sudoku='#8ceaff';DOCK_COLORS.tetris='#ba86ff';DOCK_COLORS.tv='#63e6aa';DOCK_COLORS.guilty='#ffd17e';
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
-function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');const nav=window.MeviGoogleNav;const showNavHeader=s.app==='nav'&&s.mode!=='split'&&s.nav==='browse'&&!!nav?.hasKey?.();$('cockpit').classList.toggle('nav-status-only',showNavHeader);$('cockpit').classList.toggle('mg-web-header',showNavHeader&&!nav?.isNativeMode?.());$('cockpit').classList.toggle('mg-driving-status',s.app==='nav'&&s.nav==='driving'&&!nav?.isNativeMode?.());let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='apps'?'app-home-side':''} ${s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();$('screen').innerHTML=html;if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.6", "build": 1198, "commit": "ae3ba881ab97040651e0406d6a4d8651e1952ec3"};
+function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');const nav=window.MeviGoogleNav;const showNavHeader=s.app==='nav'&&s.mode!=='split'&&s.nav!=='search'&&!!nav?.hasKey?.();$('cockpit').classList.toggle('nav-status-only',showNavHeader);$('cockpit').classList.toggle('mg-web-header',showNavHeader&&!nav?.isNativeMode?.());let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='apps'?'app-home-side':''} ${s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();$('screen').innerHTML=html;if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
+const CURRENT_BUILD={"version": "0.6.6", "build": 1184, "commit": "b07d865a27241fc177ba9e49f79f3d0d6f354957"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -6129,7 +5705,7 @@ function initBuild(){const e=$('buildVersion');if(e){e.textContent=NATIVE_BUILD?
   }else if(m)m.textContent='Web-Version ist aktuell';
   return;
  }
- const res=await fetch('./build-info.json?t='+Date.now(),{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const latest=await res.json();const latestBuild=Number(latest.build);if(Number.isInteger(latestBuild)&&latestBuild>Number(CURRENT_BUILD.build)){const url=new URL(location.href);if(window.MeviSpotify?.authBusy?.()){if(m&&!silent)m.textContent='Update nach der Spotify-Anmeldung';return}if(url.searchParams.get('v')!==String(latestBuild)){if(m&&!silent)m.textContent='Update verfügbar';url.searchParams.set('v',String(latestBuild));location.replace(url.href);return}if(m&&!silent)m.textContent='Aktualisierung noch nicht verfügbar';return}if(m&&!silent)m.textContent='Aktuell'}catch(e){if(m&&!silent)m.textContent='Prüfung fehlgeschlagen'}finally{if(!silent&&b){b.disabled=false;b.classList.remove('checking')}}}function updateClock(){const now=new Date(),t=document.getElementById('mevicarClockTime'),d=document.getElementById('mevicarClockDate'),w=document.getElementById('mevicarClockWeek');const statusTime=$('statusClock');if(statusTime)statusTime.textContent=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(now);if(!t)return;t.textContent=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);d.textContent=new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(now);const u=new Date(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()));u.setUTCDate(u.getUTCDate()+4-(u.getUTCDay()||7));const y=new Date(Date.UTC(u.getUTCFullYear(),0,1));w.textContent='KW '+Math.ceil((((u-y)/86400000)+1)/7)}setInterval(updateClock,1000);setTimeout(updateClock,0);setInterval(()=>{const panel=$('mg-guidance-menu-dashboard');if(panel&&!panel.hidden)window.MeviNavDashboard?.paint(panel,window.MeviGoogleNav?.guidanceDashboardData?.())},1000);render();initBuild();setPlatformLabel();initToolbarIcons();if('serviceWorker' in navigator){window.addEventListener('load',()=>{if(window.MeviNativeBridge?.postMessage){navigator.serviceWorker.getRegistrations().then(items=>Promise.all(items.filter(reg=>reg.scope.includes('/mevicar-cockpit-demo/')).map(reg=>reg.unregister()))).catch(()=>{});}else navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('PWA service worker:',err))})}window.addEventListener('load',()=>checkForUpdateImpl(true));
+ const res=await fetch('./build-info.json?t='+Date.now(),{cache:'no-store'});if(!res.ok)throw Error('HTTP '+res.status);const latest=await res.json();const latestBuild=Number(latest.build);if(Number.isInteger(latestBuild)&&latestBuild>Number(CURRENT_BUILD.build)){const url=new URL(location.href);if(window.MeviSpotify?.authBusy?.()){if(m&&!silent)m.textContent='Update nach der Spotify-Anmeldung';return}if(url.searchParams.get('v')!==String(latestBuild)){if(m&&!silent)m.textContent='Update verfügbar';url.searchParams.set('v',String(latestBuild));location.replace(url.href);return}if(m&&!silent)m.textContent='Aktualisierung noch nicht verfügbar';return}if(m&&!silent)m.textContent='Aktuell'}catch(e){if(m&&!silent)m.textContent='Prüfung fehlgeschlagen'}finally{if(!silent&&b){b.disabled=false;b.classList.remove('checking')}}}function updateClock(){const now=new Date(),t=document.getElementById('mevicarClockTime'),d=document.getElementById('mevicarClockDate'),w=document.getElementById('mevicarClockWeek');const statusTime=$('statusClock');if(statusTime)statusTime.textContent=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(now);if(!t)return;t.textContent=new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(now);d.textContent=new Intl.DateTimeFormat('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(now);const u=new Date(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate()));u.setUTCDate(u.getUTCDate()+4-(u.getUTCDay()||7));const y=new Date(Date.UTC(u.getUTCFullYear(),0,1));w.textContent='KW '+Math.ceil((((u-y)/86400000)+1)/7)}setInterval(updateClock,1000);setTimeout(updateClock,0);render();initBuild();setPlatformLabel();initToolbarIcons();if('serviceWorker' in navigator){window.addEventListener('load',()=>{if(window.MeviNativeBridge?.postMessage){navigator.serviceWorker.getRegistrations().then(items=>Promise.all(items.filter(reg=>reg.scope.includes('/mevicar-cockpit-demo/')).map(reg=>reg.unregister()))).catch(()=>{});}else navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('PWA service worker:',err))})}window.addEventListener('load',()=>checkForUpdateImpl(true));
 </script><script id="mevicar-versioned-credentials-script">/* Central configuration UI. Never embed entered secrets into HTML or logs.
    Browser API keys / OAuth client identifiers retain their legacy local keys for compatibility.
    HA token is persisted only in the standalone Web browser, scoped to the HA origin.
@@ -6397,16 +5973,12 @@ async function refreshNativeStatus(){
 global.MeviCredentials={html,save,clear,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
-
-</script><script src="./native-updates.js"></script><script src="./nav-dashboard.js"></script><script id="mevicar-navigation-script">/* MeviCar Next navigation adapter – Classic destination rules, Google Maps web APIs.
+</script><script src="./native-updates.js"></script><script id="mevicar-navigation-script">/* MeviCar Next navigation adapter – Classic destination rules, Google Maps web APIs.
    A browser-restricted Google Maps JavaScript key is required. Never copy Android keys. */
 (function(){
 'use strict';
 const KEY='mevicar-next-google-maps-key-v1', DATA='mevicar-next-destinations-v1';
 const MAX_SAVED=200,MAX_RECENT=30;
-const PREVIEW_OPTIONS='mevicar-next-route-options-v1', previewOptionKeys=['avoidTolls','avoidHighways','avoidFerries'];
-let routeOptions={};
-try {const saved=JSON.parse(localStorage.getItem(PREVIEW_OPTIONS)||'{}');routeOptions=Object.fromEntries(previewOptionKeys.map(key=>[key,saved?.[key]===true]));} catch {}
 const FALLBACK_CENTER={lat:49.59,lng:11.005}; // Erlangen: initial map view only, not a navigation origin.
 const text=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const valid=d=>d&&typeof d.name==='string'&&Number.isFinite(d.lat)&&Number.isFinite(d.lng)&&Math.abs(d.lat)<=90&&Math.abs(d.lng)<=180;
@@ -6512,7 +6084,6 @@ function syncNativeLayout(force=false,settling=false){
  syncNativeTheme();
  handOverFavorites();
  const el=document.getElementById('mg-map');
- const sharedRoutePreview=!!el?.closest?.('.mg-native-route-preview');
  const header=el?syncNativeHeader():null;
  const rect=el?.getBoundingClientRect?.();
  const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
@@ -6527,7 +6098,6 @@ function syncNativeLayout(force=false,settling=false){
   height:Math.min(Math.round(rect.height),Math.max(1,Math.round(vh-rect.top))),
   viewportWidth:Math.round(vw),viewportHeight:Math.round(vh)
  }:{visible:false};
- if(usable&&sharedRoutePreview)fields.sharedRoutePreview=true;
  if(usable&&!nativeAddressBook)
   fields.favorites=cache.favorites.slice(0,8).filter(valid).map(d=>({lat:d.lat,lng:d.lng,title:d.name.slice(0,120)}));
  if(usable&&header){
@@ -6711,7 +6281,7 @@ function load(){
 }
 async function mount(nextState){
  state=nextState||state;mounted=true;const el=document.getElementById('mg-map');
- if(nativeMode()){syncNativeLayout();watchNativePreview(el);return}
+ if(nativeMode()){syncNativeLayout();return}
  if(!el||!key())return;
  try{
    await load();
@@ -6967,7 +6537,7 @@ async function pick(kind,index,options={}){
   return;
  }
  stopGuidance();selected=d;routeData=null;routeStops=[];routeOrigin=null;clearLines();mark(d);
- window.meviGoogleDestination?.(d.name,d.address,{skipPreview:options?.skipPreview===true});
+ window.meviGoogleDestination?.(d.name,d.address);
  return true;
 }
 
@@ -7057,122 +6627,18 @@ async function position(){
 }
 async function myLocation(){try{const p=await position();clearStatus();if(map){map.panTo(p);map.setZoom(16)}}catch(e){status(e.message,'gps')}}
 function clearLines(){for(const l of routeLines)l.setMap(null);routeLines=[]}
-let routeChoices=[];
 function drawRoute(){
  clearLines();if(!map||!routeData)return;
- const alternatives=guidanceActive||state!=='ready'?[]:routeChoices.filter(route=>route!==routeData);
- for(const route of [...alternatives,routeData])for(const line of route.createPolylines()){
-  const active=route===routeData;
-  line.setOptions({strokeColor:active?'#26dcff':'#517ecb',strokeWeight:active?7:5,zIndex:active?2:1,clickable:!active});
-  if(!active)line.addListener('click',()=>{
-   if(previewBusy||guidanceActive||!routeChoices.includes(route))return;
-   useRoute(route,{});window.meviGoogleRerender?.();
-  });
-  line.setMap(map);routeLines.push(line);
- }
+ routeLines=routeData.createPolylines();
+ for(const line of routeLines){line.setOptions({strokeColor:'#26dcff',strokeWeight:7});line.setMap(map)}
  const path=routeData.path||[];
  if(path.length>1){
   const bounds=new google.maps.LatLngBounds();
-  for(const route of [routeData,...alternatives])for(const point of route.path||[])bounds.extend({lat:point.lat,lng:point.lng});
+  for(const point of path)bounds.extend({lat:point.lat,lng:point.lng});
   map.fitBounds(bounds,55);
  }
 }
 let routeSummary='',liveSummary='';
-let liveTripMeters=null,liveTripMinutes=null;
-let guidanceStartedAt=null,guidanceDrivenMeters=0,guidancePreviousRemaining=null;
-let guidanceMaxSpeed=null,guidanceSpeedTimestamp=null,guidanceCurrentSpeed=null;
-function recordGuidanceSpeed(position){
- if(!guidanceActive||simulation||guidanceStartedAt===null)return;
- const {speed,accuracy}=position.coords||{},stamp=position.timestamp;
- // Missing speed is not standstill. Ignore inaccurate, stale or repeated fixes.
- if(!Number.isFinite(speed)||speed<0||!Number.isFinite(accuracy)||accuracy<0||accuracy>50||
-    !Number.isFinite(stamp)||stamp<guidanceStartedAt||stamp>Date.now()+1000||Date.now()-stamp>15000||
-    (guidanceSpeedTimestamp!==null&&stamp<=guidanceSpeedTimestamp))return;
- guidanceSpeedTimestamp=stamp;
- guidanceCurrentSpeed=speed*3.6;
- guidanceMaxSpeed=Math.max(guidanceMaxSpeed??0,guidanceCurrentSpeed);
-}
-function recordGuidanceProgress(meters){
- const remaining=Math.max(0,Math.round(Number(meters)));
- if(!Number.isFinite(remaining))return;
- const before=guidancePreviousRemaining;guidancePreviousRemaining=remaining;
- if(before===null)return;
- const difference=before-remaining;
- if(difference>=1&&difference<=3000)guidanceDrivenMeters+=difference;
-}
-function resetGuidanceProgress(){
- guidanceStartedAt=null;guidanceDrivenMeters=0;guidancePreviousRemaining=null;
- guidanceMaxSpeed=null;guidanceSpeedTimestamp=null;guidanceCurrentSpeed=null;
-}
-/* The compact Web trip strip is fed by the same route and GPS progress as
-   spoken turn guidance, not by a second route calculation. */
-function guidanceTrip(){
- const distance=Number.isFinite(liveTripMeters)?liveTripMeters:Math.max(0,Number(routeData?.distanceMeters)||0);
- const minutes=Number.isFinite(liveTripMinutes)?liveTripMinutes:Math.max(0,Math.round((Number(routeData?.durationMillis)||0)/60000));
- const eta=routeData?new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(Date.now()+minutes*60000)):'–';
- return {arrival:'Ankunft '+eta,summary:metersLabel(distance)+' · '+minutes+' Min.',
-  nextStop:routeStops[0]?.name||routeStops[0]?.address||'',muted:voiceMuted};
-}
-/* Android NavRouteDetails.rows semantics over the existing browser route/GPS
-   state: no duplicate Web view, no new directions calculation. */
-function guidanceDashboardData(){
- const now=Date.now();
- const seconds=Number.isFinite(liveTripMinutes)?Math.max(0,Math.round(liveTripMinutes*60)):
-  routeData?Math.max(0,Math.round((Number(routeData.durationMillis)||0)/1000)):null;
- const remaining=Number.isFinite(liveTripMeters)?Math.max(0,Math.round(liveTripMeters)):
-  routeData?Math.max(0,Math.round(Number(routeData.distanceMeters)||0)):null;
- const elapsed=guidanceStartedAt===null?null:now-guidanceStartedAt;
- const next=guidanceSteps[Math.min(stepIndex,guidanceSteps.length-1)];
- const nextMeters=next?(next.end&&current?distanceBetween(current,next.end):next.distanceMeters):null;
- return {
-  maneuverText:next?.instructions||null,
-  maneuverMeters:Number.isFinite(nextMeters)&&nextMeters>=0?nextMeters:null,
-  speedKmh:!simulation&&guidanceSpeedTimestamp!==null&&now-guidanceSpeedTimestamp<=8000?guidanceCurrentSpeed:null,
-  arrivalEpochMs:seconds===null?null:now+seconds*1000,
-  remainingSeconds:seconds,remainingMeters:remaining,
-  avgKmh:!simulation&&elapsed!==null&&elapsed>=60000&&guidanceDrivenMeters>=100?
-   Math.round(guidanceDrivenMeters*3600000/elapsed):null,
-  maxKmh:!simulation?guidanceMaxSpeed:null
- };
-}
-function guidanceDetailsHTML(){
- const now=Date.now(),remaining=Math.max(0,Math.round(Number.isFinite(liveTripMeters)?liveTripMeters:(routeData?.distanceMeters||0)));
- const seconds=Math.max(0,Math.round(Number.isFinite(liveTripMinutes)?liveTripMinutes*60:(routeData?.durationMillis||0)/1000));
- const driven=guidanceDrivenMeters,elapsed=guidanceStartedAt===null?null:Math.max(0,now-guidanceStartedAt);
- const clock=stamp=>new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(stamp))+' Uhr';
- const duration=sec=>{const m=Math.max(0,Math.round(sec/60));return m>=60?Math.floor(m/60)+' Std. '+(m%60)+' Min.':m+' Min.'};
- const rows=[],add=(label,value)=>{if(value!==null&&value!==undefined&&String(value).trim())rows.push([label,String(value)])};
- if(selected){
-  add('Ziel',selected.name||selected.address||'–');
-  if(selected.address&&selected.address!==selected.name)add('Adresse',selected.address);
- }
- if(guidanceStartedAt!==null)add('Start',clock(guidanceStartedAt));
- add('Ankunft',clock(now+seconds*1000));
- if(elapsed!==null)add('Fahrzeit bisher',duration(elapsed/1000));
- add('Restzeit',duration(seconds));
- add('Fortschritt',driven+remaining>0?Math.round(100*driven/(driven+remaining))+' %':'0 %');
- add('Gefahren',metersLabel(driven));
- add('Reststrecke',metersLabel(remaining));
- add('Gesamtstrecke',metersLabel(driven+remaining));
- add('Durchschnittsgeschwindigkeit',!simulation&&elapsed!==null&&elapsed>=60000&&driven>=100?Math.round(driven*3600/elapsed)+' km/h':'–');
- add('Höchstgeschwindigkeit',!simulation&&guidanceMaxSpeed!==null?Math.round(guidanceMaxSpeed)+' km/h':'–');
- const next=guidanceSteps[Math.min(stepIndex,guidanceSteps.length-1)];
- if(next){
-  const dist=metersLabel(next.end&&current?distanceBetween(current,next.end):next.distanceMeters);
-  add('Nächstes Manöver',guidanceInstruction(next)+' · in '+dist);
- }
- if(routeStops.length){
-  add('Nächster Stopp',routeStops[0].name||routeStops[0].address||'–');
-  add('Zwischenstopps',routeStops.map((stop,i)=>(i+1)+'. '+(stop.name||stop.address||'Stopp')).join('\n'));
- }else add('Zwischenstopps','keine');
- const avoided=[routeOptions.avoidTolls?'Maut':'',routeOptions.avoidHighways?'Autobahnen':'',routeOptions.avoidFerries?'Fähren':''].filter(Boolean);
- add('Vermeiden',avoided.join(', ')||'nichts');
- add('Ansagen',voiceMuted?'aus':'an');
- const roadNote=window.MeviRoadAssist?.routeNote?.();
- if(roadNote)add('Blitzer',roadNote);
- return '<dl class="mg-guidance-detail-list">'+rows.map(([label,value])=>
-  '<div class="mg-guidance-detail-row"><dt>'+text(label)+'</dt><dd>'+text(value)+'</dd></div>').join('')+'</dl>';
-}
 function geoPoint(input){
  if(!input)return null;
  const p=typeof input.toJSON==='function'?input.toJSON():input;
@@ -7247,91 +6713,25 @@ async function computeRouteFrom(from,options={}){
   origin:from,destination:{lat:selected.lat,lng:selected.lng},
   ...(stops.length?{intermediates:stops.map(p=>({location:{lat:p.lat,lng:p.lng}}))}:{}),
   travelMode:'DRIVING',
-  routeModifiers:options.modifiers||routeOptions,
-  ...(stops.length||guidanceActive?{}:{computeAlternativeRoutes:true}),
   fields:['path','distanceMeters','durationMillis','legs']
  });
  if(serial!==routeRequestSerial)throw new Error('Routenberechnung wurde überholt.');
  if(!routes?.length)throw new Error('Keine Fahrroute gefunden.');
  // Commit atomically AFTER a successful request. Failed stop additions leave
  // route, Road Assist, GPS watch and existing destination unchanged.
- routeChoices=routes;routeStops=stops;routeOrigin={lat:from.lat,lng:from.lng};
- useRoute(routes[0],options);
- return true;
-}
-function useRoute(route,options){
- routeData=route;
+ routeData=routes[0];routeStops=stops;routeOrigin={lat:from.lat,lng:from.lng};
  window.MeviRoadAssist?.onRoute?.(routeData,options);
- guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';liveTripMeters=null;liveTripMinutes=null;
+ guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';
  const km=(routeData.distanceMeters||0)/1000;
  const minutes=Math.round((routeData.durationMillis||0)/60000);
  routeSummary=new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(km)+' km · '+minutes+' Min.';
  clearStatus();drawRoute();
  if(guidanceActive&&!simulation&&current)followPosition(current);
  window.meviGoogleRouteReady?.(routeSummary);
+ return true;
 }
 const MAX_STOPS=8;
 function routeStopKey(p){return p.placeId?'p:'+p.placeId:'c:'+p.lat.toFixed(4)+','+p.lng.toFixed(4)}
-let previewBusy=false,nativePreview=null,nativePreviewTimer=null,nativePreviewRequest=false;
-function watchNativePreview(el){
- const watch=!!el&&!window.MeviAndroidSharedNav?.isOpen?.()&&window.MeviAndroidSharedNav?.isOptedIn?.();
- if(!watch){
-  if(nativePreviewTimer!==null)clearInterval(nativePreviewTimer);
-  nativePreviewTimer=null;
-  return;
- }
- if(nativePreviewTimer===null){
-  nativePreviewTimer=setInterval(readNativePreview,1200);
-  void readNativePreview();
- }
-}
-async function readNativePreview(){
- if(nativePreviewRequest||window.MeviAndroidSharedNav?.isOpen?.())return;
- nativePreviewRequest=true;
- try{
-  const {route}=await nativeRequest('navigation.route.read');
-  const next=route?.preview?{...route,...route.preview,native:true}:null;
-  if(JSON.stringify(next)!==JSON.stringify(nativePreview)){
-   nativePreview=next;
-   if(!window.MeviAndroidSharedNav?.isOpen?.())window.meviGoogleRerender?.();
-  }
- }catch{}finally{nativePreviewRequest=false}
-}
-function browserRoutePreview(){
- if(!routeData)return null;
- const seconds=Math.round((routeData.durationMillis||0)/1000);
- const eta=new Date(Date.now()+seconds*1000);
- const time=eta.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
- return {...routeContext(),seconds,meters:routeData.distanceMeters||0,options:routeOptions,
-  arrival:'Ankunft '+(eta.toDateString()===new Date().toDateString()?'':'morgen ')+time,
-  alternatives:routeChoices.length>1};
-}
-async function previewAction(action,method,fields){
- if(previewBusy)return;
- previewBusy=true;
- try{
-  if(nativeMode()){
-   await nativeRequest(action,fields);
-   await readNativePreview();
-  }else await method();
- }catch(e){if(nativeMode())window.alert?.(String(e.message||e));else status(String(e.message||e),'route')}
- finally{previewBusy=false}
-}
-function previewStart(){return previewAction('navigation.route.start',()=>window.beginNavigation?.())}
-function previewEnd(){return previewAction('navigation.stop',()=>window.stopRoute?.())}
-function previewRemoveStop(index){return previewAction('navigation.route.removeStop',()=>removeRouteStop(index),{index})}
-function previewToggleOption(key){
- if(!previewOptionKeys.includes(key))return;
- const value=!(nativeMode()?nativePreview?.options:routeOptions)?.[key];
- return previewAction('navigation.route.option',async()=>{
-  if(!routeData||!routeOrigin)return;
-  const modifiers={...routeOptions,[key]:value};
-  await computeRouteFrom(routeOrigin,{modifiers});
-  routeOptions=modifiers;
-  try{localStorage.setItem(PREVIEW_OPTIONS,JSON.stringify(routeOptions))}catch{}
-  window.meviGoogleRerender?.();
- },{key,value});
-}
 function routeContext(){return {
  hasRoute:!!routeData,active:guidanceActive,stops:routeStops.map(s=>({...s})),
  maxStops:MAX_STOPS,destination:selected?{...selected}:null
@@ -7421,38 +6821,27 @@ function paintGuidance(){
  const next=document.getElementById('mg-next-turn');
  const distance=document.getElementById('mg-next-distance');
  const arrow=document.getElementById('mg-next-arrow');
+ const remaining=document.getElementById('mg-remaining');
+ const speed=document.getElementById('mg-live-gps');
  const voice=document.getElementById('mg-voice-toggle');
+ const state=document.getElementById('mg-guidance-state');
  if(next)next.textContent=step?.instructions||'Der Route folgen';
  if(arrow)arrow.textContent=guidanceSymbol(step);
  if(distance)distance.textContent=metersLabel(step?.end&&current?distanceBetween(current,step.end):step?.distanceMeters);
- const trip=guidanceTrip();
- const dash=document.getElementById('mg-guidance-menu-dashboard');
- if(dash&&!dash.hidden)window.MeviNavDashboard?.paint?.(dash,guidanceDashboardData());
- const eta=document.getElementById('mg-trip-arrival');
- const summary=document.getElementById('mg-trip-summary');
- const nextStop=document.getElementById('mg-trip-next-stop');
- const muted=document.getElementById('mg-trip-muted');
- if(eta)eta.textContent=trip.arrival;
- if(summary)summary.textContent=trip.summary;
- if(nextStop){nextStop.textContent=trip.nextStop;nextStop.hidden=!trip.nextStop}
- if(muted)muted.hidden=!trip.muted;
- if(voice){voice.textContent=voiceMuted?'Ton: aus':'Ton: an';voice.setAttribute('aria-pressed',String(!voiceMuted))}
- const details=document.querySelector('#mg-guidance-menu-details:not([hidden]) .mg-guidance-details-content');
- if(details)details.innerHTML=guidanceDetailsHTML();
+ if(remaining)remaining.textContent=liveSummary||routeSummary;
+ if(speed)speed.textContent=simulation?'DEMO – simulierte Fahrt':currentSpeed===null?'GPS aktiv · Tempo –':Math.round(currentSpeed)+' km/h · GPS ±'+Math.round(lastGpsAccuracy||0)+' m';
+ if(voice){voice.textContent=voiceMuted?'Ton einschalten':'Ton ausschalten';voice.setAttribute('aria-pressed',String(!voiceMuted))}
+ if(state)state.textContent=simulation?'SIMULATION':guidanceActive?'NAVIGATION AKTIV':'ROUTENVORSCHAU';
 }
 function showOverview(){
  if(!map||!routeData?.path?.length)return;
  followCamera=false;
- const locate=document.querySelector('.mg-web-driving .mg-my-location');
- if(locate)locate.hidden=false;
  const bounds=new google.maps.LatLngBounds();
  for(const p of routeData.path){const point=geoPoint(p);if(point)bounds.extend(point)}
  map.fitBounds(bounds,60);
 }
 function followMyLocation(){
  followCamera=true;
- const locate=document.querySelector('.mg-web-driving .mg-my-location');
- if(locate)locate.hidden=true;
  if(current){followPosition(current);markCurrent(current)}
 }
 async function recenter(){if(!current)await myLocation();followMyLocation()}
@@ -7521,7 +6910,6 @@ function updatePosition(p){
  if(!Number.isFinite(point.lat)||!Number.isFinite(point.lng))return;
  current=point;lastGpsAccuracy=p.coords.accuracy||null;
  currentSpeed=Number.isFinite(p.coords.speed)&&p.coords.speed>=0?p.coords.speed*3.6:null;
- recordGuidanceSpeed(p);
  window.MeviRoadAssist?.onPosition?.(point,{accuracy:p.coords.accuracy,timestamp:p.timestamp||Date.now()});
  markCurrent(point,p.coords.heading);followPosition(point,p.coords.heading);
  if(lastGpsAccuracy===null||lastGpsAccuracy<75)maybeAdvanceStep(point,lastGpsAccuracy);
@@ -7529,8 +6917,6 @@ function updatePosition(p){
  if(progress){
   const mins=Math.max(0,Math.round((routeData.durationMillis||0)/60000*(progress.remaining/Math.max(1,routeData.distanceMeters||1))));
   liveSummary=metersLabel(progress.remaining)+' · '+mins+' Min. verbleibend';
-  recordGuidanceProgress(progress.remaining);
-  liveTripMeters=progress.remaining;liveTripMinutes=mins;
  }
  const nearest=progress?.offRouteMeters??nearestDistanceToPath(point,routeData?.path);
  if(lastGpsAccuracy!==null&&lastGpsAccuracy<50&&nearest>110)offRouteCount++;
@@ -7562,7 +6948,6 @@ async function startGuidance(){
    await computeRouteFrom(actual);
   }
   manualOrigin=null;guidanceActive=true;simulation=false;followCamera=true;guidanceGeneration++;
-  resetGuidanceProgress();guidanceStartedAt=Date.now();
   window.MeviRoadAssist?.onGuidanceStart?.(false);
   stepIndex=0;spokenThresholds.clear();offRouteCount=0;
   clearStatus();
@@ -7578,20 +6963,14 @@ async function startGuidance(){
 function startDemo(){
  if(!routeData||!guidanceSteps.length){status('Keine Abbiegeschritte für Demo vorhanden.','route');return false}
  stopGuidance({keepRoute:true});
- guidanceActive=true;simulation=true;stepIndex=0;spokenThresholds.clear();guidanceGeneration++;liveTripMeters=null;liveTripMinutes=null;
- resetGuidanceProgress();guidanceStartedAt=Date.now();current=manualOrigin||geoPoint(routeData.path?.[0])||current;
+ guidanceActive=true;simulation=true;stepIndex=0;spokenThresholds.clear();guidanceGeneration++;current=manualOrigin||geoPoint(routeData.path?.[0])||current;
  window.MeviRoadAssist?.onGuidanceStart?.(true);
  clearStatus();
  if(simulationTimer!==null)clearInterval(simulationTimer);
  simulationTimer=setInterval(()=>{
   if(!simulation)return;
   const step=guidanceSteps[stepIndex];
-  if(step?.end){current=step.end;markCurrent(step.end);followPosition(step.end);const p=remainingAlongRoute(current,routeData?.path);if(p){
-   recordGuidanceProgress(p.remaining);
-   liveTripMeters=p.remaining;
-   liveTripMinutes=Math.max(0,Math.round((routeData.durationMillis||0)/60000*(p.remaining/Math.max(1,routeData.distanceMeters||1))));
-   liveSummary='DEMO · '+metersLabel(p.remaining)+' verbleibend';
-  }}
+  if(step?.end){current=step.end;markCurrent(step.end);followPosition(step.end);const p=remainingAlongRoute(current,routeData?.path);if(p)liveSummary='DEMO · '+metersLabel(p.remaining)+' verbleibend'}
   if(stepIndex<guidanceSteps.length-1)stepIndex++;
   else{stopGuidance({keepRoute:true});window.meviGoogleNavigationFinished?.();return}
   paintGuidance();
@@ -7603,23 +6982,21 @@ function stopGuidance(options={}){
  if(geoWatch!==null){navigator.geolocation?.clearWatch(geoWatch);geoWatch=null}
  if(simulationTimer!==null){clearInterval(simulationTimer);simulationTimer=null}
  try{window.speechSynthesis?.cancel()}catch{}
- guidanceActive=false;simulation=false;currentSpeed=null;offRouteCount=0;liveTripMeters=null;liveTripMinutes=null;
- resetGuidanceProgress();
+ guidanceActive=false;simulation=false;currentSpeed=null;offRouteCount=0;
  window.MeviRoadAssist?.onGuidanceStop?.();
  if(positionMarker){positionMarker.setMap(null);positionMarker=null}
- if(!options.keepRoute){routeRequestSerial++;routeChoices=[];routeData=null;routeStops=[];routeOrigin=null;routeSummary='';liveSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null;window.MeviRoadAssist?.onRoute?.([])}
+ if(!options.keepRoute){routeData=null;routeStops=[];routeOrigin=null;routeSummary='';liveSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null;window.MeviRoadAssist?.onRoute?.([])}
 }
 function routeInfo(){return routeSummary}
 function hasPlannedRoute(){return !!routeData}
 function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
-function locationButton(){return '<button type="button" class="mg-my-location"'+(guidanceActive?' hidden':'')+' onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
+function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
-
 </script><script id="mevicar-android-addressbook-script">/* Native address-book adapter, Stage 1: one Android DestinationStore, zero copied data.
    This does not replace Fable's native Places UI until its separate provider is ready.
    Web/PWA never loads this capability; no localStorage or API keys are touched. */
@@ -7710,7 +7087,6 @@ root.MeviNativeBook=Object.freeze({
  isReady:()=>!!packet
 });
 })(window);
-
 </script><script id="mevicar-android-places-script">/* Google Places (New) Android SDK adapter for the shared MeviCar Web UI.
    Unlike the browser provider this uses no JS Google key or network fetch.
    The native bridge owns the SDK, origin validation and cancellation. */
@@ -7815,7 +7191,6 @@ root.MeviAndroidPlaces=Object.freeze({
  connect,search,searchNearby,resolve,cancel,snapshot,isReady:()=>connected
 });
 })(window);
-
 </script><script id="mevicar-shared-navigation-script">/* Shared navigation UI contract. Platform-specific Google SDKs stay behind providers.
    Pure browser JavaScript: usable by Web/PWA and, when explicitly integrated, Android WebView. */
 (function(root){
@@ -7977,7 +7352,6 @@ root.MeviNavigationShared=Object.freeze({
  destination,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
 });
 })(window);
-
 </script><script id="mevicar-native-ui-provider-script">/* Opt-in shared navigation UI provider for the Android Hybrid WebView.
    The native Kotlin DestinationStore owns the book; Android Places owns search;
    the native navigation owns the route (navigation.route.* only reads it and
@@ -8235,7 +7609,6 @@ root.MeviAndroidSharedNav=Object.freeze({
  isReady:()=>ready,showError:warn
 });
 })(window);
-
 </script><script id="mevicar-navigation-parity-script">/* One destination search / address-book UI for Web and future Android WebView.
    Native opt-in requires an explicitly injected provider; existing hybrid APK is unchanged. */
 (function(){
@@ -8247,7 +7620,6 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
-let selectedReturnView='search';
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths={
@@ -8371,19 +7743,18 @@ function isPlaceSaved(){
  return !!key&&data().favorites.some(item=>placeKey(item)===key);
 }
 function placeHTML(){
- const selectedMode=s.nav==='preview';
- const p=selectedMode?(nav?.selectedDestination?.()||{}):(placeState||{}),name=p.name||'Ort',point=Number.isFinite(p.lat)&&Number.isFinite(p.lng);
+ const p=placeState||{},name=p.name||'Ort',point=Number.isFinite(p.lat)&&Number.isFinite(p.lng);
  const label=placeKind(p.types),rating=Number.isFinite(p.rating)&&p.rating>=1&&p.rating<=5?
   p.rating.toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+
   (Number.isInteger(p.ratingCount)&&p.ratingCount>0?' ('+p.ratingCount.toLocaleString('de-DE')+')':''):'';
  const phone=typeof p.phone==='string'&&/^[+0-9 ()/-]{3,32}$/.test(p.phone)?p.phone:'';
- const saved=selectedMode?!!nav?.isFavorite?.():isPlaceSaved(),route=provider.routeContext();
+ const saved=isPlaceSaved(),route=provider.routeContext();
  const hours=Array.isArray(p.hours)?p.hours.filter(x=>typeof x==='string').slice(0,7):[];
  const opening=p.openNow===true?'Geöffnet':p.openNow===false?'Geschlossen':'';
- return '<div class="mg-parity-shade'+(selectedMode?' mg-parity-selected':'')+'" role="dialog" aria-modal="true" aria-label="Ortsdetails">'+
+ return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Ortsdetails">'+
  '<div class="mg-parity-layout"><div class="mg-parity-top">'+
  '<button type="button" class="mg-parity-back" onclick="MeviWebNavParity.backFromPlace()" aria-label="Zurück zu den Treffern">'+ico('back')+'</button>'+
- (selectedMode?'':'<strong class="mg-poi-title">Ortsdetails</strong>')+'<span class="mg-poi-google">Google Maps</span></div>'+
+ '<strong class="mg-poi-title">Ortsdetails</strong><span class="mg-poi-google">Google Maps</span></div>'+
  '<div class="mg-poi-detail-body" aria-live="polite"><h2>'+safe(name)+'</h2>'+
  (label?'<p class="mg-poi-muted">'+safe(label)+'</p>':'')+
  (p.address?'<p>'+safe(p.address)+'</p>':'')+
@@ -8392,9 +7763,9 @@ function placeHTML(){
  (rating?'<p>'+ico('star')+' '+safe(rating)+'</p>':'')+
  (phone?'<p>'+ico('pin')+' <a href="tel:'+safe(phone.replace(/[^0-9+]/g,''))+'">'+safe(phone)+'</a></p>':'')+
  (hours.length?'<details class="mg-poi-hours"><summary>Öffnungszeiten</summary>'+hours.map(h=>'<div>'+safe(h)+'</div>').join('')+'</details>':'')+
- (!selectedMode&&placeLoading?'<p class="mg-poi-muted">Google-Ortsdaten werden geladen …</p>':'')+
- (!selectedMode&&stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
- (!selectedMode&&(placeError||p.detailError)?'<p class="mg-poi-warning">'+safe(placeError||p.detailError)+
+ (placeLoading?'<p class="mg-poi-muted">Google-Ortsdaten werden geladen …</p>':'')+
+ (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
+ (placeError||p.detailError?'<p class="mg-poi-warning">'+safe(placeError||p.detailError)+
   ' <button type="button" onclick="MeviWebNavParity.retryPlace()">Erneut versuchen</button></p>':'')+
  '</div><div class="mg-poi-detail-actions">'+
  (route.hasRoute&&point&&route.stops.length<route.maxStops?'<button type="button" class="mg-poi-action-stop" onclick="MeviWebNavParity.addStopPlace()">＋ Als Stopp hinzufügen</button>':'')+
@@ -8525,12 +7896,7 @@ async function choose(kind,index){
    if(place)await finishStop(place);
    return;
   }
-  if(!saveOnly)selectedReturnView=view==='book'?'book':'search';
-  // The Android APK routes stored targets immediately. Match that flow in
-  // the Web browser, without showing the intermediate Place-details dialog.
-  // Search hits, stop selection, saving and native bridge paths are unchanged.
-  const directRoute=!native&&!saveOnly&&['home','work','favorites','recent'].includes(kind);
-  const success=await provider.choose(kind,index,{saveOnly,skipPreview:directRoute});
+  const success=await provider.choose(kind,index,{saveOnly});
   if(success===false)return;
   if(savingSlot)await provider.saveSlot(savingSlot);
   if(savingFavorite)await provider.saveFavorite();
@@ -8538,11 +7904,6 @@ async function choose(kind,index){
    pendingSlot='';pendingFavorite=false;
    view=savingFavorite?'book':'search';s.nav='search';s.query='';
    provider.search('');rerender();
-  }else if(directRoute){
-   s.nav='browse';s.keyboard=false;s.mode='map';rerender();
-   const ready=await provider.startRoute();
-   // Keep the selected destination available if route calculation fails.
-   if(ready===false){s.nav='preview';rerender()}
   }
  }catch(e){nativeFailure(e)}
 }
@@ -8634,18 +7995,8 @@ async function showPlace(index){
 function retryPlace(){
  if(view==='place'&&placeIndex>=0)void showPlace(placeIndex);
 }
-function backFromPlace(){
- if(s.nav==='preview'){
-  placeSerial++;placeLoading=false;placeState=null;view=selectedReturnView;
-  s.nav='search';s.keyboard=false;s.query='';provider.search('');rerender();return;
- }
- placeSerial++;placeLoading=false;placeState=null;view=placeBack;rerender();
-}
+function backFromPlace(){placeSerial++;placeLoading=false;placeState=null;view=placeBack;rerender()}
 function savePlace(){
- if(s.nav==='preview'){
-  if(nav?.isFavorite?.())nav.removeFavorite?.();else nav?.saveFavorite?.();
-  rerender();return;
- }
  if(!placeState)return;
  if(provider.savePlace){
   // Android: the native book accepts single validated operations only.
@@ -8669,7 +8020,6 @@ async function routeResult(index){
  await provider.startRoute();
 }
 async function routePlace(){
- if(s.nav==='preview'){await window.startRoute?.();return}
  if(!placeState||!Number.isFinite(placeState.lat)||!Number.isFinite(placeState.lng))return;
  await routeResult(placeIndex);
 }
@@ -8732,10 +8082,9 @@ function nativeFailure(e){window.MeviAndroidSharedNav?.showError?.(e);window.ale
 function nativeImport(){if(provider.importPicker)void provider.importPicker().catch(nativeFailure)}
 window.openSearch=open;
 window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
-window.MeviWebNavParity={selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
-})();
-</script><script id="mevicar-homeassistant-script">/* MeviCar Next – Home Assistant. Mirrors Classic's FamilyPanel and separate
+})();</script><script id="mevicar-homeassistant-script">/* MeviCar Next – Home Assistant. Mirrors Classic's FamilyPanel and separate
    Road Assist API access without copying secrets or weakening HA security. */
 (function(){
  'use strict';
@@ -10651,9 +10000,12 @@ function summaryHTML(){
    '</div><small>Nur geprüfte Positionen auf der Google-Route · keine Vollständigkeitsgarantie</small></div>';
 }
 function overlayHTML(){
- // Like the native Road Assist banner, only real upcoming matched cameras are
- // shown over the map. Diagnostics remain available in the Road Assist app.
- if(!guiding||demo||!settings.enabled||!connected||!positionOnRoute||!currentMatch)return '';
+ if(!guiding)return '';
+ if(demo)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST · DEMO</strong><span>Keine echten Blitzerwarnungen während der Simulation</span></div>';
+ if(!settings.enabled)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST AUS</strong><button onclick="MeviRoadAssist.setEnabled(true)">Einschalten</button></div>';
+ if(!connected)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST</strong><span>Home Assistant nicht verbunden</span></div>';
+ if(!positionOnRoute)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST · GPS</strong><span>Präzisen Standort auf der Route abwarten</span></div>';
+ if(!currentMatch)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST</strong><span>Keine gemeldete Kontrolle bis 5 km voraus</span></div>';
  const c=currentMatch.camera;
  const urgent=currentMatch.ahead<=FINAL_WARN;
  return '<div class="mevi-ra-overlay '+(urgent?'mevi-ra-urgent':'mevi-ra-ahead')+'" role="status">'+
@@ -11094,12 +10446,11 @@ function clearTrips(){
  if(model().native){nativeCall('roadassist.trips.clear').then(takeTrips).catch(()=>{});paintApp();return}
  trips=[];saveTrips();paintApp();
 }
-window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,routeNote:routeStatus,paint,
+window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,paint,
  refresh,setEnabled,setVoice,setConfigId,storeConfig,openScan,infoHTML,scan,cancelScan,
  routeState,project,buildRoute,cameraMatches,sampleRoute,responseCameras,formatMeters,
  appHTML,paintApp,mount,unmount,toggleTrip,toggleDiag,removeTrip,clearTrips,model};
 })();
-
 </script><script id="mevidarts-parallax">/* Ported without changing renderer logic from eskiya771/mevidarts/client/js/effects-parallax.js for MeviCar Next screensaver. */
 /* global window */
 (() => {

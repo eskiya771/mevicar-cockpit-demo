@@ -224,9 +224,12 @@ function summaryHTML(){
    '</div><small>Nur geprüfte Positionen auf der Google-Route · keine Vollständigkeitsgarantie</small></div>';
 }
 function overlayHTML(){
- // Like the native Road Assist banner, only real upcoming matched cameras are
- // shown over the map. Diagnostics remain available in the Road Assist app.
- if(!guiding||demo||!settings.enabled||!connected||!positionOnRoute||!currentMatch)return '';
+ if(!guiding)return '';
+ if(demo)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST · DEMO</strong><span>Keine echten Blitzerwarnungen während der Simulation</span></div>';
+ if(!settings.enabled)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST AUS</strong><button onclick="MeviRoadAssist.setEnabled(true)">Einschalten</button></div>';
+ if(!connected)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST</strong><span>Home Assistant nicht verbunden</span></div>';
+ if(!positionOnRoute)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST · GPS</strong><span>Präzisen Standort auf der Route abwarten</span></div>';
+ if(!currentMatch)return '<div class="mevi-ra-overlay mevi-ra-diagnostic"><strong>ROAD ASSIST</strong><span>Keine gemeldete Kontrolle bis 5 km voraus</span></div>';
  const c=currentMatch.camera;
  const urgent=currentMatch.ahead<=FINAL_WARN;
  return '<div class="mevi-ra-overlay '+(urgent?'mevi-ra-urgent':'mevi-ra-ahead')+'" role="status">'+
@@ -667,7 +670,7 @@ function clearTrips(){
  if(model().native){nativeCall('roadassist.trips.clear').then(takeTrips).catch(()=>{});paintApp();return}
  trips=[];saveTrips();paintApp();
 }
-window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,routeNote:routeStatus,paint,
+window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,paint,
  refresh,setEnabled,setVoice,setConfigId,storeConfig,openScan,infoHTML,scan,cancelScan,
  routeState,project,buildRoute,cameraMatches,sampleRoute,responseCameras,formatMeters,
  appHTML,paintApp,mount,unmount,toggleTrip,toggleDiag,removeTrip,clearTrips,model};
