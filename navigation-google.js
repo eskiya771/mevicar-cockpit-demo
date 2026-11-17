@@ -567,7 +567,7 @@ async function pick(kind,index,options={}){
   return;
  }
  stopGuidance();selected=d;routeData=null;routeStops=[];routeOrigin=null;clearLines();mark(d);
- window.meviGoogleDestination?.(d.name,d.address);
+ window.meviGoogleDestination?.(d.name,d.address,{skipPreview:options?.skipPreview===true});
  return true;
 }
 

@@ -288,7 +288,11 @@ async function choose(kind,index){
    return;
   }
   if(!saveOnly)selectedReturnView=view==='book'?'book':'search';
-  const success=await provider.choose(kind,index,{saveOnly});
+  // The Android APK routes stored targets immediately. Match that flow in
+  // the Web browser, without showing the intermediate Place-details dialog.
+  // Search hits, stop selection, saving and native bridge paths are unchanged.
+  const directRoute=!native&&!saveOnly&&['home','work','favorites','recent'].includes(kind);
+  const success=await provider.choose(kind,index,{saveOnly,skipPreview:directRoute});
   if(success===false)return;
   if(savingSlot)await provider.saveSlot(savingSlot);
   if(savingFavorite)await provider.saveFavorite();
@@ -296,6 +300,11 @@ async function choose(kind,index){
    pendingSlot='';pendingFavorite=false;
    view=savingFavorite?'book':'search';s.nav='search';s.query='';
    provider.search('');rerender();
+  }else if(directRoute){
+   s.nav='browse';s.keyboard=false;s.mode='map';rerender();
+   const ready=await provider.startRoute();
+   // Keep the selected destination available if route calculation fails.
+   if(ready===false){s.nav='preview';rerender()}
   }
  }catch(e){nativeFailure(e)}
 }
