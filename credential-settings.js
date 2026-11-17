@@ -29,9 +29,20 @@ function row(id,title,placeholder,status,description,options={}){
  return '<div class="mevi-cred-row"><label for="mevi-cred-'+id+'">'+escapeHTML(title)+'</label>'+
   '<div class="mevi-cred-form"><input id="mevi-cred-'+id+'" type="'+type+'"'+inputmode+
   ' autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="'+escapeHTML(placeholder)+'">'+
+  (options.secret?'<button type="button" class="mevi-cred-reveal" aria-controls="mevi-cred-'+id+'" aria-pressed="false" onclick="MeviCredentials.toggleVisibility(\''+id+'\',this)">Anzeigen</button>':'')+
   '<button type="button" onclick="MeviCredentials.save(\''+id+'\')">Speichern</button>'+
   '<button type="button" class="mevi-cred-remove" onclick="MeviCredentials.clear(\''+id+'\')">Entfernen</button></div>'+
   '<small class="mevi-cred-status">'+escapeHTML(status)+'</small><p>'+escapeHTML(description)+'</p></div>';
+}
+/** Inspect a freshly entered secret locally without exposing it in generated HTML. */
+function toggleVisibility(id,button){
+ const field=input(id);
+ if(!field||!button||!['password','text'].includes(field.type))return false;
+ const revealed=field.type==='password';
+ field.type=revealed?'text':'password';
+ button.textContent=revealed?'Verbergen':'Anzeigen';
+ button.setAttribute('aria-pressed',String(revealed));
+ return revealed;
 }
 function nativeAvailable(){return !!(global.MeviNativeBridge?.postMessage || global.Capacitor?.Plugins?.MeviSecureSettings)}
 // This opt-in is Web-only: do not copy an Android Keystore secret into localStorage.
@@ -144,7 +155,9 @@ function html(){
  group('tv','MeviTV',tvPin?'PIN hinterlegt':'Nicht eingerichtet',row('tv','Vierstelliger PIN','Vierstelligen Zugangscode eingeben',tvPin?(nativePinAvailable?'Verschlüsselt in der APK gespeichert':'Auf diesem Gerät gespeichert'):'Nicht hinterlegt',android?'Aktuelle APK: verschlüsselt im Gerätespeicher. Ältere APKs: gegebenenfalls im WebView-Speicher.':'Lokal und unverschlüsselt in diesem Browser gespeichert.',{secret:true,pin:true}))
  ];
  if(android)groups.push(group('android','Android-Updates',nativeStatus?.githubToken?'Gespeichert':'Status prüfen',row('github-token','GitHub-Token','GitHub Fine-grained PAT eingeben',nativeStatus?.githubToken?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen','Nur eskiya771/mevicar-next · Contents: Read-only. Speicherung im Android Keystore.',{secret:true})+'<button type="button" onclick="MeviCredentials.refreshNativeStatus()">Gerätespeicher prüfen</button>'));
- return '<div class="mevi-credentials">'+groups.join('')+'<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div>'+ '</div>';
+ // Keep save/validation feedback above the service list so it stays visible
+ // while editing an expanded service near the bottom of the scroll region.
+ return '<div class="mevi-credentials"><div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div>'+groups.join('')+'</div>';
 }
 async function save(id){
  const v=value(id);
@@ -408,7 +421,7 @@ async function importBackup(){
  }catch(_){report(_?.message||'Backup konnte nicht importiert werden.')}
 }
 
-global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
+global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibility,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
 
