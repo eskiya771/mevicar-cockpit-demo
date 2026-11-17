@@ -341,10 +341,10 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 }
 .mg-navigation.mg-web-driving .mg-guidance-trip{
  position:absolute;z-index:8;left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
- right:max(8px,env(safe-area-inset-right,0px));
+ right:auto;width:max-content;max-width:calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px)));
  bottom:max(7px,env(safe-area-inset-bottom,0px));
  height:56px;display:flex;gap:6px;box-sizing:border-box;
- padding:4px 5px 4px 10px;align-items:center;
+ padding:4px 10px;align-items:center;
  border:1px solid var(--guidance-border);border-radius:14px;
  background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
  pointer-events:auto;
@@ -365,10 +365,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 }
 .mg-guidance-trip-main #mg-trip-next-stop{color:var(--guidance-accent);flex:1;min-width:0}
 .mg-guidance-trip-main #mg-trip-muted{color:var(--guidance-muted)}
-.mg-navigation .mg-guidance-menu-button{
- background:#274c5e;border:1px solid var(--guidance-border)!important;
- font-weight:750;padding:5px 17px;flex:0 0 auto;
-}
 .mg-navigation .mg-guidance-menu{
  position:absolute;z-index:9;top:max(7px,env(safe-area-inset-top,0px));
  bottom:calc(70px + env(safe-area-inset-bottom,0px));
@@ -413,7 +409,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-guidance-trip-main strong{font-size:12px}
  .mg-guidance-trip-main span{font-size:11px}
  .mg-navigation .mg-guidance-menu{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
- .mg-navigation .mg-guidance-menu-button{padding-inline:12px}
 }
 @media(orientation:portrait){
  .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
@@ -450,3 +445,4 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-guidance-detail-row{padding:7px 4px;gap:7px;font-size:12px}
  .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{width:min(330px,calc(100% - 150px))}
 }
+

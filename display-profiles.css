@@ -920,3 +920,38 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
  .cockpit.mg-driving-status .status #meviPlatformHeader,
  .cockpit.mg-driving-status .status #buildVersion{font-size:10px}
 }
+
+
+/* Browse uses the same title/update elements as guidance. Opaque surfaces are
+   required over the bright map in every theme, including the idle update state. */
+.cockpit.mg-web-header .workspace > .status{
+ height:44px;min-height:44px;gap:6px;
+}
+.cockpit.mg-web-header .status #meviPlatformHeader,
+.cockpit.mg-web-header .status .status-right{
+ background:var(--nav-header-fill)!important;color:var(--nav-header-ink)!important;
+ border:1px solid var(--nav-header-stroke);border-radius:12px;
+ box-shadow:0 4px 12px #07152180;opacity:1;
+ min-height:44px;box-sizing:border-box;padding:0 10px;
+}
+.cockpit.mg-web-header .status #meviPlatformHeader{
+ line-height:42px;font-weight:750;
+}
+.cockpit.mg-web-header .status .status-right{display:flex;align-items:center;gap:7px}
+.cockpit.mg-web-header .status #buildVersion,
+.cockpit.mg-web-header .status #updateMessage{color:var(--nav-header-ink);opacity:1}
+.cockpit.mg-web-header .status #updateBtn{
+ color:var(--nav-header-ink)!important;opacity:1!important;
+ width:44px;min-width:44px;height:44px;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .cockpit.mg-web-header .status .status-chip,
+ .cockpit.mg-web-header .status .status-time{display:none}
+ .cockpit.mg-web-header .status #meviPlatformHeader{font-size:10px;padding-inline:8px}
+ .cockpit.mg-web-header .status #buildVersion,
+ .cockpit.mg-web-header .status #updateMessage{font-size:10px}
+}
+.cockpit.mg-web-header .status #updateBtn .toolbar-icon{
+ width:22px;height:22px;color:var(--nav-header-ink);--app-icon-second:var(--nav-header-ink);
+}
+.cockpit.mg-web-header .status #updateBtn .app-illustration{opacity:1}

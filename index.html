@@ -1028,10 +1028,10 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 }
 .mg-navigation.mg-web-driving .mg-guidance-trip{
  position:absolute;z-index:8;left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
- right:max(8px,env(safe-area-inset-right,0px));
+ right:auto;width:max-content;max-width:calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px)));
  bottom:max(7px,env(safe-area-inset-bottom,0px));
  height:56px;display:flex;gap:6px;box-sizing:border-box;
- padding:4px 5px 4px 10px;align-items:center;
+ padding:4px 10px;align-items:center;
  border:1px solid var(--guidance-border);border-radius:14px;
  background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
  pointer-events:auto;
@@ -1052,10 +1052,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 }
 .mg-guidance-trip-main #mg-trip-next-stop{color:var(--guidance-accent);flex:1;min-width:0}
 .mg-guidance-trip-main #mg-trip-muted{color:var(--guidance-muted)}
-.mg-navigation .mg-guidance-menu-button{
- background:#274c5e;border:1px solid var(--guidance-border)!important;
- font-weight:750;padding:5px 17px;flex:0 0 auto;
-}
 .mg-navigation .mg-guidance-menu{
  position:absolute;z-index:9;top:max(7px,env(safe-area-inset-top,0px));
  bottom:calc(70px + env(safe-area-inset-bottom,0px));
@@ -1100,7 +1096,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-guidance-trip-main strong{font-size:12px}
  .mg-guidance-trip-main span{font-size:11px}
  .mg-navigation .mg-guidance-menu{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
- .mg-navigation .mg-guidance-menu-button{padding-inline:12px}
 }
 @media(orientation:portrait){
  .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
@@ -1137,6 +1132,7 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-guidance-detail-row{padding:7px 4px;gap:7px;font-size:12px}
  .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{width:min(330px,calc(100% - 150px))}
 }
+
 </style><style id="mevicar-navigation-parity-styles">/* Shared destination search and address book. */
 .mg-navigation .mg-parity-shade{
  position:fixed;inset:0;z-index:2147480000;font-family:Roboto,"Segoe UI",system-ui,sans-serif;
@@ -1370,6 +1366,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
   left:0;top:0;bottom:0;width:100%;max-width:100%;border-radius:0;
  }
 }
+
 </style><style id="mevicar-homeassistant-styles">/* Home Assistant Next – independent, no-scroll cockpit app.
    The dashboard uses HA's native frontend authentication; the REST views
    use a session-memory token (never localStorage or GitHub). */
@@ -5695,6 +5692,41 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
  .cockpit.mg-driving-status .status #meviPlatformHeader,
  .cockpit.mg-driving-status .status #buildVersion{font-size:10px}
 }
+
+
+/* Browse uses the same title/update elements as guidance. Opaque surfaces are
+   required over the bright map in every theme, including the idle update state. */
+.cockpit.mg-web-header .workspace > .status{
+ height:44px;min-height:44px;gap:6px;
+}
+.cockpit.mg-web-header .status #meviPlatformHeader,
+.cockpit.mg-web-header .status .status-right{
+ background:var(--nav-header-fill)!important;color:var(--nav-header-ink)!important;
+ border:1px solid var(--nav-header-stroke);border-radius:12px;
+ box-shadow:0 4px 12px #07152180;opacity:1;
+ min-height:44px;box-sizing:border-box;padding:0 10px;
+}
+.cockpit.mg-web-header .status #meviPlatformHeader{
+ line-height:42px;font-weight:750;
+}
+.cockpit.mg-web-header .status .status-right{display:flex;align-items:center;gap:7px}
+.cockpit.mg-web-header .status #buildVersion,
+.cockpit.mg-web-header .status #updateMessage{color:var(--nav-header-ink);opacity:1}
+.cockpit.mg-web-header .status #updateBtn{
+ color:var(--nav-header-ink)!important;opacity:1!important;
+ width:44px;min-width:44px;height:44px;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .cockpit.mg-web-header .status .status-chip,
+ .cockpit.mg-web-header .status .status-time{display:none}
+ .cockpit.mg-web-header .status #meviPlatformHeader{font-size:10px;padding-inline:8px}
+ .cockpit.mg-web-header .status #buildVersion,
+ .cockpit.mg-web-header .status #updateMessage{font-size:10px}
+}
+.cockpit.mg-web-header .status #updateBtn .toolbar-icon{
+ width:22px;height:22px;color:var(--nav-header-ink);--app-icon-second:var(--nav-header-ink);
+}
+.cockpit.mg-web-header .status #updateBtn .app-illustration{opacity:1}
 </style><style id="mevicar-versioned-credentials">/* Shared Settings typography and touch targets for ALL tabs (Design, Screensaver,
    Credentials and APK Updates). Credentials alone retain independent scrolling. */
 /* The SETTINGS heading and sidebar labels belong to the same control surface. */
@@ -5933,11 +5965,10 @@ function readyRouteOverlay(ctx){
    the native NavigationView and NavTripBar are authoritative; this HTML only
    renders Google Maps JavaScript guidance, with matching actions and flow. */
 function toggleGuidanceMenu(force){
- const sheet=$('mg-guidance-menu'),trigger=$('mg-guidance-menu-button');
+ const sheet=$('mg-guidance-menu');
  if(!sheet)return;
  const opening=typeof force==='boolean'?force:sheet.hidden;
  sheet.hidden=!opening;
- trigger?.setAttribute('aria-expanded',String(opening));
  if(opening){
   const actions=$('mg-guidance-menu-actions'),details=$('mg-guidance-menu-details');
   if(actions)actions.hidden=false;
@@ -5965,7 +5996,6 @@ function activeGuidanceOverlay(compact=false){
     <span id="mg-trip-next-stop" hidden></span>
     <span id="mg-trip-muted" hidden>Ton aus</span>
    </button>
-   <button type="button" class="mg-guidance-menu-button" id="mg-guidance-menu-button" aria-expanded="false" aria-controls="mg-guidance-menu" onclick="toggleGuidanceMenu()">Menü</button>
   </div>
   <aside id="mg-guidance-menu" class="mg-guidance-menu" aria-label="Navigationsmenü" hidden>
    <div id="mg-guidance-menu-actions">
@@ -6043,7 +6073,7 @@ DOCK_COLORS.lightshow='#dc7dff';DOCK_COLORS.tachonext='#23eaff';DOCK_COLORS.sudo
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');const nav=window.MeviGoogleNav;const showNavHeader=s.app==='nav'&&s.mode!=='split'&&s.nav==='browse'&&!!nav?.hasKey?.();$('cockpit').classList.toggle('nav-status-only',showNavHeader);$('cockpit').classList.toggle('mg-web-header',showNavHeader&&!nav?.isNativeMode?.());$('cockpit').classList.toggle('mg-driving-status',s.app==='nav'&&s.nav==='driving'&&!nav?.isNativeMode?.());let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='apps'?'app-home-side':''} ${s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();$('screen').innerHTML=html;if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version":"0.6.6","build":1195,"commit":"bc562a24781269e72e440b60909b3e5eb269aa59"};
+const CURRENT_BUILD={"version": "0.6.6", "build": 1196, "commit": "b51497d7b54af0a2b09a1382780bad3290a7a58c"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -6350,6 +6380,7 @@ async function refreshNativeStatus(){
 global.MeviCredentials={html,save,clear,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
+
 </script><script src="./native-updates.js"></script><script id="mevicar-navigation-script">/* MeviCar Next navigation adapter – Classic destination rules, Google Maps web APIs.
    A browser-restricted Google Maps JavaScript key is required. Never copy Android keys. */
 (function(){
@@ -7534,6 +7565,7 @@ window.MeviGoogleNav={guidanceTrip,guidanceDetailsHTML,browserRoutePreview,nativ
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
+
 </script><script id="mevicar-android-addressbook-script">/* Native address-book adapter, Stage 1: one Android DestinationStore, zero copied data.
    This does not replace Fable's native Places UI until its separate provider is ready.
    Web/PWA never loads this capability; no localStorage or API keys are touched. */
@@ -7624,6 +7656,7 @@ root.MeviNativeBook=Object.freeze({
  isReady:()=>!!packet
 });
 })(window);
+
 </script><script id="mevicar-android-places-script">/* Google Places (New) Android SDK adapter for the shared MeviCar Web UI.
    Unlike the browser provider this uses no JS Google key or network fetch.
    The native bridge owns the SDK, origin validation and cancellation. */
@@ -7728,6 +7761,7 @@ root.MeviAndroidPlaces=Object.freeze({
  connect,search,searchNearby,resolve,cancel,snapshot,isReady:()=>connected
 });
 })(window);
+
 </script><script id="mevicar-shared-navigation-script">/* Shared navigation UI contract. Platform-specific Google SDKs stay behind providers.
    Pure browser JavaScript: usable by Web/PWA and, when explicitly integrated, Android WebView. */
 (function(root){
@@ -7889,6 +7923,7 @@ root.MeviNavigationShared=Object.freeze({
  destination,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
 });
 })(window);
+
 </script><script id="mevicar-native-ui-provider-script">/* Opt-in shared navigation UI provider for the Android Hybrid WebView.
    The native Kotlin DestinationStore owns the book; Android Places owns search;
    the native navigation owns the route (navigation.route.* only reads it and
@@ -8146,6 +8181,7 @@ root.MeviAndroidSharedNav=Object.freeze({
  isReady:()=>ready,showError:warn
 });
 })(window);
+
 </script><script id="mevicar-navigation-parity-script">/* One destination search / address-book UI for Web and future Android WebView.
    Native opt-in requires an explicitly injected provider; existing hybrid APK is unchanged. */
 (function(){
@@ -8644,7 +8680,8 @@ window.openSearch=open;
 window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
 window.MeviWebNavParity={selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
-})();</script><script id="mevicar-homeassistant-script">/* MeviCar Next – Home Assistant. Mirrors Classic's FamilyPanel and separate
+})();
+</script><script id="mevicar-homeassistant-script">/* MeviCar Next – Home Assistant. Mirrors Classic's FamilyPanel and separate
    Road Assist API access without copying secrets or weakening HA security. */
 (function(){
  'use strict';
@@ -11008,6 +11045,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
  routeState,project,buildRoute,cameraMatches,sampleRoute,responseCameras,formatMeters,
  appHTML,paintApp,mount,unmount,toggleTrip,toggleDiag,removeTrip,clearTrips,model};
 })();
+
 </script><script id="mevidarts-parallax">/* Ported without changing renderer logic from eskiya771/mevidarts/client/js/effects-parallax.js for MeviCar Next screensaver. */
 /* global window */
 (() => {
