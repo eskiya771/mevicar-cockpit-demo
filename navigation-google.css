@@ -446,3 +446,24 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{width:min(330px,calc(100% - 150px))}
 }
 
+
+
+/* During Navi-Dashboard split, keep the bottom trip field (and its only Web
+   navigation-menu trigger) visible on the narrower left-side map. */
+.screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-guidance-trip{
+ left:max(6px,env(safe-area-inset-left,0px));
+ max-width:calc(100% - 12px);
+}
+.screen:has(> .mg-nav-dashboard-side) .mg-web-guidance .mg-guidance-cue{
+ left:max(6px,env(safe-area-inset-left,0px));
+ width:min(395px,calc(100% - 12px));
+}
+.screen:has(> .mg-nav-dashboard-side) .mg-navigation .mg-guidance-menu{
+ left:max(6px,env(safe-area-inset-left,0px));
+ width:min(405px,calc(100% - 12px));max-width:calc(100% - 12px);
+}
+.mg-guidance-trip-main .mg-trip-menu-hint{
+ flex:0 0 auto;
+ font-size:clamp(10px,1.9vh,13px);
+ font-weight:750;color:var(--guidance-accent);opacity:.93;
+}
