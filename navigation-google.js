@@ -678,6 +678,20 @@ function drawRoute(){
  }
 }
 let routeSummary='',liveSummary='';
+let liveTripMeters=null,liveTripMinutes=null;
+/* The compact Web trip strip is fed by the same route and GPS progress as
+   spoken turn guidance, not by a second route calculation. */
+function guidanceTrip(){
+ const distance=Number.isFinite(liveTripMeters)?liveTripMeters:Math.max(0,Number(routeData?.distanceMeters)||0);
+ const minutes=Number.isFinite(liveTripMinutes)?liveTripMinutes:Math.max(0,Math.round((Number(routeData?.durationMillis)||0)/60000));
+ const eta=routeData?new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(Date.now()+minutes*60000)):'–';
+ return {arrival:'Ankunft '+eta,summary:metersLabel(distance)+' · '+minutes+' Min.',
+  nextStop:routeStops[0]?.name||routeStops[0]?.address||'',muted:voiceMuted};
+}
+function guidanceDetailsHTML(){
+ return '<div class="mg-guidance-details-summary">'+text(guidanceTrip().summary)+'</div>'+
+  '<div class="mg-guidance-details-steps">'+stepsHTML(Math.max(4,guidanceSteps.length))+'</div>';
+}
 function geoPoint(input){
  if(!input)return null;
  const p=typeof input.toJSON==='function'?input.toJSON():input;
@@ -767,7 +781,7 @@ async function computeRouteFrom(from,options={}){
 function useRoute(route,options){
  routeData=route;
  window.MeviRoadAssist?.onRoute?.(routeData,options);
- guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';
+ guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';liveTripMeters=null;liveTripMinutes=null;
  const km=(routeData.distanceMeters||0)/1000;
  const minutes=Math.round((routeData.durationMillis||0)/60000);
  routeSummary=new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(km)+' km · '+minutes+' Min.';
@@ -926,17 +940,20 @@ function paintGuidance(){
  const next=document.getElementById('mg-next-turn');
  const distance=document.getElementById('mg-next-distance');
  const arrow=document.getElementById('mg-next-arrow');
- const remaining=document.getElementById('mg-remaining');
- const speed=document.getElementById('mg-live-gps');
  const voice=document.getElementById('mg-voice-toggle');
- const state=document.getElementById('mg-guidance-state');
  if(next)next.textContent=step?.instructions||'Der Route folgen';
  if(arrow)arrow.textContent=guidanceSymbol(step);
  if(distance)distance.textContent=metersLabel(step?.end&&current?distanceBetween(current,step.end):step?.distanceMeters);
- if(remaining)remaining.textContent=liveSummary||routeSummary;
- if(speed)speed.textContent=simulation?'DEMO – simulierte Fahrt':currentSpeed===null?'GPS aktiv · Tempo –':Math.round(currentSpeed)+' km/h · GPS ±'+Math.round(lastGpsAccuracy||0)+' m';
- if(voice){voice.textContent=voiceMuted?'Ton einschalten':'Ton ausschalten';voice.setAttribute('aria-pressed',String(!voiceMuted))}
- if(state)state.textContent=simulation?'SIMULATION':guidanceActive?'NAVIGATION AKTIV':'ROUTENVORSCHAU';
+ const trip=guidanceTrip();
+ const eta=document.getElementById('mg-trip-arrival');
+ const summary=document.getElementById('mg-trip-summary');
+ const nextStop=document.getElementById('mg-trip-next-stop');
+ const muted=document.getElementById('mg-trip-muted');
+ if(eta)eta.textContent=trip.arrival;
+ if(summary)summary.textContent=trip.summary;
+ if(nextStop){nextStop.textContent=trip.nextStop;nextStop.hidden=!trip.nextStop}
+ if(muted)muted.hidden=!trip.muted;
+ if(voice){voice.textContent=voiceMuted?'Ton: aus':'Ton: an';voice.setAttribute('aria-pressed',String(!voiceMuted))}
 }
 function showOverview(){
  if(!map||!routeData?.path?.length)return;
@@ -1022,6 +1039,7 @@ function updatePosition(p){
  if(progress){
   const mins=Math.max(0,Math.round((routeData.durationMillis||0)/60000*(progress.remaining/Math.max(1,routeData.distanceMeters||1))));
   liveSummary=metersLabel(progress.remaining)+' · '+mins+' Min. verbleibend';
+  liveTripMeters=progress.remaining;liveTripMinutes=mins;
  }
  const nearest=progress?.offRouteMeters??nearestDistanceToPath(point,routeData?.path);
  if(lastGpsAccuracy!==null&&lastGpsAccuracy<50&&nearest>110)offRouteCount++;
@@ -1068,14 +1086,18 @@ async function startGuidance(){
 function startDemo(){
  if(!routeData||!guidanceSteps.length){status('Keine Abbiegeschritte für Demo vorhanden.','route');return false}
  stopGuidance({keepRoute:true});
- guidanceActive=true;simulation=true;stepIndex=0;spokenThresholds.clear();guidanceGeneration++;current=manualOrigin||geoPoint(routeData.path?.[0])||current;
+ guidanceActive=true;simulation=true;stepIndex=0;spokenThresholds.clear();guidanceGeneration++;liveTripMeters=null;liveTripMinutes=null;current=manualOrigin||geoPoint(routeData.path?.[0])||current;
  window.MeviRoadAssist?.onGuidanceStart?.(true);
  clearStatus();
  if(simulationTimer!==null)clearInterval(simulationTimer);
  simulationTimer=setInterval(()=>{
   if(!simulation)return;
   const step=guidanceSteps[stepIndex];
-  if(step?.end){current=step.end;markCurrent(step.end);followPosition(step.end);const p=remainingAlongRoute(current,routeData?.path);if(p)liveSummary='DEMO · '+metersLabel(p.remaining)+' verbleibend'}
+  if(step?.end){current=step.end;markCurrent(step.end);followPosition(step.end);const p=remainingAlongRoute(current,routeData?.path);if(p){
+   liveTripMeters=p.remaining;
+   liveTripMinutes=Math.max(0,Math.round((routeData.durationMillis||0)/60000*(p.remaining/Math.max(1,routeData.distanceMeters||1))));
+   liveSummary='DEMO · '+metersLabel(p.remaining)+' verbleibend';
+  }}
   if(stepIndex<guidanceSteps.length-1)stepIndex++;
   else{stopGuidance({keepRoute:true});window.meviGoogleNavigationFinished?.();return}
   paintGuidance();
@@ -1087,7 +1109,7 @@ function stopGuidance(options={}){
  if(geoWatch!==null){navigator.geolocation?.clearWatch(geoWatch);geoWatch=null}
  if(simulationTimer!==null){clearInterval(simulationTimer);simulationTimer=null}
  try{window.speechSynthesis?.cancel()}catch{}
- guidanceActive=false;simulation=false;currentSpeed=null;offRouteCount=0;
+ guidanceActive=false;simulation=false;currentSpeed=null;offRouteCount=0;liveTripMeters=null;liveTripMinutes=null;
  window.MeviRoadAssist?.onGuidanceStop?.();
  if(positionMarker){positionMarker.setMap(null);positionMarker=null}
  if(!options.keepRoute){routeRequestSerial++;routeChoices=[];routeData=null;routeStops=[];routeOrigin=null;routeSummary='';liveSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null;window.MeviRoadAssist?.onRoute?.([])}
@@ -1098,7 +1120,7 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={guidanceTrip,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();

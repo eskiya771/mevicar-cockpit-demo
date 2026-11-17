@@ -299,3 +299,124 @@ html[data-theme="liquidglass"] .mg-route-preview-layout {
  .mg-route-preview-options>span{font-size:12px}
  .mg-navigation .mg-route-preview-actions button{min-height:56px}
 }
+
+/* Native-style Web guidance: Google JS provides the maneuver, the same route state
+   feeds the slim NavTripBar-equivalent. The Kotlin APK retains NavigationView. */
+.mg-navigation.mg-web-driving .mg-web-guidance{
+ --guidance-panel:#102332f5;--guidance-border:#4f92a4c9;--guidance-accent:#7cefff;
+ --guidance-text:#eff9ff;--guidance-muted:#c4d8e6;
+ position:absolute;inset:0;z-index:5;pointer-events:none;
+ color:var(--guidance-text);
+}
+html[data-theme="cyberpunk"] .mg-web-guidance{
+ --guidance-panel:#261432f5;--guidance-border:#bd45d5c7;
+ --guidance-accent:#5ee8ff;--guidance-text:#ffeaff;--guidance-muted:#d8b3df;
+}
+html[data-theme="liquidglass"] .mg-web-guidance{
+ --guidance-panel:#142a42ea;--guidance-border:#91cdf7b0;
+ --guidance-accent:#b3efff;--guidance-text:#f5faff;--guidance-muted:#d7e8f6;
+}
+.mg-web-guidance .mg-guidance-cue{
+ position:absolute;z-index:6;top:max(7px,env(safe-area-inset-top,0px));
+ left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ width:min(395px,calc(100% - 145px));box-sizing:border-box;
+ padding:10px 13px;pointer-events:auto;overflow:hidden;
+ border-radius:14px;border:1px solid var(--guidance-border);
+ background:var(--guidance-panel);box-shadow:0 7px 22px #06132180;
+}
+.mg-web-guidance .mg-guidance-turn{
+ display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;
+ align-items:center;min-width:0;
+}
+.mg-web-guidance .mg-guidance-turn #mg-next-arrow{
+ font-size:52px;color:var(--guidance-accent);font-weight:800;
+ text-align:center;line-height:1;
+}
+.mg-web-guidance .mg-guidance-instruction{min-width:0;display:flex;flex-direction:column;gap:2px}
+.mg-web-guidance #mg-next-distance{font-size:clamp(19px,3.3vh,29px);line-height:1.05;color:#fff}
+.mg-web-guidance #mg-next-turn{
+ font-size:clamp(13px,2.15vh,18px);line-height:1.16;
+ display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+ overflow:hidden;overflow-wrap:anywhere;
+}
+.mg-navigation.mg-web-driving .mg-guidance-trip{
+ position:absolute;z-index:8;left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ right:max(8px,env(safe-area-inset-right,0px));
+ bottom:max(7px,env(safe-area-inset-bottom,0px));
+ height:56px;display:flex;gap:6px;box-sizing:border-box;
+ padding:4px 5px 4px 10px;align-items:center;
+ border:1px solid var(--guidance-border);border-radius:14px;
+ background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
+ pointer-events:auto;
+}
+.mg-navigation .mg-guidance-trip button{
+ border:0;border-radius:11px;color:var(--guidance-text);
+ cursor:pointer;font:inherit;min-height:44px;
+}
+.mg-guidance-trip-main{
+ display:flex;align-items:center;gap:clamp(7px,1.5vw,18px);
+ min-width:0;flex:1;text-align:left;background:transparent;
+ padding:5px 8px;overflow:hidden;
+}
+.mg-guidance-trip-main strong{flex:0 0 auto;font-size:clamp(13px,2.6vh,18px);white-space:nowrap}
+.mg-guidance-trip-main span{
+ font-size:clamp(12px,2vh,15px);white-space:nowrap;
+ overflow:hidden;text-overflow:ellipsis;color:var(--guidance-muted);
+}
+.mg-guidance-trip-main #mg-trip-next-stop{color:var(--guidance-accent);flex:1;min-width:0}
+.mg-guidance-trip-main #mg-trip-muted{color:var(--guidance-muted)}
+.mg-navigation .mg-guidance-menu-button{
+ background:#274c5e;border:1px solid var(--guidance-border)!important;
+ font-weight:750;padding:5px 17px;flex:0 0 auto;
+}
+.mg-navigation .mg-guidance-menu{
+ position:absolute;z-index:9;top:max(7px,env(safe-area-inset-top,0px));
+ bottom:calc(70px + env(safe-area-inset-bottom,0px));
+ left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ width:min(405px,43%);max-width:calc(100% - 130px);
+ padding:8px;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
+ background:var(--guidance-panel);border:1px solid var(--guidance-border);
+ border-radius:14px;box-shadow:0 11px 30px #0008;pointer-events:auto;
+}
+.mg-guidance-menu[hidden],.mg-guidance-menu [hidden]{display:none!important}
+.mg-guidance-menu-heading{
+ display:flex;align-items:center;gap:9px;min-height:44px;
+ margin-bottom:5px;font-size:18px;
+}
+.mg-navigation .mg-guidance-menu button{
+ display:block;width:100%;min-height:44px;margin:4px 0;
+ padding:8px 13px;text-align:left;font:inherit;font-weight:650;
+ background:#1b394c;color:var(--guidance-text);
+ border:1px solid #5e91a18c;border-radius:10px;cursor:pointer;
+}
+.mg-navigation .mg-guidance-menu-heading button{width:46px;flex:0 0 46px;text-align:center}
+.mg-navigation .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
+.mg-guidance-details-content{font-size:13px;line-height:1.4}
+.mg-guidance-details-steps{display:flex;flex-direction:column;gap:2px}
+.mg-guidance-details-summary{font-weight:750;margin:4px 0 8px}
+.mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
+ bottom:calc(70px + env(safe-area-inset-bottom,0px));
+ /* Do not clip Road Assist warnings; they have priority over the map. */
+}
+.mg-navigation.mg-web-driving .mg-my-location{
+ bottom:auto;top:calc(8px + env(safe-area-inset-top,0px));
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-web-guidance .mg-guidance-cue{padding:6px 9px;width:min(380px,calc(100% - 145px))}
+ .mg-web-guidance .mg-guidance-turn{grid-template-columns:40px minmax(0,1fr);gap:6px}
+ .mg-web-guidance .mg-guidance-turn #mg-next-arrow{font-size:39px}
+ .mg-web-guidance #mg-next-distance{font-size:19px}
+ .mg-web-guidance #mg-next-turn{font-size:13px;-webkit-line-clamp:2}
+ .mg-navigation.mg-web-driving .mg-guidance-trip{height:50px}
+ .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+ .mg-guidance-trip-main{gap:8px}
+ .mg-guidance-trip-main strong{font-size:12px}
+ .mg-guidance-trip-main span{font-size:11px}
+ .mg-navigation .mg-guidance-menu{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
+ .mg-navigation .mg-guidance-menu-button{padding-inline:12px}
+}
+@media(orientation:portrait){
+ .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
+ .mg-navigation.mg-web-driving .mg-guidance-trip{left:max(8px,env(safe-area-inset-left,0px))}
+ .mg-navigation .mg-guidance-menu{left:8px;width:calc(100% - 16px);max-width:none}
+}
