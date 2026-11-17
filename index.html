@@ -712,6 +712,7 @@ html .cockpit .dock button:not(.active) .ico{
   overflow-wrap:anywhere;
  }
 }
+
 </style><style id="mevicar-navigation-styles">/* MeviCar Next Google Maps: preserve Classic-like full-map navigation overlays. */
 .mg-navigation{isolation:isolate;background:#162737}
 .mg-navigation:before{display:none!important}
@@ -1203,6 +1204,7 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  font-size:clamp(10px,1.9vh,13px);
  font-weight:750;color:var(--guidance-accent);opacity:.93;
 }
+
 </style><link rel="stylesheet" href="./nav-dashboard.css"><style id="mevicar-navigation-parity-styles">/* Shared destination search and address book. */
 .mg-navigation .mg-parity-shade{
  position:fixed;inset:0;z-index:2147480000;font-family:Roboto,"Segoe UI",system-ui,sans-serif;
@@ -1651,6 +1653,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .ha-dashboard-toggle{min-height:27px;font-size:10px;padding:4px 6px}
  .ha-dashboard-readonly{min-height:27px}
 }
+
 </style><style id="mevicar-calendar-styles">/* MeviCar Next Calendar — adaptive native landscape cockpit.
    Scroll only inside calendar content; fixed car dock remains untouched. */
 .full.calendar-host,.side.calendar-host{display:flex!important;flex-direction:column;
@@ -1810,6 +1813,7 @@ html[data-theme="cyberpunk"] .calendar-host{border-color:#e468c58f}
  .mevi-cal-compact-list{padding:6px;gap:5px}
  .mevi-cal-compact-item{padding:6px}
 }
+
 </style><style id="mevicar-whatsapp-styles">/* WhatsApp companion in MeviCar Next: official external chats only.
    Two touch-friendly panes, stack only within the dedicated split-screen app. */
 .full.whatsapp-host,.side.whatsapp-host{padding:0!important;overflow:hidden!important;
@@ -1959,6 +1963,7 @@ html[data-theme="cyberpunk"] .calendar-host{border-color:#e468c58f}
 }
 html[data-theme="liquidglass"] .mevi-wa-shell{background:linear-gradient(145deg,#1c3948,#172d40)}
 html[data-theme="cyberpunk"] .whatsapp-host{border-color:#eb63d68b}
+
 </style><style id="mevicar-youtube-styles">/* MeviCar Next YouTube — compact, car-friendly interface with an official iframe.
    The iframe is created only after stationary GPS confirmation. */
 .full.youtube-host,.side.youtube-host{padding:0!important;min-width:0;min-height:0;overflow:hidden!important;
@@ -2077,6 +2082,7 @@ html[data-theme="cyberpunk"] .youtube-host{border-color:#f15bd383}
  .mevi-youtube-shell .mevi-youtube-chip{min-height:23px}
  .mevi-youtube-shell .mevi-youtube-favorite{padding-left:5px;padding-right:5px}
 }
+
 </style><style id="mevicar-stocks-styles">/* MeviCar Next TradingView finance cockpit. Dock and unrelated apps remain unchanged. */
 .full.stocks-host,.side.stocks-host{display:flex;min-width:0;min-height:0;padding:0!important;overflow:hidden!important}
 .stocks-host>.mevi-stocks{flex:1;min-height:0;min-width:0}
@@ -2256,6 +2262,7 @@ html[data-theme="liquidglass"] .mevi-tv-item.is-selected{background:#295c76}
 .mevi-tv .mevi-tv-manual-quote button{width:30px;height:30px;align-self:center;justify-self:end}
 .mevi-tv-add{max-width:100%;min-width:0}
 .mevi-tv-add[hidden]{display:none!important}
+
 </style><style id="mevicar-roadassist-styles">/* Road Assist from Classic: route-only HA detection and live warning overlay.
    Overlay is placed within the Google map; the permanent cockpit dock stays untouched. */
 .mevi-ra-summary{padding:8px 10px;border:1px solid #6cc5de7a;border-radius:10px;background:rgba(5,31,48,.9);
@@ -2383,6 +2390,7 @@ html[data-theme="liquidglass"] .ra-app .ra-switch.is-on{background:rgba(99,234,2
  .ra-app{padding:8px;gap:7px;font-size:12px}
  .ra-card{padding:8px;gap:6px}
 }
+
 </style><style id="mevicar-weather-styles">/* MeviCar Classic Weather in Next. Isolate its original styles in a same-origin
    iframe; only the host is themed, so the other cockpit apps are unaffected. */
 .full.weather-host,.side.weather-host{
@@ -2406,6 +2414,7 @@ html[data-theme="cyberpunk"] .weather-host{border-color:#ec67d788}
 @media (orientation:landscape) and (min-width:1500px) and (max-height:820px){
  .side.weather-host{flex-basis:41%}
 }
+
 </style><style id="mevicar-screensaver-styles">
 /* MeviCar Next ambient light show; motifs adapted from the user's MeviDarts effects demo.
    Isolated overlay avoids altering underlying cockpit, and is paused outside idle mode. */
@@ -2475,6 +2484,7 @@ html[data-theme="liquidglass"] .saver-settings select{background:#334b6c;color:#
  .saver-settings select{padding:4px;font-size:10px}
 }
 @media(max-width:760px){.saver-settings .saver-row{flex-wrap:wrap}.saver-settings select{max-width:100%}}
+
 </style><style id="mevicar-media-styles">/* MeviMedia Next: library-first car media player.
    Reuses Classic MeviMedia 3.0's organization; original touch-first cockpit styling. */
 .mm-shell{--mm-cyan:#40e7fb;--mm-magenta:#ee4bda;--mm-soft:#a6b9d4;--mm-bg:#06101e;--mm-panel:#0e1a2df2;
@@ -2792,6 +2802,7 @@ html[data-theme="liquidglass"] .mm-shell.is-compact .mm-now-top{
   .mm-shell.is-compact .mm-now-album{display:none}
   .mm-shell.is-compact .mm-icon-button{min-width:32px;width:32px;height:32px}
 }
+
 </style><style id="mevicar-spotify-styles">/* MeviCar Next – Spotify Connect remote control.
    Reuses the MeviMedia car-media language; all playback state comes from the Web API. */
 .sp-shell{
@@ -3400,6 +3411,7 @@ html[data-theme="liquidglass"] .sp-web-action{background:#d9fff42d;border-color:
  .sp-shell .sp-now .sp-meta{align-self:center}
  .sp-shell .sp-now .sp-transport{gap:4px}
 }
+
 </style><style id="mevicar-lightshow-styles">/* MeviCar Next · Lichtshow – live MeviDarts canvas, independent from idle screensaver. */
 .lightshow-host.full,.lightshow-host.side{padding:0!important;overflow:hidden!important;gap:0!important;background:#040817!important;min-height:0;min-width:0;display:flex;flex-direction:column}
 .lightshow-host.side{width:clamp(250px,41%,610px)}
@@ -3473,6 +3485,7 @@ html[data-theme="cyberpunk"] .app-lightshow .app-home-icon{color:#d471ff!importa
  .app-home-grid:has(> .app-home-tile:nth-child(13)) .app-home-icon{height:10vh;width:10vh}
  .app-home-side .app-home-grid:has(> .app-home-tile:nth-child(13)) .app-home-icon{height:7vh;width:7vh}
 }
+
 </style><style id="mevicar-speedometer-styles">/* Premium dual-gauge cockpit. Full layout and split layout are different compositions. */
 .tacho-host{overflow:hidden!important;min-width:0;min-height:0;padding:clamp(4px,.7vh,8px)!important;gap:0!important}
 .full.tacho-host,.side.tacho-host{display:flex;flex-direction:column}
@@ -4206,6 +4219,7 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
    top:77%!important;
  }
 }
+
 </style><style id="mevicar-tacho-next-styles">/* Native Tacho Next module, scoped to MeviCar Next app host. */
 .tacho-next-host{padding:0!important;overflow:hidden!important;display:flex!important;min-height:0!important}
 .tn-root{--tn-accent:#00e8ef;--tn-text:#f0f4f8;--tn-muted:#9aa8bc;display:flex;flex-direction:column;flex:1;min-height:0;width:100%;height:100%;background:#090f19;color:var(--tn-text);font-family:inherit;padding:clamp(4px,.6vw,10px);box-sizing:border-box}
@@ -4380,6 +4394,7 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
  .tn-gps-status{font-size:9px;padding:2px 5px}
  .tn-sensor-button{font-size:9px;padding:2px 5px}
 }
+
 </style><style id="mevicar-sudoku-styles">/* Sudoku uses the existing full/split cockpit surfaces; only the game area changes.
    Fit a square board to actual content height and remaining width, without scroll. */
 .full:has(.sdk-host){
@@ -4490,6 +4505,7 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
  .sdk-numbers button,.sdk-actions button{min-height:clamp(26px,7vh,33px)}
  .sdk-actions button{font-size:clamp(9px,1.3vw,12px)}
 }
+
 </style><style>.tt-root{--tt-accent:#64e4ff;display:flex;flex:1;min-height:0;min-width:0;width:100%;height:100%;gap:clamp(10px,3vw,48px);align-items:center;justify-content:center;color:#edf7ff;overflow:hidden}
 .tt-stage{position:relative;height:100%;aspect-ratio:1/2;max-width:45%;flex:none;min-height:0}
 .tt-board{display:block;width:100%;height:100%;border:1px solid #64e4ff66;border-radius:10px;box-shadow:0 0 24px #2abce519;object-fit:contain;background:#081321}
@@ -4511,6 +4527,7 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
 .cockpit .full:has(>.tt-root)>.row,.cockpit .side:has(>.tt-root)>h3{display:none}
 .app-home-grid{grid-template-rows:repeat(5,minmax(0,1fr))}
 .app-home-grid .app-home-icon{height:min(100%,12vh);width:min(100%,12vh)}
+
 </style><style id="mevicar-bottle-game-style">/* MeviCar Next · Wer ist schuld? – responsive landscape bottle spinner */
 .wis-root{
  --wis-neon:#63e7ed;
@@ -4602,6 +4619,7 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
  .wis-party{font-size:10px;padding:4px 6px;min-height:21px}
 }
 @media(prefers-reduced-motion:reduce){.wis-party{transition:none}.wis-bottle{will-change:auto}}
+
 </style><style>.tv-root{display:flex;gap:12px;flex:1;width:100%;height:100%;min-width:0;min-height:0;color:#eaf8ff;container-type:inline-size}
 .tv-root button,.tv-root select,.tv-root input,.tv-web{min-height:44px;border:1px solid #75d8ff44;border-radius:10px;background:#183649;color:inherit;padding:7px 10px;font-size:14px;min-width:0}
 .tv-root button{touch-action:manipulation}.tv-root button:focus-visible,.tv-root input:focus-visible{outline:2px solid #67e9ff}
@@ -4950,6 +4968,7 @@ html.mevi-tv-theater .tv-stage movi-player{
 .tv-native-direct [data-act="xtream-settings"],
 .tv-native-direct [data-act="proxy-status"] {display:none!important}
 .tv-engine {display:block;width:100%;min-height:44px;font:inherit;margin-top:8px}
+
 </style><style id="mevicar-display-profiles">/* MeviCar Next – five supported landscape CSS-viewport profiles:
    iPhone 17 874×402; S20 FE 915×412; DeX 1920×1200;
    FullHD 1920×1080; panoramic 1920×720.
@@ -5907,191 +5926,146 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
  width:22px;height:22px;color:var(--nav-header-ink);--app-icon-second:var(--nav-header-ink);
 }
 .cockpit.mg-web-header .status #updateBtn .app-illustration{opacity:1}
-</style><style id="mevicar-versioned-credentials">/* Shared Settings typography and touch targets for ALL tabs (Design, Screensaver,
-   Credentials and APK Updates). Credentials alone retain independent scrolling. */
-/* The SETTINGS heading and sidebar labels belong to the same control surface. */
-.full:has(> .settings-ui) > .row h3{
-  font-size:clamp(17px,1.9vw,22px);
-  line-height:1.2;
-}
-.cockpit:has(.settings-ui) .dock.left .dock-label{
-  font-size:clamp(11px,1.3vw,14px);
-}
-.settings-ui{
-  font-size:clamp(16px,1.7vw,20px);
-  gap:clamp(6px,1vh,12px);
-}
-.settings-ui .settings-heading h2{
-  font-size:clamp(21px,2.4vw,29px);
-  line-height:1.2;
-}
-.settings-ui .settings-heading p{
-  font-size:clamp(15px,1.65vw,18px);
-  line-height:1.3;
-}
-.settings-ui .settings-version{
-  font-size:clamp(12px,1.35vw,15px);
-  white-space:normal;
-  max-width:44%;
-  text-align:right;
-  line-height:1.25;
-}
-/* Consistent, full-width tabs: active screen remains visible on narrow landscape. */
-.settings-ui .settings-tabs{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:clamp(5px,0.8vw,10px);
-  flex:0 0 auto;
-  min-width:0;
-}
-.settings-ui .settings-tabs button{
-  width:100%;
-  min-width:0;
-  min-height:48px;
-  padding:8px 5px;
-  line-height:1.15;
-  border-radius:15px;
-  font-size:clamp(16px,1.65vw,20px);
-  white-space:normal;
-  text-align:center;
-}
-.settings-ui .settings-tabs button[aria-selected="true"]{
-  background:#236f8b;
-  border-color:#77ddec;
-  box-shadow:inset 0 0 0 1px #77ddec44;
-}
-/* Keep the theme choices and Release Notes readable in the same Touch UI. */
-.settings-ui .theme-name{
-  font-size:clamp(16px,1.65vw,20px);
-}
-.settings-ui .theme-check{
-  font-size:clamp(13px,1.5vw,17px);
-}
-.settings-ui .settings-bottom button{
-  min-height:46px;
-  font-size:clamp(16px,1.65vw,20px);
-  padding:8px 13px;
-  line-height:1.15;
-}
-.settings-ui .settings-bottom .small{
-  font-size:clamp(14px,1.5vw,18px);
-  line-height:1.2;
-}
-.mevi-credentials{
-  flex:1 1 auto;
-  min-height:0;
-  height:auto;
-  width:100%;
-  max-width:1100px;
-  margin:0 auto;
-  padding:8px 10px 20px;
-  overflow-y:auto;
-  overflow-x:hidden;
-  overscroll-behavior:contain;
-  scrollbar-gutter:stable;
-  -webkit-overflow-scrolling:touch;
-  font-size:clamp(16px,1.7vw,20px);
-}
-.mevi-credentials h3{
-  margin:15px 0 8px;
-  font-size:clamp(20px,2.1vw,26px);
-  line-height:1.2;
-  color:var(--mevi-accent,#80d7ff);
-}
-.mevi-credentials p{line-height:1.35}
-.mevi-cred-intro{margin:3px 0 12px;color:#bad4e4;font-size:clamp(16px,1.7vw,20px)}
-.mevi-cred-row{
-  padding:12px;
-  margin:0 0 10px;
-  border:1px solid #39566c;
-  border-radius:15px;
-  background:rgba(8,25,40,.72);
-}
-.mevi-cred-row>label{
-  display:block;
-  font-size:clamp(17px,1.9vw,22px);
-  line-height:1.2;
-  font-weight:700;
-  margin-bottom:8px;
-}
-.mevi-cred-form{display:flex;gap:9px;align-items:stretch;flex-wrap:wrap}
-.mevi-cred-row input{
-  font:inherit;
-  font-size:clamp(16px,1.75vw,20px);
-  background:#081923;
-  color:#e5f6ff;
-  border:1px solid #547188;
-  border-radius:11px;
-  min-height:50px;
-  padding:10px 12px;
-  flex:1 1 230px;
-  min-width:0;
-}
-.mevi-cred-row input:focus{outline:2px solid #65c9ef;outline-offset:2px}
-.mevi-cred-row button,.mevi-credentials>button{
-  font:inherit;
-  font-size:clamp(16px,1.7vw,20px);
-  min-height:50px;
-  padding:10px 14px;
-  border-radius:11px;
-  touch-action:manipulation;
-}
-.mevi-cred-remove{opacity:1}
-.mevi-cred-status{
-  display:block;
-  margin-top:7px;
-  font-size:clamp(15px,1.6vw,18px);
-  color:#a8d6cb;
-}
-.mevi-cred-row p,.mevi-cred-note{
-  margin:8px 0 0;
-  font-size:clamp(15px,1.55vw,18px);
-  color:#c0d0dc;
-}
-#mevi-credentials-feedback{min-height:24px;margin-top:12px;color:#9fddea}
-@media (orientation:landscape) and (max-height:480px){
-  .settings-ui .settings-heading h2{font-size:21px}
-  .settings-ui .settings-heading p{font-size:15px}
-  .settings-ui .settings-tabs button{min-height:48px;padding:6px 4px}
-  .mevi-credentials{padding:5px 8px 14px}
-  .mevi-credentials h3{margin:9px 0 7px}
-  .mevi-cred-row{padding:10px;margin-bottom:8px}
-  .mevi-cred-row input,.mevi-cred-row button,.mevi-credentials>button{min-height:48px}
-}
-@media (max-width:700px){
-  .settings-ui .settings-heading{align-items:flex-start}
-  .settings-ui .settings-version{max-width:50%}
-  .settings-ui .settings-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .mevi-cred-row .mevi-cred-form input{flex-basis:100%}
-  .mevi-cred-row .mevi-cred-form button{flex:1}
-}
 
-
-/* Portable encrypted credentials backup: same controls on Web and APK. */
-.mevi-backup{
-  display:flex;flex-direction:column;gap:7px;
-  border:1px solid #52748a;border-radius:14px;
-  background:#14293c;padding:clamp(8px,1.2vw,15px);
-  min-width:0;
+</style><style id="mevicar-versioned-credentials">/* Shared settings workspace for Web and APK. One scroll owner per category. */
+.full:has(> .settings-workspace) > .row{display:none}
+.full:has(> .settings-workspace){padding:0;overflow:hidden;background:var(--settings-bg,#101927)}
+.settings-ui.settings-workspace{
+ --settings-bg:#101927;--settings-surface:#172435;--settings-line:#344458;
+ --settings-text:#f2f6fc;--settings-muted:#b1bfce;--settings-accent:#74d9ef;--settings-active:#163e50;
+ display:flex;flex:1;flex-direction:column;width:100%;height:100%;min-height:0;min-width:0;
+ gap:0;background:var(--settings-bg);color:var(--settings-text);font-size:16px;
 }
-.mevi-backup h3{margin:0;font-size:clamp(15px,2.5vh,20px);color:#b5f1ff}
-.mevi-backup p,.mevi-backup small{margin:0;line-height:1.35;color:#c3d8e4}
-.mevi-backup label{font-weight:600;color:#e1f4ff;font-size:clamp(12px,2vh,15px)}
-.mevi-backup input{
-  box-sizing:border-box;width:100%;min-width:0;min-height:46px;
-  padding:7px 12px;border:1px solid #61869a;border-radius:10px;
-  color:#f4fbff;background:#091b2c;font-size:15px;
+html[data-theme="cyberpunk"] .settings-workspace{--settings-bg:#171222;--settings-surface:#241c30;--settings-line:#49394f;--settings-accent:#f192df;--settings-active:#442744}
+html[data-theme="liquidglass"] .settings-workspace{--settings-bg:#172334;--settings-surface:#23354b;--settings-line:#4b5f77;--settings-accent:#b7ddff;--settings-active:#334d69}
+.settings-workspace *{box-sizing:border-box}
+.settings-workspace .settings-topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 24px;border-bottom:1px solid var(--settings-line);flex:0 0 auto}
+.settings-workspace .settings-topbar h2{margin:0;font-size:22px;line-height:1.2;letter-spacing:0;color:var(--settings-text)}
+.settings-workspace .settings-version{font-size:13px;line-height:1.3;color:var(--settings-muted);text-align:right;white-space:normal}
+.settings-workspace .settings-layout{display:grid;grid-template-columns:190px minmax(0,1fr);flex:1;min-height:0;overflow:hidden}
+.settings-workspace .settings-tabs{display:flex;flex-direction:column;gap:6px;overflow-y:auto;overscroll-behavior:contain;min-height:0;min-width:0;padding:16px 10px;border-right:1px solid var(--settings-line)}
+.settings-workspace .settings-tabs button{display:flex;align-items:center;gap:12px;flex:0 0 auto;width:100%;min-width:0;min-height:50px;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--settings-muted);box-shadow:none;font:inherit;font-size:16px;text-align:left;line-height:1.2;white-space:normal}
+.settings-workspace .settings-tabs button[aria-current="page"]{background:var(--settings-active);color:var(--settings-text);border-color:var(--settings-line);box-shadow:inset 3px 0 var(--settings-accent)}
+.settings-workspace .settings-nav-icon{width:24px;height:24px;display:block;flex:0 0 24px;color:var(--settings-accent)}
+.settings-workspace .settings-nav-icon svg{width:24px;height:24px;filter:none}
+.settings-workspace .settings-nav-icon .app-art{stroke:currentColor;stroke-width:6;fill:none}
+.settings-workspace .settings-detail{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden}
+.settings-workspace .settings-heading{padding:20px 24px 14px;display:block;flex:0 0 auto}
+.settings-workspace .settings-heading h2{font-size:24px;line-height:1.2;margin:0;color:var(--settings-text)}
+.settings-workspace .settings-heading p{display:block;font-size:14px;line-height:1.4;margin:6px 0 0;color:var(--settings-muted)}
+.settings-workspace .settings-content{flex:1;min-height:0;min-width:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;scrollbar-width:thin;scrollbar-color:var(--settings-line) transparent;padding:0 24px 24px;scroll-padding:12px}
+.settings-workspace button,.settings-workspace input,.settings-workspace select,.settings-workspace summary{touch-action:manipulation}
+.settings-workspace button:focus-visible,.settings-workspace input:focus-visible,.settings-workspace select:focus-visible,.settings-workspace summary:focus-visible{outline:2px solid var(--settings-accent);outline-offset:2px}
+.settings-workspace .theme-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;min-height:0;flex:none;max-width:1100px}
+html[data-theme] .settings-workspace .theme-card{display:flex;flex-direction:column;align-items:stretch;gap:8px;padding:12px;border:1px solid var(--settings-line);border-radius:14px;background:var(--settings-surface);color:var(--settings-text);box-shadow:none;min-height:0;overflow:hidden}
+html[data-theme] .settings-workspace .theme-card.selected{border-color:var(--settings-accent);box-shadow:inset 0 0 0 1px var(--settings-accent)}
+.settings-workspace .theme-visual{width:100%;min-height:90px;height:clamp(90px,16vh,180px);flex:none;border-radius:9px;max-width:none}
+.settings-workspace .theme-name{font-size:18px;line-height:1.2}
+.settings-workspace .theme-description{display:block;font-size:13px;line-height:1.4;color:var(--settings-muted)}
+.settings-workspace .theme-check{font-size:14px;color:var(--settings-accent);margin-top:2px}
+.settings-workspace .settings-local-note{font-size:13px;color:var(--settings-muted);margin:16px 0 0}
+.settings-workspace .mevi-credentials{display:block;overflow:visible;height:auto;padding:0;max-width:1100px}
+.settings-workspace .mevi-service{border:1px solid var(--settings-line);border-radius:12px;background:var(--settings-surface);margin-bottom:8px;overflow:hidden}
+.settings-workspace .mevi-service summary{display:flex;align-items:center;gap:12px;min-height:60px;padding:12px 16px;cursor:pointer;list-style:none}
+.settings-workspace .mevi-service summary::-webkit-details-marker{display:none}
+.settings-workspace .mevi-service-title{font-size:17px;font-weight:650;flex:1;min-width:0}
+.settings-workspace .mevi-service-status{font-size:13px;color:var(--settings-muted);text-align:right}
+.settings-workspace .mevi-service-chevron{font-size:26px;color:var(--settings-accent);line-height:1;transition:transform .15s}
+.settings-workspace .mevi-service[open] .mevi-service-chevron{transform:rotate(90deg)}
+.settings-workspace .mevi-service-body{padding:0 16px 16px;border-top:1px solid var(--settings-line)}
+.settings-workspace .mevi-cred-row{border:0;background:none;border-radius:0;padding:14px 0 0;margin:0}
+.settings-workspace .mevi-cred-row label,.settings-workspace .mevi-backup label{display:block;font-size:14px;font-weight:650;line-height:1.4;margin:0 0 8px;color:var(--settings-text)}
+.settings-workspace .mevi-cred-row label:not(:first-child){margin-top:14px}
+.settings-workspace .mevi-cred-form{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch}
+.settings-workspace input,.settings-workspace select{font:inherit;font-size:16px;color:var(--settings-text);background:var(--settings-bg);border:1px solid var(--settings-line);border-radius:8px;min-height:44px;min-width:0;padding:10px 12px}
+.settings-workspace .mevi-cred-form input{flex:1 1 220px;width:100%}
+.settings-workspace .settings-content button{font:inherit;font-size:14px;min-height:44px;padding:10px 14px;border:1px solid var(--settings-line);border-radius:8px;background:var(--settings-active);color:var(--settings-text);box-shadow:none;line-height:1.3}
+.settings-workspace .settings-content .mevi-cred-remove{background:transparent;color:var(--settings-muted)}
+.settings-workspace .mevi-cred-status{display:block;margin-top:9px;font-size:13px;color:var(--settings-accent)}
+.settings-workspace .mevi-cred-row p,.settings-workspace .mevi-backup p,.settings-workspace .mevi-backup small{font-size:13px;line-height:1.5;color:var(--settings-muted);margin:8px 0 0}
+.settings-workspace #mevi-credentials-feedback:not(:empty){position:sticky;bottom:0;margin-top:12px;padding:12px;border:1px solid var(--settings-accent);border-radius:10px;background:var(--settings-bg);color:var(--settings-text);font-size:14px}
+.settings-workspace .mevi-backup{display:flex;flex-direction:column;gap:8px;max-width:760px;background:var(--settings-surface);border:1px solid var(--settings-line);border-radius:12px;padding:18px}
+.settings-workspace .mevi-backup h3{font-size:18px;letter-spacing:0;color:var(--settings-text);margin:0}
+.settings-workspace .mevi-backup label{margin:8px 0 0}
+.settings-workspace .mevi-backup input{width:100%}
+.settings-workspace .mevi-backup-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.settings-workspace .mevi-backup-actions button{flex:1 1 180px}
+.settings-workspace .mevi-updates{height:auto;overflow:visible;max-width:950px;margin:0;padding:0;font-size:15px}
+.settings-workspace .mevi-updates h3{font-size:18px;color:var(--settings-text);letter-spacing:0}
+.settings-workspace .mevi-update-panel{background:var(--settings-surface);border-color:var(--settings-line)}
+.settings-workspace .settings-release{margin-top:16px}
+.settings-workspace .saver-settings{display:flex;flex-direction:column;gap:0;overflow:visible;height:auto;max-width:1100px}
+.settings-workspace .saver-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 0;border:0;border-bottom:1px solid var(--settings-line);background:none;border-radius:0}
+.settings-workspace .saver-row-info b{font-size:16px}
+.settings-workspace .saver-row-info small,.settings-workspace .saver-bottom .small{font-size:13px;color:var(--settings-muted);line-height:1.4}
+.settings-workspace .saver-options{display:flex;flex-wrap:wrap;gap:6px}
+.settings-workspace .saver-options button[aria-pressed="true"],.settings-workspace .saver-toggle[aria-pressed="true"]{border-color:var(--settings-accent)}
+.settings-workspace .saver-row select{max-width:100%;font-size:16px}
+.settings-workspace .saver-bottom{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:16px}
+@media(max-height:540px), (max-width:1000px){
+ .settings-workspace .settings-topbar{padding:10px 16px;min-height:44px}
+ .settings-workspace .settings-topbar h2{font-size:19px}
+ .settings-workspace .settings-layout{grid-template-columns:145px minmax(0,1fr)}
+ .settings-workspace .settings-tabs{padding:10px 6px;gap:3px}
+ .settings-workspace .settings-tabs button{min-height:44px;padding:8px;gap:8px;font-size:14px}
+ .settings-workspace .settings-nav-icon,.settings-workspace .settings-nav-icon svg{width:20px;height:20px;flex-basis:20px}
+ .settings-workspace .settings-heading{padding:12px 16px 10px}
+ .settings-workspace .settings-heading h2{font-size:20px}
+ .settings-workspace .settings-heading p{font-size:13px;margin-top:4px}
+ .settings-workspace .settings-content{padding:0 16px 16px}
+ .settings-workspace .theme-options{gap:8px}
+ html[data-theme] .settings-workspace .theme-card{padding:9px;gap:6px}
+ .settings-workspace .theme-visual{height:80px;min-height:80px;padding:8px}
+ .settings-workspace .theme-name{font-size:16px}
+ .settings-workspace .theme-description{font-size:12px}
+ .settings-workspace .theme-check{font-size:13px}
+ .settings-workspace .mevi-service summary{min-height:50px;padding:10px 12px}
+ .settings-workspace .mevi-service-title{font-size:15px}
+ .settings-workspace .mevi-service-status{font-size:12px}
+ .settings-workspace .mevi-cred-form input{flex-basis:100%}
+ .settings-workspace .saver-row{padding:12px 0}
 }
-.mevi-backup input[type=file]{padding:8px;min-height:48px}
-.mevi-backup-actions{display:flex;gap:8px;flex-wrap:wrap}
-.mevi-backup-actions button{
-  flex:1 1 175px;min-height:48px;padding:8px 12px;
-  background:#174661;color:#effcff;border:1px solid #68afc8;
-  border-radius:10px;font-weight:700;
+@media(max-width:650px){
+ .settings-workspace .settings-layout{grid-template-columns:120px minmax(0,1fr)}
+ .settings-workspace .settings-tabs button{gap:6px;font-size:13px}
+ .settings-workspace .settings-heading,.settings-workspace .settings-content{padding-left:12px;padding-right:12px}
+ .settings-workspace .theme-options{grid-template-columns:1fr}
+ .settings-workspace .mevi-service summary{flex-wrap:wrap;gap:6px}
+ .settings-workspace .mevi-service-status{font-size:11px}
 }
-html[data-theme="cyberpunk"] .mevi-backup{background:#1e1230;border-color:#86497d}
-html[data-theme="cyberpunk"] .mevi-backup-actions button{background:#45214d;border-color:#c967b3}
-html[data-theme="liquidglass"] .mevi-backup{background:#1a334b;border-color:#7aacc8}
+/* External touch displays retain comfortable reading and hit areas. */
+@media(min-width:1400px){
+ .settings-workspace .settings-layout{grid-template-columns:250px minmax(0,1fr)}
+ .settings-workspace .settings-topbar{padding:18px 28px}
+ .settings-workspace .settings-topbar h2{font-size:28px}
+ .settings-workspace .settings-version{font-size:18px}
+ .settings-workspace .settings-tabs{padding:20px 12px;gap:8px}
+ .settings-workspace .settings-tabs button{font-size:21px;min-height:62px;padding:14px;gap:14px}
+ .settings-workspace .settings-heading{padding:24px 28px 20px}
+ .settings-workspace .settings-heading h2{font-size:30px}
+ .settings-workspace .settings-heading p{font-size:19px}
+ .settings-workspace .settings-content{padding:0 28px 28px}
+ .settings-workspace .theme-options,.settings-workspace .mevi-credentials,.settings-workspace .saver-settings{max-width:1300px}
+ .settings-workspace .theme-visual{height:clamp(150px,20vh,240px)}
+ .settings-workspace .theme-name{font-size:24px}
+ .settings-workspace .theme-description,.settings-workspace .theme-check,.settings-workspace .settings-local-note{font-size:18px}
+ .settings-workspace .mevi-service summary{min-height:72px;padding:16px 20px}
+ .settings-workspace .mevi-service-title{font-size:22px}
+ .settings-workspace .mevi-service-status{font-size:18px}
+ .settings-workspace .settings-content button,.settings-workspace input,.settings-workspace select{font-size:20px;min-height:56px}
+ .settings-workspace .mevi-cred-row label,.settings-workspace .mevi-backup label,.settings-workspace .saver-row-info b{font-size:21px}
+ .settings-workspace .mevi-cred-row p,.settings-workspace .mevi-cred-status,.settings-workspace .mevi-backup p,.settings-workspace .mevi-backup small,.settings-workspace .saver-row-info small,.settings-workspace .saver-bottom .small{font-size:18px}
+ .settings-workspace .mevi-backup,.settings-workspace .mevi-updates{max-width:1100px;font-size:20px}
+}
+html[data-theme] .settings-workspace .saver-settings .saver-options button[aria-pressed="true"],
+html[data-theme] .settings-workspace .saver-settings .saver-toggle[aria-pressed="true"]{background:var(--settings-active);border-color:var(--settings-accent);color:var(--settings-text)}
+.settings-workspace .mevi-backup-modes{display:flex;gap:6px;margin-bottom:8px}
+.settings-workspace .mevi-backup-modes button{flex:1;background:transparent}
+.settings-workspace .mevi-backup-modes button[aria-pressed="true"]{background:var(--settings-active);border-color:var(--settings-accent)}
+.settings-workspace .mevi-backup-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.settings-workspace .mevi-backup-fields label{margin:0 0 6px}
+.settings-workspace .mevi-backup-fields>div:only-child{grid-column:1/-1}
+@media(max-width:650px){.settings-workspace .mevi-backup-fields{grid-template-columns:1fr}}
 </style><link rel="stylesheet" href="./native-updates.css"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"></head><body><div class="shell"><div class="toolbar"><div><h1>MeviCar Next · Cockpit</h1><div class="sub">Google Maps Navigation · Vollbild-Cockpit · Querformat</div></div><div class="actions"><button id="leftBtn" class="active" onclick="setDock('left')">Dock links</button><button id="bottomBtn" onclick="setDock('bottom')">Dock unten</button><button onclick="reset()">↻ Reset</button></div></div><div id="cockpit" class="cockpit"><div class="body" id="body"><nav class="dock left" id="dock"></nav><div class="workspace"><div class="status"><div id="mg-native-header-slot" aria-hidden="true"></div><div class="mg-web-nav-actions" role="group" aria-label="Navigation"><button type="button" onclick="openSearch()">Ziel / POI</button><button type="button" id="fullscreenBtn" onclick="toggleFullscreen()" hidden>Vollbild</button></div><span class="status-right"><span class="small" id="buildVersion" aria-label="Geladene Buildnummer">Build –</span><button type="button" id="updateBtn" class="status-action" title="Web-App aktualisieren" aria-label="Web-App auf Updates prüfen" onclick="checkForUpdate()"></button><span id="updateMessage" aria-live="polite"></span><span class="status-chip" title="GPS-Sensorstatus im Tacho prüfen"><span id="gpsSignalIcon" class="status-icon" aria-hidden="true"></span><span>GPS</span></span><span class="status-chip" title="LTE: Demo-Anzeige, kein Live-Mobilfunkstatus"><span id="cellSignalIcon" class="status-icon" aria-hidden="true"></span><span>LTE</span></span><time id="statusClock" class="status-time" aria-label="Aktuelle Uhrzeit">--:--</time></span></div><main class="screen" id="screen"></main></div></div></div><div class="note" id="statusline">Google Maps ist nach der Einrichtung eines Web-API-Keys verfügbar.</div></div><script>
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const fixed=[['nav','Navi','➤'],['audio','Audio','♫'],['phone','Telefon','☎'],['tachonext','Tacho','◉']];const extras=[['speed','Tacho Classic','◉'],['weather','Wetter','☁'],['ha','Home Assistant','⌂'],['roadassist','Road Assist','◈'],['obd','OBD','◈'],['whatsapp','WhatsApp','✉'],['youtube','YouTube','▶'],['teams','Teams','▣'],['trips','Fahrtenbuch','↝'],['calendar','Kalender','▦'],['stocks','Aktienkurse','↗'],['calculator','Rechner','🧮'],['sudoku','Sudoku','▦'],['tetris','Tetris','▦'],['guilty','Wer ist schuld?','↻'],['tv','TV','▣'],['clock','Uhr','🕒'],['lightshow','Lichtshow','✦'],['settings','Settings','⚙']];const all=[...fixed,...extras,['apps','Apps','▦']];const info=id=>all.find(x=>x[0]===id)||['slot','Zusatz','＋'];const places=[['Erlangen-Nord','Zuletzt angesehen'],['Erlangen Arcaden','Nürnberger Straße, Erlangen'],['Erlangen Hauptbahnhof','Bahnhofsplatz, Erlangen'],['Höchstadt an der Aisch','91315 Höchstadt'],['Adelsdorf','91325 Adelsdorf'],['Nürnberg Hauptbahnhof','Bahnhofsplatz, Nürnberg'],['Herzogenaurach','91074 Herzogenaurach'],['Siemens Erlangen','Erlangen']];const THEME_STORAGE_KEY='mevicar-next-theme';function readSavedTheme(){try{const saved=localStorage.getItem(THEME_STORAGE_KEY);return ['default','cyberpunk','liquidglass'].includes(saved)?saved:'default'}catch{return 'default'}}const initial=()=>({dock:'left',app:'nav',mode:'map',nav:'browse',keyboard:false,query:'',destination:'',routeChoice:0,route:false,extra:'weather',recents:['Erlangen-Nord','Erlangen Arcaden','Höchstadt an der Aisch'],favorites:['Privat','Arbeit','Gymnasium','İzmir'],audio:'radio',playing:false,station:'Mevi FM',call:'idle',returnApp:'nav',returnMode:'map',light:true,trip:false,tripKm:12.4,stock:'Siemens',theme:readSavedTheme(),settingsTab:'design'});let s=initial();function setTheme(theme){if(!['default','cyberpunk','liquidglass'].includes(theme))return;s.theme=theme;try{localStorage.setItem(THEME_STORAGE_KEY,theme)}catch{}render()}function setDock(v){s.dock=v;render()}function reset(){s=initial();render()}const calcState={display:'0',stored:null,operator:null,fresh:false};function calcPress(k){let a=calcState;if(k==='C'){a.display='0';a.stored=null;a.operator=null;a.fresh=false}else if(k==='⌫'){a.display=a.display.length>1?a.display.slice(0,-1):'0';if(a.display==='-'||a.display==='')a.display='0'}else if(k==='±'){if(a.display!=='0')a.display=a.display.startsWith('-')?a.display.slice(1):'-'+a.display}else if(k==='%'){a.display=String(Number(a.display)/100)}else if('0123456789.'.includes(k)&&k.length===1){if(a.fresh){a.display='0';a.fresh=false}if(k==='.'&&a.display.includes('.'))return;if(a.display.replace(/[^0-9]/g,'').length>=12)return;a.display=k==='.'?a.display+'.':a.display==='0'?k:a.display+k}else if(['+','−','×','÷','='].includes(k)){let v=Number(a.display);if(a.operator!==null&&a.stored!==null&&!a.fresh){let n=a.operator==='+'?a.stored+v:a.operator==='−'?a.stored-v:a.operator==='×'?a.stored*v:v===0?NaN:a.stored/v;if(!Number.isFinite(n)){a.display='Fehler';a.stored=null;a.operator=null;a.fresh=true;render();return}a.display=String(Number(n.toPrecision(11)));v=Number(a.display)}a.stored=k==='='?null:v;a.operator=k==='='?null:k;a.fresh=true}render()}function calcHTML(){const keys=['C','⌫','%','÷','7','8','9','×','4','5','6','−','1','2','3','+','±','0','.','='];return '<div class="calculator-layout"><div class="calculator-display" aria-live="polite">'+esc(calcState.display)+'</div><div class="calculator-keys">'+keys.map(k=>'<button type="button" onclick="calcPress(\''+k+'\')">'+k+'</button>').join('')+'</div></div>'}
 function openApp(id){
@@ -6292,18 +6266,22 @@ function gpsRefresh(){if(typeof window.meviSpeedPaint==='function')window.meviSp
 function gpsSpeedOnly(){return typeof window.meviSpeedHTML==='function'?window.meviSpeedHTML(true):''}
 function gpsDashboard(){return typeof window.meviSpeedHTML==='function'?window.meviSpeedHTML(false):'<div class="center">Tacho wird geladen …</div>'}
 
-function setSettingsTab(tab){s.settingsTab=['design','screensaver','credentials','updates'].includes(tab)?tab:'design';render();if(tab==='updates')window.MeviNativeUpdates?.refresh?.()}
+const SETTINGS_SECTIONS=[
+ {id:'design',label:'Darstellung',icon:'apps',title:'Dein Cockpit-Look',hint:'Wähle ein Design. Die Änderung wird sofort gespeichert.'},
+ {id:'screensaver',label:'Ruhemodus',icon:'clock',title:'Bildschirmschoner',hint:'Licht und Uhr für die Zeit zwischen deinen Fahrten.'},
+ {id:'credentials',label:'Zugänge',icon:'settings',title:'Dienste & Zugänge',hint:'Dienst öffnen, Zugang einrichten und speichern.'},
+ {id:'backup',label:'Sicherung',icon:'update',title:'Sichern & übertragen',hint:'Deine Zugänge und Spotify-Anmeldung auf ein anderes Gerät mitnehmen.'},
+ {id:'updates',label:'System',icon:'update',title:'Updates & Info',hint:'Version, Aktualisierung und Änderungen an einem Ort.'}
+];
+function setSettingsTab(tab){s.settingsTab=SETTINGS_SECTIONS.some(x=>x.id===tab)?tab:'design';render();if(tab==='updates')window.MeviNativeUpdates?.refresh?.()}
 function openCredentialSettings(){s.app='settings';s.extra='settings';s.mode='full';s.settingsTab='credentials';s.keyboard=false;render()}
 window.meviOpenCredentialSettings=openCredentialSettings;
 function settingsHTML(){
- const tab=['design','screensaver','credentials','updates'].includes(s.settingsTab)?s.settingsTab:'design';
- const themes=[{id:'default',name:'Original',description:'Aktueller Cockpit-Look'},{id:'cyberpunk',name:'Neon City',description:'Magenta · große Icons'},{id:'liquidglass',name:'Liquid Glass',description:'Glas · weiches Licht'}];
- const design='<div class="theme-options" role="group" aria-label="Design auswählen">'+themes.map(t=>'<button type="button" class="theme-card '+(s.theme===t.id?'selected':'')+'" aria-pressed="'+(s.theme===t.id)+'" onclick="setTheme(\''+t.id+'\')"><span class="theme-visual theme-visual-'+t.id+'" aria-hidden="true"><span class="theme-mini-dock"><i></i><i></i><i></i></span><span class="theme-mini-screen"><b></b><b></b><b></b></span></span><span class="theme-name">'+t.name+'</span><span class="theme-description">'+t.description+'</span><span class="theme-check">'+(s.theme===t.id?'✓ Aktiv':'Auswählen')+'</span></button>').join('')+'</div>';
- const pane=tab==='updates'?(window.MeviNativeUpdates?.html?.()||'<p>APK-Updates werden geladen …</p>'):tab==='credentials'?(window.MeviCredentials?.html?.()||'<p>Zugänge werden geladen …</p>'):tab==='screensaver'?(typeof meviSaverSettingsHTML==='function'?meviSaverSettingsHTML():'<p>Bildschirmschoner wird geladen …</p>'):design;
- const bottom=tab==='design'?'<div class="settings-bottom"><span class="small">Deine Auswahl wird auf diesem Gerät gespeichert.</span>'+btn('📋 Release Notes','showReleaseNotes()','primary')+'</div>':'';
- return '<div class="settings-ui"><div class="settings-heading"><div><h2>'+(tab==='updates'?'APK-Updates':tab==='credentials'?'Zugänge &amp; Schlüssel':tab==='screensaver'?'Bildschirmschoner':'Design &amp; Anzeige')+'</h2><p>'+(tab==='updates'?'Android-APK auf Updates prüfen, herunterladen und installieren.':tab==='credentials'?'API-Schlüssel, Client-IDs, PINs und Passwörter zentral verwalten.':tab==='screensaver'?'MeviDarts-Neonlicht im Ruhezustand':'Wähle deinen MeviCar-Next-Look. Änderungen sind sofort sichtbar.')+'</p></div><span class="settings-version" title="'+esc(versionTitle())+'">'+esc(versionStatus())+'</span></div>'+
- '<div class="settings-tabs" role="tablist" aria-label="Anzeigeeinstellungen"><button role="tab" aria-selected="'+(tab==='design')+'" onclick="setSettingsTab(\'design\')">✦ Design</button><button role="tab" aria-selected="'+(tab==='screensaver')+'" onclick="setSettingsTab(\'screensaver\')">◉ Bildschirmschoner</button><button role="tab" aria-selected="'+(tab==='credentials')+'" onclick="setSettingsTab(\'credentials\')">🔑 Zugänge</button><button role="tab" aria-selected="'+(tab==='updates')+'" onclick="setSettingsTab(\'updates\')">⬇ APK-Updates</button></div>'+
- pane+bottom+'</div>';
+ const section=SETTINGS_SECTIONS.find(x=>x.id===s.settingsTab)||SETTINGS_SECTIONS[0],tab=section.id;
+ const themes=[{id:'default',name:'Original',description:'Klar & kontrastreich'},{id:'cyberpunk',name:'Neon City',description:'Magenta & leuchtende Akzente'},{id:'liquidglass',name:'Liquid Glass',description:'Glas & weiches Licht'}];
+ const design='<div class="theme-options" role="group" aria-label="Design auswählen">'+themes.map(t=>'<button type="button" class="theme-card '+(s.theme===t.id?'selected':'')+'" aria-pressed="'+(s.theme===t.id)+'" onclick="setTheme(\''+t.id+'\')"><span class="theme-visual theme-visual-'+t.id+'" aria-hidden="true"><span class="theme-mini-dock"><i></i><i></i><i></i></span><span class="theme-mini-screen"><b></b><b></b><b></b></span></span><span class="theme-name">'+t.name+'</span><span class="theme-description">'+t.description+'</span><span class="theme-check">'+(s.theme===t.id?'✓ Ausgewählt':'Auswählen')+'</span></button>').join('')+'</div><p class="settings-local-note">Auf diesem Gerät gespeichert</p>';
+ const pane=tab==='updates'?((window.MeviNativeUpdates?.html?.()||'<p>Updates werden geladen …</p>')+'<button type="button" class="settings-release" onclick="showReleaseNotes()">Was ist neu?</button>'):tab==='credentials'?(window.MeviCredentials?.html?.()||'<p>Zugänge werden geladen …</p>'):tab==='backup'?(window.MeviCredentials?.backupHTML?.()||'<p>Sicherung wird geladen …</p>'):tab==='screensaver'?(typeof meviSaverSettingsHTML==='function'?meviSaverSettingsHTML():'<p>Bildschirmschoner wird geladen …</p>'):design;
+ return '<div class="settings-ui settings-workspace"><header class="settings-topbar"><h2>Einstellungen</h2><span class="settings-version" title="'+esc(versionTitle())+'">'+esc(versionStatus())+'</span></header><div class="settings-layout"><nav class="settings-tabs" aria-label="Einstellungskategorien">'+SETTINGS_SECTIONS.map(item=>'<button type="button" aria-current="'+(tab===item.id?'page':'false')+'" onclick="setSettingsTab(\''+item.id+'\')"><span class="settings-nav-icon">'+appVector(item.icon)+'</span><span>'+item.label+'</span></button>').join('')+'</nav><section class="settings-detail" aria-labelledby="settings-detail-title" data-section="'+tab+'"><div class="settings-heading"><div><h2 id="settings-detail-title">'+section.title+'</h2><p>'+section.hint+'</p></div></div><div class="settings-content">'+pane+'</div></section></div></div>';
 }
 function appBody(){if(s.app==='navdashboard')return '<div id="mg-nav-dashboard-split" class="mg-dashboard-split-content">'+(window.MeviNavDashboard?.html?.(true)||'')+'</div>';if(s.app==='stocks')return window.MeviStocks?.html(s.mode==='split')||'<div class="center">Aktienkurse laden …</div>';if(s.app==='youtube')return window.MeviYouTube?.html(s.mode==='split')||'<div class="center">YouTube lädt …</div>';if(s.app==='whatsapp')return window.MeviWhatsApp?.html(s.mode==='split')||'<div class="center">WhatsApp lädt …</div>';if(s.app==='calendar')return window.MeviCalendar?.html(s.mode==='split')||'<div class="center">Kalender lädt …</div>';if(s.app==='weather')return '<iframe class="mevi-weather-frame" title="MeviCar Wetter Adelsdorf: aktuell, Regenplanung, 7 Tage und Wetterkarte" src="./weather/weather.html" referrerpolicy="strict-origin-when-cross-origin" loading="eager"></iframe>';if(s.app==='tv')return window.meviTVHTML?window.meviTVHTML():'';if(s.app==='tetris')return window.meviTetrisHTML?window.meviTetrisHTML():'';if(s.app==='sudoku')return window.meviSudokuHTML?window.meviSudokuHTML():'';if(s.app==='guilty')return window.meviWhosGuiltyHTML?window.meviWhosGuiltyHTML(s.mode==='split'):'';if(s.app==='tachonext')return window.meviTachoNextHTML?window.meviTachoNextHTML():'';if(s.call!=='idle'&&s.app==='phone')return `<div class="center"><div class="bigicon">☎</div><h2>${s.call==='ring'?'Eingehender Anruf':'Anruf aktiv'}</h2><div>Demo-Anrufer</div><div class="controls">${s.call==='ring'?btn('✓ Annehmen',`s.call='active';render()`,'primary'):''}${btn('✕ Auflegen','endCall()')}</div></div>`;if(s.app==='audio'&&s.audio==='media')return typeof window.meviMediaHTML==='function'?window.meviMediaHTML(s.mode==='split'):'<div class="center">MeviMedia wird geladen …</div>';if(s.app==='audio'&&s.audio==='radio')return typeof window.meviRadioHTML==='function'?window.meviRadioHTML(s.mode==='split'):'<div class="center">Radio wird geladen …</div>';if(s.app==='audio')return typeof window.meviSpotifyHTML==='function'?window.meviSpotifyHTML(s.mode==='split'):'<div class="center">Audio wird geladen …</div>';if(s.app==='lightshow')return typeof window.meviLightshowHTML==='function'?window.meviLightshowHTML(s.mode==='split'):'<div class="center">Lichtshow lädt …</div>';if(s.app==='ha')return window.MeviHA?.html(s.mode==='split')||'<div class="center">Home Assistant wird geladen …</div>';if(s.app==='roadassist')return window.MeviRoadAssist?.appHTML(s.mode==='split')||'<div class="center">Road Assist wird geladen …</div>';if(s.app==='trips')return `<div class="center"><div class="bigicon">↝</div><h2>${s.tripKm.toFixed(1)} km</h2>${btn(s.trip?'Fahrt stoppen':'Fahrt starten',`s.trip=!s.trip;render()`,'primary')}${btn('Demo +1,2 km',`s.tripKm+=1.2;render()`)}</div>`;if(s.app==='calculator')return calcHTML();if(s.app==='speed')return typeof window.meviSpeedHTML==='function'?window.meviSpeedHTML(s.mode==='split'):'<div class="center">Tacho wird geladen …</div>';if(s.app==='clock')return '<div class="center" style="width:100%;height:100%;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(4px,1.5vh,14px);overflow:hidden"><div class="bigicon" style="font-size:clamp(20px,5vh,42px)">🕒</div><div id="mevicarClockTime" style="font-size:clamp(30px,9vh,76px);font-weight:750;letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1.05">--:--:--</div><div id="mevicarClockDate" style="font-size:clamp(12px,2.7vh,22px);text-align:center">Datum wird geladen</div><div id="mevicarClockWeek" class="small">Kalenderwoche</div></div>';if(s.app==='settings')return settingsHTML();if(s.app==='phone')return `<div class="center"><div class="bigicon">☎</div><h2>Telefon</h2>${btn('Testanruf simulieren','startCall()','primary')}</div>`;const labels={speed:'82 km/h · 2.150 U/min',weather:'4 °C · Leicht bewölkt',obd:'82 km/h · 2.150 U/min',whatsapp:'Keine neuen Nachrichten',youtube:'Videobereich · Demo',teams:'Keine Besprechung',calendar:'09:30 · Teammeeting'};return `<div class="center"><div class="bigicon">${info(s.app)[2]}</div><h2>${info(s.app)[1]}</h2><div>${labels[s.app]||'Demo-Ansicht'}</div></div>`}
 const APP_VECTORS={"weather":"<circle class=\"secondary\" cx=\"78\" cy=\"31\" r=\"13\"/><path class=\"secondary\" d=\"M78 9v9M78 44v8M56 31h9M92 31h9M62 15l7 7M87 40l7 7\"/><path class=\"main\" d=\"M34 84h52c14 0 22-9 22-21 0-11-9-20-20-20h-4C78 29 66 23 55 27c-12 3-20 14-20 27-15-3-29 8-29 23 0 12 10 19 28 19\"/><path class=\"secondary\" d=\"M37 101l-5 9M60 101l-5 9M83 101l-5 9\"/>","ha":"<path class=\"main\" d=\"M13 51L60 11l47 40M23 46v55h74V46\"/><path class=\"secondary\" d=\"M61 37v47M61 57L41 44M61 66l19-18M61 84l-21 10\"/><circle class=\"node\" cx=\"61\" cy=\"37\" r=\"5\"/><circle class=\"node\" cx=\"41\" cy=\"44\" r=\"5\"/><circle class=\"node\" cx=\"80\" cy=\"48\" r=\"5\"/><circle class=\"node\" cx=\"40\" cy=\"94\" r=\"5\"/><path class=\"soft\" d=\"M13 101h94\"/>","roadassist":"<path class=\"main\" d=\"M34 106L50 14M86 106L70 14\"/><path class=\"secondary\" d=\"M60 24v12M60 50v12M60 76v14\"/><circle class=\"node\" cx=\"96\" cy=\"38\" r=\"9\"/><path class=\"soft\" d=\"M96 47v26M14 106h92\"/>","obd":"<path class=\"main\" d=\"M25 30h67l13 13v39l-13 13H25L13 82V43z\"/><path class=\"secondary\" d=\"M25 18v12M43 18v12M62 18v12M80 18v12M25 95v11M43 95v11M62 95v11M80 95v11\"/><path class=\"main\" d=\"M30 72a31 31 0 0 1 60 0\"/><path class=\"secondary\" d=\"M60 73l19-22\"/><circle class=\"node\" cx=\"60\" cy=\"73\" r=\"6\"/><path class=\"soft\" d=\"M34 85h52\"/>","whatsapp":"<path class=\"main\" d=\"M28 94l-17 13 6-25A48 48 0 1 1 60 108a49 49 0 0 1-32-14z\"/><path class=\"secondary\" d=\"M43 35c-4-3-9-1-11 3-7 18 23 47 42 45 7-1 12-7 10-11l-14-9-10 8c-11-5-17-12-21-21l7-9z\"/><circle class=\"node\" cx=\"86\" cy=\"32\" r=\"3\"/>","youtube":"<rect class=\"main\" x=\"10\" y=\"25\" width=\"100\" height=\"70\" rx=\"20\"/><path class=\"solid\" d=\"M50 39l34 21-34 21z\"/><path class=\"secondary\" d=\"M24 17h73M26 104h66\"/>","teams":"<circle class=\"main\" cx=\"44\" cy=\"37\" r=\"14\"/><circle class=\"secondary\" cx=\"83\" cy=\"36\" r=\"11\"/><path class=\"main\" d=\"M18 88V70c0-13 11-21 26-21s26 8 26 21v18c0 12-10 20-26 20S18 100 18 88z\"/><path class=\"secondary\" d=\"M78 56c13-1 27 7 27 21v9c0 10-8 17-19 17h-8\"/><path class=\"soft\" d=\"M33 75h22M44 64v22\"/>","trips":"<path class=\"main\" d=\"M23 95c5-11 17-15 25-20 13-8 2-18-8-25-16-11-9-31 11-33M84 96c5-11 12-19 8-33-3-9-14-17-23-20\"/><path class=\"secondary\" stroke-dasharray=\"3 9\" d=\"M51 101c-1-12 22-22 16-38-2-7-8-10-12-16\"/><path class=\"main\" d=\"M51 8c-14 0-23 10-23 21 0 13 23 38 23 38s23-25 23-38C74 18 65 8 51 8z\"/><circle class=\"node\" cx=\"51\" cy=\"29\" r=\"7\"/><circle class=\"secondary\" cx=\"83\" cy=\"99\" r=\"6\"/>","calendar":"<rect class=\"main\" x=\"17\" y=\"20\" width=\"86\" height=\"87\" rx=\"11\"/><path class=\"main\" d=\"M18 47h84M38 10v20M81 10v20\"/><path class=\"secondary\" d=\"M32 63h11M55 63h11M78 63h10M32 83h11M55 83h11M78 83h10\"/><rect class=\"solid\" x=\"52\" y=\"78\" width=\"18\" height=\"15\" rx=\"5\"/>","stocks":"<path class=\"soft\" d=\"M20 13v90h92M20 78h83M20 54h83M20 31h83\"/><path class=\"main\" d=\"M27 89l19-20 17 8 20-31 22-24\"/><path class=\"secondary\" d=\"M86 21h20v20\"/><circle class=\"node\" cx=\"46\" cy=\"69\" r=\"4\"/><circle class=\"node\" cx=\"63\" cy=\"77\" r=\"4\"/>","calculator":"<rect class=\"main\" x=\"23\" y=\"8\" width=\"75\" height=\"104\" rx=\"12\"/><rect class=\"secondary\" x=\"35\" y=\"22\" width=\"51\" height=\"25\" rx=\"5\"/><path class=\"secondary\" d=\"M39 60h9M63 60h9M83 60h2M38 78h10M63 78h9M83 78h2M38 96h10M63 96h9\"/><rect class=\"solid\" x=\"79\" y=\"88\" width=\"9\" height=\"13\" rx=\"3\"/>","clock":"<circle class=\"main\" cx=\"60\" cy=\"60\" r=\"48\"/><path class=\"secondary\" d=\"M60 20v9M60 91v9M20 60h9M91 60h9M31 31l6 6M83 83l6 6\"/><path class=\"main\" d=\"M60 32v30l22 16\"/><circle class=\"node\" cx=\"60\" cy=\"60\" r=\"6\"/><circle class=\"soft\" cx=\"60\" cy=\"60\" r=\"36\"/>","settings":"<path class=\"main\" d=\"M50 9h20l3 12 10 4 11-7 14 15-7 11 4 10 13 4v20l-13 4-4 10 7 10-14 15-11-7-10 4-3 12H50l-3-12-10-4-11 7-14-15 7-10-4-10-13-4V58l13-4 4-10-7-11 14-15 11 7 10-4z\" transform=\"translate(0,-8) scale(.92) translate(5,6)\"/><circle class=\"secondary\" cx=\"60\" cy=\"60\" r=\"24\"/><circle class=\"node\" cx=\"60\" cy=\"60\" r=\"10\"/>"};Object.assign(APP_VECTORS,{"nav":"<path class=\"main\" d=\"M60 9 107 107 60 83 13 107Z\"/><path class=\"secondary\" d=\"M60 38v30\"/><path class=\"soft\" d=\"M60 9v11M29 92 60 77 90 92\"/>","audio":"<path class=\"main\" d=\"M40 84V24l54-12v62\"/><path class=\"secondary\" d=\"M40 39 94 27\"/><ellipse class=\"main\" cx=\"27\" cy=\"89\" rx=\"16\" ry=\"11\" transform=\"rotate(-20 27 89)\"/><ellipse class=\"main\" cx=\"81\" cy=\"79\" rx=\"16\" ry=\"11\" transform=\"rotate(-20 81 79)\"/><path class=\"soft\" d=\"M54 16 84 9\"/>","phone":"<rect class=\"main\" x=\"31\" y=\"8\" width=\"58\" height=\"104\" rx=\"11\"/><path class=\"secondary\" d=\"M47 19h26M43 97h34\"/><circle class=\"node\" cx=\"60\" cy=\"104\" r=\"3\"/><path class=\"soft\" d=\"M39 29h42\"/>","speed":"<path class=\"main\" d=\"M16 91a46 46 0 1 1 88 0H16Z\"/><path class=\"secondary\" d=\"M60 27v10M31 37l7 7M89 37l-7 7M18 69h11M91 69h11M26 87h68\"/><path class=\"main\" d=\"M60 78 84 49\"/><circle class=\"node\" cx=\"60\" cy=\"78\" r=\"7\"/>","apps":"<rect class=\"main\" x=\"14\" y=\"14\" width=\"39\" height=\"39\" rx=\"8\"/><rect class=\"secondary\" x=\"67\" y=\"14\" width=\"39\" height=\"39\" rx=\"8\"/><rect class=\"secondary\" x=\"14\" y=\"67\" width=\"39\" height=\"39\" rx=\"8\"/><rect class=\"main\" x=\"67\" y=\"67\" width=\"39\" height=\"39\" rx=\"8\"/>","fullscreen":"<path class=\"main\" d=\"M15 48V17h31M74 17h31v31M105 73v31H74M46 104H15V73\"/><path class=\"secondary\" d=\"M32 33 49 50M88 33 71 50M88 87 71 70M32 87 49 70\"/>","fullscreenExit":"<path class=\"main\" d=\"M15 42h28V14M77 14v28h28M105 78H77v28M43 106V78H15\"/><path class=\"secondary\" d=\"M43 42 26 25M77 42 94 25M77 78 94 95M43 78 26 95\"/>","update":"<path class=\"main\" d=\"M96 47a39 39 0 0 0-69-16L16 44\"/><path class=\"main\" d=\"M24 73a39 39 0 0 0 69 17l11-15\"/><path class=\"secondary\" d=\"M13 18v27h28M107 102V75H79\"/>","gps":"<circle class=\"main\" cx=\"60\" cy=\"60\" r=\"36\"/><path class=\"secondary\" d=\"M60 12v23M60 85v23M12 60h23M85 60h23\"/><circle class=\"node\" cx=\"60\" cy=\"60\" r=\"9\"/><path class=\"soft\" d=\"M41 41 79 79\"/>","lte":"<path class=\"main\" d=\"M12 99h14V80H12zM33 99h14V64H33zM54 99h14V48H54zM75 99h14V32H75zM96 99h14V16H96z\"/><path class=\"secondary\" d=\"M12 18c27-17 63-17 90 0\"/>","close":"<circle class=\"soft\" cx=\"60\" cy=\"60\" r=\"45\"/><path class=\"main\" d=\"m37 37 46 46M83 37 37 83\"/>","back":"<path class=\"main\" d=\"M56 26 23 60l33 34M25 60h78\"/>","search":"<circle class=\"main\" cx=\"53\" cy=\"52\" r=\"32\"/><path class=\"secondary\" d=\"m77 77 29 29\"/>","locate":"<circle class=\"main\" cx=\"60\" cy=\"60\" r=\"28\"/><circle class=\"node\" cx=\"60\" cy=\"60\" r=\"9\"/><path class=\"secondary\" d=\"M60 7v22M60 91v22M7 60h22M91 60h22\"/>","heading":"<path class=\"main\" d=\"M60 9 93 109 60 83 27 109Z\"/><path class=\"secondary\" d=\"M60 32v48\"/>","microphone":"<rect class=\"main\" x=\"42\" y=\"12\" width=\"36\" height=\"64\" rx=\"18\"/><path class=\"secondary\" d=\"M28 58a32 32 0 0 0 64 0M60 90v17M41 107h38\"/>","reset":"<path class=\"main\" d=\"M25 42a39 39 0 1 1-1 40\"/><path class=\"secondary\" d=\"M16 21v29h29\"/>"});
@@ -6319,7 +6297,7 @@ DOCK_COLORS.lightshow='#dc7dff';DOCK_COLORS.tachonext='#23eaff';DOCK_COLORS.sudo
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');const nav=window.MeviGoogleNav;const showNavHeader=s.app==='nav'&&s.mode!=='split'&&s.nav==='browse'&&!!nav?.hasKey?.();$('cockpit').classList.toggle('nav-status-only',showNavHeader);$('cockpit').classList.toggle('mg-web-header',showNavHeader&&!nav?.isNativeMode?.());$('cockpit').classList.toggle('mg-driving-status',s.app==='nav'&&s.nav==='driving'&&!nav?.isNativeMode?.());let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3>'+(s.app==='navdashboard'?'<button type="button" onclick="showGuidanceMap()">Karte</button>':'')+'</div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();$('screen').innerHTML=html;if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.6", "build": 1210, "commit": "e233b24cf9a0b4a81e6e6420ef577eaa6430850e"};
+const CURRENT_BUILD={"version": "0.6.6", "build": 1211, "commit": "c8009efb0b6927519b7786047f693ffb679e0310"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -6468,74 +6446,44 @@ function tvPinReady(){
  return tvPinLoad;
 }
 if(nativeAvailable())void tvPinReady();
+const openGroups=new Set();
+function toggleGroup(id,open){if(open)openGroups.add(id);else openGroups.delete(id)}
+function group(id,title,status,body){
+ return '<details class="mevi-service"'+(openGroups.has(id)?' open':'')+' ontoggle="MeviCredentials.toggleGroup(\''+id+'\',this.open)"><summary><span class="mevi-service-title">'+escapeHTML(title)+'</span><span class="mevi-service-status">'+escapeHTML(status)+'</span><span class="mevi-service-chevron" aria-hidden="true">›</span></summary><div class="mevi-service-body">'+body+'</div></details>';
+}
+let backupMode='export';
+function setBackupMode(mode){backupMode=mode==='import'?'import':'export';global.render?.()}
+function backupHTML(){
+ const importing=backupMode==='import';
+ return '<section class="mevi-backup" aria-label="Verschlüsselter Zugangsdaten-Transfer">'+
+ '<div class="mevi-backup-modes" role="group" aria-label="Sicherungsaktion"><button type="button" aria-pressed="'+(!importing)+'" onclick="MeviCredentials.setBackupMode(\'export\')">Exportieren</button><button type="button" aria-pressed="'+importing+'" onclick="MeviCredentials.setBackupMode(\'import\')">Importieren</button></div>'+
+ '<h3>'+(importing?'Sicherung wiederherstellen':'Verschlüsselte Sicherung erstellen')+'</h3>'+
+ '<p>'+(importing?'Wähle deine .mevibackup-Datei und gib das zugehörige Passwort ein.':'Enthält API-Schlüssel, Zugangsdaten und die Spotify-Anmeldung.')+'</p>'+
+ (importing?'<label for="mevi-backup-file">Sicherungsdatei</label><input id="mevi-backup-file" type="file" accept=".mevibackup,application/json">':'')+
+ '<div class="mevi-backup-fields"><div><label for="mevi-backup-pass">'+(importing?'Backup-Passwort':'Passwort · mindestens 12 Zeichen')+'</label><input id="mevi-backup-pass" type="password" autocomplete="new-password" placeholder="Backup-Passwort"></div>'+
+ (!importing?'<div><label for="mevi-backup-confirm">Passwort wiederholen</label><input id="mevi-backup-confirm" type="password" autocomplete="new-password" placeholder="Passwort bestätigen"></div>':'')+'</div>'+
+ '<div class="mevi-backup-actions"><button type="button" onclick="MeviCredentials.'+(importing?'importBackup':'exportBackup')+'()">'+(importing?'Backup importieren':'Backup exportieren')+'</button></div>'+
+ '<small>'+(importing?'Vorhandene Zugänge werden nach Bestätigung ersetzt.':'Datei und Passwort getrennt aufbewahren. Die Datei enthält auch die Spotify-Sitzung; Spotify kann eine erneute Anmeldung verlangen.')+'</small></section>'+
+ '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div>';
+}
 function html(){
  const ha=global.MeviHA?.debug?.()||{};
- const cal=json(CAL_KEY),road=json(ROAD_KEY);
- const android=nativeAvailable();
+ const cal=json(CAL_KEY),road=json(ROAD_KEY),android=nativeAvailable();
  const haSaved=!android&&!!webHaRecord();
+ const status=ready=>ready?'Eingerichtet':'Nicht eingerichtet';
  const groups=[
-  '<h3>Google-Dienste</h3>',
-  ...(android?[
-   row('android-maps','Google Navigation SDK · Android-API-Key','Android-SDK-Schlüssel eingeben',
-       nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
-       'Für Android-Karte, Google-Places-Adresssuche und Routenführung. Paket de.mevicar.next und SHA-1 der signierten APK in Google Cloud freigeben.',{secret:true})
-  ]:[
-   row('maps','Google Maps · Browser-API-Key','Neuen Browser-API-Key eingeben',
-       saved(MAPS_KEY)?'Eingerichtet':'Nicht eingerichtet',
-       'Nur für die Web-App: HTTP-Referrer auf die MeviCar-Seite einschränken. Kein Android-SDK-Schlüssel.')
-  ]),
-  row('calendar','Google Kalender · OAuth-Web-Client-ID','…apps.googleusercontent.com',
-      cal.clientId?'Eingerichtet':'Nicht eingerichtet',
-      'Client-ID für den lesenden Kalenderzugriff; Google-Passwort wird niemals hier eingegeben.'),
-  '<h3>Medien und Blitzer</h3>',
-  row('spotify','Spotify · Client-ID','Neue Spotify Client-ID eingeben',
-      saved(SPOTIFY_KEY)?'Eingerichtet':'Nicht eingerichtet',
-      'OAuth PKCE: kein Client Secret oder Spotify-Passwort erforderlich.'),
-  row('road','Blitzer.de · HA-Konfigurations-ID','26-stellige Config Entry ID',
-      road.configId?'Eingerichtet':'Nicht eingerichtet',
-      'Steuert den optionalen Routenscan; kein Home-Assistant-Token.'),
-  row('tv','MeviTV · vierstelliger PIN','Vierstelligen Zugangscode eingeben',
-      tvPin?(nativePinAvailable?'Verschlüsselt in der APK gespeichert':'Auf diesem Gerät gespeichert'):'Nicht hinterlegt',
-      android?'Die neue Android-APK speichert die PIN verschlüsselt. Bei älteren APK-Versionen kann die PIN im WebView-Speicher liegen.':'Der PIN bleibt auf diesem Gerät im Browser-Speicher; dort ist er nicht verschlüsselt.',{secret:true,pin:true}),
-  '<h3>Home Assistant</h3>',
-  row('ha','Home Assistant · Long-Lived Access Token','Neuen HA-Token einfügen',
-      ha.connected?(haSaved?'API verbunden · im Browser gespeichert':'API verbunden'):haSaved?'Im Browser gespeichert · nicht verbunden':ha.tokenPresent?'Token in dieser Sitzung vorhanden':'Nicht verbunden',
-      android?'Die Android-APK nutzt ihren bisherigen geschützten Gerätespeicher.':'Der Token bleibt nach einem Neustart in diesem Browser gespeichert (nicht verschlüsselt). Nur auf einem privaten PC verwenden; mit „Entfernen“ wieder löschen.',{secret:true}),
-  '<div class="mevi-cred-row"><label for="mevi-cred-ha-origin">Home Assistant · HTTPS-Adresse</label>'+
-  '<div class="mevi-cred-form"><input id="mevi-cred-ha-origin" type="url" spellcheck="false" value="'+escapeHTML(ha.origin||'')+'" placeholder="https://homeassistant.example">'+
-  '<button type="button" onclick="MeviCredentials.save(\'ha-origin\')">Adresse speichern</button></div>'+
-  '<label for="mevi-cred-ha-path">Dashboard-Pfad</label><input id="mevi-cred-ha-path" type="text" spellcheck="false" value="'+escapeHTML(ha.dashboard?.replace(ha.origin||'','')||'/')+'">'+
-  '<p>API und Dashboard verwenden dieselbe gespeicherte HTTPS-Basisadresse. Für die Browser-API muss Home Assistant die CORS-Herkunft erlauben.</p></div>'
+ group('navigation','Google Navigation',android?(nativeStatus?.mapsKey?'Gespeichert':'Status prüfen'):status(saved(MAPS_KEY)),
+ android?row('android-maps','Android-API-Key','Android-SDK-Schlüssel eingeben',nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen','Für Karte, Adresssuche und Routenführung. In Google Cloud: Paket de.mevicar.next und SHA-1 der signierten APK freigeben.',{secret:true}):row('maps','Browser-API-Key','Neuen Browser-API-Key eingeben',status(saved(MAPS_KEY)),'In Google Cloud den HTTP-Referrer auf deine MeviCar-Website einschränken.',{secret:true})),
+ group('spotify','Spotify',status(saved(SPOTIFY_KEY)),row('spotify','Client-ID','Neue Spotify Client-ID eingeben',status(saved(SPOTIFY_KEY)),'Die Anmeldung erfolgt in der Spotify-App von MeviCar. Kein Client Secret oder Spotify-Passwort erforderlich.')),
+ group('ha','Home Assistant',ha.connected?'Verbunden':haSaved?'Gespeichert · offline':'Nicht verbunden',
+ '<div class="mevi-cred-row"><label for="mevi-cred-ha-origin">Server-Adresse</label><div class="mevi-cred-form"><input id="mevi-cred-ha-origin" type="url" spellcheck="false" value="'+escapeHTML(ha.origin||'')+'" placeholder="https://homeassistant.example"></div><label for="mevi-cred-ha-path">Dashboard-Pfad</label><div class="mevi-cred-form"><input id="mevi-cred-ha-path" type="text" spellcheck="false" value="'+escapeHTML(ha.dashboard?.replace(ha.origin||'','')||'/')+'"><button type="button" onclick="MeviCredentials.save(\'ha-origin\')">Adresse speichern</button></div></div>'+
+ row('ha','Zugriffstoken','Neuen HA-Token einfügen',ha.connected?(haSaved?'API verbunden · im Browser gespeichert':'API verbunden'):haSaved?'Im Browser gespeichert · nicht verbunden':'Nicht verbunden',android?'Geschützter Gerätespeicher der Android-APK.':'Wird lokal und unverschlüsselt in diesem Browser gespeichert. Home Assistant muss diese Website per CORS erlauben.',{secret:true})),
+ group('calendar','Google Kalender',status(cal.clientId),row('calendar','OAuth-Web-Client-ID','…apps.googleusercontent.com',status(cal.clientId),'Lesender Kalenderzugriff. Dein Google-Passwort wird hier nicht benötigt.')),
+ group('road','Blitzer.de',status(road.configId),row('road','HA-Konfigurations-ID','26-stellige Config Entry ID',status(road.configId),'Für den optionalen Routenscan der Home-Assistant-Integration.')),
+ group('tv','MeviTV',tvPin?'PIN hinterlegt':'Nicht eingerichtet',row('tv','Vierstelliger PIN','Vierstelligen Zugangscode eingeben',tvPin?(nativePinAvailable?'Verschlüsselt in der APK gespeichert':'Auf diesem Gerät gespeichert'):'Nicht hinterlegt',android?'Aktuelle APK: verschlüsselt im Gerätespeicher. Ältere APKs: gegebenenfalls im WebView-Speicher.':'Lokal und unverschlüsselt in diesem Browser gespeichert.',{secret:true,pin:true}))
  ];
- if(android){
-  groups.push('<h3>Nur Android-APK</h3>');
-  groups.push(row('github-token','GitHub · Token für private APK-Updates','GitHub Fine-grained PAT eingeben',
-    nativeStatus?.githubToken?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
-    'Nur Zugriff auf eskiya771/mevicar-next · Contents: Read-only. Der Token wird ausschließlich im Android Keystore gespeichert.',{secret:true}));
-  groups.push('<button type="button" onclick="MeviCredentials.refreshNativeStatus()">Gespeicherte Android-Zugänge prüfen</button>');
- }else{
-  groups.push('<p class="mevi-cred-note">Der Android-Navigation-SDK-Schlüssel wird ausschließlich in Settings der APK eingegeben, nicht im Browser.</p>');
- }
- return '<div class="mevi-credentials"><p class="mevi-cred-intro">Alle Schlüssel, Client-IDs, PINs und Zugänge werden hier verwaltet. Die übrigen Apps haben keine eigenen Zugangsdatenfelder mehr.</p>'+
-  groups.join('')+
-  '<p class="mevi-cred-note">'+(android?
-   'Android: Google-Navigation und Places verwenden ausschließlich den Android-API-Key im verschlüsselten Android Keystore; ein Browser-Key wird nicht benötigt.':
-   'Web-App: Google Maps nutzt einen auf diese Website eingeschränkten Browser-API-Key.')+
-   ' Der MeviTV-PIN wird in der aktuellen Android-APK verschlüsselt, in der Web-App lokal gespeichert. '+
-   (android?'Die Android-APK verwaltet HA-Zugänge weiterhin separat.':'Der HA-Token wird lokal und unverschlüsselt in diesem Browser gespeichert, nicht auf GitHub.')+'</p>'+
-  '<section class="mevi-backup" aria-label="Verschlüsselter Zugangsdaten-Transfer">'+
-    '<h3>Verschlüsseltes Backup</h3>'+
-    '<p>Überträgt API-Schlüssel, Zugangsdaten und die Spotify-Anmeldung auf ein anderes Gerät. Keine Cloud, kein GitHub-Upload.</p>'+
-    '<label for="mevi-backup-pass">Backup-Passwort (mindestens 12 Zeichen)</label>'+
-    '<input id="mevi-backup-pass" type="password" autocomplete="new-password" placeholder="Eigenes sicheres Passwort">'+
-    '<label for="mevi-backup-confirm">Passwort für Export wiederholen</label>'+
-    '<input id="mevi-backup-confirm" type="password" autocomplete="new-password" placeholder="Nur beim Export nötig">'+
-    '<label for="mevi-backup-file">Gesicherte Datei zum Importieren</label>'+
-    '<input id="mevi-backup-file" type="file" accept=".mevibackup,application/json">'+
-    '<div class="mevi-backup-actions"><button type="button" onclick="MeviCredentials.exportBackup()">Backup exportieren</button>'+
-    '<button type="button" onclick="MeviCredentials.importBackup()">Backup importieren</button></div>'+
-    '<small>Die Backup-Datei enthält auch Spotify-Refresh-Token. Passwort und Datei getrennt aufbewahren. Die Anmeldung kann durch Spotify ungültig werden.</small></section>'+
-  '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div></div>';
+ if(android)groups.push(group('android','Android-Updates',nativeStatus?.githubToken?'Gespeichert':'Status prüfen',row('github-token','GitHub-Token','GitHub Fine-grained PAT eingeben',nativeStatus?.githubToken?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen','Nur eskiya771/mevicar-next · Contents: Read-only. Speicherung im Android Keystore.',{secret:true})+'<button type="button" onclick="MeviCredentials.refreshNativeStatus()">Gerätespeicher prüfen</button>'));
+ return '<div class="mevi-credentials">'+groups.join('')+'<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div>'+ '</div>';
 }
 async function save(id){
  const v=value(id);
@@ -6799,9 +6747,10 @@ async function importBackup(){
  }catch(_){report(_?.message||'Backup konnte nicht importiert werden.')}
 }
 
-global.MeviCredentials={html,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
+global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
+
 </script><script src="./native-updates.js"></script><script src="./nav-dashboard.js"></script><script id="mevicar-navigation-script">/* MeviCar Next navigation adapter – Classic destination rules, Google Maps web APIs.
    A browser-restricted Google Maps JavaScript key is required. Never copy Android keys. */
 (function(){
@@ -8027,6 +7976,7 @@ window.MeviGoogleNav={guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,bro
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
+
 
 </script><script id="mevicar-android-addressbook-script">/* Native address-book adapter, Stage 1: one Android DestinationStore, zero copied data.
    This does not replace Fable's native Places UI until its separate provider is ready.
@@ -9580,6 +9530,7 @@ window.render?.();
   // Helpers for node-only contract tests; no token or credentials exposed.
   cameraFromState,validateOrigin,validatePath};
 })();
+
 </script><script id="mevicar-calendar-script">/* MeviCar Next – Kalender.
    Native CalendarContract is unavailable to a PWA. Real sources:
    Google Calendar via official Google Identity Services readonly OAuth, or local .ics.
@@ -10100,7 +10051,8 @@ window.MeviCalendar={html,mount,unmount,tab,month,day,today,toggleSource,chooseF
  setClientId,connectGoogle,disconnectGoogle,refresh,parseICS,parseICSDate,expandICS,normalizeGoogleEvent,eventsWindow,
  debug:()=>({imports:state.imports.length,google:!!state.googleToken,calendars:sourceList().length,
    googleEvents:state.googleEvents.length,storedGoogleEvents:false,tab:state.tab})};
-})();</script><script id="mevicar-whatsapp-script">/* MeviCar Next / WhatsApp
+})();
+</script><script id="mevicar-whatsapp-script">/* MeviCar Next / WhatsApp
    Official wa.me and WhatsApp Web hand-off, not an unauthorized chat client.
    Contacts are stored only on this device. Never claim to receive notifications,
    read chats, send messages automatically or access Android NotificationListener.
@@ -10379,6 +10331,7 @@ window.MeviCalendar={html,mount,unmount,tab,month,day,today,toggleSource,chooseF
    contacts:state.contacts.length,selected:!!selected(),localOnly:true,inboxAvailable:false,notificationBridge:false
   })};
 })();
+
 </script><script id="mevicar-youtube-script">/* MeviCar Next · YouTube
    Classic-compatible: official iframe, video/playlist link, stationary GPS guard.
    No YouTube Data API key, no background playback, no secret storage. */
@@ -10626,7 +10579,8 @@ window.MeviYouTube={html,mount,unmount,load,stop,setInput,openExternal,bookmark,
  parseLink,embedUrl,publicUrl,currentFix,
  debug:()=>({mounted:state.mounted,playing:state.playing,hasFix:!!state.fix,
     status:state.status,source:state.input,watchActive:state.watchId!==null})};
-})();</script><script id="mevicar-stocks-script">/* MeviCar Next · free TradingView stocks.
+})();
+</script><script id="mevicar-stocks-script">/* MeviCar Next · free TradingView stocks.
    Official embeddable chart with historical data. No Home Assistant or API key. */
 (function(){
 'use strict';
@@ -10833,7 +10787,8 @@ function mount(){state.mounted=!!document.querySelector('.mevi-tv');if(state.mou
 function unmount(){state.mounted=false;state.generation++}
 window.MeviStocks={html,mount,unmount,select,period,favorite,favoritesOnly,search,toggleAdd,add,remove,editQuote,validSymbol,resolveSymbol,chartConfig,
  debug:()=>({mounted:state.mounted,symbol:state.symbol,period:state.period,items:state.items.map(x=>x.symbol),favorites:[...state.favorites]})};
-})();</script><script id="mevicar-roadassist-script">/* MeviCar Next Road Assist – port of Classic route camera geometry, not a fake overlay.
+})();
+</script><script id="mevicar-roadassist-script">/* MeviCar Next Road Assist – port of Classic route camera geometry, not a fake overlay.
    Uses only camera entities from the user's connected Home Assistant session.
    Route sampling is opt-in: it changes an HA device_tracker and calls blitzer.refresh_controls.
    No tokens, keys or camera positions are committed. */
@@ -11624,6 +11579,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
     }
     window.MevidartsParallax = Object.freeze({ scenes: SCENES, width: WIDTH, height: HEIGHT, draw });
 })();
+
 </script><script id="mevidarts-showcase">/* Ported without changing renderer logic from eskiya771/mevidarts/client/js/effects-showcase.js for MeviCar Next screensaver. */
 /* global window */
 (() => {
@@ -11807,6 +11763,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
     }
     window.MevidartsShowcase = Object.freeze({ scenes, create });
 })();
+
 </script><script id="mevidarts-light-renderer">/* Original MeviDarts 35-effect renderer, adapted only for an embeddable canvas API.
  * Rendering code in renderAtmosphere/renderExtra/render comes from
  * eskiya771/mevidarts/client/js/effects.js without changes.
@@ -12105,7 +12062,8 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
    return Object.freeze({resize,draw,touch:(x,y,t)=>showcase.touch(x,y,t),reset:()=>{showcase.reset();lastTouchPulse=-Infinity}});
  }
  window.MevidartsLightRenderer=Object.freeze({effects:EFFECTS,create});
-})();</script><script id="mevicar-screensaver-script">/* MeviCar Next screensaver, adapted from MeviDarts effects.js aurora / orbits / stars / neon grid.
+})();
+</script><script id="mevicar-screensaver-script">/* MeviCar Next screensaver, adapted from MeviDarts effects.js aurora / orbits / stars / neon grid.
    Self-contained: never animates in the background when hidden. */
 (function(){
   'use strict';
@@ -12251,6 +12209,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
   window.addEventListener('resize',()=>{if(active&&renderer)measure()});
   schedule();
 })();
+
 </script><script id="mevicar-media-script">/* MeviMedia Next – touchscreen player based on Classic MeviMedia 3.0's library-first UX.
    Browser player: user-approved files and folders, no persistent file access claims. */
 (function(){
@@ -12827,7 +12786,8 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
     meviMediaShowVideo:showVideo,meviMediaCloseVideo:closeVideo,meviMediaStopForSource:onSourceChanged,
     meviMediaDebug:()=>({count:st.tracks.length,current:st.index,section:st.section,queue:st.queue.length,playing:!!player&&!player.paused,shuffle:st.shuffle,repeat:st.repeat})
   });
-})();</script><script id="mevicar-spotify-script">/* MeviCar Next – Spotify Premium browser player.
+})();
+</script><script id="mevicar-spotify-script">/* MeviCar Next – Spotify Premium browser player.
    Plays exclusively on this MeviCar device through the Spotify Web Playback SDK.
    OAuth Authorization Code + PKCE only: no backend, no client secret, tokens stay local. */
 (function () {
@@ -14902,6 +14862,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
     rerender();
   });
 })();
+
 </script><script id="mevicar-lightshow-script">/* MeviCar Next Lichtshow – 35 authentic MeviDarts effects as a cockpit app.
    Independent from the idle screensaver; animation is cancelled on unmount. */
 (function(){
@@ -15067,6 +15028,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
   window.meviLightshowToggle=toggle;
   window.meviLightshowDebug=()=>({active:visible,playing:state.playing,effect:state.effect,current:effective(),cycleSeconds:state.cycleSeconds,frames:!!raf});
 })();
+
 </script><script id="mevicar-speedometer-script">/* MeviCar Next premium speedometer.
    Two analog gauges, GPS trip, compass and a clearly marked demo mode.
    Odometer and RPM stay empty until a real vehicle source is ingested. */
@@ -15636,6 +15598,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
     };
   };
 })();
+
 </script><script id="mevicar-tacho-next-script">/* Tacho Next: native MeviCar app component, no iframe or separate document. */
 (function(){
 'use strict';
@@ -15864,7 +15827,8 @@ window.meviTachoNextHTML=()=>'<div class="tn-root" aria-label="Tacho Next lädt"
 window.meviTachoNextMount=mount;
 window.meviTachoNextUnmount=unmount;
 window.meviTachoNextDebug=()=>({mounted:!!host,gpsWatch,orientationOn,speedKmh:speed,rpm,odometerKm,tripKm:trip,heading:compassHeading(),lastFixAt,gpsStatus});
-})();</script><script id="mevicar-sudoku-script">/* MeviCar Next Sudoku: self-contained native app, no dependencies. */
+})();
+</script><script id="mevicar-sudoku-script">/* MeviCar Next Sudoku: self-contained native app, no dependencies. */
 (function(){
 'use strict';
 let game=null,root=null,boardObserver=null;
@@ -15938,7 +15902,8 @@ function unmount(){
  root=null;
 }
 window.meviSudokuHTML=()=>'<div class="sdk-host"></div>';window.meviSudokuMount=mount;window.meviSudokuUnmount=unmount;
-})();</script><script>/* Dependency-free falling-block game and lifecycle adapter. */
+})();
+</script><script>/* Dependency-free falling-block game and lifecycle adapter. */
 (function(global){
 'use strict';
 const SHAPES=[
@@ -15992,6 +15957,7 @@ function unmount(){clearTimeout(timer);timer=null;paused=true;document.removeEve
 function mount(){unmount();root=document.querySelector('.tt-root');if(!root)return;if(!game)game=new Game();root.addEventListener('click',click);document.addEventListener('keydown',key);document.addEventListener('visibilitychange',visibility);draw();}
 global.meviTetrisHTML=html;global.meviTetrisMount=mount;global.meviTetrisUnmount=unmount;
 })(typeof window==='undefined'?globalThis:window);
+
 </script><script id="mevicar-bottle-game-script">/* MeviCar Next – "Wer ist schuld?" party bottle spinner.
    A local, playful random selector: no server, no personal data, no hidden weighting. */
 (function(root){
@@ -16179,6 +16145,7 @@ root.meviWhosGuiltyMount=mount;
 root.meviWhosGuiltyUnmount=unmount;
 if(typeof module!=='undefined'&&module.exports)module.exports={DEFAULT,randomIndex,nextRotation,clean};
 })(typeof window!=='undefined'?window:globalThis);
+
 </script><script>/* MeviTV Xtream: session-only credentials. Provider must support HTTPS and browser CORS. */
 (function(global){
 'use strict';
@@ -16321,6 +16288,7 @@ Object.assign(api,{connect,active,remove,view,episodes,playbackURL,epg,normalize
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 global.meviXtream=api;
 })(typeof window==='undefined'?globalThis:window);
+
 </script><script>/* MeviTV: public broadcaster HLS streams, local favorites and user playlists. */
 (function(global){
 'use strict';
@@ -17304,4 +17272,6 @@ global.meviTVHTML=html;global.meviTVMount=mount;global.meviTVUnmount=unmount;glo
 // Begin fetching the last IPTV catalogue at app startup, before TV is opened.
 void restoreLastPlaylist();
 })(typeof window==='undefined'?globalThis:window);
+
 </script></body></html>
+

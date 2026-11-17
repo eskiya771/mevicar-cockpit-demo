@@ -72,9 +72,9 @@ function statusInfo(data){
 }
 function html(){
  if(!native()){
-  return '<section class="mevi-updates"><h3>Web-App-Updates</h3><p>Diese Seite läuft als Web-App. Updates werden durch GitHub Pages veröffentlicht und über die Update-Funktion der Web-App geladen.</p>'+
+  return '<section class="mevi-updates"><h3>Web-App-Updates</h3><p>Prüfe, ob eine neuere Version für deine Web-App verfügbar ist.</p>'+
   '<button type="button" onclick="checkForUpdate()">Web-App auf Updates prüfen</button>'+
-  '<p class="mevi-update-note">Der native APK-Installer und GitHub-Token werden ausschließlich in der Android-APK angeboten.</p></section>';
+  '<p class="mevi-update-note">Deine gespeicherten Einstellungen bleiben beim Aktualisieren erhalten.</p></section>';
  }
  if(state.supported===false)return '<section class="mevi-updates"><h3>APK-Updates</h3><p>Diese ältere Android-APK enthält noch keinen nativen Update-Installer. Nach dem einmaligen Umstieg auf die dauerhaft signierte Next-APK stehen künftige Updates hier zur Verfügung.</p><p>Die alte Debug-Signatur kann nicht überinstalliert werden. Vor einer Neuinstallation zuerst Einstellungen und Daten sichern.</p></section>';
  const x=state.release;
@@ -82,12 +82,12 @@ function html(){
  const installed=state.installedBuild===null?'Status noch nicht gelesen':esc(state.installedVersion)+' · APK-Build '+state.installedBuild;
  return '<section class="mevi-updates" aria-label="Android Updates">'+
   '<h3>MeviCar Next · Android-Updates</h3>'+
-  '<p>Wie bei MeviCar Classic: Privates GitHub-Release prüfen, signierte APK herunterladen und anschließend mit Android installieren.</p>'+
+  '<p>Prüfe die gewählte Version und installiere verfügbare Updates.</p>'+
   '<div class="mevi-update-panel"><strong>Installiert:</strong> '+installed+'</div>'+
   '<div class="mevi-update-panel"><strong>Updatekanal</strong><div class="mevi-update-actions">'+
   '<button type="button" aria-pressed="'+(state.channel==='preview')+'" '+(state.busy?'disabled':'')+' onclick="MeviNativeUpdates.channel(\'preview\')">Preview / Beta</button>'+
   '<button type="button" aria-pressed="'+(state.channel==='stable')+'" '+(state.busy?'disabled':'')+' onclick="MeviNativeUpdates.channel(\'stable\')">Stable</button>'+
-  '</div><small>Preview sucht nur dauerhaft signierte Next-Test-APKs. Die alten Debug-Builds werden ausdrücklich ausgeschlossen.</small></div>'+
+  '</div><small>Beta enthält die neuesten Änderungen. Stable ist der reguläre Veröffentlichungskanal.</small></div>'+
   '<div class="mevi-update-panel">'+
   '<div class="mevi-update-actions"><button type="button" '+(state.busy?'disabled':'')+' onclick="MeviNativeUpdates.check()">Auf Updates prüfen</button>'+
   (available?'<button type="button" '+(state.busy?'disabled':'')+' onclick="MeviNativeUpdates.download()">APK laden &amp; installieren</button>':'')+
@@ -166,3 +166,4 @@ async function cancel(){
 async function webUpdate(onProgress){return request('web.update',{},onProgress);}
 global.MeviNativeUpdates={html,refresh,channel,check,download,install,permission,cancel,webUpdate,debug:()=>({...state})};
 })(typeof window==='undefined'?globalThis:window);
+

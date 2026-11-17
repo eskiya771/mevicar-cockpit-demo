@@ -107,74 +107,44 @@ function tvPinReady(){
  return tvPinLoad;
 }
 if(nativeAvailable())void tvPinReady();
+const openGroups=new Set();
+function toggleGroup(id,open){if(open)openGroups.add(id);else openGroups.delete(id)}
+function group(id,title,status,body){
+ return '<details class="mevi-service"'+(openGroups.has(id)?' open':'')+' ontoggle="MeviCredentials.toggleGroup(\''+id+'\',this.open)"><summary><span class="mevi-service-title">'+escapeHTML(title)+'</span><span class="mevi-service-status">'+escapeHTML(status)+'</span><span class="mevi-service-chevron" aria-hidden="true">›</span></summary><div class="mevi-service-body">'+body+'</div></details>';
+}
+let backupMode='export';
+function setBackupMode(mode){backupMode=mode==='import'?'import':'export';global.render?.()}
+function backupHTML(){
+ const importing=backupMode==='import';
+ return '<section class="mevi-backup" aria-label="Verschlüsselter Zugangsdaten-Transfer">'+
+ '<div class="mevi-backup-modes" role="group" aria-label="Sicherungsaktion"><button type="button" aria-pressed="'+(!importing)+'" onclick="MeviCredentials.setBackupMode(\'export\')">Exportieren</button><button type="button" aria-pressed="'+importing+'" onclick="MeviCredentials.setBackupMode(\'import\')">Importieren</button></div>'+
+ '<h3>'+(importing?'Sicherung wiederherstellen':'Verschlüsselte Sicherung erstellen')+'</h3>'+
+ '<p>'+(importing?'Wähle deine .mevibackup-Datei und gib das zugehörige Passwort ein.':'Enthält API-Schlüssel, Zugangsdaten und die Spotify-Anmeldung.')+'</p>'+
+ (importing?'<label for="mevi-backup-file">Sicherungsdatei</label><input id="mevi-backup-file" type="file" accept=".mevibackup,application/json">':'')+
+ '<div class="mevi-backup-fields"><div><label for="mevi-backup-pass">'+(importing?'Backup-Passwort':'Passwort · mindestens 12 Zeichen')+'</label><input id="mevi-backup-pass" type="password" autocomplete="new-password" placeholder="Backup-Passwort"></div>'+
+ (!importing?'<div><label for="mevi-backup-confirm">Passwort wiederholen</label><input id="mevi-backup-confirm" type="password" autocomplete="new-password" placeholder="Passwort bestätigen"></div>':'')+'</div>'+
+ '<div class="mevi-backup-actions"><button type="button" onclick="MeviCredentials.'+(importing?'importBackup':'exportBackup')+'()">'+(importing?'Backup importieren':'Backup exportieren')+'</button></div>'+
+ '<small>'+(importing?'Vorhandene Zugänge werden nach Bestätigung ersetzt.':'Datei und Passwort getrennt aufbewahren. Die Datei enthält auch die Spotify-Sitzung; Spotify kann eine erneute Anmeldung verlangen.')+'</small></section>'+
+ '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div>';
+}
 function html(){
  const ha=global.MeviHA?.debug?.()||{};
- const cal=json(CAL_KEY),road=json(ROAD_KEY);
- const android=nativeAvailable();
+ const cal=json(CAL_KEY),road=json(ROAD_KEY),android=nativeAvailable();
  const haSaved=!android&&!!webHaRecord();
+ const status=ready=>ready?'Eingerichtet':'Nicht eingerichtet';
  const groups=[
-  '<h3>Google-Dienste</h3>',
-  ...(android?[
-   row('android-maps','Google Navigation SDK · Android-API-Key','Android-SDK-Schlüssel eingeben',
-       nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
-       'Für Android-Karte, Google-Places-Adresssuche und Routenführung. Paket de.mevicar.next und SHA-1 der signierten APK in Google Cloud freigeben.',{secret:true})
-  ]:[
-   row('maps','Google Maps · Browser-API-Key','Neuen Browser-API-Key eingeben',
-       saved(MAPS_KEY)?'Eingerichtet':'Nicht eingerichtet',
-       'Nur für die Web-App: HTTP-Referrer auf die MeviCar-Seite einschränken. Kein Android-SDK-Schlüssel.')
-  ]),
-  row('calendar','Google Kalender · OAuth-Web-Client-ID','…apps.googleusercontent.com',
-      cal.clientId?'Eingerichtet':'Nicht eingerichtet',
-      'Client-ID für den lesenden Kalenderzugriff; Google-Passwort wird niemals hier eingegeben.'),
-  '<h3>Medien und Blitzer</h3>',
-  row('spotify','Spotify · Client-ID','Neue Spotify Client-ID eingeben',
-      saved(SPOTIFY_KEY)?'Eingerichtet':'Nicht eingerichtet',
-      'OAuth PKCE: kein Client Secret oder Spotify-Passwort erforderlich.'),
-  row('road','Blitzer.de · HA-Konfigurations-ID','26-stellige Config Entry ID',
-      road.configId?'Eingerichtet':'Nicht eingerichtet',
-      'Steuert den optionalen Routenscan; kein Home-Assistant-Token.'),
-  row('tv','MeviTV · vierstelliger PIN','Vierstelligen Zugangscode eingeben',
-      tvPin?(nativePinAvailable?'Verschlüsselt in der APK gespeichert':'Auf diesem Gerät gespeichert'):'Nicht hinterlegt',
-      android?'Die neue Android-APK speichert die PIN verschlüsselt. Bei älteren APK-Versionen kann die PIN im WebView-Speicher liegen.':'Der PIN bleibt auf diesem Gerät im Browser-Speicher; dort ist er nicht verschlüsselt.',{secret:true,pin:true}),
-  '<h3>Home Assistant</h3>',
-  row('ha','Home Assistant · Long-Lived Access Token','Neuen HA-Token einfügen',
-      ha.connected?(haSaved?'API verbunden · im Browser gespeichert':'API verbunden'):haSaved?'Im Browser gespeichert · nicht verbunden':ha.tokenPresent?'Token in dieser Sitzung vorhanden':'Nicht verbunden',
-      android?'Die Android-APK nutzt ihren bisherigen geschützten Gerätespeicher.':'Der Token bleibt nach einem Neustart in diesem Browser gespeichert (nicht verschlüsselt). Nur auf einem privaten PC verwenden; mit „Entfernen“ wieder löschen.',{secret:true}),
-  '<div class="mevi-cred-row"><label for="mevi-cred-ha-origin">Home Assistant · HTTPS-Adresse</label>'+
-  '<div class="mevi-cred-form"><input id="mevi-cred-ha-origin" type="url" spellcheck="false" value="'+escapeHTML(ha.origin||'')+'" placeholder="https://homeassistant.example">'+
-  '<button type="button" onclick="MeviCredentials.save(\'ha-origin\')">Adresse speichern</button></div>'+
-  '<label for="mevi-cred-ha-path">Dashboard-Pfad</label><input id="mevi-cred-ha-path" type="text" spellcheck="false" value="'+escapeHTML(ha.dashboard?.replace(ha.origin||'','')||'/')+'">'+
-  '<p>API und Dashboard verwenden dieselbe gespeicherte HTTPS-Basisadresse. Für die Browser-API muss Home Assistant die CORS-Herkunft erlauben.</p></div>'
+ group('navigation','Google Navigation',android?(nativeStatus?.mapsKey?'Gespeichert':'Status prüfen'):status(saved(MAPS_KEY)),
+ android?row('android-maps','Android-API-Key','Android-SDK-Schlüssel eingeben',nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen','Für Karte, Adresssuche und Routenführung. In Google Cloud: Paket de.mevicar.next und SHA-1 der signierten APK freigeben.',{secret:true}):row('maps','Browser-API-Key','Neuen Browser-API-Key eingeben',status(saved(MAPS_KEY)),'In Google Cloud den HTTP-Referrer auf deine MeviCar-Website einschränken.',{secret:true})),
+ group('spotify','Spotify',status(saved(SPOTIFY_KEY)),row('spotify','Client-ID','Neue Spotify Client-ID eingeben',status(saved(SPOTIFY_KEY)),'Die Anmeldung erfolgt in der Spotify-App von MeviCar. Kein Client Secret oder Spotify-Passwort erforderlich.')),
+ group('ha','Home Assistant',ha.connected?'Verbunden':haSaved?'Gespeichert · offline':'Nicht verbunden',
+ '<div class="mevi-cred-row"><label for="mevi-cred-ha-origin">Server-Adresse</label><div class="mevi-cred-form"><input id="mevi-cred-ha-origin" type="url" spellcheck="false" value="'+escapeHTML(ha.origin||'')+'" placeholder="https://homeassistant.example"></div><label for="mevi-cred-ha-path">Dashboard-Pfad</label><div class="mevi-cred-form"><input id="mevi-cred-ha-path" type="text" spellcheck="false" value="'+escapeHTML(ha.dashboard?.replace(ha.origin||'','')||'/')+'"><button type="button" onclick="MeviCredentials.save(\'ha-origin\')">Adresse speichern</button></div></div>'+
+ row('ha','Zugriffstoken','Neuen HA-Token einfügen',ha.connected?(haSaved?'API verbunden · im Browser gespeichert':'API verbunden'):haSaved?'Im Browser gespeichert · nicht verbunden':'Nicht verbunden',android?'Geschützter Gerätespeicher der Android-APK.':'Wird lokal und unverschlüsselt in diesem Browser gespeichert. Home Assistant muss diese Website per CORS erlauben.',{secret:true})),
+ group('calendar','Google Kalender',status(cal.clientId),row('calendar','OAuth-Web-Client-ID','…apps.googleusercontent.com',status(cal.clientId),'Lesender Kalenderzugriff. Dein Google-Passwort wird hier nicht benötigt.')),
+ group('road','Blitzer.de',status(road.configId),row('road','HA-Konfigurations-ID','26-stellige Config Entry ID',status(road.configId),'Für den optionalen Routenscan der Home-Assistant-Integration.')),
+ group('tv','MeviTV',tvPin?'PIN hinterlegt':'Nicht eingerichtet',row('tv','Vierstelliger PIN','Vierstelligen Zugangscode eingeben',tvPin?(nativePinAvailable?'Verschlüsselt in der APK gespeichert':'Auf diesem Gerät gespeichert'):'Nicht hinterlegt',android?'Aktuelle APK: verschlüsselt im Gerätespeicher. Ältere APKs: gegebenenfalls im WebView-Speicher.':'Lokal und unverschlüsselt in diesem Browser gespeichert.',{secret:true,pin:true}))
  ];
- if(android){
-  groups.push('<h3>Nur Android-APK</h3>');
-  groups.push(row('github-token','GitHub · Token für private APK-Updates','GitHub Fine-grained PAT eingeben',
-    nativeStatus?.githubToken?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen',
-    'Nur Zugriff auf eskiya771/mevicar-next · Contents: Read-only. Der Token wird ausschließlich im Android Keystore gespeichert.',{secret:true}));
-  groups.push('<button type="button" onclick="MeviCredentials.refreshNativeStatus()">Gespeicherte Android-Zugänge prüfen</button>');
- }else{
-  groups.push('<p class="mevi-cred-note">Der Android-Navigation-SDK-Schlüssel wird ausschließlich in Settings der APK eingegeben, nicht im Browser.</p>');
- }
- return '<div class="mevi-credentials"><p class="mevi-cred-intro">Alle Schlüssel, Client-IDs, PINs und Zugänge werden hier verwaltet. Die übrigen Apps haben keine eigenen Zugangsdatenfelder mehr.</p>'+
-  groups.join('')+
-  '<p class="mevi-cred-note">'+(android?
-   'Android: Google-Navigation und Places verwenden ausschließlich den Android-API-Key im verschlüsselten Android Keystore; ein Browser-Key wird nicht benötigt.':
-   'Web-App: Google Maps nutzt einen auf diese Website eingeschränkten Browser-API-Key.')+
-   ' Der MeviTV-PIN wird in der aktuellen Android-APK verschlüsselt, in der Web-App lokal gespeichert. '+
-   (android?'Die Android-APK verwaltet HA-Zugänge weiterhin separat.':'Der HA-Token wird lokal und unverschlüsselt in diesem Browser gespeichert, nicht auf GitHub.')+'</p>'+
-  '<section class="mevi-backup" aria-label="Verschlüsselter Zugangsdaten-Transfer">'+
-    '<h3>Verschlüsseltes Backup</h3>'+
-    '<p>Überträgt API-Schlüssel, Zugangsdaten und die Spotify-Anmeldung auf ein anderes Gerät. Keine Cloud, kein GitHub-Upload.</p>'+
-    '<label for="mevi-backup-pass">Backup-Passwort (mindestens 12 Zeichen)</label>'+
-    '<input id="mevi-backup-pass" type="password" autocomplete="new-password" placeholder="Eigenes sicheres Passwort">'+
-    '<label for="mevi-backup-confirm">Passwort für Export wiederholen</label>'+
-    '<input id="mevi-backup-confirm" type="password" autocomplete="new-password" placeholder="Nur beim Export nötig">'+
-    '<label for="mevi-backup-file">Gesicherte Datei zum Importieren</label>'+
-    '<input id="mevi-backup-file" type="file" accept=".mevibackup,application/json">'+
-    '<div class="mevi-backup-actions"><button type="button" onclick="MeviCredentials.exportBackup()">Backup exportieren</button>'+
-    '<button type="button" onclick="MeviCredentials.importBackup()">Backup importieren</button></div>'+
-    '<small>Die Backup-Datei enthält auch Spotify-Refresh-Token. Passwort und Datei getrennt aufbewahren. Die Anmeldung kann durch Spotify ungültig werden.</small></section>'+
-  '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div></div>';
+ if(android)groups.push(group('android','Android-Updates',nativeStatus?.githubToken?'Gespeichert':'Status prüfen',row('github-token','GitHub-Token','GitHub Fine-grained PAT eingeben',nativeStatus?.githubToken?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen','Nur eskiya771/mevicar-next · Contents: Read-only. Speicherung im Android Keystore.',{secret:true})+'<button type="button" onclick="MeviCredentials.refreshNativeStatus()">Gerätespeicher prüfen</button>'));
+ return '<div class="mevi-credentials">'+groups.join('')+'<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div>'+ '</div>';
 }
 async function save(id){
  const v=value(id);
@@ -438,6 +408,7 @@ async function importBackup(){
  }catch(_){report(_?.message||'Backup konnte nicht importiert werden.')}
 }
 
-global.MeviCredentials={html,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
+global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
+
