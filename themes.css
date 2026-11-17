@@ -409,13 +409,27 @@ html[data-theme="liquidglass"] .suggestion .circle{background:#b2e2ff2e;border-c
   .map.searchmode .keyboard .keyrow .special,.map.searchmode .keyboard .keyrow .go{font-size:clamp(10px,2.4vh,14px)}
 }
 
-/* Individual sidebar buttons provide their own surfaces and active outline. */
-html[data-theme] .cockpit .dock.left{
-  background:transparent;
-  border-color:transparent;
-  box-shadow:none;
+/* Keep the app dock fully opaque above the Google Maps canvas.
+   Shared for Web and Hybrid: selected tabs retain their app accent. */
+html[data-theme] .cockpit .dock{
+  --dock-panel-bg:#102438;
+  --dock-tile-bg:#203a50;
+  --dock-tile-border:#385a70;
+  background:var(--dock-panel-bg);
+  border:1px solid var(--dock-tile-border);
+  box-shadow:0 6px 18px #06101c99;
   backdrop-filter:none;
   -webkit-backdrop-filter:none;
+}
+html[data-theme="cyberpunk"] .cockpit .dock{
+  --dock-panel-bg:#1b102a;
+  --dock-tile-bg:#32203f;
+  --dock-tile-border:#62406f;
+}
+html[data-theme="liquidglass"] .cockpit .dock{
+  --dock-panel-bg:#172d45;
+  --dock-tile-bg:#2c455f;
+  --dock-tile-border:#57738b;
 }
 
 
@@ -434,7 +448,14 @@ html .cockpit .dock button.active .ico{
   filter:drop-shadow(0 0 5px color-mix(in srgb,var(--dock-accent,#64dfff) 60%,transparent));
 }
 html .cockpit .dock button:not(.active){
-  border-color:transparent;
+  background:var(--dock-tile-bg,#203a50)!important;
+  border-color:var(--dock-tile-border,#385a70)!important;
+  box-shadow:inset 0 1px 0 #ffffff12;
+  --dock-neutral:#c8d8e7;
+}
+html .cockpit .dock button:not(.active) .dock-label{
+  color:#f1f7ff;
+  font-weight:650;
 }
 
 /* Canonical app launcher geometry: a fixed illustration cell and a separate
