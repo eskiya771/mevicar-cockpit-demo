@@ -680,6 +680,17 @@ function drawRoute(){
 let routeSummary='',liveSummary='';
 let liveTripMeters=null,liveTripMinutes=null;
 let guidanceStartedAt=null,guidanceDrivenMeters=0,guidancePreviousRemaining=null;
+let guidanceMaxSpeed=null,guidanceSpeedTimestamp=null;
+function recordGuidanceSpeed(position){
+ if(!guidanceActive||simulation||guidanceStartedAt===null)return;
+ const {speed,accuracy}=position.coords||{},stamp=position.timestamp;
+ // Missing speed is not standstill. Ignore inaccurate, stale or repeated fixes.
+ if(!Number.isFinite(speed)||speed<0||!Number.isFinite(accuracy)||accuracy<0||accuracy>50||
+    !Number.isFinite(stamp)||stamp<guidanceStartedAt||stamp>Date.now()+1000||Date.now()-stamp>15000||
+    (guidanceSpeedTimestamp!==null&&stamp<=guidanceSpeedTimestamp))return;
+ guidanceSpeedTimestamp=stamp;
+ guidanceMaxSpeed=Math.max(guidanceMaxSpeed??0,speed*3.6);
+}
 function recordGuidanceProgress(meters){
  const remaining=Math.max(0,Math.round(Number(meters)));
  if(!Number.isFinite(remaining))return;
@@ -690,6 +701,7 @@ function recordGuidanceProgress(meters){
 }
 function resetGuidanceProgress(){
  guidanceStartedAt=null;guidanceDrivenMeters=0;guidancePreviousRemaining=null;
+ guidanceMaxSpeed=null;guidanceSpeedTimestamp=null;
 }
 /* The compact Web trip strip is fed by the same route and GPS progress as
    spoken turn guidance, not by a second route calculation. */
@@ -721,7 +733,8 @@ function guidanceDetailsHTML(){
  add('Gefahren',metersLabel(driven));
  add('Reststrecke',metersLabel(remaining));
  add('Gesamtstrecke',metersLabel(driven+remaining));
- if(elapsed!==null&&elapsed>=60000&&driven>=100)add('Durchschnitt',Math.round(driven*3600/elapsed)+' km/h');
+ add('Durchschnittsgeschwindigkeit',!simulation&&elapsed!==null&&elapsed>=60000&&driven>=100?Math.round(driven*3600/elapsed)+' km/h':'–');
+ add('Höchstgeschwindigkeit',!simulation&&guidanceMaxSpeed!==null?Math.round(guidanceMaxSpeed)+' km/h':'–');
  const next=guidanceSteps[Math.min(stepIndex,guidanceSteps.length-1)];
  if(next){
   const dist=metersLabel(next.end&&current?distanceBetween(current,next.end):next.distanceMeters);
@@ -1085,6 +1098,7 @@ function updatePosition(p){
  if(!Number.isFinite(point.lat)||!Number.isFinite(point.lng))return;
  current=point;lastGpsAccuracy=p.coords.accuracy||null;
  currentSpeed=Number.isFinite(p.coords.speed)&&p.coords.speed>=0?p.coords.speed*3.6:null;
+ recordGuidanceSpeed(p);
  window.MeviRoadAssist?.onPosition?.(point,{accuracy:p.coords.accuracy,timestamp:p.timestamp||Date.now()});
  markCurrent(point,p.coords.heading);followPosition(point,p.coords.heading);
  if(lastGpsAccuracy===null||lastGpsAccuracy<75)maybeAdvanceStep(point,lastGpsAccuracy);
@@ -1182,3 +1196,4 @@ window.MeviGoogleNav={guidanceTrip,guidanceDetailsHTML,browserRoutePreview,nativ
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
+

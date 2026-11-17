@@ -431,7 +431,7 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  border-bottom:1px solid #789ab54a;font-size:clamp(12px,1.85vh,15px);
  line-height:1.4;
 }
-.mg-guidance-detail-row dt{font-weight:650;color:var(--guidance-muted)}
+.mg-guidance-detail-row dt{font-weight:650;color:var(--guidance-muted);hyphens:auto;overflow-wrap:anywhere}
 .mg-guidance-detail-row dd{margin:0;font-weight:650;color:var(--guidance-text);
  overflow-wrap:anywhere;white-space:pre-line}
 .mg-navigation.mg-web-driving .mg-my-location[hidden]{display:none!important}
