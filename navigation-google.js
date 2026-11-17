@@ -4,6 +4,9 @@
 'use strict';
 const KEY='mevicar-next-google-maps-key-v1', DATA='mevicar-next-destinations-v1';
 const MAX_SAVED=200,MAX_RECENT=30;
+const PREVIEW_OPTIONS='mevicar-next-route-options-v1', previewOptionKeys=['avoidTolls','avoidHighways','avoidFerries'];
+let routeOptions={};
+try {const saved=JSON.parse(localStorage.getItem(PREVIEW_OPTIONS)||'{}');routeOptions=Object.fromEntries(previewOptionKeys.map(key=>[key,saved?.[key]===true]));} catch {}
 const FALLBACK_CENTER={lat:49.59,lng:11.005}; // Erlangen: initial map view only, not a navigation origin.
 const text=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const valid=d=>d&&typeof d.name==='string'&&Number.isFinite(d.lat)&&Number.isFinite(d.lng)&&Math.abs(d.lat)<=90&&Math.abs(d.lng)<=180;
@@ -109,6 +112,7 @@ function syncNativeLayout(force=false,settling=false){
  syncNativeTheme();
  handOverFavorites();
  const el=document.getElementById('mg-map');
+ const sharedRoutePreview=!!el?.closest?.('.mg-native-route-preview');
  const header=el?syncNativeHeader():null;
  const rect=el?.getBoundingClientRect?.();
  const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
@@ -123,6 +127,7 @@ function syncNativeLayout(force=false,settling=false){
   height:Math.min(Math.round(rect.height),Math.max(1,Math.round(vh-rect.top))),
   viewportWidth:Math.round(vw),viewportHeight:Math.round(vh)
  }:{visible:false};
+ if(usable&&sharedRoutePreview)fields.sharedRoutePreview=true;
  if(usable&&!nativeAddressBook)
   fields.favorites=cache.favorites.slice(0,8).filter(valid).map(d=>({lat:d.lat,lng:d.lng,title:d.name.slice(0,120)}));
  if(usable&&header){
@@ -306,7 +311,7 @@ function load(){
 }
 async function mount(nextState){
  state=nextState||state;mounted=true;const el=document.getElementById('mg-map');
- if(nativeMode()){syncNativeLayout();return}
+ if(nativeMode()){syncNativeLayout();watchNativePreview(el);return}
  if(!el||!key())return;
  try{
    await load();
@@ -652,14 +657,23 @@ async function position(){
 }
 async function myLocation(){try{const p=await position();clearStatus();if(map){map.panTo(p);map.setZoom(16)}}catch(e){status(e.message,'gps')}}
 function clearLines(){for(const l of routeLines)l.setMap(null);routeLines=[]}
+let routeChoices=[];
 function drawRoute(){
  clearLines();if(!map||!routeData)return;
- routeLines=routeData.createPolylines();
- for(const line of routeLines){line.setOptions({strokeColor:'#26dcff',strokeWeight:7});line.setMap(map)}
+ const alternatives=guidanceActive||state!=='ready'?[]:routeChoices.filter(route=>route!==routeData);
+ for(const route of [...alternatives,routeData])for(const line of route.createPolylines()){
+  const active=route===routeData;
+  line.setOptions({strokeColor:active?'#26dcff':'#517ecb',strokeWeight:active?7:5,zIndex:active?2:1,clickable:!active});
+  if(!active)line.addListener('click',()=>{
+   if(previewBusy||guidanceActive||!routeChoices.includes(route))return;
+   useRoute(route,{});window.meviGoogleRerender?.();
+  });
+  line.setMap(map);routeLines.push(line);
+ }
  const path=routeData.path||[];
  if(path.length>1){
   const bounds=new google.maps.LatLngBounds();
-  for(const point of path)bounds.extend({lat:point.lat,lng:point.lng});
+  for(const route of [routeData,...alternatives])for(const point of route.path||[])bounds.extend({lat:point.lat,lng:point.lng});
   map.fitBounds(bounds,55);
  }
 }
@@ -738,13 +752,20 @@ async function computeRouteFrom(from,options={}){
   origin:from,destination:{lat:selected.lat,lng:selected.lng},
   ...(stops.length?{intermediates:stops.map(p=>({location:{lat:p.lat,lng:p.lng}}))}:{}),
   travelMode:'DRIVING',
+  routeModifiers:options.modifiers||routeOptions,
+  ...(stops.length||guidanceActive?{}:{computeAlternativeRoutes:true}),
   fields:['path','distanceMeters','durationMillis','legs']
  });
  if(serial!==routeRequestSerial)throw new Error('Routenberechnung wurde überholt.');
  if(!routes?.length)throw new Error('Keine Fahrroute gefunden.');
  // Commit atomically AFTER a successful request. Failed stop additions leave
  // route, Road Assist, GPS watch and existing destination unchanged.
- routeData=routes[0];routeStops=stops;routeOrigin={lat:from.lat,lng:from.lng};
+ routeChoices=routes;routeStops=stops;routeOrigin={lat:from.lat,lng:from.lng};
+ useRoute(routes[0],options);
+ return true;
+}
+function useRoute(route,options){
+ routeData=route;
  window.MeviRoadAssist?.onRoute?.(routeData,options);
  guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';
  const km=(routeData.distanceMeters||0)/1000;
@@ -753,10 +774,69 @@ async function computeRouteFrom(from,options={}){
  clearStatus();drawRoute();
  if(guidanceActive&&!simulation&&current)followPosition(current);
  window.meviGoogleRouteReady?.(routeSummary);
- return true;
 }
 const MAX_STOPS=8;
 function routeStopKey(p){return p.placeId?'p:'+p.placeId:'c:'+p.lat.toFixed(4)+','+p.lng.toFixed(4)}
+let previewBusy=false,nativePreview=null,nativePreviewTimer=null,nativePreviewRequest=false;
+function watchNativePreview(el){
+ const watch=!!el&&!window.MeviAndroidSharedNav?.isOpen?.()&&window.MeviAndroidSharedNav?.isOptedIn?.();
+ if(!watch){
+  if(nativePreviewTimer!==null)clearInterval(nativePreviewTimer);
+  nativePreviewTimer=null;
+  return;
+ }
+ if(nativePreviewTimer===null){
+  nativePreviewTimer=setInterval(readNativePreview,1200);
+  void readNativePreview();
+ }
+}
+async function readNativePreview(){
+ if(nativePreviewRequest||window.MeviAndroidSharedNav?.isOpen?.())return;
+ nativePreviewRequest=true;
+ try{
+  const {route}=await nativeRequest('navigation.route.read');
+  const next=route?.preview?{...route,...route.preview,native:true}:null;
+  if(JSON.stringify(next)!==JSON.stringify(nativePreview)){
+   nativePreview=next;
+   if(!window.MeviAndroidSharedNav?.isOpen?.())window.meviGoogleRerender?.();
+  }
+ }catch{}finally{nativePreviewRequest=false}
+}
+function browserRoutePreview(){
+ if(!routeData)return null;
+ const seconds=Math.round((routeData.durationMillis||0)/1000);
+ const eta=new Date(Date.now()+seconds*1000);
+ const time=eta.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+ return {...routeContext(),seconds,meters:routeData.distanceMeters||0,options:routeOptions,
+  arrival:'Ankunft '+(eta.toDateString()===new Date().toDateString()?'':'morgen ')+time,
+  alternatives:routeChoices.length>1};
+}
+async function previewAction(action,method,fields){
+ if(previewBusy)return;
+ previewBusy=true;
+ try{
+  if(nativeMode()){
+   await nativeRequest(action,fields);
+   await readNativePreview();
+  }else await method();
+ }catch(e){if(nativeMode())window.alert?.(String(e.message||e));else status(String(e.message||e),'route')}
+ finally{previewBusy=false}
+}
+function previewStart(){return previewAction('navigation.route.start',()=>window.beginNavigation?.())}
+function previewEnd(){return previewAction('navigation.stop',()=>window.stopRoute?.())}
+function previewRemoveStop(index){return previewAction('navigation.route.removeStop',()=>removeRouteStop(index),{index})}
+function previewToggleOption(key){
+ if(!previewOptionKeys.includes(key))return;
+ const value=!(nativeMode()?nativePreview?.options:routeOptions)?.[key];
+ return previewAction('navigation.route.option',async()=>{
+  if(!routeData||!routeOrigin)return;
+  const modifiers={...routeOptions,[key]:value};
+  await computeRouteFrom(routeOrigin,{modifiers});
+  routeOptions=modifiers;
+  try{localStorage.setItem(PREVIEW_OPTIONS,JSON.stringify(routeOptions))}catch{}
+  window.meviGoogleRerender?.();
+ },{key,value});
+}
 function routeContext(){return {
  hasRoute:!!routeData,active:guidanceActive,stops:routeStops.map(s=>({...s})),
  maxStops:MAX_STOPS,destination:selected?{...selected}:null
@@ -1010,7 +1090,7 @@ function stopGuidance(options={}){
  guidanceActive=false;simulation=false;currentSpeed=null;offRouteCount=0;
  window.MeviRoadAssist?.onGuidanceStop?.();
  if(positionMarker){positionMarker.setMap(null);positionMarker=null}
- if(!options.keepRoute){routeData=null;routeStops=[];routeOrigin=null;routeSummary='';liveSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null;window.MeviRoadAssist?.onRoute?.([])}
+ if(!options.keepRoute){routeRequestSerial++;routeChoices=[];routeData=null;routeStops=[];routeOrigin=null;routeSummary='';liveSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null;window.MeviRoadAssist?.onRoute?.([])}
 }
 function routeInfo(){return routeSummary}
 function hasPlannedRoute(){return !!routeData}
@@ -1018,7 +1098,7 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location" onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();

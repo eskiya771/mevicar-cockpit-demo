@@ -203,3 +203,31 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .mg-navigation .mg-poi-detail-actions button{padding:5px 8px;min-height:38px;min-width:95px}
  .mg-waypoint-list{max-height:60px}
 }
+
+/* Shared selected destination is drawn from the same Place sheet as POIs.
+   Show it next to the map as Android does, rather than the old Web preview. */
+.mg-navigation .mg-parity-shade.mg-parity-selected{
+ position:absolute;inset:0 auto 0 0;z-index:8;
+ width:min(46%,720px);max-width:calc(100% - 12px);
+ border-radius:0 16px 16px 0;padding:clamp(6px,1.1vh,12px);
+}
+.mg-navigation .mg-parity-selected .mg-parity-layout{margin-left:0!important}
+.mg-parity-selected .mg-poi-detail-actions{flex-wrap:nowrap}
+.mg-navigation .mg-parity-selected .mg-poi-detail-actions button{min-width:0;flex:1}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-navigation .mg-parity-shade.mg-parity-selected{
+  left:max(4px,env(safe-area-inset-left,0px));
+  top:max(4px,env(safe-area-inset-top,0px));
+  bottom:max(4px,env(safe-area-inset-bottom,0px));
+  width:min(46vw,640px);border-radius:16px;
+ }
+ .mg-parity-selected .mg-poi-detail-body{padding:6px 9px;gap:5px}
+ .mg-parity-selected .mg-poi-detail-body h2{font-size:clamp(18px,4.5vh,26px)}
+ .mg-parity-selected .mg-parity-top{height:46px}
+ .mg-parity-selected .mg-poi-detail-actions button{min-height:48px!important}
+}
+@media(orientation:portrait){
+ .mg-navigation .mg-parity-shade.mg-parity-selected{
+  left:0;top:0;bottom:0;width:100%;max-width:100%;border-radius:0;
+ }
+}
