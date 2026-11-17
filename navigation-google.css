@@ -303,17 +303,17 @@ html[data-theme="liquidglass"] .mg-route-preview-layout {
 /* Native-style Web guidance: Google JS provides the maneuver, the same route state
    feeds the slim NavTripBar-equivalent. The Kotlin APK retains NavigationView. */
 .mg-navigation.mg-web-driving .mg-web-guidance{
- --guidance-panel:#102332f5;--guidance-border:#4f92a4c9;--guidance-accent:#7cefff;
+ --guidance-panel:#102332;--guidance-border:#4f92a4c9;--guidance-accent:#7cefff;
  --guidance-text:#eff9ff;--guidance-muted:#c4d8e6;
  position:absolute;inset:0;z-index:5;pointer-events:none;
  color:var(--guidance-text);
 }
 html[data-theme="cyberpunk"] .mg-navigation.mg-web-driving .mg-web-guidance{
- --guidance-panel:#261432f5;--guidance-border:#bd45d5c7;
+ --guidance-panel:#261432;--guidance-border:#bd45d5c7;
  --guidance-accent:#5ee8ff;--guidance-text:#ffeaff;--guidance-muted:#d8b3df;
 }
 html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
- --guidance-panel:#142a42ea;--guidance-border:#91cdf7b0;
+ --guidance-panel:#142a42;--guidance-border:#91cdf7b0;
  --guidance-accent:#b3efff;--guidance-text:#f5faff;--guidance-muted:#d7e8f6;
 }
 .mg-web-guidance .mg-guidance-cue{
@@ -419,4 +419,34 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
  .mg-navigation.mg-web-driving .mg-guidance-trip{left:max(8px,env(safe-area-inset-left,0px))}
  .mg-navigation .mg-guidance-menu{left:8px;width:calc(100% - 16px);max-width:none}
+}
+
+/* Route detail rows mirror NavRouteDetails.rows labels and order. One Web
+   guidance panel, not a competing turn-list dialog. */
+.mg-navigation .mg-guidance-menu{
+ background:var(--guidance-panel);backdrop-filter:none!important;
+ -webkit-backdrop-filter:none!important;isolation:isolate;
+}
+.mg-navigation .mg-guidance-menu-details,
+.mg-guidance-details-content{min-height:0}
+.mg-guidance-detail-list{display:flex;flex-direction:column;margin:0;padding:0}
+.mg-guidance-detail-row{
+ display:grid;grid-template-columns:minmax(94px,38%) minmax(0,1fr);
+ gap:10px;align-items:start;padding:9px 5px;
+ border-bottom:1px solid #789ab54a;font-size:clamp(12px,1.85vh,15px);
+ line-height:1.4;
+}
+.mg-guidance-detail-row dt{font-weight:650;color:var(--guidance-muted)}
+.mg-guidance-detail-row dd{margin:0;font-weight:650;color:var(--guidance-text);
+ overflow-wrap:anywhere;white-space:pre-line}
+.mg-navigation.mg-web-driving .mg-my-location[hidden]{display:none!important}
+/* Real Road Assist warnings use the native banner position, not a permanent
+   right-hand status box. Empty/no-alert states now render no overlay at all. */
+.mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
+ right:auto!important;left:50%!important;transform:translateX(-50%);
+ width:min(350px,calc(100% - 160px));
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-guidance-detail-row{padding:7px 4px;gap:7px;font-size:12px}
+ .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{width:min(330px,calc(100% - 150px))}
 }

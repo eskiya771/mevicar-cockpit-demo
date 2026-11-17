@@ -885,3 +885,38 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
    left:calc(max(4px,env(safe-area-inset-left,0px)) + 76px)!important;
  }
 }
+
+/* Driving status stays readable over the Google map. Uses the SAME status
+   elements as browse/update; only layout changes, never a second version label. */
+.cockpit.mg-driving-status .workspace > .status{
+ display:flex!important;position:fixed!important;
+ z-index:24;top:max(7px,env(safe-area-inset-top,0px));
+ right:max(7px,env(safe-area-inset-right,0px));left:auto;
+ width:auto;height:36px;min-height:36px;max-width:min(43vw,390px);
+ box-sizing:border-box;align-items:center;justify-content:flex-end;
+ gap:10px;padding:3px 11px;
+ border:1px solid #5c99ac;background:#091b2a!important;color:#e8f9ff!important;
+ border-radius:12px;box-shadow:0 5px 15px #071521a6;
+ backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ font-size:12px;white-space:nowrap;overflow:hidden;
+ pointer-events:auto;
+}
+.cockpit.mg-driving-status .status #meviPlatformHeader{
+ display:block!important;overflow:hidden;text-overflow:ellipsis;min-width:0;
+ font-size:11px;font-weight:750;letter-spacing:.03em;color:#e8f9ff;
+}
+.cockpit.mg-driving-status .status .status-right{display:flex;align-items:center;min-width:0;gap:5px}
+.cockpit.mg-driving-status .status #buildVersion{
+ display:inline!important;font-size:11px;color:#fff;white-space:nowrap;opacity:1;
+}
+.cockpit.mg-driving-status .status .mg-web-nav-actions,
+.cockpit.mg-driving-status .status #mg-native-header-slot,
+.cockpit.mg-driving-status .status #updateBtn,
+.cockpit.mg-driving-status .status #updateMessage,
+.cockpit.mg-driving-status .status .status-chip,
+.cockpit.mg-driving-status .status .status-time{display:none!important}
+@media(orientation:landscape) and (max-height:480px){
+ .cockpit.mg-driving-status .workspace > .status{height:32px;min-height:32px;max-width:min(43vw,350px);padding:3px 8px}
+ .cockpit.mg-driving-status .status #meviPlatformHeader,
+ .cockpit.mg-driving-status .status #buildVersion{font-size:10px}
+}
