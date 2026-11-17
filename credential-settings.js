@@ -67,7 +67,7 @@ if(typeof global.addEventListener==='function'){
 }
 function nativeCall(action,name,secret){
  const plugin=global.Capacitor?.Plugins?.MeviSecureSettings;
- if(plugin){
+ if(plugin&&!action.startsWith('settings.backup.')){
   if(action==='settings.status')return plugin.status();
   if(action==='settings.get')return plugin.get?.({name})||Promise.reject(new Error('Android-PIN-Abruf nicht verfügbar.'));
   if(action==='settings.set')return plugin.set({name,value:secret});
@@ -162,6 +162,18 @@ function html(){
    'Web-App: Google Maps nutzt einen auf diese Website eingeschränkten Browser-API-Key.')+
    ' Der MeviTV-PIN wird in der aktuellen Android-APK verschlüsselt, in der Web-App lokal gespeichert. '+
    (android?'Die Android-APK verwaltet HA-Zugänge weiterhin separat.':'Der HA-Token wird lokal und unverschlüsselt in diesem Browser gespeichert, nicht auf GitHub.')+'</p>'+
+  '<section class="mevi-backup" aria-label="Verschlüsselter Zugangsdaten-Transfer">'+
+    '<h3>Verschlüsseltes Backup</h3>'+
+    '<p>Überträgt API-Schlüssel, Zugangsdaten und die Spotify-Anmeldung auf ein anderes Gerät. Keine Cloud, kein GitHub-Upload.</p>'+
+    '<label for="mevi-backup-pass">Backup-Passwort (mindestens 12 Zeichen)</label>'+
+    '<input id="mevi-backup-pass" type="password" autocomplete="new-password" placeholder="Eigenes sicheres Passwort">'+
+    '<label for="mevi-backup-confirm">Passwort für Export wiederholen</label>'+
+    '<input id="mevi-backup-confirm" type="password" autocomplete="new-password" placeholder="Nur beim Export nötig">'+
+    '<label for="mevi-backup-file">Gesicherte Datei zum Importieren</label>'+
+    '<input id="mevi-backup-file" type="file" accept=".mevibackup,application/json">'+
+    '<div class="mevi-backup-actions"><button type="button" onclick="MeviCredentials.exportBackup()">Backup exportieren</button>'+
+    '<button type="button" onclick="MeviCredentials.importBackup()">Backup importieren</button></div>'+
+    '<small>Die Backup-Datei enthält auch Spotify-Refresh-Token. Passwort und Datei getrennt aufbewahren. Die Anmeldung kann durch Spotify ungültig werden.</small></section>'+
   '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div></div>';
 }
 async function save(id){
@@ -262,6 +274,170 @@ async function refreshNativeStatus(){
  try{const d=await nativeCall('settings.status');nativeStatus=d.configured||{};report('Android-Speicherstatus aktualisiert.');global.render?.()}
  catch(e){report(e.message)}
 }
-global.MeviCredentials={html,save,clear,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
+
+/* Portable backup v1. Only the explicit allowlist is exported, never all of localStorage.
+   Spotify's access/refresh tokens are included to preserve the session where permitted.
+   Android's Keystore contents are encrypted inside Kotlin before being returned to JS. */
+const BACKUP_KEY_MAP=Object.freeze({
+ maps:MAPS_KEY,spotifyClient:SPOTIFY_KEY,spotifySession:'mevicar-spotify-token-v1',
+ calendar:CAL_KEY,road:ROAD_KEY,tvPin:TV_PIN_KEY,
+ haConfig:'mevicar-next-ha-config-v1',haToken:HA_WEB_TOKEN_KEY
+});
+const BACKUP_FORMAT='mevicar-next-credentials';
+const BACKUP_ROUNDS=310000;
+function backupPassword(){
+ const pass=String(document.getElementById('mevi-backup-pass')?.value||'');
+ if(pass.length<12||pass.length>256)throw new Error('Backup-Passwort: 12 bis 256 Zeichen eingeben.');
+ return pass;
+}
+function backupCrypto(){
+ const wc=global.crypto;
+ if(!wc?.subtle||!wc?.getRandomValues)throw new Error('Verschlüsselung benötigt HTTPS und einen aktuellen Browser.');
+ return wc;
+}
+function backupEncode(bytes){
+ let out='';for(let i=0;i<bytes.length;i+=4096)out+=String.fromCharCode(...bytes.subarray(i,i+4096));
+ return global.btoa(out);
+}
+function backupDecode(value){
+ if(typeof value!=='string'||value.length>2000000)throw Error('Ungültiger Backup-Datenblock.');
+ const s=global.atob(value),bytes=new Uint8Array(s.length);
+ for(let i=0;i<s.length;i++)bytes[i]=s.charCodeAt(i);
+ return bytes;
+}
+async function backupKey(pass,salt){
+ const base=await backupCrypto().subtle.importKey('raw',new TextEncoder().encode(pass),
+  'PBKDF2',false,['deriveKey']);
+ return backupCrypto().subtle.deriveKey({name:'PBKDF2',salt,iterations:BACKUP_ROUNDS,hash:'SHA-256'},
+  base,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+async function encryptBackup(data,pass){
+ const salt=backupCrypto().getRandomValues(new Uint8Array(16));
+ const iv=backupCrypto().getRandomValues(new Uint8Array(12));
+ const key=await backupKey(pass,salt);
+ const bytes=new TextEncoder().encode(JSON.stringify(data));
+ const encrypted=await backupCrypto().subtle.encrypt({name:'AES-GCM',iv},key,bytes);
+ return JSON.stringify({format:BACKUP_FORMAT,version:1,kdf:'PBKDF2-SHA256',iterations:BACKUP_ROUNDS,
+  salt:backupEncode(salt),iv:backupEncode(iv),ciphertext:backupEncode(new Uint8Array(encrypted))});
+}
+async function decryptBackup(text,pass){
+ let envelope;try{envelope=JSON.parse(text)}catch{throw Error('Keine gültige MeviCar-Backupdatei.')}
+ if(envelope?.format!==BACKUP_FORMAT||envelope.version!==1||
+    envelope.kdf!=='PBKDF2-SHA256'||envelope.iterations!==BACKUP_ROUNDS)throw Error('Backup-Format nicht unterstützt.');
+ const salt=backupDecode(envelope.salt),iv=backupDecode(envelope.iv);
+ if(salt.length!==16||iv.length!==12)throw Error('Backup-Datei ist beschädigt.');
+ try{
+  const key=await backupKey(pass,salt);
+  const out=await backupCrypto().subtle.decrypt({name:'AES-GCM',iv},key,backupDecode(envelope.ciphertext));
+  return JSON.parse(new TextDecoder().decode(out));
+ }catch{throw Error('Passwort falsch oder Backup-Datei beschädigt.')}
+}
+function collectBackupWeb(){
+ const result={};
+ for(const [name,key] of Object.entries(BACKUP_KEY_MAP)){
+  if(nativeAvailable()&&(name==='maps'||name==='haToken'||name==='tvPin'))continue;
+  const value=saved(key);if(value)result[name]=value;
+ }
+ return result;
+}
+function inspectBackupItems(payload){
+ if(!payload||payload.format!==BACKUP_FORMAT||payload.version!==1||!payload.items||
+    typeof payload.items!=='object'||Array.isArray(payload.items))throw Error('Backup-Inhalt ungültig.');
+ const out={};
+ for(const [name,value] of Object.entries(payload.items)){
+  if(!Object.prototype.hasOwnProperty.call(BACKUP_KEY_MAP,name))continue;
+  if(typeof value!=='string'||value.length<1||value.length>16384)throw Error('Ungültiger Eintrag: '+name);
+  out[name]=value;
+ }
+ if(out.maps&&!/^[A-Za-z0-9_-]{20,256}$/.test(out.maps))throw Error('Ungültiger Google-Web-Key im Backup.');
+ if(out.spotifyClient&&!/^[A-Za-z0-9]{8,64}$/.test(out.spotifyClient))throw Error('Ungültige Spotify Client-ID.');
+ if(out.tvPin&&!/^\d{4}$/.test(out.tvPin))throw Error('Ungültige TV-PIN.');
+ if(out.spotifySession){
+  let t;try{t=JSON.parse(out.spotifySession)}catch{throw Error('Spotify-Sitzung ist beschädigt.')}
+  if(!t||typeof t.access_token!=='string'||!t.access_token||
+     typeof t.refresh_token!=='string'||!t.refresh_token||
+     !Number.isFinite(Number(t.expires_at))||String(t.token_type||'Bearer')!=='Bearer')
+   throw Error('Spotify-Sitzung enthält keinen gültigen Refresh-Token.');
+  if(!out.spotifyClient)throw Error('Zur Spotify-Sitzung fehlt die zugehörige Client-ID im Backup.');
+ }
+ for(const k of ['calendar','road','haConfig','haToken']){
+  if(!out[k])continue;
+  let data;try{data=JSON.parse(out[k])}catch{throw Error('Ungültige Einstellung: '+k)}
+  if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Ungültige Einstellung: '+k);
+  if(k==='haConfig'&&(!/^https:\/\//.test(data.origin||'')||data.origin.length>300))
+   throw Error('Home-Assistant-Adresse im Backup ungültig.');
+  if(k==='haToken'&&(!/^https:\/\//.test(data.origin||'')||typeof data.token!=='string'||
+      data.token.length<20||/\s/.test(data.token)))throw Error('HA-Token im Backup ungültig.');
+ }
+ if(out.haToken&&out.haConfig){
+  const record=JSON.parse(out.haToken),config=JSON.parse(out.haConfig);
+  if(record.origin!==config.origin)throw Error('Home-Assistant-Token passt nicht zur gespeicherten Adresse.');
+ }
+ if(payload.nativeVault!==undefined&&(typeof payload.nativeVault!=='string'||
+    payload.nativeVault.length>100000))throw Error('Ungültiger Android-Backupblock.');
+ return out;
+}
+function clearBackupFields(){
+ for(const id of ['mevi-backup-pass','mevi-backup-confirm']){
+  const el=document.getElementById(id);if(el)el.value='';
+ }
+}
+async function exportBackup(){
+ try{
+  const pass=backupPassword();
+  if(pass!==String(document.getElementById('mevi-backup-confirm')?.value||''))
+   throw Error('Die beiden Backup-Passwörter stimmen nicht überein.');
+  if(nativeAvailable())await tvPinReady();
+  const payload={format:BACKUP_FORMAT,version:1,created:new Date().toISOString(),
+   source:nativeAvailable()?'android':'web',items:collectBackupWeb()};
+  if(nativeAvailable()){
+   const secure=await nativeCall('settings.backup.export','',pass);
+   if(typeof secure?.blob!=='string'||!secure.blob)throw Error('Android-Schlüssel konnten nicht gesichert werden.');
+   payload.nativeVault=secure.blob;
+  }
+  if(!Object.keys(payload.items).length&&!payload.nativeVault)throw Error('Keine gespeicherten Zugangsdaten gefunden.');
+  inspectBackupItems(payload);
+  const sealed=await encryptBackup(payload,pass);
+  const file=new Blob([sealed],{type:'application/json'});
+  const uri=global.URL.createObjectURL(file);
+  const a=document.createElement('a');a.href=uri;a.download='mevicar-zugaenge-'+new Date().toISOString().slice(0,10)+'.mevibackup';
+  document.body.appendChild(a);a.click();a.remove();
+  global.setTimeout(()=>global.URL.revokeObjectURL(uri),60000);
+  report('Verschlüsseltes Backup erstellt. Datei sicher aufbewahren.');clearBackupFields();
+ }catch(_){report(_?.message||'Backup konnte nicht erstellt werden.')}
+}
+async function importBackup(){
+ try{
+  const pass=backupPassword();
+  const file=document.getElementById('mevi-backup-file')?.files?.[0];
+  if(!file)throw Error('Bitte eine .mevibackup-Datei auswählen.');
+  if(file.size>2000000)throw Error('Backup-Datei ist zu groß.');
+  const payload=await decryptBackup(await file.text(),pass);
+  const items=inspectBackupItems(payload);
+  if(!global.confirm('Gespeicherte Zugangsdaten auf diesem Gerät durch die importierten Werte ersetzen?'))return;
+  // Import the encrypted native vault before changing any local browser settings.
+  if(nativeAvailable()){
+   if(payload.nativeVault){
+    await nativeCall('settings.backup.import',payload.nativeVault,pass);
+   }else{
+    if(items.tvPin)await nativeCall('settings.set','tvPin',items.tvPin);
+    if(items.haToken)await nativeCall('settings.set','haToken',JSON.parse(items.haToken).token);
+   }
+  }
+  let count=0;
+  for(const [name,value] of Object.entries(items)){
+   if(nativeAvailable()&&(name==='maps'||name==='tvPin'||name==='haToken'))continue;
+   localStorage.setItem(BACKUP_KEY_MAP[name],value);count++;
+  }
+  clearBackupFields();
+  report('Backup importiert: '+count+' Browser-Einstellungen'+
+   (nativeAvailable()?' und geschützter Android-Speicher':'')+
+   (!nativeAvailable()&&payload.nativeVault?' (Android-Keystore-Zugänge nur in der APK wiederherstellbar)':'')+
+   '. App wird neu geladen.');
+  global.setTimeout(()=>global.location.reload(),400);
+ }catch(_){report(_?.message||'Backup konnte nicht importiert werden.')}
+}
+
+global.MeviCredentials={html,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
