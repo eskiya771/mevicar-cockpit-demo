@@ -1026,8 +1026,8 @@ function paintGuidance(){
  if(arrow)arrow.textContent=guidanceSymbol(step);
  if(distance)distance.textContent=metersLabel(step?.end&&current?distanceBetween(current,step.end):step?.distanceMeters);
  const trip=guidanceTrip();
- const dash=document.getElementById('mg-guidance-menu-dashboard');
- if(dash&&!dash.hidden)window.MeviNavDashboard?.paint?.(dash,guidanceDashboardData());
+ const dash=document.getElementById('mg-nav-dashboard-split');
+ if(dash)window.MeviNavDashboard?.paint?.(dash,guidanceDashboardData());
  const eta=document.getElementById('mg-trip-arrival');
  const summary=document.getElementById('mg-trip-summary');
  const nextStop=document.getElementById('mg-trip-next-stop');

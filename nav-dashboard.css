@@ -26,20 +26,9 @@
 .mg-dash-maneuver strong{font-size:clamp(12px,2.5vh,22px)!important;line-height:1.2!important;white-space:normal!important;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mg-dash-maximum{grid-column:3;grid-row:3}
 .mg-dash-maximum .mg-dash-value strong{font-size:clamp(25px,5.5vh,52px)}
-.mg-guidance-menu.mg-dashboard-open{
- --dashboard-left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
- left:var(--dashboard-left);
- width:min(790px,calc(100% - var(--dashboard-left) - max(8px,env(safe-area-inset-right,0px))));
- max-width:none;overflow:hidden
-}
-.mg-guidance-menu-dashboard{display:flex;flex-direction:column;min-height:0;height:100%;gap:5px}
-.mg-guidance-menu-dashboard[hidden]{display:none!important}
-.mg-guidance-menu-dashboard .mg-guidance-menu-heading{flex:0 0 auto;margin:0}
-.mg-guidance-menu-dashboard .mg-nav-dashboard{flex:1}
 .mg-dashboard-standalone{padding:0;margin:0;background:#071725;color:#f0faff}
 .mg-dashboard-standalone #nav-dashboard-root{height:100vh;height:100dvh;box-sizing:border-box;padding:7px;overflow:hidden}
 @media(orientation:landscape) and (max-height:480px){
- .mg-guidance-menu.mg-dashboard-open{padding:5px}
  .mg-dash-cell{padding:5px 7px}
  .mg-dash-label{font-size:clamp(10px,2.3vh,13px)}
  .mg-dash-cell>strong{font-size:clamp(16px,4.8vh,24px)}
@@ -47,9 +36,52 @@
  .mg-dash-maximum .mg-dash-value strong{font-size:clamp(20px,5vh,34px)}
 }
 @media(max-width:520px){
- .mg-nav-dashboard{grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,minmax(0,1fr))}
- .mg-dash-speed{grid-row:1/span 2}
- .mg-dash-maneuver{grid-column:1;grid-row:4}
- .mg-dash-maximum{grid-column:2;grid-row:4}
+ .mg-nav-dashboard:not(.mg-dashboard-compact){grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,minmax(0,1fr))}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-speed{grid-row:1/span 2}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-maneuver{grid-column:1;grid-row:4}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-maximum{grid-column:2;grid-row:4}
  .mg-dash-speed .mg-dash-value strong{font-size:clamp(40px,12vw,65px)}
+}
+
+/* Shared compact raster: Web uses the ordinary 36%-wide right .side pane,
+   Android Navigation SDK loads the identical renderer in its right panel. */
+.side.mg-nav-dashboard-side{
+ overflow:hidden;min-height:0;min-width:0;
+ padding:clamp(4px,.75vw,12px);gap:clamp(3px,.6vh,7px);
+}
+.side.mg-nav-dashboard-side .row{flex:0 0 auto;min-width:0}
+.side.mg-nav-dashboard-side .row button{
+ padding:3px 10px;border:1px solid #3b7c97;border-radius:8px;
+ background:#12384b;font-size:clamp(10px,2vh,13px);
+}
+.mg-dashboard-split-content{flex:1;min-width:0;min-height:0;overflow:hidden}
+.mg-nav-dashboard.mg-dashboard-compact{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ grid-template-rows:minmax(0,1.22fr) repeat(3,minmax(0,1fr));
+ gap:clamp(3px,.7vh,8px);
+}
+.mg-dashboard-compact .mg-dash-cell{padding:clamp(3px,.7vh,9px);border-radius:clamp(6px,1vw,12px)}
+.mg-dashboard-compact .mg-dash-label{font-size:clamp(9px,1.6vh,13px);line-height:1.05}
+.mg-dashboard-compact .mg-dash-cell>strong{font-size:clamp(15px,3.5vh,27px)}
+.mg-dashboard-compact .mg-dash-speed{
+ grid-column:1/-1;grid-row:1;flex-direction:row;align-items:center;justify-content:space-between;
+}
+.mg-dashboard-compact .mg-dash-speed .mg-dash-value{flex-direction:row;align-items:baseline;gap:5px}
+.mg-dashboard-compact .mg-dash-speed .mg-dash-value strong{font-size:clamp(39px,7.5vh,74px)}
+.mg-dashboard-compact .mg-dash-speed .mg-dash-value small{font-size:clamp(10px,2vh,17px)}
+.mg-dashboard-compact .mg-dash-arrival{grid-column:1;grid-row:2}
+.mg-dashboard-compact .mg-dash-time{grid-column:2;grid-row:2}
+.mg-dashboard-compact .mg-dash-distance{grid-column:1;grid-row:3}
+.mg-dashboard-compact .mg-dash-average{grid-column:2;grid-row:3}
+.mg-dashboard-compact .mg-dash-maximum{grid-column:1;grid-row:4}
+.mg-dashboard-compact .mg-dash-maneuver{grid-column:2;grid-row:4}
+.mg-dashboard-compact .mg-dash-value strong{font-size:clamp(18px,4vh,31px)}
+.mg-dashboard-compact .mg-dash-value small{font-size:clamp(9px,1.6vh,14px)}
+.mg-dashboard-compact .mg-dash-maneuver strong{
+ font-size:clamp(10px,2.2vh,15px)!important;overflow-wrap:anywhere;
+}
+@media(orientation:landscape) and (max-height:420px){
+ .mg-dashboard-compact .mg-dash-cell{padding:3px 5px}
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-value strong{font-size:clamp(36px,8vh,60px)}
+ .mg-dashboard-compact .mg-dash-label{font-size:clamp(9px,1.5vh,11px)}
 }

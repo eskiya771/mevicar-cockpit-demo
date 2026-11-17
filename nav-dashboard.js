@@ -18,8 +18,8 @@ function duration(value){
  const hours=Math.floor(minutes/60),rest=minutes%60;
  return hours+' Std.'+(rest?' '+rest+' Min.':'');
 }
-function html(){
- return `<section class="mg-nav-dashboard" role="group" aria-label="Fahrtdashboard">
+function html(compact=false){
+ return `<section class="mg-nav-dashboard${compact?' mg-dashboard-compact':''}" role="group" aria-label="Fahrtdashboard">
   <div class="mg-dash-cell mg-dash-speed"><span class="mg-dash-label">Geschwindigkeit</span>
    <div class="mg-dash-value"><strong data-dash="speed">${placeholder}</strong><small>km/h</small></div></div>
   <div class="mg-dash-cell mg-dash-arrival"><span class="mg-dash-label">Ankunft</span><strong data-dash="arrival">${placeholder}</strong></div>
