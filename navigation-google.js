@@ -729,11 +729,8 @@ function guidanceDashboardData(){
  const remaining=Number.isFinite(liveTripMeters)?Math.max(0,Math.round(liveTripMeters)):
   routeData?Math.max(0,Math.round(Number(routeData.distanceMeters)||0)):null;
  const elapsed=guidanceStartedAt===null?null:now-guidanceStartedAt;
- const next=guidanceSteps[Math.min(stepIndex,guidanceSteps.length-1)];
- const nextMeters=next?(next.end&&current?distanceBetween(current,next.end):next.distanceMeters):null;
  return {
-  maneuverText:next?.instructions||null,
-  maneuverMeters:Number.isFinite(nextMeters)&&nextMeters>=0?nextMeters:null,
+  nextCameraMeters:window.MeviRoadAssist?.nextCameraDistanceMeters?.()??null,
   speedKmh:!simulation&&guidanceSpeedTimestamp!==null&&now-guidanceSpeedTimestamp<=8000?guidanceCurrentSpeed:null,
   arrivalEpochMs:seconds===null?null:now+seconds*1000,
   remainingSeconds:seconds,remainingMeters:remaining,

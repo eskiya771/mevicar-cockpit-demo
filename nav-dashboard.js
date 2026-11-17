@@ -27,7 +27,7 @@ function html(compact=false){
   <div class="mg-dash-cell mg-dash-distance"><span class="mg-dash-label">Reststrecke</span><strong data-dash="distance">${placeholder}</strong></div>
   <div class="mg-dash-cell mg-dash-average"><span class="mg-dash-label">Ø Geschwindigkeit</span>
    <div class="mg-dash-value"><strong data-dash="average">${placeholder}</strong><small>km/h</small></div></div>
-  <div class="mg-dash-cell mg-dash-maneuver"><span class="mg-dash-label">Nächste Fahranweisung</span><strong data-dash="maneuver">${placeholder}</strong></div>
+  <div class="mg-dash-cell mg-dash-camera"><span class="mg-dash-label">Nächster Blitzer</span><strong data-dash="camera">${placeholder}</strong></div>
   <div class="mg-dash-cell mg-dash-maximum"><span class="mg-dash-label">Höchstgeschwindigkeit</span>
    <div class="mg-dash-value"><strong data-dash="maximum">${placeholder}</strong><small>km/h</small></div></div>
  </section>`;
@@ -42,10 +42,7 @@ function paint(container,data){
   distance:distance(info.remainingMeters),
   average:rounded(info.avgKmh),
   maximum:rounded(info.maxKmh),
-  maneuver:typeof info.maneuverText==='string'&&info.maneuverText.trim()?
-   info.maneuverText.trim()+
-    (Number.isFinite(info.maneuverMeters)&&info.maneuverMeters>=0?' · in '+distance(info.maneuverMeters):'')
-   :placeholder
+  camera:distance(info.nextCameraMeters)
  };
  for(const [key,value] of Object.entries(values)){
   const element=container.querySelector('[data-dash="'+key+'"]');

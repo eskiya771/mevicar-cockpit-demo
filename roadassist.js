@@ -192,6 +192,12 @@ function updateMatch(){
  const ahead=Math.max(0,candidate.progress-positionOnRoute.progress);
  currentMatch={...candidate,ahead};
 }
+/** Returns only a current route-matched Road Assist alert; no secondary geometry. */
+function nextCameraDistanceMeters(){
+ if(!guiding||demo||!settings.enabled||!connected||!positionOnRoute||!currentMatch||
+    !fixAt||Date.now()-fixAt>MAX_FIX_AGE||fixAccuracy>MAX_ACCURACY)return null;
+ return Number.isFinite(currentMatch.ahead)&&currentMatch.ahead>=0?currentMatch.ahead:null;
+}
 function maybeSpeak(){
  if(!guiding||demo||!settings.enabled||!settings.voice||!currentMatch)return;
  if(!fixAt||Date.now()-fixAt>MAX_FIX_AGE||fixAccuracy>MAX_ACCURACY)return;
@@ -667,7 +673,7 @@ function clearTrips(){
  if(model().native){nativeCall('roadassist.trips.clear').then(takeTrips).catch(()=>{});paintApp();return}
  trips=[];saveTrips();paintApp();
 }
-window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,routeNote:routeStatus,paint,
+window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,routeNote:routeStatus,paint,nextCameraDistanceMeters,
  refresh,setEnabled,setVoice,setConfigId,storeConfig,openScan,infoHTML,scan,cancelScan,
  routeState,project,buildRoute,cameraMatches,sampleRoute,responseCameras,formatMeters,
  appHTML,paintApp,mount,unmount,toggleTrip,toggleDiag,removeTrip,clearTrips,model};

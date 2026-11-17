@@ -5934,8 +5934,10 @@ function openApp(id){
  if(id==='slot')id=s.extra||'apps';
  if(id==='nav'){
   if(window.MeviGoogleNav?.isNativeMode?.()){
-   // Native SDK dashboard switches on/off with each Navi-dock tap.
-   s.app='nav';s.mode='map';s.keyboard=false;render();
+   // Keep the native NavigationView mounted on repeated Navi taps.
+   if(s.app!=='nav'||s.mode!=='map'){
+    s.app='nav';s.mode='map';s.keyboard=false;render();
+   }
    window.MeviGoogleNav?.toggleNativeDashboard?.();
    return;
   }
@@ -5944,6 +5946,8 @@ function openApp(id){
    else showGuidanceDashboard();
    return;
   }
+  // Already on the inactive map: do not reconstruct Google Maps on a second tap.
+  if(s.app==='nav'&&s.mode==='map')return;
   s.app='nav';s.mode='map';
  }else if(s.app===id){s.mode=s.mode==='full'?'split':'full'}
  else{s.app=id;s.mode='full'}
@@ -6079,7 +6083,6 @@ function activeGuidanceOverlay(compact=false){
    <div id="mg-guidance-menu-actions">
     <div class="mg-guidance-menu-heading"><button type="button" onclick="toggleGuidanceMenu(false)" aria-label="Zurück zur Karte">←</button><strong>Navigation</strong></div>
     <button type="button" onclick="MeviWebNavParity.openStopSearch()">Stopp suchen</button>
-    <button type="button" onclick="showGuidanceDashboard()">Dashboard</button>
     <button type="button" onclick="showGuidanceDetails()">Routendetails</button>
     <button type="button" id="mg-voice-toggle" aria-pressed="true" onclick="MeviGoogleNav.toggleVoice()">Ton: an</button>
     <button type="button" onclick="toggleGuidanceMenu(false);MeviGoogleNav.showOverview()">Übersicht</button>
@@ -6152,7 +6155,7 @@ DOCK_COLORS.lightshow='#dc7dff';DOCK_COLORS.tachonext='#23eaff';DOCK_COLORS.sudo
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');const nav=window.MeviGoogleNav;const showNavHeader=s.app==='nav'&&s.mode!=='split'&&s.nav==='browse'&&!!nav?.hasKey?.();$('cockpit').classList.toggle('nav-status-only',showNavHeader);$('cockpit').classList.toggle('mg-web-header',showNavHeader&&!nav?.isNativeMode?.());$('cockpit').classList.toggle('mg-driving-status',s.app==='nav'&&s.nav==='driving'&&!nav?.isNativeMode?.());let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3>'+(s.app==='navdashboard'?'<button type="button" onclick="showGuidanceMap()">Karte</button>':'')+'</div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();$('screen').innerHTML=html;if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.6", "build": 1204, "commit": "fc692148135751a0a0e888997831eb62e65f4b75"};
+const CURRENT_BUILD={"version": "0.6.6", "build": 1205, "commit": "7e6bd7e148079f51586ce7ef304b7f028e621850"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -7191,11 +7194,8 @@ function guidanceDashboardData(){
  const remaining=Number.isFinite(liveTripMeters)?Math.max(0,Math.round(liveTripMeters)):
   routeData?Math.max(0,Math.round(Number(routeData.distanceMeters)||0)):null;
  const elapsed=guidanceStartedAt===null?null:now-guidanceStartedAt;
- const next=guidanceSteps[Math.min(stepIndex,guidanceSteps.length-1)];
- const nextMeters=next?(next.end&&current?distanceBetween(current,next.end):next.distanceMeters):null;
  return {
-  maneuverText:next?.instructions||null,
-  maneuverMeters:Number.isFinite(nextMeters)&&nextMeters>=0?nextMeters:null,
+  nextCameraMeters:window.MeviRoadAssist?.nextCameraDistanceMeters?.()??null,
   speedKmh:!simulation&&guidanceSpeedTimestamp!==null&&now-guidanceSpeedTimestamp<=8000?guidanceCurrentSpeed:null,
   arrivalEpochMs:seconds===null?null:now+seconds*1000,
   remainingSeconds:seconds,remainingMeters:remaining,
@@ -10688,6 +10688,12 @@ function updateMatch(){
  const ahead=Math.max(0,candidate.progress-positionOnRoute.progress);
  currentMatch={...candidate,ahead};
 }
+/** Returns only a current route-matched Road Assist alert; no secondary geometry. */
+function nextCameraDistanceMeters(){
+ if(!guiding||demo||!settings.enabled||!connected||!positionOnRoute||!currentMatch||
+    !fixAt||Date.now()-fixAt>MAX_FIX_AGE||fixAccuracy>MAX_ACCURACY)return null;
+ return Number.isFinite(currentMatch.ahead)&&currentMatch.ahead>=0?currentMatch.ahead:null;
+}
 function maybeSpeak(){
  if(!guiding||demo||!settings.enabled||!settings.voice||!currentMatch)return;
  if(!fixAt||Date.now()-fixAt>MAX_FIX_AGE||fixAccuracy>MAX_ACCURACY)return;
@@ -11163,7 +11169,7 @@ function clearTrips(){
  if(model().native){nativeCall('roadassist.trips.clear').then(takeTrips).catch(()=>{});paintApp();return}
  trips=[];saveTrips();paintApp();
 }
-window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,routeNote:routeStatus,paint,
+window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHAChange,summaryHTML,overlayHTML,routeNote:routeStatus,paint,nextCameraDistanceMeters,
  refresh,setEnabled,setVoice,setConfigId,storeConfig,openScan,infoHTML,scan,cancelScan,
  routeState,project,buildRoute,cameraMatches,sampleRoute,responseCameras,formatMeters,
  appHTML,paintApp,mount,unmount,toggleTrip,toggleDiag,removeTrip,clearTrips,model};
