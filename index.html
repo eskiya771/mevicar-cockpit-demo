@@ -4353,7 +4353,117 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
  .tn-gps-status{font-size:9px;padding:2px 5px}
  .tn-sensor-button{font-size:9px;padding:2px 5px}
 }
-</style><style id="mevicar-sudoku-styles">.sdk-host{width:100%;height:100%;min-height:0;min-width:0;display:flex;justify-content:center;overflow:hidden}.sdk-root{width:100%;height:100%;min-height:0;display:flex;flex-direction:column;gap:6px;padding:5px;color:#e9f9ff}.sdk-head{display:flex;align-items:center;gap:8px;flex:none}.sdk-head strong{font-size:clamp(15px,2vw,23px);color:#57e8f5}.sdk-head select,.sdk-head button{background:#13283b;color:#effaff;border:1px solid #376079;border-radius:8px;padding:5px 10px;min-height:32px}.sdk-head #sdk-time{margin-left:auto;font-variant-numeric:tabular-nums;color:#80eaf7;font-weight:700}.sdk-content{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:clamp(8px,2vw,22px)}.sdk-board{aspect-ratio:1;width:auto;height:100%;max-width:min(100%,65vh);display:grid;grid-template-columns:repeat(9,minmax(0,1fr));grid-template-rows:repeat(9,minmax(0,1fr));border:2px solid #68d7e9;border-radius:4px;overflow:hidden;background:#14293a;flex:none}.sdk-cell{position:relative;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0;padding:0;border:0;border-right:1px solid #395266;border-bottom:1px solid #395266;border-radius:0;background:#122638;color:#dceff7;font-size:clamp(11px,2.8vh,25px);font-weight:600;touch-action:manipulation}.sdk-cell:nth-child(9n){border-right:0}.sdk-cell:nth-last-child(-n+9){border-bottom:0}.sdk-cell.sdk-box-right{border-right:2px solid #5ab9c9}.sdk-cell.sdk-box-bottom{border-bottom:2px solid #5ab9c9}.sdk-cell.sdk-fixed{color:#ffffff;font-weight:800}.sdk-cell.sdk-related{background:#1d3648}.sdk-cell.sdk-same{background:#24586a}.sdk-cell.sdk-selected{background:#0b8199;box-shadow:inset 0 0 0 2px #6bf8ff;color:white}.sdk-cell.sdk-conflict{color:#ff737b;background:#59303f}.sdk-notes{width:100%;height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);align-items:center;justify-items:center}.sdk-notes small{font-size:clamp(6px,1vh,9px);font-weight:500;color:#a2dce7}.sdk-controls{display:flex;flex-direction:column;justify-content:center;gap:10px;min-width:0;width:clamp(155px,24vw,320px);max-height:100%}.sdk-info{text-align:center;color:#b5d4e4;font-size:clamp(11px,1.3vw,16px)}.sdk-numbers{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}.sdk-numbers button,.sdk-actions button{min-height:clamp(28px,5vh,50px);padding:3px;border:1px solid #287d93;border-radius:8px;background:linear-gradient(150deg,#163a50,#0e2538);color:#80f5ff;font-weight:800;font-size:clamp(13px,2vw,22px)}.sdk-actions{display:flex;gap:5px}.sdk-actions button{flex:1;font-size:clamp(10px,1vw,14px);font-weight:600}.sdk-actions .sdk-on{background:#087a8c;color:white}.sdk-root button:focus-visible{outline:2px solid #fff;outline-offset:-2px}@media(max-width:700px){.sdk-root{padding:2px;gap:3px}.sdk-content{gap:5px}.sdk-controls{width:clamp(110px,31%,170px);gap:5px}.sdk-head{gap:4px}.sdk-head strong{font-size:14px}.sdk-head select,.sdk-head button{font-size:11px;padding:3px 5px;min-height:26px}.sdk-board{max-width:min(100%,62vh)}.sdk-numbers{gap:3px}.sdk-actions{gap:3px}.sdk-actions button{font-size:9px;min-height:30px}}@media(max-height:450px){.sdk-root{padding:1px;gap:3px}.sdk-head{min-height:25px}.sdk-content{gap:6px}.sdk-board{max-width:min(100%,calc(100dvh - 135px))}.sdk-controls{gap:4px}.sdk-numbers button{min-height:25px}.sdk-actions button{min-height:28px}.sdk-info{font-size:11px}}</style><style>.tt-root{--tt-accent:#64e4ff;display:flex;flex:1;min-height:0;min-width:0;width:100%;height:100%;gap:clamp(10px,3vw,48px);align-items:center;justify-content:center;color:#edf7ff;overflow:hidden}
+</style><style id="mevicar-sudoku-styles">/* Sudoku uses the existing full/split cockpit surfaces; only the game area changes.
+   Fit a square board to actual content height and remaining width, without scroll. */
+.full:has(.sdk-host){
+ padding:clamp(6px,1.1vh,14px);
+ gap:clamp(4px,.8vh,9px);
+ overflow:hidden;
+}
+.full:has(.sdk-host)>.row{flex:0 0 auto;min-height:0}
+.side:has(.sdk-host){overflow:hidden;padding:clamp(4px,.8vw,10px)}
+.sdk-host{width:100%;height:100%;flex:1;min-height:0;min-width:0;display:flex;overflow:hidden}
+.sdk-root{
+ width:100%;height:100%;min-height:0;min-width:0;display:flex;flex-direction:column;
+ padding:clamp(1px,.45vh,6px);color:#e9f9ff;overflow:hidden;
+}
+.sdk-content{
+ --sdk-gap:clamp(8px,1.5vw,24px);
+ flex:1;min-height:0;min-width:0;width:100%;
+ display:flex;align-items:center;justify-content:center;gap:var(--sdk-gap);overflow:hidden;
+}
+.sdk-board{
+ aspect-ratio:1/1;
+ width:var(--sdk-board-size,min(48vh,48%));
+ height:var(--sdk-board-size,min(48vh,48%));
+ max-width:100%;max-height:100%;
+ display:grid;grid-template-columns:repeat(9,minmax(0,1fr));
+ grid-template-rows:repeat(9,minmax(0,1fr));
+ border:2px solid #68d7e9;border-radius:5px;overflow:hidden;
+ background:#14293a;flex:0 0 auto;
+}
+.sdk-cell{
+ position:relative;display:flex;align-items:center;justify-content:center;
+ min-width:0;min-height:0;padding:0;
+ border:0;border-right:1px solid #395266;border-bottom:1px solid #395266;
+ border-radius:0;background:#122638;color:#dceff7;
+ font-size:clamp(13px,calc(var(--sdk-board-size,450px)*.046),31px);
+ font-weight:600;touch-action:manipulation;
+}
+.sdk-cell:nth-child(9n){border-right:0}
+.sdk-cell:nth-last-child(-n+9){border-bottom:0}
+.sdk-cell.sdk-box-right{border-right:2px solid #5ab9c9}
+.sdk-cell.sdk-box-bottom{border-bottom:2px solid #5ab9c9}
+.sdk-cell.sdk-fixed{color:#fff;font-weight:800}
+.sdk-cell.sdk-related{background:#1d3648}
+.sdk-cell.sdk-same{background:#24586a}
+.sdk-cell.sdk-selected{background:#0b8199;box-shadow:inset 0 0 0 2px #6bf8ff;color:#fff}
+.sdk-cell.sdk-conflict{color:#ff737b;background:#59303f}
+.sdk-notes{width:100%;height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);align-items:center;justify-items:center}
+.sdk-notes small{font-size:clamp(6px,calc(var(--sdk-board-size,450px)*.017),11px);font-weight:500;color:#a2dce7}
+.sdk-controls{
+ flex:0 0 clamp(170px,22vw,350px);
+ width:clamp(170px,22vw,350px);
+ height:100%;min-height:0;min-width:0;
+ display:flex;flex-direction:column;justify-content:space-between;
+ gap:clamp(4px,.9vh,12px);
+}
+.sdk-head{display:flex;align-items:center;gap:clamp(4px,.7vw,10px);min-width:0;flex:0 0 auto}
+.sdk-head select,.sdk-head button{
+ background:#13283b;color:#effaff;border:1px solid #376079;border-radius:9px;
+ padding:5px 9px;min-height:clamp(30px,4.5vh,44px);min-width:0;
+}
+.sdk-head select{flex:0 1 auto;max-width:52%}
+.sdk-head #sdk-time{
+ margin-left:auto;font-variant-numeric:tabular-nums;
+ color:#80eaf7;font-size:clamp(12px,1.9vh,20px);font-weight:700;white-space:nowrap;
+}
+.sdk-control-pad{
+ flex:1;min-height:0;min-width:0;
+ display:flex;flex-direction:column;justify-content:center;
+ gap:clamp(4px,1vh,12px);
+}
+.sdk-info{text-align:center;color:#b5d4e4;font-size:clamp(11px,1.3vw,16px)}
+.sdk-numbers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(3px,.6vh,8px)}
+.sdk-numbers button,.sdk-actions button{
+ min-width:0;min-height:clamp(28px,7vh,56px);padding:3px;
+ border:1px solid #287d93;border-radius:9px;
+ background:linear-gradient(150deg,#163a50,#0e2538);color:#80f5ff;
+ font-weight:800;font-size:clamp(15px,2.2vw,28px);
+}
+.sdk-actions{display:flex;gap:clamp(3px,.5vw,7px)}
+.sdk-actions button{flex:1;font-size:clamp(10px,1vw,15px);font-weight:600}
+.sdk-actions .sdk-on{background:#087a8c;color:#fff}
+.sdk-root button:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+
+/* In a true split pane the board and a compact nine-key row stack vertically. */
+.side .sdk-root{padding:2px}
+.side .sdk-content{--sdk-gap:clamp(2px,.5vh,6px);flex-direction:column}
+.side .sdk-controls{
+ flex:0 0 auto;width:100%;height:auto;gap:clamp(2px,.45vh,5px);
+}
+.side .sdk-head{gap:4px}
+.side .sdk-head select,.side .sdk-head button{
+ min-height:25px;padding:2px 6px;font-size:clamp(10px,1.7vh,13px);
+}
+.side .sdk-head #sdk-time{font-size:clamp(10px,1.7vh,13px)}
+.side .sdk-control-pad{flex:0 0 auto;gap:clamp(2px,.4vh,5px)}
+.side .sdk-info{font-size:clamp(9px,1.6vh,12px)}
+.side .sdk-numbers{grid-template-columns:repeat(9,minmax(0,1fr));gap:2px}
+.side .sdk-numbers button{min-height:clamp(24px,4vh,37px);padding:0;font-size:clamp(10px,1.7vh,15px);border-radius:5px}
+.side .sdk-actions button{min-height:clamp(24px,4vh,34px);padding:1px;font-size:clamp(9px,1.5vh,12px);border-radius:6px}
+@media(orientation:landscape) and (max-height:440px){
+ .sdk-root{padding:1px}
+ .sdk-content{--sdk-gap:clamp(4px,1vw,10px)}
+ .sdk-controls{gap:3px}
+ .sdk-control-pad{gap:3px}
+ .sdk-head select,.sdk-head button{min-height:27px;padding:2px 6px;font-size:clamp(10px,1.8vh,13px)}
+ .sdk-head #sdk-time{font-size:12px}
+ .sdk-numbers{gap:3px}
+ .sdk-numbers button,.sdk-actions button{min-height:clamp(26px,7vh,33px)}
+ .sdk-actions button{font-size:clamp(9px,1.3vw,12px)}
+}
+</style><style>.tt-root{--tt-accent:#64e4ff;display:flex;flex:1;min-height:0;min-width:0;width:100%;height:100%;gap:clamp(10px,3vw,48px);align-items:center;justify-content:center;color:#edf7ff;overflow:hidden}
 .tt-stage{position:relative;height:100%;aspect-ratio:1/2;max-width:45%;flex:none;min-height:0}
 .tt-board{display:block;width:100%;height:100%;border:1px solid #64e4ff66;border-radius:10px;box-shadow:0 0 24px #2abce519;object-fit:contain;background:#081321}
 .tt-banner{position:absolute;top:40%;left:4%;right:4%;padding:14px 4px;background:#0b172fee;border:1px solid var(--tt-accent);border-radius:10px;text-align:center;font-size:clamp(12px,2vh,22px);font-weight:700}
@@ -6155,7 +6265,7 @@ DOCK_COLORS.lightshow='#dc7dff';DOCK_COLORS.tachonext='#23eaff';DOCK_COLORS.sudo
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');const nav=window.MeviGoogleNav;const showNavHeader=s.app==='nav'&&s.mode!=='split'&&s.nav==='browse'&&!!nav?.hasKey?.();$('cockpit').classList.toggle('nav-status-only',showNavHeader);$('cockpit').classList.toggle('mg-web-header',showNavHeader&&!nav?.isNativeMode?.());$('cockpit').classList.toggle('mg-driving-status',s.app==='nav'&&s.nav==='driving'&&!nav?.isNativeMode?.());let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3>'+(s.app==='navdashboard'?'<button type="button" onclick="showGuidanceMap()">Karte</button>':'')+'</div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();$('screen').innerHTML=html;if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.6", "build": 1205, "commit": "7e6bd7e148079f51586ce7ef304b7f028e621850"};
+const CURRENT_BUILD={"version": "0.6.6", "build": 1206, "commit": "6fa8afa9a75f149df7ef3acd4ef2a8d8e5456c48"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -15528,7 +15638,7 @@ window.meviTachoNextDebug=()=>({mounted:!!host,gpsWatch,orientationOn,speedKmh:s
 })();</script><script id="mevicar-sudoku-script">/* MeviCar Next Sudoku: self-contained native app, no dependencies. */
 (function(){
 'use strict';
-let game=null,root=null;
+let game=null,root=null,boardObserver=null;
 const store='mevicar-sudoku-v1';
 function shuffled(a){return a.slice().sort(()=>Math.random()-.5)}
 function solve(board,random=false){let best=-1,choices=null;for(let i=0;i<81;i++){if(board[i])continue;const used=new Set();const r=Math.floor(i/9),c=i%9;for(let j=0;j<9;j++){used.add(board[r*9+j]);used.add(board[j*9+c]);used.add(board[(Math.floor(r/3)*3+Math.floor(j/3))*9+Math.floor(c/3)*3+j%3])}const opts=(random?shuffled([1,2,3,4,5,6,7,8,9]):[1,2,3,4,5,6,7,8,9]).filter(n=>!used.has(n));if(!opts.length)return false;if(!choices||opts.length<choices.length){best=i;choices=opts;if(opts.length===1)break}}if(best<0)return true;for(const n of choices){board[best]=n;if(solve(board,random))return true}board[best]=0;return false}
@@ -15537,14 +15647,67 @@ function fresh(level){const solution=Array(81).fill(0);solve(solution,true);cons
 function save(){try{localStorage.setItem(store,JSON.stringify(game))}catch(e){}}
 function restore(){try{const x=JSON.parse(localStorage.getItem(store));if(x&&Array.isArray(x.puzzle)&&x.puzzle.length===81&&Array.isArray(x.values)&&x.values.length===81&&Array.isArray(x.solution)&&x.solution.length===81){game=x;return}}catch(e){}fresh('mittel')}
 function time(){const secs=(game.elapsed||0)+(game.finished?0:Math.floor((Date.now()-game.started)/1000));return Math.floor(secs/60)+':'+String(secs%60).padStart(2,'0')}
-function markup(){return '<div class="sdk-root"><header class="sdk-head"><strong>Sudoku</strong><select id="sdk-level" aria-label="Schwierigkeit"><option value="leicht">Leicht</option><option value="mittel">Mittel</option><option value="schwer">Schwer</option></select><button id="sdk-new" type="button">Neu</button><span id="sdk-time">0:00</span></header><div class="sdk-content"><div id="sdk-board" class="sdk-board" role="grid" aria-label="Sudoku Spielfeld"></div><div class="sdk-controls"><div id="sdk-info" class="sdk-info"></div><div class="sdk-numbers">'+Array.from({length:9},(_,i)=>'<button type="button" data-num="'+(i+1)+'">'+(i+1)+'</button>').join('')+'</div><div class="sdk-actions"><button id="sdk-erase" type="button">Löschen</button><button id="sdk-note" type="button">Notizen</button><button id="sdk-hint" type="button">Tipp</button></div></div></div></div>'}
+function markup(){
+ return '<div class="sdk-root"><div class="sdk-content">'+
+  '<div id="sdk-board" class="sdk-board" role="grid" aria-label="Sudoku Spielfeld"></div>'+
+  '<div class="sdk-controls">'+
+   '<header class="sdk-head"><select id="sdk-level" aria-label="Schwierigkeit">'+
+    '<option value="leicht">Leicht</option><option value="mittel">Mittel</option><option value="schwer">Schwer</option>'+
+   '</select><button id="sdk-new" type="button">Neu</button><span id="sdk-time">0:00</span></header>'+
+   '<div class="sdk-control-pad"><div id="sdk-info" class="sdk-info"></div>'+
+    '<div class="sdk-numbers">'+Array.from({length:9},(_,i)=>'<button type="button" data-num="'+(i+1)+'">'+(i+1)+'</button>').join('')+'</div>'+
+    '<div class="sdk-actions"><button id="sdk-erase" type="button">Löschen</button>'+
+     '<button id="sdk-note" type="button">Notizen</button><button id="sdk-hint" type="button">Tipp</button></div>'+
+   '</div>'+
+  '</div></div></div>';
+}
 function conflicts(i){const v=game.values[i];if(!v)return false;const r=Math.floor(i/9),c=i%9;for(let j=0;j<81;j++){if(j===i||game.values[j]!==v)continue;const rr=Math.floor(j/9),cc=j%9;if(rr===r||cc===c||(Math.floor(rr/3)===Math.floor(r/3)&&Math.floor(cc/3)===Math.floor(c/3)))return true}return false}
 function draw(){if(!root||!game)return;const board=root.querySelector('#sdk-board');if(!board)return;board.innerHTML=game.values.map((n,i)=>{const selected=i===game.selected;const r=Math.floor(i/9),c=i%9;const related=game.selected>=0&&(Math.floor(game.selected/9)===r||game.selected%9===c||Math.floor(Math.floor(game.selected/9)/3)===Math.floor(r/3)&&Math.floor((game.selected%9)/3)===Math.floor(c/3));const same=n&&game.selected>=0&&n===game.values[game.selected];const classes=['sdk-cell',game.puzzle[i]?'sdk-fixed':'',selected?'sdk-selected':'',related?'sdk-related':'',same?'sdk-same':'',conflicts(i)?'sdk-conflict':'',c===2||c===5?'sdk-box-right':'',r===2||r===5?'sdk-box-bottom':''].filter(Boolean).join(' ');const notes=!n&&game.notes[i]?'<span class="sdk-notes">'+game.notes[i].map(v=>'<small>'+v+'</small>').join('')+'</span>':'';return '<button type="button" class="'+classes+'" data-cell="'+i+'" role="gridcell" aria-label="Zeile '+(r+1)+', Spalte '+(c+1)+(n?', '+n:'')+'">'+(n||notes)+'</button>'}).join('');root.querySelector('#sdk-level').value=game.level;root.querySelector('#sdk-time').textContent=time();root.querySelector('#sdk-note').classList.toggle('sdk-on',!!game.noteMode);root.querySelector('#sdk-info').textContent=game.finished?'Gelöst! Glückwunsch!':'Fehler: '+game.mistakes+' · '+game.values.filter(Boolean).length+'/81';}
 function enter(n){if(game.finished||game.selected<0||game.puzzle[game.selected])return;const i=game.selected;if(game.noteMode&&n){const set=new Set(game.notes[i]||[]);if(set.has(n))set.delete(n);else set.add(n);game.notes[i]=[...set].sort();}else{if(n&&game.solution[i]!==n)game.mistakes++;game.values[i]=n;delete game.notes[i]}if(game.values.every((v,k)=>v===game.solution[k])){game.elapsed+=Math.floor((Date.now()-game.started)/1000);game.finished=true}save();draw()}
 function onClick(e){const cell=e.target.closest('[data-cell]');if(cell){game.selected=Number(cell.dataset.cell);save();draw();return}const num=e.target.closest('[data-num]');if(num){enter(Number(num.dataset.num));return}const id=e.target.id;if(id==='sdk-erase')enter(0);if(id==='sdk-note'){game.noteMode=!game.noteMode;save();draw()}if(id==='sdk-hint'&&!game.finished){let i=game.selected;if(i<0||game.puzzle[i]||game.values[i]===game.solution[i])i=game.values.findIndex((v,k)=>v!==game.solution[k]&&!game.puzzle[k]);if(i>=0){game.selected=i;game.values[i]=game.solution[i];delete game.notes[i];if(game.values.every((v,k)=>v===game.solution[k])){game.elapsed+=Math.floor((Date.now()-game.started)/1000);game.finished=true}save();draw()}}if(id==='sdk-new')fresh(root.querySelector('#sdk-level').value)}
 function onKey(e){if(!root||!root.isConnected||e.target.tagName==='SELECT')return;if(/^[1-9]$/.test(e.key)){enter(Number(e.key));e.preventDefault()}else if(e.key==='Backspace'||e.key==='Delete'){enter(0);e.preventDefault()}else if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){const delta={ArrowUp:-9,ArrowDown:9,ArrowLeft:-1,ArrowRight:1}[e.key];game.selected=Math.max(0,Math.min(80,(game.selected<0?0:game.selected)+delta));save();draw();e.preventDefault()}}
-function mount(){const next=document.querySelector('.sdk-host');if(!next){unmount();return}unmount();root=next;root.innerHTML=markup();root.addEventListener('click',onClick);document.addEventListener('keydown',onKey);restore();draw();window.meviSudokuTimer=setInterval(()=>{if(root&&game&&!game.finished){const t=root.querySelector('#sdk-time');if(t)t.textContent=time()}},1000)}
-function unmount(){if(window.meviSudokuTimer){clearInterval(window.meviSudokuTimer);window.meviSudokuTimer=null}document.removeEventListener('keydown',onKey);if(root)root.removeEventListener('click',onClick);root=null}
+function sizeBoard(){
+ if(!root)return;
+ const content=root.querySelector('.sdk-content'),board=root.querySelector('#sdk-board');
+ const controls=root.querySelector('.sdk-controls');
+ if(!content||!board||!controls)return;
+ const style=typeof getComputedStyle==='function'?getComputedStyle(content):null;
+ const gap=Number.parseFloat(style?.gap)||8;
+ const vertical=style?.flexDirection==='column';
+ const free=vertical?content.clientHeight-controls.offsetHeight-gap:
+  content.clientWidth-controls.offsetWidth-gap;
+ const size=Math.floor(Math.max(0,Math.min(
+  vertical?content.clientWidth:content.clientHeight,free)));
+ if(size>0)board.style.setProperty('--sdk-board-size',size+'px');
+}
+function mount(){
+ const next=document.querySelector('.sdk-host');
+ if(!next){unmount();return}
+ unmount();root=next;root.innerHTML=markup();
+ root.addEventListener('click',onClick);
+ document.addEventListener('keydown',onKey);
+ restore();draw();
+ sizeBoard();
+ if(typeof ResizeObserver!=='undefined'){
+  boardObserver=new ResizeObserver(sizeBoard);
+  boardObserver.observe(root.querySelector('.sdk-content'));
+ }
+ window.addEventListener?.('resize',sizeBoard);
+ window.requestAnimationFrame?.(sizeBoard);
+ window.meviSudokuTimer=setInterval(()=>{
+  if(root&&game&&!game.finished){
+   const t=root.querySelector('#sdk-time');if(t)t.textContent=time();
+  }
+ },1000);
+}
+function unmount(){
+ boardObserver?.disconnect();boardObserver=null;
+ window.removeEventListener?.('resize',sizeBoard);
+ if(window.meviSudokuTimer){clearInterval(window.meviSudokuTimer);window.meviSudokuTimer=null}
+ document.removeEventListener('keydown',onKey);
+ if(root)root.removeEventListener('click',onClick);
+ root=null;
+}
 window.meviSudokuHTML=()=>'<div class="sdk-host"></div>';window.meviSudokuMount=mount;window.meviSudokuUnmount=unmount;
 })();</script><script>/* Dependency-free falling-block game and lifecycle adapter. */
 (function(global){
