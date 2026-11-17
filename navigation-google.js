@@ -680,7 +680,7 @@ function drawRoute(){
 let routeSummary='',liveSummary='';
 let liveTripMeters=null,liveTripMinutes=null;
 let guidanceStartedAt=null,guidanceDrivenMeters=0,guidancePreviousRemaining=null;
-let guidanceMaxSpeed=null,guidanceSpeedTimestamp=null;
+let guidanceMaxSpeed=null,guidanceSpeedTimestamp=null,guidanceCurrentSpeed=null;
 function recordGuidanceSpeed(position){
  if(!guidanceActive||simulation||guidanceStartedAt===null)return;
  const {speed,accuracy}=position.coords||{},stamp=position.timestamp;
@@ -689,7 +689,8 @@ function recordGuidanceSpeed(position){
     !Number.isFinite(stamp)||stamp<guidanceStartedAt||stamp>Date.now()+1000||Date.now()-stamp>15000||
     (guidanceSpeedTimestamp!==null&&stamp<=guidanceSpeedTimestamp))return;
  guidanceSpeedTimestamp=stamp;
- guidanceMaxSpeed=Math.max(guidanceMaxSpeed??0,speed*3.6);
+ guidanceCurrentSpeed=speed*3.6;
+ guidanceMaxSpeed=Math.max(guidanceMaxSpeed??0,guidanceCurrentSpeed);
 }
 function recordGuidanceProgress(meters){
  const remaining=Math.max(0,Math.round(Number(meters)));
@@ -701,7 +702,7 @@ function recordGuidanceProgress(meters){
 }
 function resetGuidanceProgress(){
  guidanceStartedAt=null;guidanceDrivenMeters=0;guidancePreviousRemaining=null;
- guidanceMaxSpeed=null;guidanceSpeedTimestamp=null;
+ guidanceMaxSpeed=null;guidanceSpeedTimestamp=null;guidanceCurrentSpeed=null;
 }
 /* The compact Web trip strip is fed by the same route and GPS progress as
    spoken turn guidance, not by a second route calculation. */
@@ -714,6 +715,26 @@ function guidanceTrip(){
 }
 /* Android NavRouteDetails.rows semantics over the existing browser route/GPS
    state: no duplicate Web view, no new directions calculation. */
+function guidanceDashboardData(){
+ const now=Date.now();
+ const seconds=Number.isFinite(liveTripMinutes)?Math.max(0,Math.round(liveTripMinutes*60)):
+  routeData?Math.max(0,Math.round((Number(routeData.durationMillis)||0)/1000)):null;
+ const remaining=Number.isFinite(liveTripMeters)?Math.max(0,Math.round(liveTripMeters)):
+  routeData?Math.max(0,Math.round(Number(routeData.distanceMeters)||0)):null;
+ const elapsed=guidanceStartedAt===null?null:now-guidanceStartedAt;
+ const next=guidanceSteps[Math.min(stepIndex,guidanceSteps.length-1)];
+ const nextMeters=next?(next.end&&current?distanceBetween(current,next.end):next.distanceMeters):null;
+ return {
+  maneuverText:next?.instructions||null,
+  maneuverMeters:Number.isFinite(nextMeters)&&nextMeters>=0?nextMeters:null,
+  speedKmh:!simulation&&guidanceSpeedTimestamp!==null&&now-guidanceSpeedTimestamp<=8000?guidanceCurrentSpeed:null,
+  arrivalEpochMs:seconds===null?null:now+seconds*1000,
+  remainingSeconds:seconds,remainingMeters:remaining,
+  avgKmh:!simulation&&elapsed!==null&&elapsed>=60000&&guidanceDrivenMeters>=100?
+   Math.round(guidanceDrivenMeters*3600000/elapsed):null,
+  maxKmh:!simulation?guidanceMaxSpeed:null
+ };
+}
 function guidanceDetailsHTML(){
  const now=Date.now(),remaining=Math.max(0,Math.round(Number.isFinite(liveTripMeters)?liveTripMeters:(routeData?.distanceMeters||0)));
  const seconds=Math.max(0,Math.round(Number.isFinite(liveTripMinutes)?liveTripMinutes*60:(routeData?.durationMillis||0)/1000));
@@ -1005,6 +1026,8 @@ function paintGuidance(){
  if(arrow)arrow.textContent=guidanceSymbol(step);
  if(distance)distance.textContent=metersLabel(step?.end&&current?distanceBetween(current,step.end):step?.distanceMeters);
  const trip=guidanceTrip();
+ const dash=document.getElementById('mg-guidance-menu-dashboard');
+ if(dash&&!dash.hidden)window.MeviNavDashboard?.paint?.(dash,guidanceDashboardData());
  const eta=document.getElementById('mg-trip-arrival');
  const summary=document.getElementById('mg-trip-summary');
  const nextStop=document.getElementById('mg-trip-next-stop');
@@ -1192,7 +1215,7 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location"'+(guidanceActive?' hidden':'')+' onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={guidanceTrip,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
