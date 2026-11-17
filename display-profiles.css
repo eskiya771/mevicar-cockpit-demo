@@ -866,3 +866,22 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
  .cockpit.mg-web-header #updateMessage,
  .cockpit.mg-web-header .status-time { display: none; }
 }
+
+/* Compact landscape navigation: reserve the full viewport for a ready-route
+   sheet (Android-style), then restore the app dock after the sheet closes.
+   During live guidance the dock stays available, so turn instructions are
+   shifted beyond the physical dock and the device's left safe-area inset. */
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .cockpit:has(.mg-route-preview-pane) .dock,
+ .cockpit:has(.mg-route-banner.mg-route-ready) .dock{display:none!important}
+ .cockpit:has(.mg-route-preview-pane) .body,
+ .cockpit:has(.mg-route-banner.mg-route-ready) .body{gap:0!important}
+ .cockpit:has(.mg-route-preview-pane) .workspace,
+ .cockpit:has(.mg-route-banner.mg-route-ready) .workspace{min-width:0;width:100%}
+ .cockpit .mg-navigation .mg-route-banner.mg-route-ready{
+   max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain;
+ }
+ .cockpit .mg-navigation .mg-guidance-banner{
+   left:calc(max(4px,env(safe-area-inset-left,0px)) + 76px)!important;
+ }
+}
