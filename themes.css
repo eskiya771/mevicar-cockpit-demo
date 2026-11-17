@@ -451,11 +451,17 @@ html .cockpit .dock button:not(.active){
   background:var(--dock-tile-bg,#203a50)!important;
   border-color:var(--dock-tile-border,#385a70)!important;
   box-shadow:inset 0 1px 0 #ffffff12;
-  --dock-neutral:#c8d8e7;
+  opacity:1!important;
+  --dock-neutral:#e3f0fa;
+  --app-icon-second:#aec9df;
 }
 html .cockpit .dock button:not(.active) .dock-label{
-  color:#f1f7ff;
+  color:#f1f7ff!important;
   font-weight:650;
+}
+html .cockpit .dock button:not(.active) .ico{
+  opacity:1!important;
+  color:var(--dock-neutral)!important;
 }
 
 /* Canonical app launcher geometry: a fixed illustration cell and a separate
