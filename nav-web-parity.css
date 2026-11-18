@@ -13,6 +13,7 @@
  --nav-search-accent:#8beaff;
  background:var(--nav-search-background);
  color:var(--nav-search-ink);
+ -webkit-text-size-adjust:100%;text-size-adjust:100%;
 }
 html[data-theme="cyberpunk"] .mg-parity-shade{
  --nav-search-background:#0b0815;
@@ -39,7 +40,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-back svg{width:clamp(25px,3vw,36px);height:clamp(25px,3vw,36px)}
 .mg-parity-field{flex:1;min-width:0;display:flex;align-items:center;padding:0 clamp(9px,1.4vw,20px);gap:10px}
 .mg-parity-field>svg{width:20px;height:20px;opacity:.7}
-.mg-parity-field input{min-width:0;width:100%;border:0;background:transparent;outline:0;color:var(--nav-search-ink);font-size:clamp(16px,2.9vh,28px);font-weight:400;padding:0;height:100%;appearance:none;-webkit-appearance:none}
+.mg-parity-field input{min-width:0;width:100%;border:0;background:transparent;outline:0;color:var(--nav-search-ink);font-size:clamp(16px,1.45vw,23px);font-weight:400;padding:0;height:100%;appearance:none;-webkit-appearance:none}
 .mg-parity-field input::placeholder,#mg-parity-filter::placeholder{color:var(--nav-search-dim);opacity:1}
 .mg-parity-field input::-webkit-search-cancel-button{display:none}
 .mg-parity-clear{border:0;background:transparent;font-size:28px;padding:0 12px;color:var(--nav-search-ink)}
@@ -59,9 +60,9 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-symbol{display:grid;place-items:center;color:var(--nav-search-dim);flex:0 0 clamp(22px,2.2vw,34px)}
 .mg-parity-symbol svg{width:clamp(21px,3.2vh,35px);height:clamp(21px,3.2vh,35px)}
 .mg-parity-description{min-width:0;flex:1;display:flex;flex-direction:column;gap:clamp(1px,.45vh,4px)}
-.mg-parity-description strong{font-weight:650;font-size:clamp(14px,2.7vh,25px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mg-parity-description small{font-size:clamp(12px,2.15vh,21px);color:var(--nav-search-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mg-parity-distance{flex:0 0 auto;font-size:clamp(12px,2.35vh,21px);color:var(--nav-search-dim);white-space:nowrap}
+.mg-parity-description strong{font-weight:650;font-size:clamp(18px,1.5vw,23px);line-height:1.18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mg-parity-description small{font-size:clamp(15px,1.2vw,19px);line-height:1.2;color:var(--nav-search-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mg-parity-distance{flex:0 0 auto;font-size:clamp(14px,1.1vw,18px);line-height:1.2;color:var(--nav-search-dim);white-space:nowrap}
 .mg-parity-empty{padding:clamp(13px,3vh,30px);font-size:clamp(13px,2.2vh,20px);color:var(--nav-search-dim)}
 .mg-navigation .mg-parity-empty-slot{border:0;background:var(--nav-search-surface);border-radius:12px;padding:12px 17px;text-align:left;font-size:clamp(13px,2.4vh,20px);min-height:44px}
 /* Management belongs to the unified search view. */
@@ -81,7 +82,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  font-size:clamp(12px,2.2vh,18px);white-space:nowrap
 }
 .mg-parity-manage-actions svg{width:18px;height:18px}
-.mg-parity-section-title{flex:0 0 auto;font-size:clamp(12px,2.15vh,17px);font-weight:650;
+.mg-parity-section-title{flex:0 0 auto;font-size:clamp(13px,1.1vw,17px);font-weight:650;
  color:var(--nav-search-dim);padding:clamp(4px,.6vh,8px) 5px}
 .mg-navigation .mg-parity-inline{flex:0 0 clamp(44px,5vw,56px);min-width:44px;min-height:44px;padding:5px;background:transparent;border:0;border-radius:0;color:var(--nav-search-dim)}
 .mg-parity-inline svg{width:19px;height:19px}
@@ -265,6 +266,9 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  flex:1.8 1 0;font-size:clamp(13px,2.7vh,18px);
  font-weight:700;background:var(--nav-search-accent);color:#0b2331;
 }
+/* The result and search typography above deliberately use viewport WIDTH rather
+   than HEIGHT. iOS can change usable height as the keyboard and results open;
+   font sizes must not jump when switching idle / typing / results modes. */
 /* The user is typing: POI chips, tabs and management must not steal the
    precious vertical space needed to read and tap the live result list. */
 .mg-parity-shade.mg-parity-keyboard-open #mg-parity-controls,
