@@ -2,11 +2,31 @@
    Pure browser JavaScript: usable by Web/PWA and, when explicitly integrated, Android WebView. */
 (function(root){
 'use strict';
+/** Common input validation for the Web and Android navigation providers. */
+function validCoordinates(value){
+ return !!value&&Number.isFinite(value.lat)&&Number.isFinite(value.lng)&&
+  Math.abs(value.lat)<=90&&Math.abs(value.lng)<=180;
+}
+function validPlaceId(value){return typeof value==='string'&&/^[A-Za-z0-9_-]{1,300}$/.test(value)}
+function escapeHtml(value){
+ return String(value??'').replace(/[&<>"']/g,c=>
+  ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+/** Canonical native DestinationBook identity, shared by all Web providers.
+ * Match Kotlin Math.round(lat*100000) and Math.round(lng*100000) exactly. */
+function destinationKey(value){
+ if(!value||typeof value!=='object')return '';
+ if(validPlaceId(value.placeId))
+  return 'p:'+value.placeId;
+ const lat=value.lat,lng=value.lng;
+ if(!validCoordinates(value))return '';
+ return 'c:'+Math.round(lat*100000)+':'+Math.round(lng*100000);
+}
 function destination(value){
  if(!value||typeof value!=='object'||typeof value.name!=='string'||!value.name.trim())return null;
  const lat=value.lat,lng=value.lng;
- const coords=Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180;
- const placeId=typeof value.placeId==='string'&&/^[A-Za-z0-9_-]{1,300}$/.test(value.placeId)?value.placeId:'';
+ const coords=validCoordinates(value);
+ const placeId=validPlaceId(value.placeId)?value.placeId:'';
  const hasExplicitCoords=(lat!=null||lng!=null);
  if(!coords&&(hasExplicitCoords||!placeId))return null;
  // Native Android may store a Google place ID before its coordinates are fetched.
@@ -25,7 +45,7 @@ function distinct(values,max){
  const seen=new Set(),out=[];
  for(const value of Array.isArray(values)?values:[]){
   const item=destination(value);if(!item)continue;
-  const id=item.placeId?'p:'+item.placeId:'c:'+item.lat.toFixed(5)+','+item.lng.toFixed(5);
+  const id=destinationKey(item);
   if(seen.has(id))continue;seen.add(id);out.push(item);
   if(out.length>=max)break;
  }
@@ -107,7 +127,7 @@ function editSaved(source,kind,index,patch){
   slots[nextSlot]=next; // Native semantics: the previous slot occupant is replaced.
  }else{
   // Native semantics: an existing favourite for the same place is replaced.
-  const key=item=>item.placeId?'p:'+item.placeId:'c:'+item.lat.toFixed(5)+','+item.lng.toFixed(5);
+  const key=destinationKey;
   const old=favorites.findIndex(x=>key(x)===key(next));
   if(old>=0)favorites.splice(old,1);
   favorites.splice(kind==='favorites'?Math.min(index,favorites.length):favorites.length,0,next);
@@ -156,6 +176,6 @@ function importAddressBook(payload,current){
  return {changes:{slots,favorites:distinct(favorites,200),recent:distinct(history,30)},added,skipped};
 }
 root.MeviNavigationShared=Object.freeze({
- destination,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
+ destination,destinationKey,validCoordinates,validPlaceId,escapeHtml,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
 });
 })(window);
