@@ -190,3 +190,78 @@ html[data-theme="liquidglass"] .mg-dash-speed{background:linear-gradient(155deg,
 }
 .mg-dash-panel[data-route-active="false"] .mg-dashboard-compact .mg-dash-cell:not(.mg-dash-speed){display:none}
 .mg-dash-panel[data-route-active="false"] .mg-dashboard-compact .mg-dash-speed{grid-column:1;grid-row:1}
+
+/* Idle Navi split: Apple-Maps-style saved-place quick actions, driven by the
+   single destination provider. During a route, the normal trip grid takes over. */
+.mg-dash-panel[data-route-active="true"] .mg-dash-quick{display:none}
+.mg-dash-quick{
+ flex:1 1 0;display:flex;flex-direction:column;min-width:0;min-height:0;
+ padding:clamp(7px,1.15vh,14px) clamp(6px,.8vw,12px);
+ border:1px solid var(--dash-border);border-radius:clamp(10px,1.25vw,17px);
+ background:color-mix(in srgb,var(--dash-bg) 85%,transparent);
+ overflow:hidden;
+}
+.mg-dash-quick-heading{
+ flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:8px;
+ min-height:clamp(25px,4.1vh,42px);color:var(--dash-ink);
+}
+.mg-dash-quick-heading strong{font-size:clamp(15px,2.7vh,25px);font-weight:780}
+.mg-dash-quick-hint{
+ flex:0 0 auto;color:var(--dash-sub);
+ font-size:clamp(11px,1.75vh,15px);white-space:nowrap;
+}
+.mg-dash-quick-rail{
+ display:flex;align-items:flex-start;gap:clamp(7px,.8vw,14px);
+ flex:1 1 0;min-height:0;min-width:0;overflow-x:auto;overflow-y:hidden;
+ padding:clamp(1px,.4vh,5px) 0 clamp(4px,.75vh,10px);
+ scroll-snap-type:x proximity;overscroll-behavior-x:contain;
+ -webkit-overflow-scrolling:touch;scrollbar-width:thin;
+}
+.mg-dash-quick-rail::-webkit-scrollbar{height:3px}
+.mg-dash-quick-rail::-webkit-scrollbar-thumb{background:var(--dash-border);border-radius:3px}
+.side.mg-nav-dashboard-side .mg-dash-quick-place{
+ flex:0 0 clamp(76px,10vw,128px);min-width:76px;min-height:44px;
+ display:flex;flex-direction:column;align-items:center;gap:clamp(2px,.5vh,6px);
+ margin:0;padding:0 2px 3px;border:0;background:transparent;
+ font:inherit;color:var(--dash-ink);cursor:pointer;scroll-snap-align:start;
+ text-align:center;touch-action:pan-x;-webkit-tap-highlight-color:transparent;
+}
+.mg-dash-quick-circle{
+ width:clamp(57px,10vh,104px);height:clamp(57px,10vh,104px);
+ max-width:100%;flex:0 0 auto;display:grid;place-items:center;
+ border-radius:50%;border:1px solid #ffffff33;
+ background:linear-gradient(145deg,#6476a0,#313b5b);
+ box-shadow:inset 0 1px 2px #ffffff24,0 3px 10px #0004;
+ color:#fff;
+}
+.mg-dash-quick-place[data-kind="home"] .mg-dash-quick-circle,
+.mg-dash-quick-circle[data-icon="home"]{background:linear-gradient(145deg,#25d9e7,#087b9c)}
+.mg-dash-quick-place[data-kind="work"] .mg-dash-quick-circle,
+.mg-dash-quick-circle[data-icon="work"]{background:linear-gradient(145deg,#c99b83,#86554d)}
+.mg-dash-quick-circle[data-icon="fuel"]{background:linear-gradient(145deg,#fc9b66,#c65053)}
+.mg-dash-quick-circle[data-icon="food"]{background:linear-gradient(145deg,#bfa77f,#8a633c)}
+.mg-dash-quick-circle[data-icon="parking"]{background:linear-gradient(145deg,#73aee8,#3367aa)}
+.mg-dash-quick-circle svg{
+ width:48%;height:48%;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;
+ stroke-linejoin:round;fill:none;
+}
+.mg-dash-quick-place>strong{
+ max-width:100%;font-size:clamp(11px,1.95vh,17px);line-height:1.1;
+ font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mg-dash-quick-place>small{
+ max-width:100%;color:var(--dash-sub);font-size:clamp(10px,1.55vh,14px);
+ line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mg-dash-quick-place:active .mg-dash-quick-circle{transform:scale(.95);filter:brightness(1.2)}
+.mg-dash-quick-place:focus-visible{outline:2px solid var(--dash-accent);outline-offset:2px;border-radius:7px}
+.mg-dash-quick-empty{margin:6px 0;color:var(--dash-sub);font-size:clamp(12px,2vh,17px);line-height:1.35}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-quick{padding:3px 6px}
+ .mg-dash-quick-heading{min-height:30px}
+ .mg-dash-quick-rail{gap:6px;padding:0 0 2px}
+ .side.mg-nav-dashboard-side .mg-dash-quick-place{flex-basis:clamp(73px,10vw,98px)}
+ .mg-dash-quick-circle{width:clamp(52px,14vh,64px);height:clamp(52px,14vh,64px)}
+ .mg-dash-quick-place>strong{font-size:clamp(11px,2.6vh,14px)}
+ .mg-dash-quick-place>small{font-size:10px}
+}

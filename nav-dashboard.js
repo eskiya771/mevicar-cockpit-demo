@@ -43,13 +43,53 @@ function panel(){
    <button type="button" class="mg-dash-action" data-dash-action="search" onclick="openDashboardSearch()">${icon(icons.search)}<span>Ziel suchen</span></button>
   </div>
   ${html(true)}
+  <section class="mg-dash-quick" aria-label="Gespeicherte Orte" data-dash-quick>
+   <div class="mg-dash-quick-heading">
+    <strong>Orte</strong>
+    <span class="mg-dash-quick-hint" aria-hidden="true">Wischen ›</span>
+   </div>
+   <div class="mg-dash-quick-rail" data-dash-quick-rail role="group" aria-label="Schnellziele"></div>
+  </section>
  </div>`;
+}
+// Read from the single search provider; do not re-render the full cockpit or
+// reset the horizontal scroll position every time fresh GPS metrics arrive.
+function refreshQuick(container){
+ if(!container?.querySelector)return;
+ const panel=container.querySelector('.mg-dash-panel');
+ if(!panel||panel.dataset?.routeActive==='true')return;
+ const rail=container.querySelector('[data-dash-quick-rail]');
+ if(!rail)return;
+ const parity=root.MeviWebNavParity;
+ const places=parity?.quickDestinations?.()||[];
+ const signature=JSON.stringify(places);
+ if(rail.dataset?.signature===signature)return;
+ const previousScroll=rail.scrollLeft||0;
+ const safe=root.MeviNavigationShared?.escapeHtml||
+  (value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));
+ rail.innerHTML=places.length?places.map(p=>{
+  const kind=['home','work','favorites'].includes(p.kind)?p.kind:'favorites';
+  const index=Number.isInteger(p.index)&&p.index>=0?p.index:0;
+  const name=safe(p.name);
+  const subtitle=safe(p.distance||p.address||'Gespeichert');
+  const iconName=safe(p.icon||'star');
+  const glyph=parity?.quickIcon?.(p.icon)||'★';
+  return '<button type="button" class="mg-dash-quick-place"'+
+   ' data-kind="'+kind+'" data-index="'+index+'"'+
+   ' onclick="MeviWebNavParity.quickSelect(this.dataset.kind,Number(this.dataset.index))"'+
+   ' aria-label="'+name+' als Ziel auswählen" title="'+name+'">'+
+   '<span class="mg-dash-quick-circle mg-dash-quick-'+kind+'" data-icon="'+iconName+'">'+glyph+'</span>'+
+   '<strong>'+name+'</strong><small>'+subtitle+'</small></button>';
+ }).join(''):'<p class="mg-dash-quick-empty">Noch keine Orte gespeichert. Ziele kannst du über die Suche hinzufügen.</p>';
+ if(rail.dataset)rail.dataset.signature=signature;
+ rail.scrollLeft=previousScroll;
 }
 function paint(container,data){
  if(!container?.querySelector)return;
  const info=data||{},format=root.MeviNavRouteDetails;
  const panel=container.querySelector('.mg-dash-panel');
  if(panel?.dataset)panel.dataset.routeActive=info.routeActive===true?'true':'false';
+ if(info.routeActive!==true)refreshQuick(container);
  // Web guidance and the Android SDK both supply raw metrics.
  // avgKmh remains an input for compatibility with older callers only.
  const rawAverage=Number.isFinite(info.drivenMeters)&&Number.isFinite(info.elapsedMs)?
@@ -70,5 +110,5 @@ function paint(container,data){
   if(element&&element.textContent!==value)element.textContent=value;
  }
 }
-root.MeviNavDashboard={html,panel,paint};
+root.MeviNavDashboard={html,panel,paint,refreshQuick};
 })(window);

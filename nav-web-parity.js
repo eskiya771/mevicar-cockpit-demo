@@ -17,6 +17,7 @@ const iosDevice=/iPhone|iPad|iPod/.test(ua)||
 const touchKeyboard=!native&&iosDevice&&!!window.matchMedia?.('(orientation: landscape)')?.matches;
 let keyboardVisible=false,keyboardUpper=false,keyboardNumbers=false;
 let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false,manage=false;
+let quickBookBusy=false,quickSelecting=false;
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=shared.escapeHtml;
 const paths={
@@ -115,6 +116,60 @@ function localMatches(query){
  d.favorites.forEach((item,i)=>add(item,'favorites',i));
  d.recent.forEach((item,i)=>add(item,'recent',i));
  return matches.join('');
+}
+// Dashboard quick destinations are projections of the *same* provider used
+// by the unified Zielsuche/Adressbuch, never a second favorite store.
+function quickDestinations(){
+ if(native&&!provider.isReady()){
+  if(!quickBookBusy&&window.MeviAndroidSharedNav?.connect){
+   quickBookBusy=true;
+   Promise.resolve().then(()=>window.MeviAndroidSharedNav.connect()).then(()=>{
+    window.MeviNavDashboard?.refreshQuick?.(document.getElementById?.('mg-nav-dashboard-split'));
+   }).catch(()=>{}).finally(()=>{quickBookBusy=false});
+  }
+  return [];
+ }
+ let book;
+ try{book=provider.read()}catch{return []}
+ const entries=[],seen=[];
+ const append=(item,kind,index)=>{
+  if(!item||seen.some(other=>sameSearchDestination(other,item)))return;
+  seen.push(item);
+  const actual=shared.effectiveIcon(item,kind==='favorites'?'':kind);
+  const point=book.origin;
+  const km=shared.validCoordinates(point)&&shared.validCoordinates(item)?
+   shared.distanceMeters(point,item)/1000:null;
+  const distance=Number.isFinite(km)?
+   (km<1?Math.round(km*1000)+' m':
+    (km<10?km.toLocaleString('de-DE',{maximumFractionDigits:1}):
+     Math.round(km).toLocaleString('de-DE'))+' km'):'';
+  entries.push({kind,index,name:item.name|| (kind==='home'?'Zuhause':'Arbeit'),
+   icon:actual,distance,address:item.address||''});
+ };
+ append(book.slots?.home,'home',0);
+ append(book.slots?.work,'work',0);
+ (book.favorites||[]).forEach((item,index)=>append(item,'favorites',index));
+ return entries;
+}
+async function quickSelect(kind,index){
+ // Dashboard only: no hijacking an already planned route.
+ if(!['home','work','favorites'].includes(kind)||!Number.isInteger(index)||index<0||quickSelecting)return false;
+ if(window.MeviGoogleNav?.guidanceDashboardData?.()?.routeActive===true)return false;
+ quickSelecting=true;
+ try{
+  if(native&&!provider.isReady())await window.MeviAndroidSharedNav?.connect?.();
+  const book=provider.read();
+  const selected=kind==='favorites'?book.favorites[index]:book.slots[kind];
+  if(!selected)return false;
+  // The normal book selection owns native navigation and browser routing.
+  // Switch from dashboard to the live map before calling it, with no search overlay.
+  returnNav='browse';bookOpenedFromSearch=false;
+  s.app='nav';s.mode='map';s.nav='browse';s.keyboard=false;
+  window.render?.();
+  await choose(kind,index);
+  return true;
+ }catch(e){nativeFailure(e);return false}
+ finally{quickSelecting=false}
 }
 function searchRows(){
  const d=data(),q=(s.query||'').trim();
@@ -689,6 +744,6 @@ function nativeImport(){if(provider.importPicker)void provider.importPicker().ca
 window.openSearch=open;
 function overlayHTML(){return view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
 window.searchOverlay=overlayHTML;
-window.MeviWebNavParity={overlayHTML,focusSearch,hideSearchKeyboard,blankResultsTapped,resultsScrolled,typeKey,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={overlayHTML,quickDestinations,quickSelect,quickIcon:ico,focusSearch,hideSearchKeyboard,blankResultsTapped,resultsScrolled,typeKey,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
