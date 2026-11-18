@@ -9,7 +9,6 @@
 .mevi-ra-summary-actions button{min-height:31px;border-radius:8px;border:1px solid #6ad9e08c;
  padding:4px 8px;background:#205063;color:#eafaff;font-weight:760;font-size:clamp(10px,1.4vh,13px)}
 .mevi-ra-summary small{font-size:clamp(9px,1.2vh,11px);color:#bcd6e4}
-.mg-navigation .mg-route-ready{max-height:calc(100% - 12px);overflow-y:auto;overscroll-behavior:contain}
 .mevi-ra-overlay-shell{position:absolute;z-index:5;right:clamp(8px,1.2vw,20px);bottom:clamp(8px,1.2vh,18px);
  pointer-events:none;width:min(350px,43%);max-width:calc(100% - 18px)}
 .mevi-ra-overlay{background:linear-gradient(120deg,#11283ef5,#203b54f7);color:#effbff;

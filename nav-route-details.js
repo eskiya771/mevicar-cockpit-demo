@@ -10,7 +10,8 @@
    if(v<1000)return Math.round(v)+' m';
    return (v/1000).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+' km';
   }
-  if(v<1000)return Math.round(v/10)*10+' m';
+  if(style==='compact')return v>=1000?new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(v/1000)+' km':Math.round(v/10)*10+' m';
+  if(v<1000)return (style==='maneuver'&&v<50?Math.round(v/5)*5:Math.round(v/10)*10)+' m';
   return (v<10000?(v/1000).toFixed(1).replace('.',','):String(Math.round(v/1000)))+' km';
  }
  function duration(sec,rounding='round'){
@@ -22,6 +23,17 @@
  function clock(stamp,withSuffix=true){
   if(!finite(stamp)||stamp<0)return '';
   return new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(stamp))+(withSuffix?' Uhr':'');
+ }
+ /* "32 min · 24 km": trip strip and route preview on every platform. */
+ function tripSummary(sec,m){
+  const mins=Math.max(1,Math.round(n(sec)/60));
+  return (mins<60?mins+' min':Math.floor(mins/60)+' h '+String(mins%60).padStart(2,'0')+' min')+' · '+distance(m);
+ }
+ /* "Ankunft 14:32", "Ankunft morgen 02:10", "Ankunft +2 Tage 02:10" in local time. */
+ function arrival(nowMs,sec){
+  const now=finite(nowMs)?nowMs:Date.now(),a=new Date(now),b=new Date(now+n(sec)*1000);
+  const days=Math.round((new Date(b.getFullYear(),b.getMonth(),b.getDate())-new Date(a.getFullYear(),a.getMonth(),a.getDate()))/86400000);
+  return 'Ankunft '+(days<=0?'':days===1?'morgen ':'+'+days+' Tage ')+clock(b.getTime(),false);
  }
  function averageKmh(drivenMeters,elapsedMs){
   if(!finite(drivenMeters)||!finite(elapsedMs)||drivenMeters<100||elapsedMs<60000)return null;
@@ -72,5 +84,5 @@
   if(roadNote)add('Blitzer',roadNote);
   return result;
  }
- root.MeviNavRouteDetails=Object.freeze({rows,distance,duration,clock,averageKmh});
+ root.MeviNavRouteDetails=Object.freeze({rows,distance,duration,clock,averageKmh,tripSummary,arrival});
 })(window);

@@ -31,17 +31,8 @@ const point=p=>{
  const lng=typeof q.lng==='function'?q.lng():q.lng;
  return finite(lat)&&finite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180?{lat,lng}:null;
 };
-function distance(a,b){
- if(!a||!b)return Infinity;
- const R=Math.PI/180,dLat=(b.lat-a.lat)*R,dLng=(b.lng-a.lng)*R;
- const h=Math.sin(dLat/2)**2+Math.cos(a.lat*R)*Math.cos(b.lat*R)*Math.sin(dLng/2)**2;
- return 12742000*Math.atan2(Math.sqrt(h),Math.sqrt(Math.max(0,1-h)));
-}
-function formatMeters(m){
- if(!finite(m))return '–';
- return m>=1000?new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(m/1000)+' km':
-  Math.max(0,Math.round(m/10)*10)+' m';
-}
+const distance=(a,b)=>window.MeviNavigationShared.distanceMeters(a,b);
+const formatMeters=m=>finite(m)?window.MeviNavRouteDetails.distance(m,'compact'):'–';
 function buildRoute(path){
  const points=(path||[]).map(point).filter(Boolean);
  if(points.length<2)return {points:[],segments:[],length:0};

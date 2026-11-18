@@ -156,6 +156,12 @@ function exportAddressBook(source){
   }))
  };
 }
+function distanceMeters(a,b){
+ if(!a||!b)return Infinity;
+ const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLng=(b.lng-a.lng)*rad;
+ const h=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLng/2)**2;
+ return 12742000*Math.atan2(Math.sqrt(h),Math.sqrt(Math.max(0,1-h)));
+}
 function importAddressBook(payload,current){
  if(!payload||typeof payload!=='object'||Array.isArray(payload))throw new Error('Ungültiges Adressbuch.');
  const hasEntries=['saved','favorites','recent'].some(k=>Array.isArray(payload[k]));
@@ -176,6 +182,6 @@ function importAddressBook(payload,current){
  return {changes:{slots,favorites:distinct(favorites,200),recent:distinct(history,30)},added,skipped};
 }
 root.MeviNavigationShared=Object.freeze({
- destination,destinationKey,validCoordinates,validPlaceId,escapeHtml,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
+ destination,destinationKey,validCoordinates,validPlaceId,escapeHtml,distanceMeters,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
 });
 })(window);

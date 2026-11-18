@@ -1,14 +1,22 @@
 /* One lightweight trip-strip renderer for the Web cockpit and Android SDK host.
- * Platform engines provide only sanitized trip strings; no second native layout. */
+ * Platform engines provide raw trip values (seconds, metres); the texts come
+ * from MeviNavRouteDetails. No second native layout, no second formatter. */
 (function(root){
  'use strict';
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const label=(value,max=140)=>String(value??'').trim().slice(0,max);
  function normalize(input){
   const trip=input&&typeof input==='object'?input:{};
+  const d=root.MeviNavRouteDetails,num=v=>typeof v==='number'&&Number.isFinite(v);
+  if(d&&num(trip.seconds)&&num(trip.meters)){
+   const stop=trip.nextStop,leg=stop&&typeof stop==='object'&&num(stop.seconds)&&num(stop.meters);
+   return {arrival:d.arrival(Date.now(),trip.seconds),summary:d.tripSummary(trip.seconds,trip.meters),
+    nextStop:leg?'Nächster Stopp in '+d.tripSummary(stop.seconds,stop.meters):typeof stop==='string'?label(stop,120):'',
+    muted:trip.muted===true};
+  }
   return {arrival:label(trip.arrival,80)||'Ankunft –',
    summary:label(trip.summary,130)||'Reststrecke wird ermittelt',
-   nextStop:label(trip.nextStop,120),muted:trip.muted===true};
+   nextStop:typeof trip.nextStop==='string'?label(trip.nextStop,120):'',muted:trip.muted===true};
  }
  function html(input,action='toggleGuidanceMenu()'){
   const t=normalize(input);

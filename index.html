@@ -341,31 +341,7 @@ html[data-theme="liquidglass"] .dock button[data-app="audio-spotify"].active .ic
 @media (max-height:450px){.media-cover-icon{width:clamp(33px,9vh,72px);height:clamp(33px,9vh,72px)}}
 
 /* Quality pass 01: consistent, single-purpose CarPlay-inspired navigation controls. */
-.nav-search-trigger{
-  width:100%;display:flex;gap:clamp(8px,1vw,13px);
-  min-height:clamp(55px,8vh,73px);padding:clamp(10px,1.5vh,16px);
-  text-align:left;border:1px solid #94d8e887;
-  border-radius:clamp(13px,1.6vw,20px);
-  background:linear-gradient(130deg,#265467d9,#263a5ff0);
-  box-shadow:inset 0 1px #fff3,0 4px 20px #0003;
-}
-.nav-search-trigger:hover{border-color:#87f0fb;background:linear-gradient(130deg,#296777d9,#2f476af0)}
-.nav-search-text{min-width:0;flex:1;font-size:clamp(13px,2.1vh,19px);font-weight:730;letter-spacing:.01em;color:#e6faff}
-.nav-search-hint{flex:0 0 auto;font-size:clamp(10px,1.6vh,13px);font-weight:770;white-space:nowrap;color:#92e8f3}
-.nav-search-symbol{flex:0 0 auto;width:clamp(22px,3.4vh,29px);height:clamp(22px,3.4vh,29px);display:grid;place-items:center;color:#83f0ff}
-.nav-search-symbol .app-illustration{width:100%;height:100%;filter:none}
-.nav-search-field{gap:clamp(7px,1vw,11px)}
-.nav-search-field:focus-within{border-color:#67eefd;box-shadow:0 0 0 2px #52d9ef28}
-.nav-search-heading{flex:none;padding:0 3px}
-.nav-search-heading b{font-size:clamp(12px,1.85vh,15px);color:#c9e6f5}
-.nav-clear[hidden]{display:none!important}
-.nav-clear{min-width:34px;min-height:34px;display:grid;place-items:center;color:#d0edf5;font-size:24px}
-.nav-browse .sectiontitle{font-size:clamp(13px,1.9vh,16px);letter-spacing:.025em}
-.nav-browse .list{flex:1;min-height:0}
-.nav-browse .inner,.nav-search .inner{overflow:hidden}
-.nav-browse .inner{gap:clamp(6px,1.25vh,13px)}
-.nav-search .inner{gap:clamp(6px,1.15vh,12px)}
-.nav-suggestions{min-height:0}
+
 .suggestion{min-height:clamp(56px,9vh,73px);gap:10px;flex:none}
 .suggestion:focus-visible,.fav:focus-visible{outline:2px solid #8af1ff;outline-offset:1px}
 .suggestion .circle{width:clamp(37px,6.6vh,46px);height:clamp(37px,6.6vh,46px);
@@ -373,54 +349,25 @@ html[data-theme="liquidglass"] .dock button[data-app="audio-spotify"].active .ic
 .suggestion .circle .app-illustration{height:55%;width:55%;filter:none;color:#8ef3fb}
 .suggestion-chevron{margin-left:auto;flex:0 0 auto;font-size:22px;color:#9ed6e3}
 .fav .bubble .app-illustration{width:54%;height:54%;color:#eaffff;filter:drop-shadow(0 0 6px #a4f3fe77)}
-.nav-preview-destination{font-size:clamp(16px,2.8vh,24px);line-height:1.2;min-width:0;overflow-wrap:anywhere}
-.nav-preview-actions{gap:8px}
-.nav-preview-actions button{min-height:clamp(43px,7vh,54px);flex:1;font-weight:750;padding:6px}
 .navbanner{max-width:calc(100% - 32px);border:1px solid #8cdfe65b;box-shadow:0 10px 28px #04121b66}
 .navbanner .small{letter-spacing:.04em;color:#9ee7eb}
 .navbanner .controls button{min-height:43px}
-html[data-theme="cyberpunk"] .nav-search-trigger{background:linear-gradient(135deg,#3d194cdd,#1c1a41ed);border-color:#ea69d786}
-html[data-theme="cyberpunk"] .nav-search-symbol{color:#ff82e8}
-html[data-theme="cyberpunk"] .nav-search-hint{color:#f6a1e2}
 html[data-theme="cyberpunk"] .suggestion .circle{background:linear-gradient(130deg,#582162,#273b64);border-color:#f96bdb7a}
 html[data-theme="cyberpunk"] .suggestion .circle .app-illustration{color:#ffa7ef}
 html[data-theme="cyberpunk"] .navbanner{border-color:#e956d263}
-html[data-theme="liquidglass"] .nav-search-trigger{background:#d2eaff24;backdrop-filter:blur(16px);border-color:#ffffffa6;box-shadow:inset 0 1px #fff5,0 8px 30px #17335835}
 html[data-theme="liquidglass"] .suggestion .circle{background:#b2e2ff2e;border-color:#dcf5ff9c}
 @media(max-width:700px){
-  .overlay.nav-browse,.overlay.nav-search{width:min(94%,440px);max-height:calc(100% - 26px);left:13px;top:13px}
   .preview.nav-preview{width:min(94%,460px);left:13px;top:13px}
-  .nav-search-hint{display:none}
 }
 @media(max-height:500px){
-  .nav-browse .inner,.nav-search .inner{padding:clamp(7px,1.5vh,12px);gap:clamp(4px,.9vh,9px)}
   .fav .bubble{height:clamp(38px,10vh,60px);width:clamp(38px,10vh,60px)}
   .fav{min-width:clamp(57px,12vw,85px)}
-  .nav-search-trigger{min-height:46px;padding:7px}
-  .nav-search-field{min-height:42px;padding:6px 10px}
   .suggestion{min-height:48px;padding:7px}
-  .searchmode .overlay.nav-search{bottom:43%}
 }
 
 /* UX polish 02: in short landscape viewports, show results and keyboard together.
    Previously the full-width keyboard covered the complete results list. */
 @media (orientation:landscape) and (max-height:520px) and (min-width:700px){
-  .map.searchmode .overlay.nav-search{
-    left:clamp(8px,1.3vw,14px);right:auto;
-    top:clamp(8px,1.3vh,13px);bottom:clamp(8px,1.3vh,13px);
-    width:40.5%;height:auto;max-height:none;
-    border-radius:clamp(12px,2vw,20px);
-  }
-  .map.searchmode .overlay.nav-search .inner{
-    height:100%;min-height:0;overflow:hidden;
-    gap:clamp(4px,1.2vh,8px);
-    padding:clamp(7px,1.2vh,11px);
-  }
-  .map.searchmode .nav-overlay-title{font-size:clamp(12px,2.9vh,16px)}
-  .map.searchmode .nav-search .searchbox{min-height:clamp(36px,9vh,45px)}
-  .map.searchmode .nav-search .row{flex:none}
-  .map.searchmode .nav-suggestions{min-height:0;flex:1;overflow-y:auto;scrollbar-width:thin}
-  .map.searchmode .nav-suggestions .suggestion{min-height:clamp(42px,12vh,56px);padding:5px 7px}
   .map.searchmode .keyboard{
     left:auto;right:clamp(8px,1.3vw,14px);
     bottom:clamp(8px,1.3vh,13px);
@@ -728,11 +675,7 @@ html .cockpit .dock button:not(.active) .ico{
 .mg-setup code{font-size:11px;overflow-wrap:anywhere}
 .mg-setup input{width:100%;min-height:42px;border-radius:9px;padding:8px;background:#091c30;color:#fff;border:1px solid #75a9ce88}
 .mg-setup button{min-height:43px;border-radius:10px;background:#1aaec3;border:1px solid #bbffff;color:#021b27;font-weight:800}
-.mg-navigation .overlay:has(.nav-suggestions .mg-setup) .mg-setup{position:static;transform:none;max-width:none}
-.mg-result{width:100%;text-align:left}
 .mg-navigation .nav-preview{max-width:min(480px,85%);z-index:5}
-.mg-route-banner{max-width:min(430px,60%);min-width:0}
-#mg-live-gps{color:#b5e8fa;margin-top:6px;font-size:clamp(12px,1.7vh,16px)}
 @media (orientation:landscape) and (max-height:500px){
  .mg-setup{gap:4px;padding:9px;max-width:400px}
  .mg-setup strong{font-size:15px}
@@ -743,17 +686,12 @@ html .cockpit .dock button:not(.active) .ico{
 }
 
 /* Keep controls readable if Google rejects the key and shows a light error map. */
-.mg-navigation .nav-browse,
-.mg-navigation .nav-search,
 .mg-navigation .nav-preview{
  background:linear-gradient(140deg,#142e43f5,#1a3453f4);
  color:#f3fbff;
  border:1px solid #6da5c65e;
  box-shadow:0 9px 25px #08132269;
 }
-.mg-navigation .nav-search-trigger,
-.mg-navigation .nav-search-field{color:#f3fbff;background:#203d53ee}
-.mg-navigation .nav-search-text,
 .mg-navigation .sectiontitle{color:#eaf9ff}
 .mg-map-state{pointer-events:auto;display:flex;flex-direction:column;gap:7px;z-index:5}
 .mg-map-state[hidden]{display:none!important}
@@ -771,35 +709,20 @@ html .cockpit .dock button:not(.active) .ico{
 
 /* The Google map is often bright, so target the navigation card directly.
    In Liquid Glass this must be stronger than the generic translucent theme. */
-html[data-theme="liquidglass"] .mg-navigation .nav-preview,
-html[data-theme="liquidglass"] .mg-navigation .nav-browse,
-html[data-theme="liquidglass"] .mg-navigation .nav-search{
+html[data-theme="liquidglass"] .mg-navigation .nav-preview{
  background:linear-gradient(145deg,rgba(14,36,54,.97),rgba(22,48,70,.96));
  border:1px solid rgba(135,211,238,.63);
  box-shadow:0 12px 32px rgba(4,17,30,.55),inset 0 1px rgba(255,255,255,.15);
  color:#f2fcff;
  backdrop-filter:blur(12px);
 }
-html[data-theme="liquidglass"] .mg-navigation .nav-preview .small,
-html[data-theme="liquidglass"] .mg-navigation .nav-preview-address,
-html[data-theme="liquidglass"] .mg-navigation .nav-browse .sectiontitle{
+html[data-theme="liquidglass"] .mg-navigation .nav-preview .small{
  color:#d1e8f5;
 }
-html[data-theme="liquidglass"] .mg-navigation .nav-preview button,
-html[data-theme="liquidglass"] .mg-navigation .nav-browse .nav-search-trigger{
+html[data-theme="liquidglass"] .mg-navigation .nav-preview button{
  background:#24475e;
  border:1px solid #8acbe080;
  color:#f1fbff;
-}
-.mg-navigation .mg-manual-origin-actions{margin-top:5px}
-.mg-navigation .mg-origin-button{
- width:100%;
- min-height:40px;
- border-radius:11px;
- color:#dff8ff;
- background:rgba(18,80,104,.85);
- border:1px solid rgba(93,216,240,.65);
- font-weight:750;
 }
 .mg-navigation.mg-selecting-origin .mg-map{cursor:crosshair!important}
 .mg-origin-instruction{
@@ -820,90 +743,23 @@ html[data-theme="liquidglass"] .mg-navigation .nav-browse .nav-search-trigger{
 }
 .mg-map-state .mg-manual-action[hidden]{display:none}
 @media(max-height:500px){
- .mg-navigation .mg-origin-button{min-height:32px;padding:4px 8px;font-size:11px}
  .mg-origin-instruction{max-width:83%;font-size:11px;padding:6px 8px;gap:4px}
  .mg-origin-instruction button{padding:4px 7px}
- .mg-navigation .nav-preview .mg-manual-origin-actions{margin-top:2px}
 }
 
 /* Classic-like Web Guidance: route ready -> navigation start -> live turn cards.
    Scoped to Next's nav only so radio, media and other split apps stay untouched. */
-.mg-navigation .mg-route-banner,
-.mg-navigation .mg-guidance-banner{
- z-index:5;left:clamp(9px,1.2vw,20px);top:clamp(9px,1.2vh,18px);
- width:min(510px,49%);max-width:calc(100% - 24px);min-width:0;
- padding:clamp(12px,1.8vh,20px);
- border-radius:clamp(15px,1.5vw,23px);
- background:linear-gradient(130deg,rgba(12,33,55,.97),rgba(20,53,75,.97));
- border:1px solid rgba(109,209,234,.78);
- box-shadow:0 12px 32px rgba(0,10,24,.56);
- color:#f4fbff;backdrop-filter:blur(14px);
- display:flex;flex-direction:column;gap:clamp(6px,1.1vh,13px);
-}
-.mg-route-eyebrow,.mg-guidance-header{
- text-transform:uppercase;color:#83e8f5;letter-spacing:.1em;font-size:clamp(10px,1.3vh,13px);
- font-weight:800;
-}
-.mg-route-destination{font-size:clamp(20px,3.2vh,30px);line-height:1.15;overflow-wrap:anywhere}
-.mg-ready-meta{font-size:clamp(13px,2.1vh,19px);font-weight:750}
-.mg-ready-summary{display:flex;flex-direction:column;gap:8px}
-.mg-ready-summary>strong{font-size:clamp(13px,2vh,18px)}
-.mg-ready-steps{display:flex;flex-direction:column;gap:3px;max-height:min(36vh,240px);overflow-y:auto;scrollbar-width:thin}
-.mg-step-item{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;align-items:center;padding:6px 3px;border-bottom:1px solid #9bdaf331;font-size:clamp(11px,1.65vh,15px)}
-.mg-step-icon{color:#82edff;font-size:clamp(21px,3.4vh,29px);font-weight:800}
-.mg-step-item small{color:#bdd6e5;white-space:nowrap}
-.mg-guidance-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-.mg-guidance-actions button{
- border:1px solid #77b9d38a;border-radius:12px;min-height:clamp(38px,5vh,50px);
- padding:7px clamp(9px,1.1vw,16px);background:#23425a;color:#e8fbff;
- font-weight:800;cursor:pointer;font-size:clamp(11px,1.65vh,15px);
-}
-.mg-guidance-actions .mg-start-navigation{flex:1;background:linear-gradient(125deg,#10b78a,#0f869c);color:#071b26;border:1px solid #a2ffe3}
-.mg-guidance-actions .mg-stop-navigation{background:#6c2c3d;color:#ffeaf1;border-color:#f7a8bc7e}
-.mg-route-hint{color:#bad0de;font-size:clamp(10px,1.4vh,13px);line-height:1.35}
-.mg-guidance-header{display:flex;justify-content:space-between;gap:9px;align-items:center}
-.mg-guidance-header #mg-remaining{color:#d5e9f7;letter-spacing:0;text-transform:none;font-size:clamp(12px,1.6vh,16px);text-align:right}
+
 .mg-guidance-turn{display:grid;grid-template-columns:clamp(55px,7vw,94px) minmax(0,1fr);gap:12px;align-items:center}
 .mg-guidance-turn #mg-next-arrow{font-size:clamp(48px,10vh,88px);font-weight:850;color:#64edff;line-height:1;text-align:center}
 .mg-guidance-instruction{min-width:0;display:flex;flex-direction:column;gap:3px}
 .mg-guidance-instruction #mg-next-distance{font-size:clamp(24px,4.1vh,37px);color:#fff}
 .mg-guidance-instruction #mg-next-turn{font-size:clamp(16px,2.5vh,23px);line-height:1.2;overflow-wrap:anywhere}
-.mg-guidance-footer{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;
- font-size:clamp(11px,1.45vh,14px);color:#c1dbea}
-.mg-guidance-target{max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-html[data-theme="liquidglass"] .mg-navigation .mg-route-banner,
-html[data-theme="liquidglass"] .mg-navigation .mg-guidance-banner{
- background:linear-gradient(135deg,rgba(12,30,46,.96),rgba(20,42,60,.96));border:1px solid #79dbeaab;
- color:#f3fcff;box-shadow:0 12px 33px #03121c91;
-}
-.mg-navigation .mg-guidance-compact{width:min(350px,40%);padding:8px;gap:5px}
-.mg-guidance-compact .mg-guidance-turn{grid-template-columns:44px minmax(0,1fr);gap:5px}
-.mg-guidance-compact #mg-next-arrow{font-size:36px}
-.mg-guidance-compact .mg-guidance-instruction #mg-next-distance{font-size:18px}
-.mg-guidance-compact .mg-guidance-instruction #mg-next-turn{font-size:12px}
-.mg-guidance-compact .mg-guidance-header{font-size:9px}
-.mg-guidance-compact .mg-guidance-footer{font-size:10px}
 @media (orientation:landscape) and (max-height:540px){
- .mg-navigation .mg-route-banner,.mg-navigation .mg-guidance-banner{
-  padding:7px 9px;gap:5px;width:min(470px,56%);top:6px;left:7px;border-radius:12px;
- }
- .mg-route-destination{font-size:17px}
- .mg-ready-steps{max-height:22vh}
- .mg-step-item{padding:3px 2px;font-size:10px;grid-template-columns:21px minmax(0,1fr) auto}
- .mg-step-icon{font-size:18px}
- .mg-guidance-actions button{min-height:30px;padding:4px 8px;font-size:10px}
- .mg-route-hint{font-size:10px}
  .mg-guidance-turn{grid-template-columns:45px minmax(0,1fr);gap:5px}
  .mg-guidance-turn #mg-next-arrow{font-size:41px}
  .mg-guidance-instruction #mg-next-distance{font-size:21px}
  .mg-guidance-instruction #mg-next-turn{font-size:13px}
- .mg-guidance-header{font-size:10px}
- .mg-guidance-header #mg-remaining{font-size:11px}
- .mg-navigation .mg-guidance-compact{width:min(220px,44%)}
- .mg-guidance-compact .mg-guidance-turn{grid-template-columns:32px minmax(0,1fr)}
- .mg-guidance-compact #mg-next-arrow{font-size:27px}
- .mg-guidance-compact .mg-guidance-instruction #mg-next-distance{font-size:13px}
- .mg-guidance-compact .mg-guidance-instruction #mg-next-turn{font-size:10px}
 }
 
 /* First-run: only one setup card, always above the inactive map. */
@@ -1086,8 +942,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 .mg-navigation .mg-guidance-menu-heading button{width:46px;flex:0 0 46px;text-align:center}
 .mg-navigation .mg-guidance-menu .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
 .mg-guidance-details-content{font-size:13px;line-height:1.4}
-.mg-guidance-details-steps{display:flex;flex-direction:column;gap:2px}
-.mg-guidance-details-summary{font-weight:750;margin:4px 0 8px}
 .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
  bottom:calc(70px + env(safe-area-inset-bottom,0px));
  /* Do not clip Road Assist warnings; they have priority over the map. */
@@ -1329,7 +1183,7 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-description small{font-size:clamp(12px,2.15vh,21px);color:var(--nav-search-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mg-parity-distance{flex:0 0 auto;font-size:clamp(12px,2.35vh,21px);color:var(--nav-search-dim);white-space:nowrap}
 .mg-parity-empty{padding:clamp(13px,3vh,30px);font-size:clamp(13px,2.2vh,20px);color:var(--nav-search-dim)}
-.mg-navigation .mg-parity-book-link,.mg-navigation .mg-parity-empty-slot{border:0;background:var(--nav-search-surface);border-radius:12px;padding:12px 17px;text-align:left;font-size:clamp(13px,2.4vh,20px);min-height:44px}
+.mg-navigation .mg-parity-empty-slot{border:0;background:var(--nav-search-surface);border-radius:12px;padding:12px 17px;text-align:left;font-size:clamp(13px,2.4vh,20px);min-height:44px}
 .mg-parity-book-top{gap:clamp(5px,1vw,14px)}
 .mg-parity-book-top strong{font-size:clamp(17px,3.2vh,29px);white-space:nowrap}
 #mg-parity-filter{flex:1;min-width:0;max-width:950px;height:90%;border:0;border-radius:14px;background:var(--nav-search-surface);color:var(--nav-search-ink);padding:0 14px;font-size:clamp(14px,2.5vh,22px)}
@@ -1459,7 +1313,6 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-navigation .mg-poi-detail-actions{flex-wrap:wrap}
 .mg-navigation .mg-poi-detail-actions button{min-width:105px}
 .mg-navigation .mg-poi-warning[role="alert"]{font-size:clamp(12px,2.1vh,18px);padding:3px 8px}
-.mg-navigation .mg-add-stop{background:#254258;color:#c5faff;border:1px solid #527c94;border-radius:12px}
 .mg-waypoint-list{display:flex;flex-direction:column;gap:4px;max-height:clamp(70px,20vh,160px);overflow-y:auto;padding:4px 1px}
 .mg-waypoint-list>strong{font-size:clamp(12px,2vh,16px)}
 .mg-waypoint-row{display:flex;align-items:center;gap:8px;font-size:clamp(12px,2.2vh,17px);color:#e7ebf6}
@@ -2327,7 +2180,6 @@ html[data-theme="liquidglass"] .mevi-tv-item.is-selected{background:#295c76}
 .mevi-ra-summary-actions button{min-height:31px;border-radius:8px;border:1px solid #6ad9e08c;
  padding:4px 8px;background:#205063;color:#eafaff;font-weight:760;font-size:clamp(10px,1.4vh,13px)}
 .mevi-ra-summary small{font-size:clamp(9px,1.2vh,11px);color:#bcd6e4}
-.mg-navigation .mg-route-ready{max-height:calc(100% - 12px);overflow-y:auto;overscroll-behavior:contain}
 .mevi-ra-overlay-shell{position:absolute;z-index:5;right:clamp(8px,1.2vw,20px);bottom:clamp(8px,1.2vh,18px);
  pointer-events:none;width:min(350px,43%);max-width:calc(100% - 18px)}
 .mevi-ra-overlay{background:linear-gradient(120deg,#11283ef5,#203b54f7);color:#effbff;
@@ -5022,16 +4874,6 @@ html,body{min-height:0;overscroll-behavior:none}
 .dock button .dock-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 /* DeX, FullHD, panoramic: desktop-sized touch keyboard beside the search results. */
 @media(orientation:landscape) and (min-width:1150px){
- .map.searchmode .overlay.nav-search{
-   top:clamp(12px,2vh,24px);bottom:auto;left:clamp(12px,1.4vw,22px);right:auto;
-   width:min(36%,535px);height:auto;max-height:min(700px,calc(100% - 36px));
-   border-radius:clamp(16px,1.4vw,25px);
- }
- .map.searchmode .overlay.nav-search .inner{
-   height:auto;max-height:min(700px,calc(100dvh - 72px));min-height:0;overflow:hidden;
-   gap:clamp(9px,1.2vh,17px);padding:clamp(12px,1.45vh,20px);
- }
- .map.searchmode .nav-suggestions{min-height:0;overflow-y:auto;flex:1}
  .map.searchmode .keyboard{
    left:auto;right:clamp(20px,3vw,58px);top:50%;bottom:auto;transform:translateY(-50%);
    width:min(50%,840px);max-height:calc(100% - 40px);padding:clamp(12px,1.3vw,19px);
@@ -5053,9 +4895,6 @@ html,body{min-height:0;overscroll-behavior:none}
  .dock.left .dock-label{font-size:clamp(10px,2.15vh,12px)}
  .screen{gap:clamp(4px,.55vw,7px)}
  .side.mm-host{width:42%;min-width:0}
- .map.searchmode .overlay.nav-search{
-   width:41.5%;left:8px;right:auto;top:8px;bottom:8px;height:auto;max-height:none;
- }
  .map.searchmode .keyboard{
    left:auto;right:8px;top:auto;bottom:8px;transform:none;
    width:54%;max-width:54%;padding:7px;
@@ -5063,11 +4902,6 @@ html,body{min-height:0;overscroll-behavior:none}
  .map.searchmode .keyboard .keyrow button{
    min-height:clamp(39px,9.8vh,44px);font-size:clamp(12px,2.8vh,14px);
  }
- .map.searchmode .nav-suggestions .suggestion{
-   min-height:clamp(42px,10.5vh,50px);padding:5px 7px;
- }
- .map.searchmode .overlay.nav-search .inner{gap:clamp(5px,1vh,8px)}
- .map.searchmode .nav-search-heading{margin:0}
  :is(.mm-shell,.sp-shell).is-compact .mm-top-actions{gap:clamp(3px,.5vw,6px)}
  :is(.mm-shell,.sp-shell).is-compact .mm-mode-button{
    min-height:var(--car-touch);min-width:0;padding:4px 7px;
@@ -5163,7 +4997,6 @@ html,body{min-height:0;overscroll-behavior:none}
 .mm-shell.is-compact .mm-transport button{min-width:44px;min-height:44px}
 .mm-shell.is-compact .mm-transport .mm-primary{min-width:56px;min-height:56px}
 @media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
- .map.searchmode .overlay.nav-search{width:37%;max-width:none}
  .map.searchmode .keyboard{width:60%;max-width:60%;padding:6px;gap:3px}
  .map.searchmode .keyboard .keyrow{gap:2px}
  .map.searchmode .keyboard .keyrow button{min-height:44px;padding:3px 0}
@@ -5177,7 +5010,6 @@ html,body{min-height:0;overscroll-behavior:none}
 :is(.mm-shell,.sp-shell) .mm-mode-button{min-height:44px}
 :is(.mm-shell,.sp-shell).is-compact .mm-mode-button{min-width:44px}
 .mm-shell.is-compact .mm-now .mm-icon-button{width:44px;min-width:44px;height:44px;min-height:44px}
-.nav-search .tool-control{min-height:44px}
 
 /* Quality pass 4: larger iPhone/S20 landscape keyboard.
    The QWERTZ row has ten keys: protect key width, not only key height.
@@ -5186,33 +5018,6 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit:has(.map.searchmode) .dock{display:none}
  .cockpit:has(.map.searchmode) .body{gap:0}
  .cockpit:has(.map.searchmode) .workspace{min-width:0;width:100%}
- .map.searchmode .overlay.nav-search{
-   left:4px;right:auto;top:4px;bottom:4px;
-   width:26%;min-width:0;max-width:none;border-radius:14px;
- }
- .map.searchmode .overlay.nav-search .inner{
-   min-height:0;height:100%;overflow:hidden;padding:7px 6px;gap:6px;
- }
- .map.searchmode .nav-search-field{
-   min-height:46px;padding:5px 7px;gap:5px;border-radius:13px;
- }
- .map.searchmode .nav-search-field input{font-size:clamp(13px,3.6vh,16px)}
- .map.searchmode .nav-overlay-title{font-size:clamp(13px,3.6vh,16px)}
- .map.searchmode .nav-suggestions .suggestion{
-   min-height:48px;padding:5px;gap:6px;border-radius:10px;
- }
- .map.searchmode .nav-suggestions .suggestion .circle{
-   width:29px;height:29px;font-size:15px;
- }
- .map.searchmode .nav-suggestions .suggestion span:nth-child(2){
-   min-width:0;flex:1;
- }
- .map.searchmode .nav-suggestions .suggestion strong{
-   display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-   font-size:clamp(11px,3.1vh,13px);
- }
- .map.searchmode .nav-suggestions .suggestion small,
- .map.searchmode .nav-suggestions .suggestion-chevron{display:none}
  .map.searchmode .keyboard{width:72%;max-width:72%;
    left:auto;right:4px;top:auto;bottom:4px;transform:none;
    padding:6px;gap:5px;border-radius:15px;
@@ -5351,8 +5156,6 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit .status-chip{font-size:10px;}
  .cockpit .dock.left{width:62px;padding:3px;gap:3px;border-radius:10px;}
  .cockpit .dock.left button{min-height:44px;}
- .cockpit .overlay.nav-browse{top:5px;left:5px;bottom:5px;}
- .cockpit .overlay.nav-search{top:5px;bottom:5px;}
 }
 
 /* iPhone landscape edge-to-edge: paint the cockpit into the unsafe regions,
@@ -5419,12 +5222,6 @@ html,body{min-height:0;overscroll-behavior:none}
    margin-bottom:max(4px,env(safe-area-inset-bottom,0px));
  }
  .cockpit .status{position:fixed;z-index:20;}
- .cockpit .overlay.nav-browse,.cockpit .overlay.nav-search{
-   left:calc(max(4px,env(safe-area-inset-left,0px)) + 72px) !important;
-   top:max(5px,env(safe-area-inset-top,0px)) !important;
-   bottom:max(5px,env(safe-area-inset-bottom,0px)) !important;
-   max-width:calc(100vw - max(4px,env(safe-area-inset-left,0px)) - max(4px,env(safe-area-inset-right,0px)) - 80px);
- }
 }
 
 /* iPhone 17 landscape navigation polish: compact Apple Maps-style panels.
@@ -5436,23 +5233,6 @@ html,body{min-height:0;overscroll-behavior:none}
    right:max(8px,env(safe-area-inset-right,0px));
    left:auto;
    max-width:40vw;
- }
- .cockpit .overlay.nav-browse{
-   width:var(--nav-browse-width) !important;
-   right:auto !important;
-   height:auto;
-   border-radius:18px;
- }
- .cockpit .overlay.nav-browse .inner{
-   padding:8px !important;
- }
- .cockpit .overlay.nav-search{
-   width:min(31vw,275px) !important;
-   right:auto !important;
-   border-radius:16px;
- }
- .cockpit .map.searchmode .overlay.nav-search{
-   width:min(31vw,275px) !important;
  }
  .cockpit .map.searchmode .keyboard{
    width:59vw !important;
@@ -5474,50 +5254,21 @@ html,body{min-height:0;overscroll-behavior:none}
  }
  .cockpit .map.searchmode .keyboard .keyrow .special,
  .cockpit .map.searchmode .keyboard .keyrow .go{font-size:12px !important;}
- .cockpit .map.searchmode .nav-suggestions{overflow-y:auto;min-height:0;}
 }
 
 /* Size the browse panel to three full favorites and a quarter of the next.
    Shared dimensions keep the scroll hint consistent across themes. */
-.cockpit .overlay.nav-browse{
- --nav-favorite-width:90px;
- --nav-favorite-gap:11px;
- --nav-browse-padding:16px;
- --nav-browse-width:calc(3.25 * var(--nav-favorite-width) + 3 * var(--nav-favorite-gap) + 2 * var(--nav-browse-padding) + 2px);
- width:var(--nav-browse-width);
- max-width:calc(100% - 32px);
-}
-.cockpit .overlay.nav-browse .inner{padding-inline:var(--nav-browse-padding) !important;min-width:0}
-.cockpit .nav-browse .favs{gap:var(--nav-favorite-gap);flex-shrink:0}
-.cockpit .nav-browse .favs .fav{flex:0 0 var(--nav-favorite-width);min-width:var(--nav-favorite-width)}
-@media(max-height:500px){
- .cockpit .overlay.nav-browse{--nav-browse-padding:8px}
-}
+
 
 /* Search is a stable mode: removing the keyboard must never move the
    result panel or bring back the app dock. Use the vacated dock width. */
 @media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
- .cockpit:has(.nav-search) .dock.left{display:none !important;}
- .cockpit:has(.nav-search) .body{gap:0 !important;}
- .cockpit .overlay.nav-search,
- .cockpit .map.searchmode .overlay.nav-search{
-   position:absolute;
-   left:max(7px,env(safe-area-inset-left,0px)) !important;
-   top:max(7px,env(safe-area-inset-top,0px)) !important;
-   bottom:max(7px,env(safe-area-inset-bottom,0px)) !important;
-   width:38vw !important;
-   max-width:38vw !important;
-   right:auto !important;
-   z-index:16;
- }
  .cockpit .map.searchmode .keyboard{
    right:max(7px,env(safe-area-inset-right,0px)) !important;
    width:56vw !important;
    max-width:56vw !important;
    z-index:17;
  }
- .cockpit .nav-search .inner{min-height:0;overflow:hidden;}
- .cockpit .nav-search .nav-suggestions{min-height:0;overflow-y:auto;}
 }
 
 /* Restore the route preview to the dock-safe position after a destination
@@ -5535,54 +5286,14 @@ html,body{min-height:0;overscroll-behavior:none}
 
 /* iPhone landscape search: reserve disjoint horizontal lanes for suggestions
    and the keyboard, including the right-hand notch/safe-area inset. */
-@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
- .cockpit:has(.nav-search) .overlay.nav-search,
- .cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
-   width:calc(100vw - max(7px,env(safe-area-inset-left,0px)) - max(7px,env(safe-area-inset-right,0px)) - 56vw - 16px) !important;
-   max-width:calc(100vw - max(7px,env(safe-area-inset-left,0px)) - max(7px,env(safe-area-inset-right,0px)) - 56vw - 16px) !important;
-   box-sizing:border-box;
- }
- .cockpit:has(.nav-search) .nav-search .inner{min-width:0;}
- .cockpit:has(.nav-search) .nav-search .nav-suggestions{min-width:0;overflow-x:hidden;}
-}
 
 /* Compact, stable search field with an unframed clear glyph. */
-.cockpit .nav-search-field{
- height:46px;min-height:46px;max-height:46px;
- padding:4px 10px;align-items:center;flex-shrink:0;
-}
-.cockpit .nav-search-field .nav-clear,
-.cockpit .nav-search-field .nav-clear.iconbtn{
- width:32px;height:32px;min-width:32px;min-height:32px;
- padding:0;display:grid;place-items:center;line-height:1;
- border:0!important;border-radius:0!important;background:transparent!important;
- box-shadow:none!important;outline:0;font-size:23px;font-weight:400;
-}
-.cockpit .nav-search-field .nav-clear[hidden]{display:none!important;}
-@media (orientation:landscape) and (max-height:480px){
- .cockpit .map.searchmode .nav-search-field,
- .cockpit .nav-search-field{height:46px;min-height:46px;max-height:46px;padding:3px 8px;}
-}
+
 
 /* Search input: visible software caret without triggering the native iOS keyboard. */
-.cockpit .nav-search-field{position:relative;gap:8px;border:1px solid #8edffb80;box-shadow:inset 0 0 0 1px #69c7ef25;}
-.cockpit .nav-search-field:focus-within{border-color:#64e5ff;box-shadow:0 0 0 2px #37c8f444,inset 0 0 16px #1dbdf016;}
-.cockpit .nav-search-field #searchInput{position:absolute;inset:0;width:100%;height:100%;opacity:0;z-index:2;cursor:text;}
-.cockpit .nav-search-field .nav-search-symbol{pointer-events:none;}
-.cockpit .nav-entry-visual,.cockpit .nav-entry-placeholder{font:inherit;font-size:clamp(14px,1.7vw,19px);white-space:nowrap;overflow:hidden;min-width:0;pointer-events:none;}
-.cockpit .nav-entry-visual{display:flex;align-items:center;flex:1;color:#f5fbff;}
-.cockpit .nav-entry-placeholder{position:absolute;left:calc(16px + 30px);color:#c0d4d7;}
-.cockpit .nav-entry-placeholder[hidden]{display:none;}
-.cockpit .nav-entry-caret{height:1.15em;min-width:2px;flex:none;background:#60edff;box-shadow:0 0 7px #2cdeff;animation:mevi-nav-caret-blink 1s steps(1,end) infinite;}
-.cockpit .nav-entry-before,.cockpit .nav-entry-after{white-space:pre;flex:none;}
-.cockpit .nav-search-field .nav-clear{position:relative;z-index:3;flex:none;min-width:32px;min-height:44px;color:#e9faff;}
+
 @keyframes mevi-nav-caret-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
 @media (orientation:landscape) and (max-height:480px){
- .cockpit .nav-search .nav-suggestions{gap:5px;}
- .cockpit .nav-search .suggestion{min-height:53px;padding:6px 9px;gap:9px;border-radius:13px;}
- .cockpit .nav-search .suggestion .circle{width:35px;height:35px;flex:none;}
- .cockpit .nav-search .suggestion strong{font-size:clamp(12px,1.5vw,16px);}
- .cockpit .nav-search .suggestion small{font-size:11px;line-height:1.2;margin-top:2px;}
  .cockpit .keyboard .keyrow button.special{background:#35485e;border:1px solid #a2c7e052;}
  .cockpit .keyboard .keyrow button.go{background:#087eae;border:1px solid #74d8ff8c;}
 }
@@ -5668,28 +5379,7 @@ html,body{min-height:0;overscroll-behavior:none}
 /* Search stays anchored at the top; dismissed keyboard space becomes list space.
    Paint keyboard to the map bottom. A small internal gesture margin replaces
    the external bottom safe-area gap; lateral cutout insets remain unchanged. */
-.cockpit:has(.nav-search) .dock{display:none!important}
-.cockpit:has(.nav-search) .body{gap:0!important}
-.cockpit .map:has(.nav-search){
- --nav-keyboard-height:clamp(198px,28vh,270px);
- --nav-keyboard-foot: min(8px,env(safe-area-inset-bottom,0px));
- --nav-search-inset: max(8px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));
-}
-.cockpit .map .overlay.nav-search,
-.cockpit .map.searchmode .overlay.nav-search,
-.cockpit:has(.nav-search) .map .overlay.nav-search,
-.cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
- left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
- top:8px!important;bottom:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot) + 8px)!important;
- width:auto!important;max-width:none!important;max-height:none!important;
- transform:none!important;
-}
-.cockpit .map .overlay.nav-search .inner{height:100%;min-height:0;padding:12px;gap:8px;overflow:hidden}
-.cockpit .map .nav-search .inner>.row:first-child{position:absolute;right:12px;top:12px;height:46px;z-index:4}
-.cockpit .nav-search .nav-overlay-title{display:none}
-.cockpit .map .nav-search-field{margin-right:112px;flex-shrink:0}
-.cockpit .map .nav-search-heading{flex-shrink:0;margin:0}
-.cockpit .map .nav-suggestions{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+
 .cockpit .map.searchmode .keyboard{
  left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
  top:auto!important;bottom:0!important;
@@ -5698,24 +5388,9 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 .cockpit .map.searchmode .keyboard .keyrow{flex:1;min-height:0;gap:5px!important}
 .cockpit .map.searchmode .keyboard .keyrow button{height:auto!important;min-height:44px!important;padding:4px 0!important;font-size:clamp(15px,1.3vw,22px)}
-.cockpit .nav-browse .favs{scrollbar-width:none;-ms-overflow-style:none}
-.cockpit .nav-browse .favs::-webkit-scrollbar{display:none;width:0;height:0}
-.cockpit .nav-search-trigger .nav-search-text{white-space:nowrap;font-size:clamp(15px,1.5vw,20px)}
-.cockpit .nav-preview-address{line-height:1.4;overflow-wrap:anywhere}
-@media(orientation:landscape) and (max-height:500px){
- .cockpit .map:has(.nav-search){--nav-keyboard-height:198px}
- .cockpit .map .overlay.nav-search .inner{padding:6px;gap:4px}
- .cockpit .map .nav-search .inner>.row:first-child{right:6px;top:6px}
- .cockpit .map .nav-search-heading{display:none}
- .cockpit .map .nav-search .suggestion{min-height:44px;padding:4px 8px}
- .cockpit .map .nav-search .suggestion .circle{width:30px;height:30px}
-}
 
 /* Expand downward only, preserving the search field and current scroll position. */
-.cockpit:has(.nav-search) .map:not(.searchmode) .overlay.nav-search{
- bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
-}
-.cockpit .map .nav-search .suggestion{flex-shrink:0}
+
 
 /* One keyboard bottom accent only. No second outer border; leave keyboard,
    rows, keys, and result panel at their existing positions and dimensions. */
@@ -5884,18 +5559,9 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
    During live guidance the dock stays available, so turn instructions are
    shifted beyond the physical dock and the device's left safe-area inset. */
 @media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
- .cockpit:has(.mg-route-preview-pane) .dock,
- .cockpit:has(.mg-route-banner.mg-route-ready) .dock{display:none!important}
- .cockpit:has(.mg-route-preview-pane) .body,
- .cockpit:has(.mg-route-banner.mg-route-ready) .body{gap:0!important}
- .cockpit:has(.mg-route-preview-pane) .workspace,
- .cockpit:has(.mg-route-banner.mg-route-ready) .workspace{min-width:0;width:100%}
- .cockpit .mg-navigation .mg-route-banner.mg-route-ready{
-   max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain;
- }
- .cockpit .mg-navigation .mg-guidance-banner{
-   left:calc(max(4px,env(safe-area-inset-left,0px)) + 76px)!important;
- }
+ .cockpit:has(.mg-route-preview-pane) .dock{display:none!important}
+ .cockpit:has(.mg-route-preview-pane) .body{gap:0!important}
+ .cockpit:has(.mg-route-preview-pane) .workspace{min-width:0;width:100%}
 }
 
 /* Driving status stays readable over the Google map. Uses the SAME status
@@ -6187,7 +5853,7 @@ document.addEventListener('touchcancel',()=>{twoFingerStart=null},{passive:true}
 /* The shared Android/Web navigation module owns the sole search UI. */
 function openSearch(){return window.MeviWebNavParity?.open()}
 function openAddressBook(){return window.MeviWebNavParity?.book?.()}
-window.meviGoogleDestination=(name,address,options={})=>{s.destination=name;s.query=name;if(options.skipPreview)return;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviGoogleRouteReady=()=>{};window.meviNativeGuidanceFocusMap=()=>{if(window.MeviGoogleNav?.isNativeMode?.()){s.app='nav';s.mode='map';s.keyboard=false}};window.meviGoogleRerender=()=>render();window.meviNativeArrivalFocusMap=()=>{s.app='nav';s.mode='map';s.nav='ready';s.keyboard=false;render()};window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};async function startRoute(){const n=window.MeviGoogleNav;if(!n)return false;const ready=await n.calculateRoute();if(!ready)return false;if(ready==='native')return true;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render();return true}
+window.meviGoogleDestination=(name,address,options={})=>{s.destination=name;s.query=name;if(options.skipPreview)return;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviNativeGuidanceFocusMap=()=>{if(window.MeviGoogleNav?.isNativeMode?.()){s.app='nav';s.mode='map';s.keyboard=false}};window.meviGoogleRerender=()=>render();window.meviNativeArrivalFocusMap=()=>{s.app='nav';s.mode='map';s.nav='ready';s.keyboard=false;render()};window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};async function startRoute(){const n=window.MeviGoogleNav;if(!n)return false;const ready=await n.calculateRoute();if(!ready)return false;if(ready==='native')return true;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render();return true}
 async function beginNavigation(){const n=window.MeviGoogleNav;if(!n)return;const started=await n.startGuidance();if(!started)return;if(started==='native'){s.nav='ready';s.mode='map';s.app='nav';return} s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function beginNavigationDemo(){const n=window.MeviGoogleNav;if(!n?.startDemo())return;s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function returnToRoute(){window.MeviGoogleNav?.stopGuidance({keepRoute:true});s.nav='ready';s.route=true;s.app='nav';s.mode='map';render()}
@@ -6202,17 +5868,15 @@ function readyRouteOverlay(ctx){
  const seconds=Math.max(0,Number(ctx.seconds)||0),meters=Math.max(0,Number(ctx.meters)||0);
  const stops=Array.isArray(ctx.stops)?ctx.stops:[];
  const maxStops=Number.isInteger(ctx.maxStops)?ctx.maxStops:8;
- const km=new Intl.NumberFormat('de-DE',{maximumFractionDigits:meters>=10000?0:1}).format(meters/1000);
- const totalMinutes=Math.max(1,Math.round(seconds/60));
- const duration=totalMinutes>=60?Math.floor(totalMinutes/60)+' h '+totalMinutes%60+' min':totalMinutes+' min';
- const arrival=ctx.arrival||'';
+ const format=window.MeviNavRouteDetails;
+ const arrival=seconds>0||meters>0?format.arrival(Date.now(),seconds):'';
  const detail=[arrival,'Gewählte Route',ctx.alternatives?'Alternativen auf der Karte antippen':''].filter(Boolean).join(' · ');
  const name=ctx.destination?.name||s.destination;
  const options=[['avoidTolls','Maut','Mautstraßen meiden'],['avoidHighways','Autobahn','Autobahnen meiden'],['avoidFerries','Fähren','Fähren meiden']];
  return `<aside class="mg-route-preview-pane" aria-labelledby="mg-route-preview-title">
   <div class="mg-route-preview-heading"><h2 id="mg-route-preview-title">Routenvorschau</h2><button type="button" onclick="MeviGoogleNav.previewEnd()">Beenden</button></div>
   <div class="mg-route-preview-trip" aria-label="Gewählte Route">
-   <strong class="mg-route-preview-summary">${duration} · ${km} km</strong>
+   <strong class="mg-route-preview-summary">${format.tripSummary(seconds,meters)}</strong>
    <p class="mg-route-preview-meta">${esc(detail)}</p>
   </div>
   <div class="mg-route-preview-scroll">
@@ -6393,7 +6057,7 @@ function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=
 const nativeOverlay=!!(nativeShared&&(nav?.nativeRoutePreview?.()||nav?.currentNativeArrival?.()||nav?.nativeGuidanceMode?.()));
 const showNavHeader=s.app==='nav'&&s.mode!=='split'&&!!nav?.hasKey?.()&&
  (nativeShared?(s.nav!=='search'&&!nativeOverlay):s.nav==='browse');$('cockpit').classList.toggle('nav-status-only',showNavHeader);$('cockpit').classList.toggle('mg-web-header',showNavHeader&&(!nav?.isNativeMode?.()||nativeShared));$('cockpit').classList.toggle('mg-driving-status',s.app==='nav'&&s.nav==='driving'&&!nav?.isNativeMode?.());let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3>'+(s.app==='navdashboard'?'<button type="button" onclick="showGuidanceMap()">Karte</button>':'')+'</div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();$('screen').innerHTML=html;if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.7", "build": 1249, "commit": "58cd48d3fc82c96acd2943c10be5f01dc38ec37f"};
+const CURRENT_BUILD={"version": "0.6.7", "build": 1333, "commit": "c4a390202743623746ec4a82640b9e07cf34641c"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -6866,16 +6530,24 @@ global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibili
 })(typeof window==='undefined'?globalThis:window);
 
 </script><script src="./native-updates.js"></script><script src="./nav-dashboard.js"></script><script id="mevicar-trip-script">/* One lightweight trip-strip renderer for the Web cockpit and Android SDK host.
- * Platform engines provide only sanitized trip strings; no second native layout. */
+ * Platform engines provide raw trip values (seconds, metres); the texts come
+ * from MeviNavRouteDetails. No second native layout, no second formatter. */
 (function(root){
  'use strict';
  const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const label=(value,max=140)=>String(value??'').trim().slice(0,max);
  function normalize(input){
   const trip=input&&typeof input==='object'?input:{};
+  const d=root.MeviNavRouteDetails,num=v=>typeof v==='number'&&Number.isFinite(v);
+  if(d&&num(trip.seconds)&&num(trip.meters)){
+   const stop=trip.nextStop,leg=stop&&typeof stop==='object'&&num(stop.seconds)&&num(stop.meters);
+   return {arrival:d.arrival(Date.now(),trip.seconds),summary:d.tripSummary(trip.seconds,trip.meters),
+    nextStop:leg?'Nächster Stopp in '+d.tripSummary(stop.seconds,stop.meters):typeof stop==='string'?label(stop,120):'',
+    muted:trip.muted===true};
+  }
   return {arrival:label(trip.arrival,80)||'Ankunft –',
    summary:label(trip.summary,130)||'Reststrecke wird ermittelt',
-   nextStop:label(trip.nextStop,120),muted:trip.muted===true};
+   nextStop:typeof trip.nextStop==='string'?label(trip.nextStop,120):'',muted:trip.muted===true};
  }
  function html(input,action='toggleGuidanceMenu()'){
   const t=normalize(input);
@@ -6926,7 +6598,8 @@ global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibili
    if(v<1000)return Math.round(v)+' m';
    return (v/1000).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+' km';
   }
-  if(v<1000)return Math.round(v/10)*10+' m';
+  if(style==='compact')return v>=1000?new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(v/1000)+' km':Math.round(v/10)*10+' m';
+  if(v<1000)return (style==='maneuver'&&v<50?Math.round(v/5)*5:Math.round(v/10)*10)+' m';
   return (v<10000?(v/1000).toFixed(1).replace('.',','):String(Math.round(v/1000)))+' km';
  }
  function duration(sec,rounding='round'){
@@ -6938,6 +6611,17 @@ global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibili
  function clock(stamp,withSuffix=true){
   if(!finite(stamp)||stamp<0)return '';
   return new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(stamp))+(withSuffix?' Uhr':'');
+ }
+ /* "32 min · 24 km": trip strip and route preview on every platform. */
+ function tripSummary(sec,m){
+  const mins=Math.max(1,Math.round(n(sec)/60));
+  return (mins<60?mins+' min':Math.floor(mins/60)+' h '+String(mins%60).padStart(2,'0')+' min')+' · '+distance(m);
+ }
+ /* "Ankunft 14:32", "Ankunft morgen 02:10", "Ankunft +2 Tage 02:10" in local time. */
+ function arrival(nowMs,sec){
+  const now=finite(nowMs)?nowMs:Date.now(),a=new Date(now),b=new Date(now+n(sec)*1000);
+  const days=Math.round((new Date(b.getFullYear(),b.getMonth(),b.getDate())-new Date(a.getFullYear(),a.getMonth(),a.getDate()))/86400000);
+  return 'Ankunft '+(days<=0?'':days===1?'morgen ':'+'+days+' Tage ')+clock(b.getTime(),false);
  }
  function averageKmh(drivenMeters,elapsedMs){
   if(!finite(drivenMeters)||!finite(elapsedMs)||drivenMeters<100||elapsedMs<60000)return null;
@@ -6988,7 +6672,7 @@ global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibili
   if(roadNote)add('Blitzer',roadNote);
   return result;
  }
- root.MeviNavRouteDetails=Object.freeze({rows,distance,duration,clock,averageKmh});
+ root.MeviNavRouteDetails=Object.freeze({rows,distance,duration,clock,averageKmh,tripSummary,arrival});
 })(window);
 </script><script id="mevicar-shared-navigation-script">/* Shared navigation UI contract. Platform-specific Google SDKs stay behind providers.
    Pure browser JavaScript: usable by Web/PWA and, when explicitly integrated, Android WebView. */
@@ -7148,6 +6832,12 @@ function exportAddressBook(source){
   }))
  };
 }
+function distanceMeters(a,b){
+ if(!a||!b)return Infinity;
+ const rad=Math.PI/180,dLat=(b.lat-a.lat)*rad,dLng=(b.lng-a.lng)*rad;
+ const h=Math.sin(dLat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dLng/2)**2;
+ return 12742000*Math.atan2(Math.sqrt(h),Math.sqrt(Math.max(0,1-h)));
+}
 function importAddressBook(payload,current){
  if(!payload||typeof payload!=='object'||Array.isArray(payload))throw new Error('Ungültiges Adressbuch.');
  const hasEntries=['saved','favorites','recent'].some(k=>Array.isArray(payload[k]));
@@ -7168,7 +6858,7 @@ function importAddressBook(payload,current){
  return {changes:{slots,favorites:distinct(favorites,200),recent:distinct(history,30)},added,skipped};
 }
 root.MeviNavigationShared=Object.freeze({
- destination,destinationKey,validCoordinates,validPlaceId,escapeHtml,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
+ destination,destinationKey,validCoordinates,validPlaceId,escapeHtml,distanceMeters,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
 });
 })(window);
 </script><script id="mevicar-navigation-script">/* MeviCar Next navigation adapter – Classic destination rules, Google Maps web APIs.
@@ -7299,7 +6989,6 @@ function syncNativeLayout(force=false,settling=false){
  syncNativeTheme();
  handOverFavorites();
  const el=document.getElementById('mg-map');
- const sharedRoutePreview=!!el?.closest?.('.mg-native-route-preview');
  const header=el?syncNativeHeader():null;
  const rect=el?.getBoundingClientRect?.();
  const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
@@ -7314,7 +7003,6 @@ function syncNativeLayout(force=false,settling=false){
   height:Math.min(Math.round(rect.height),Math.max(1,Math.round(vh-rect.top))),
   viewportWidth:Math.round(vw),viewportHeight:Math.round(vh)
  }:{visible:false};
- if(usable&&sharedRoutePreview)fields.sharedRoutePreview=true;
  if(usable&&!nativeAddressBook)
   fields.favorites=cache.favorites.slice(0,8).filter(valid).map(d=>({lat:d.lat,lng:d.lng,title:d.name.slice(0,120)}));
  if(usable&&header){
@@ -7347,10 +7035,6 @@ let tripCovered=false,tripTimer=null,tripGpsLost=false,tripShown=false,nativeMap
  * Touches on native views never reach the WebView, so the screensaver asks here.
  */
 const nativeBusy=()=>nativeMode()&&(nativeMapShown||tripShown);
-function tripDistance(meters){
- if(meters<1000)return (meters<50?Math.round(meters/5)*5:Math.round(meters/10)*10)+' m';
- return (meters<10000?(Math.round(meters/100)/10).toFixed(1).replace('.',','):String(Math.round(meters/1000)))+' km';
-}
 function tripLine(data){
  const eta=Number(data?.etaEpochMs);
  if(!Number.isFinite(eta)||eta<=0)return '';
@@ -7358,8 +7042,8 @@ function tripLine(data){
  if(tripGpsLost)parts.push('GPS-Signal fehlt');
  const step=data.maneuver,meters=Number(step?.distanceMeters);
  const what=plain(step?.text,200)||maneuverWords[step?.type]||'';
- if(what&&Number.isFinite(meters)&&meters>=0)parts.push('in '+tripDistance(meters)+' · '+what);
- parts.push('Ankunft '+new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(eta)));
+ if(what&&Number.isFinite(meters)&&meters>=0)parts.push('in '+window.MeviNavRouteDetails.distance(meters,'maneuver')+' · '+what);
+ parts.push('Ankunft '+window.MeviNavRouteDetails.clock(eta,false));
  return parts.join(' · ');
 }
 function renderTrip(line){
@@ -7533,14 +7217,6 @@ async function nativeGuidanceAction(action){
    details:Array.isArray(reply.details)?reply.details:[]};
   paintNativeGuidanceMenu();return true;
  }catch(e){status('Navigationsmenü: '+(e.message||e));return false}
-}
-/** Second tap on the Navi dock button while the map is already in front: the APK
- * opens or closes its guidance actions (stop search, sound, overview, end).
- * Older APKs and a map without guidance ignore it. */
-function toggleNativeActions(){
- if(!nativeMode())return false;
- nativeRequest('navigation.actions').catch(()=>{});
- return true;
 }
 /* Navi dock toggles the native right-hand dashboard without changing the
    bottom trip strip's actions/menu trigger. */
@@ -7933,7 +7609,6 @@ function chooseOriginPoint(point){
  stopGuidance({keepRoute:true});routeData=null;routeStops=[];routeOrigin=null;routeSummary='';guidanceSteps=[];clearLines();markOrigin();
  window.meviGoogleRerender?.();
 }
-function originDescription(){return manualOrigin?'Manueller Startpunkt auf Karte gesetzt':'Startpunkt ist dein aktueller GPS-Standort'}
 async function position(){
  if(!navigator.geolocation)throw new Error('Standortfunktion in diesem Browser nicht verfügbar.');
  const locate=options=>new Promise((resolve,reject)=>{
@@ -7978,7 +7653,7 @@ function drawRoute(){
   map.fitBounds(bounds,55);
  }
 }
-let routeSummary='',liveSummary='';
+let routeSummary='';
 let liveTripMeters=null,liveTripMinutes=null;
 let guidanceStartedAt=null,guidanceDrivenMeters=0,guidancePreviousRemaining=null;
 let guidanceMaxSpeed=null,guidanceSpeedTimestamp=null,guidanceCurrentSpeed=null;
@@ -8010,8 +7685,8 @@ function resetGuidanceProgress(){
 function guidanceTrip(){
  const distance=Number.isFinite(liveTripMeters)?liveTripMeters:Math.max(0,Number(routeData?.distanceMeters)||0);
  const minutes=Number.isFinite(liveTripMinutes)?liveTripMinutes:Math.max(0,Math.round((Number(routeData?.durationMillis)||0)/60000));
- const eta=routeData?new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(Date.now()+minutes*60000)):'–';
- return {arrival:'Ankunft '+eta,summary:metersLabel(distance)+' · '+minutes+' Min.',
+ if(!routeData)return {arrival:'Ankunft –',summary:'',nextStop:'',muted:voiceMuted};
+ return {seconds:minutes*60,meters:distance,
   nextStop:routeStops[0]?.name||routeStops[0]?.address||'',muted:voiceMuted};
 }
 /* Android NavRouteDetails.rows semantics over the existing browser route/GPS
@@ -8063,18 +7738,10 @@ function geoPoint(input){
  const lng=typeof p.lng==='function'?p.lng():p.lng;
  return Number.isFinite(lat)&&Number.isFinite(lng)?{lat,lng}:null;
 }
-function distanceBetween(a,b){
- if(!a||!b)return Infinity;
- const rad=Math.PI/180,dlat=(b.lat-a.lat)*rad,dlng=(b.lng-a.lng)*rad;
- const t=Math.sin(dlat/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dlng/2)**2;
- return 12742000*Math.atan2(Math.sqrt(t),Math.sqrt(Math.max(0,1-t)));
-}
-function metersLabel(m){
- if(!Number.isFinite(m))return '–';
- return m>=1000?new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(m/1000)+' km':Math.round(m/10)*10+' m';
-}
+const distanceBetween=(a,b)=>window.MeviNavigationShared.distanceMeters(a,b);
+const metersLabel=m=>Number.isFinite(m)?window.MeviNavRouteDetails.distance(m,'compact'):'–';
 function guidanceInstruction(step){
- return (step?.instructions||'Der Route folgen').replace(/<[^>]*>/g,' ').replace(/\\s+/g,' ').trim();
+ return (step?.instructions||'Der Route folgen').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim();
 }
 function guidanceSymbol(step){
  const v=String(step?.maneuver||'').toUpperCase().replace(/-/g,'_');
@@ -8116,10 +7783,6 @@ function stepsFromRoute(route){
   path:(step.path||[]).map(geoPoint).filter(Boolean)
  }));
 }
-function stepsHTML(limit=5){
- if(!guidanceSteps.length)return '<span class="mg-empty-steps">Google hat keine einzelnen Fahranweisungen geliefert.</span>';
- return guidanceSteps.slice(0,limit).map((step,i)=>'<div class="mg-step-item"><span class="mg-step-icon">'+guidanceSymbol(step)+'</span><span>'+text(step.instructions)+'</span><small>'+metersLabel(step.distanceMeters)+'</small></div>').join('');
-}
 async function computeRouteFrom(from,options={}){
  const serial=++routeRequestSerial;
  const stops=Array.isArray(options.stops)?options.stops.slice():routeStops.slice();
@@ -8145,13 +7808,10 @@ async function computeRouteFrom(from,options={}){
 function useRoute(route,options){
  routeData=route;
  window.MeviRoadAssist?.onRoute?.(routeData,options);
- guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveSummary='';liveTripMeters=null;liveTripMinutes=null;
- const km=(routeData.distanceMeters||0)/1000;
- const minutes=Math.round((routeData.durationMillis||0)/60000);
- routeSummary=new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(km)+' km · '+minutes+' Min.';
+ guidanceSteps=stepsFromRoute(routeData);stepIndex=0;spokenThresholds.clear();lastSpokenStep=-1;liveTripMeters=null;liveTripMinutes=null;
+ routeSummary=window.MeviNavRouteDetails.tripSummary((routeData.durationMillis||0)/1000,routeData.distanceMeters||0);
  clearStatus();drawRoute();
  if(guidanceActive&&!simulation&&current)followPosition(current);
- window.meviGoogleRouteReady?.(routeSummary);
 }
 const MAX_STOPS=8;
 function routeStopKey(p){return p.placeId?'p:'+p.placeId:'c:'+p.lat.toFixed(4)+','+p.lng.toFixed(4)}
@@ -8183,10 +7843,7 @@ async function readNativePreview(){
 function browserRoutePreview(){
  if(!routeData)return null;
  const seconds=Math.round((routeData.durationMillis||0)/1000);
- const eta=new Date(Date.now()+seconds*1000);
- const time=eta.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
  return {...routeContext(),seconds,meters:routeData.distanceMeters||0,options:routeOptions,
-  arrival:'Ankunft '+(eta.toDateString()===new Date().toDateString()?'':'morgen ')+time,
   alternatives:routeChoices.length>1};
 }
 async function previewAction(action,method,fields){
@@ -8405,7 +8062,6 @@ function updatePosition(p){
  const progress=remainingAlongRoute(point,routeData?.path);
  if(progress){
   const mins=Math.max(0,Math.round((routeData.durationMillis||0)/60000*(progress.remaining/Math.max(1,routeData.distanceMeters||1))));
-  liveSummary=metersLabel(progress.remaining)+' · '+mins+' Min. verbleibend';
   recordGuidanceProgress(progress.remaining);
   liveTripMeters=progress.remaining;liveTripMinutes=mins;
  }
@@ -8467,7 +8123,6 @@ function startDemo(){
    recordGuidanceProgress(p.remaining);
    liveTripMeters=p.remaining;
    liveTripMinutes=Math.max(0,Math.round((routeData.durationMillis||0)/60000*(p.remaining/Math.max(1,routeData.distanceMeters||1))));
-   liveSummary='DEMO · '+metersLabel(p.remaining)+' verbleibend';
   }}
   if(stepIndex<guidanceSteps.length-1)stepIndex++;
   else{stopGuidance({keepRoute:true});window.meviGoogleNavigationFinished?.();return}
@@ -8484,18 +8139,17 @@ function stopGuidance(options={}){
  resetGuidanceProgress();
  window.MeviRoadAssist?.onGuidanceStop?.();
  if(positionMarker){positionMarker.setMap(null);positionMarker=null}
- if(!options.keepRoute){routeRequestSerial++;routeChoices=[];routeData=null;routeStops=[];routeOrigin=null;routeSummary='';liveSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null;window.MeviRoadAssist?.onRoute?.([])}
+ if(!options.keepRoute){routeRequestSerial++;routeChoices=[];routeData=null;routeStops=[];routeOrigin=null;routeSummary='';guidanceSteps=[];stepIndex=0;clearLines();selected=null;window.MeviRoadAssist?.onRoute?.([])}
 }
 function hasPlannedRoute(){return !!routeData}
 function guidanceRunning(){return guidanceActive}
-function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location"'+(guidanceActive?' hidden':'')+' onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
 window.MeviGoogleNav={refreshNativeRoutePreview:readNativePreview,
  currentNativeArrival,showNativeArrival,closeNativeArrival,nativeArrivalAction,
  toggleNativeGuidanceMenu,closeNativeGuidanceMenu,refreshNativeGuidanceMenu,nativeGuidanceMode,
  nativeGuidanceMuted,nativeGuidanceRoadEnabled,nativeGuidanceRoadVoice,nativeGuidanceDetailsHTML,
- nativeGuidanceShowDetails,nativeGuidanceBack,nativeGuidanceAction,guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,usesSharedNativeHeader,toggleNativeFullscreen,toggleNativeActions,toggleNativeDashboard,changeQuery,pick,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+ nativeGuidanceShowDetails,nativeGuidanceBack,nativeGuidanceAction,guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,usesSharedNativeHeader,toggleNativeFullscreen,toggleNativeDashboard,changeQuery,pick,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
@@ -9022,9 +8676,7 @@ function data(){return provider.read()}
 function distance(d){
  const p=gps||data().origin;
  if(!p||!Number.isFinite(p.lat)||!Number.isFinite(p.lng)||!Number.isFinite(d.lat)||!Number.isFinite(d.lng))return '';
- const rad=Math.PI/180,dl=(d.lat-p.lat)*rad,dg=(d.lng-p.lng)*rad;
- const a=Math.sin(dl/2)**2+Math.cos(p.lat*rad)*Math.cos(d.lat*rad)*Math.sin(dg/2)**2;
- const km=6371*2*Math.asin(Math.min(1,Math.sqrt(a)));
+ const km=shared.distanceMeters(p,d)/1000;
  return (km<10?km.toLocaleString('de-DE',{maximumFractionDigits:1}):Math.round(km).toLocaleString('de-DE'))+' km';
 }
 function row(d,kind,i,manage){
@@ -11236,17 +10888,8 @@ const point=p=>{
  const lng=typeof q.lng==='function'?q.lng():q.lng;
  return finite(lat)&&finite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180?{lat,lng}:null;
 };
-function distance(a,b){
- if(!a||!b)return Infinity;
- const R=Math.PI/180,dLat=(b.lat-a.lat)*R,dLng=(b.lng-a.lng)*R;
- const h=Math.sin(dLat/2)**2+Math.cos(a.lat*R)*Math.cos(b.lat*R)*Math.sin(dLng/2)**2;
- return 12742000*Math.atan2(Math.sqrt(h),Math.sqrt(Math.max(0,1-h)));
-}
-function formatMeters(m){
- if(!finite(m))return '–';
- return m>=1000?new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(m/1000)+' km':
-  Math.max(0,Math.round(m/10)*10)+' m';
-}
+const distance=(a,b)=>window.MeviNavigationShared.distanceMeters(a,b);
+const formatMeters=m=>finite(m)?window.MeviNavRouteDetails.distance(m,'compact'):'–';
 function buildRoute(path){
  const points=(path||[]).map(point).filter(Boolean);
  if(points.length<2)return {points:[],segments:[],length:0};

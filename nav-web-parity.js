@@ -40,9 +40,7 @@ function data(){return provider.read()}
 function distance(d){
  const p=gps||data().origin;
  if(!p||!Number.isFinite(p.lat)||!Number.isFinite(p.lng)||!Number.isFinite(d.lat)||!Number.isFinite(d.lng))return '';
- const rad=Math.PI/180,dl=(d.lat-p.lat)*rad,dg=(d.lng-p.lng)*rad;
- const a=Math.sin(dl/2)**2+Math.cos(p.lat*rad)*Math.cos(d.lat*rad)*Math.sin(dg/2)**2;
- const km=6371*2*Math.asin(Math.min(1,Math.sqrt(a)));
+ const km=shared.distanceMeters(p,d)/1000;
  return (km<10?km.toLocaleString('de-DE',{maximumFractionDigits:1}):Math.round(km).toLocaleString('de-DE'))+' km';
 }
 function row(d,kind,i,manage){

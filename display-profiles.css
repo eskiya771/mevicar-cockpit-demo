@@ -10,16 +10,6 @@ html,body{min-height:0;overscroll-behavior:none}
 .dock button .dock-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 /* DeX, FullHD, panoramic: desktop-sized touch keyboard beside the search results. */
 @media(orientation:landscape) and (min-width:1150px){
- .map.searchmode .overlay.nav-search{
-   top:clamp(12px,2vh,24px);bottom:auto;left:clamp(12px,1.4vw,22px);right:auto;
-   width:min(36%,535px);height:auto;max-height:min(700px,calc(100% - 36px));
-   border-radius:clamp(16px,1.4vw,25px);
- }
- .map.searchmode .overlay.nav-search .inner{
-   height:auto;max-height:min(700px,calc(100dvh - 72px));min-height:0;overflow:hidden;
-   gap:clamp(9px,1.2vh,17px);padding:clamp(12px,1.45vh,20px);
- }
- .map.searchmode .nav-suggestions{min-height:0;overflow-y:auto;flex:1}
  .map.searchmode .keyboard{
    left:auto;right:clamp(20px,3vw,58px);top:50%;bottom:auto;transform:translateY(-50%);
    width:min(50%,840px);max-height:calc(100% - 40px);padding:clamp(12px,1.3vw,19px);
@@ -41,9 +31,6 @@ html,body{min-height:0;overscroll-behavior:none}
  .dock.left .dock-label{font-size:clamp(10px,2.15vh,12px)}
  .screen{gap:clamp(4px,.55vw,7px)}
  .side.mm-host{width:42%;min-width:0}
- .map.searchmode .overlay.nav-search{
-   width:41.5%;left:8px;right:auto;top:8px;bottom:8px;height:auto;max-height:none;
- }
  .map.searchmode .keyboard{
    left:auto;right:8px;top:auto;bottom:8px;transform:none;
    width:54%;max-width:54%;padding:7px;
@@ -51,11 +38,6 @@ html,body{min-height:0;overscroll-behavior:none}
  .map.searchmode .keyboard .keyrow button{
    min-height:clamp(39px,9.8vh,44px);font-size:clamp(12px,2.8vh,14px);
  }
- .map.searchmode .nav-suggestions .suggestion{
-   min-height:clamp(42px,10.5vh,50px);padding:5px 7px;
- }
- .map.searchmode .overlay.nav-search .inner{gap:clamp(5px,1vh,8px)}
- .map.searchmode .nav-search-heading{margin:0}
  :is(.mm-shell,.sp-shell).is-compact .mm-top-actions{gap:clamp(3px,.5vw,6px)}
  :is(.mm-shell,.sp-shell).is-compact .mm-mode-button{
    min-height:var(--car-touch);min-width:0;padding:4px 7px;
@@ -151,7 +133,6 @@ html,body{min-height:0;overscroll-behavior:none}
 .mm-shell.is-compact .mm-transport button{min-width:44px;min-height:44px}
 .mm-shell.is-compact .mm-transport .mm-primary{min-width:56px;min-height:56px}
 @media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
- .map.searchmode .overlay.nav-search{width:37%;max-width:none}
  .map.searchmode .keyboard{width:60%;max-width:60%;padding:6px;gap:3px}
  .map.searchmode .keyboard .keyrow{gap:2px}
  .map.searchmode .keyboard .keyrow button{min-height:44px;padding:3px 0}
@@ -165,7 +146,6 @@ html,body{min-height:0;overscroll-behavior:none}
 :is(.mm-shell,.sp-shell) .mm-mode-button{min-height:44px}
 :is(.mm-shell,.sp-shell).is-compact .mm-mode-button{min-width:44px}
 .mm-shell.is-compact .mm-now .mm-icon-button{width:44px;min-width:44px;height:44px;min-height:44px}
-.nav-search .tool-control{min-height:44px}
 
 /* Quality pass 4: larger iPhone/S20 landscape keyboard.
    The QWERTZ row has ten keys: protect key width, not only key height.
@@ -174,33 +154,6 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit:has(.map.searchmode) .dock{display:none}
  .cockpit:has(.map.searchmode) .body{gap:0}
  .cockpit:has(.map.searchmode) .workspace{min-width:0;width:100%}
- .map.searchmode .overlay.nav-search{
-   left:4px;right:auto;top:4px;bottom:4px;
-   width:26%;min-width:0;max-width:none;border-radius:14px;
- }
- .map.searchmode .overlay.nav-search .inner{
-   min-height:0;height:100%;overflow:hidden;padding:7px 6px;gap:6px;
- }
- .map.searchmode .nav-search-field{
-   min-height:46px;padding:5px 7px;gap:5px;border-radius:13px;
- }
- .map.searchmode .nav-search-field input{font-size:clamp(13px,3.6vh,16px)}
- .map.searchmode .nav-overlay-title{font-size:clamp(13px,3.6vh,16px)}
- .map.searchmode .nav-suggestions .suggestion{
-   min-height:48px;padding:5px;gap:6px;border-radius:10px;
- }
- .map.searchmode .nav-suggestions .suggestion .circle{
-   width:29px;height:29px;font-size:15px;
- }
- .map.searchmode .nav-suggestions .suggestion span:nth-child(2){
-   min-width:0;flex:1;
- }
- .map.searchmode .nav-suggestions .suggestion strong{
-   display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-   font-size:clamp(11px,3.1vh,13px);
- }
- .map.searchmode .nav-suggestions .suggestion small,
- .map.searchmode .nav-suggestions .suggestion-chevron{display:none}
  .map.searchmode .keyboard{width:72%;max-width:72%;
    left:auto;right:4px;top:auto;bottom:4px;transform:none;
    padding:6px;gap:5px;border-radius:15px;
@@ -339,8 +292,6 @@ html,body{min-height:0;overscroll-behavior:none}
  .cockpit .status-chip{font-size:10px;}
  .cockpit .dock.left{width:62px;padding:3px;gap:3px;border-radius:10px;}
  .cockpit .dock.left button{min-height:44px;}
- .cockpit .overlay.nav-browse{top:5px;left:5px;bottom:5px;}
- .cockpit .overlay.nav-search{top:5px;bottom:5px;}
 }
 
 /* iPhone landscape edge-to-edge: paint the cockpit into the unsafe regions,
@@ -407,12 +358,6 @@ html,body{min-height:0;overscroll-behavior:none}
    margin-bottom:max(4px,env(safe-area-inset-bottom,0px));
  }
  .cockpit .status{position:fixed;z-index:20;}
- .cockpit .overlay.nav-browse,.cockpit .overlay.nav-search{
-   left:calc(max(4px,env(safe-area-inset-left,0px)) + 72px) !important;
-   top:max(5px,env(safe-area-inset-top,0px)) !important;
-   bottom:max(5px,env(safe-area-inset-bottom,0px)) !important;
-   max-width:calc(100vw - max(4px,env(safe-area-inset-left,0px)) - max(4px,env(safe-area-inset-right,0px)) - 80px);
- }
 }
 
 /* iPhone 17 landscape navigation polish: compact Apple Maps-style panels.
@@ -424,23 +369,6 @@ html,body{min-height:0;overscroll-behavior:none}
    right:max(8px,env(safe-area-inset-right,0px));
    left:auto;
    max-width:40vw;
- }
- .cockpit .overlay.nav-browse{
-   width:var(--nav-browse-width) !important;
-   right:auto !important;
-   height:auto;
-   border-radius:18px;
- }
- .cockpit .overlay.nav-browse .inner{
-   padding:8px !important;
- }
- .cockpit .overlay.nav-search{
-   width:min(31vw,275px) !important;
-   right:auto !important;
-   border-radius:16px;
- }
- .cockpit .map.searchmode .overlay.nav-search{
-   width:min(31vw,275px) !important;
  }
  .cockpit .map.searchmode .keyboard{
    width:59vw !important;
@@ -462,50 +390,21 @@ html,body{min-height:0;overscroll-behavior:none}
  }
  .cockpit .map.searchmode .keyboard .keyrow .special,
  .cockpit .map.searchmode .keyboard .keyrow .go{font-size:12px !important;}
- .cockpit .map.searchmode .nav-suggestions{overflow-y:auto;min-height:0;}
 }
 
 /* Size the browse panel to three full favorites and a quarter of the next.
    Shared dimensions keep the scroll hint consistent across themes. */
-.cockpit .overlay.nav-browse{
- --nav-favorite-width:90px;
- --nav-favorite-gap:11px;
- --nav-browse-padding:16px;
- --nav-browse-width:calc(3.25 * var(--nav-favorite-width) + 3 * var(--nav-favorite-gap) + 2 * var(--nav-browse-padding) + 2px);
- width:var(--nav-browse-width);
- max-width:calc(100% - 32px);
-}
-.cockpit .overlay.nav-browse .inner{padding-inline:var(--nav-browse-padding) !important;min-width:0}
-.cockpit .nav-browse .favs{gap:var(--nav-favorite-gap);flex-shrink:0}
-.cockpit .nav-browse .favs .fav{flex:0 0 var(--nav-favorite-width);min-width:var(--nav-favorite-width)}
-@media(max-height:500px){
- .cockpit .overlay.nav-browse{--nav-browse-padding:8px}
-}
+
 
 /* Search is a stable mode: removing the keyboard must never move the
    result panel or bring back the app dock. Use the vacated dock width. */
 @media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
- .cockpit:has(.nav-search) .dock.left{display:none !important;}
- .cockpit:has(.nav-search) .body{gap:0 !important;}
- .cockpit .overlay.nav-search,
- .cockpit .map.searchmode .overlay.nav-search{
-   position:absolute;
-   left:max(7px,env(safe-area-inset-left,0px)) !important;
-   top:max(7px,env(safe-area-inset-top,0px)) !important;
-   bottom:max(7px,env(safe-area-inset-bottom,0px)) !important;
-   width:38vw !important;
-   max-width:38vw !important;
-   right:auto !important;
-   z-index:16;
- }
  .cockpit .map.searchmode .keyboard{
    right:max(7px,env(safe-area-inset-right,0px)) !important;
    width:56vw !important;
    max-width:56vw !important;
    z-index:17;
  }
- .cockpit .nav-search .inner{min-height:0;overflow:hidden;}
- .cockpit .nav-search .nav-suggestions{min-height:0;overflow-y:auto;}
 }
 
 /* Restore the route preview to the dock-safe position after a destination
@@ -523,54 +422,14 @@ html,body{min-height:0;overscroll-behavior:none}
 
 /* iPhone landscape search: reserve disjoint horizontal lanes for suggestions
    and the keyboard, including the right-hand notch/safe-area inset. */
-@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
- .cockpit:has(.nav-search) .overlay.nav-search,
- .cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
-   width:calc(100vw - max(7px,env(safe-area-inset-left,0px)) - max(7px,env(safe-area-inset-right,0px)) - 56vw - 16px) !important;
-   max-width:calc(100vw - max(7px,env(safe-area-inset-left,0px)) - max(7px,env(safe-area-inset-right,0px)) - 56vw - 16px) !important;
-   box-sizing:border-box;
- }
- .cockpit:has(.nav-search) .nav-search .inner{min-width:0;}
- .cockpit:has(.nav-search) .nav-search .nav-suggestions{min-width:0;overflow-x:hidden;}
-}
 
 /* Compact, stable search field with an unframed clear glyph. */
-.cockpit .nav-search-field{
- height:46px;min-height:46px;max-height:46px;
- padding:4px 10px;align-items:center;flex-shrink:0;
-}
-.cockpit .nav-search-field .nav-clear,
-.cockpit .nav-search-field .nav-clear.iconbtn{
- width:32px;height:32px;min-width:32px;min-height:32px;
- padding:0;display:grid;place-items:center;line-height:1;
- border:0!important;border-radius:0!important;background:transparent!important;
- box-shadow:none!important;outline:0;font-size:23px;font-weight:400;
-}
-.cockpit .nav-search-field .nav-clear[hidden]{display:none!important;}
-@media (orientation:landscape) and (max-height:480px){
- .cockpit .map.searchmode .nav-search-field,
- .cockpit .nav-search-field{height:46px;min-height:46px;max-height:46px;padding:3px 8px;}
-}
+
 
 /* Search input: visible software caret without triggering the native iOS keyboard. */
-.cockpit .nav-search-field{position:relative;gap:8px;border:1px solid #8edffb80;box-shadow:inset 0 0 0 1px #69c7ef25;}
-.cockpit .nav-search-field:focus-within{border-color:#64e5ff;box-shadow:0 0 0 2px #37c8f444,inset 0 0 16px #1dbdf016;}
-.cockpit .nav-search-field #searchInput{position:absolute;inset:0;width:100%;height:100%;opacity:0;z-index:2;cursor:text;}
-.cockpit .nav-search-field .nav-search-symbol{pointer-events:none;}
-.cockpit .nav-entry-visual,.cockpit .nav-entry-placeholder{font:inherit;font-size:clamp(14px,1.7vw,19px);white-space:nowrap;overflow:hidden;min-width:0;pointer-events:none;}
-.cockpit .nav-entry-visual{display:flex;align-items:center;flex:1;color:#f5fbff;}
-.cockpit .nav-entry-placeholder{position:absolute;left:calc(16px + 30px);color:#c0d4d7;}
-.cockpit .nav-entry-placeholder[hidden]{display:none;}
-.cockpit .nav-entry-caret{height:1.15em;min-width:2px;flex:none;background:#60edff;box-shadow:0 0 7px #2cdeff;animation:mevi-nav-caret-blink 1s steps(1,end) infinite;}
-.cockpit .nav-entry-before,.cockpit .nav-entry-after{white-space:pre;flex:none;}
-.cockpit .nav-search-field .nav-clear{position:relative;z-index:3;flex:none;min-width:32px;min-height:44px;color:#e9faff;}
+
 @keyframes mevi-nav-caret-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
 @media (orientation:landscape) and (max-height:480px){
- .cockpit .nav-search .nav-suggestions{gap:5px;}
- .cockpit .nav-search .suggestion{min-height:53px;padding:6px 9px;gap:9px;border-radius:13px;}
- .cockpit .nav-search .suggestion .circle{width:35px;height:35px;flex:none;}
- .cockpit .nav-search .suggestion strong{font-size:clamp(12px,1.5vw,16px);}
- .cockpit .nav-search .suggestion small{font-size:11px;line-height:1.2;margin-top:2px;}
  .cockpit .keyboard .keyrow button.special{background:#35485e;border:1px solid #a2c7e052;}
  .cockpit .keyboard .keyrow button.go{background:#087eae;border:1px solid #74d8ff8c;}
 }
@@ -656,28 +515,7 @@ html,body{min-height:0;overscroll-behavior:none}
 /* Search stays anchored at the top; dismissed keyboard space becomes list space.
    Paint keyboard to the map bottom. A small internal gesture margin replaces
    the external bottom safe-area gap; lateral cutout insets remain unchanged. */
-.cockpit:has(.nav-search) .dock{display:none!important}
-.cockpit:has(.nav-search) .body{gap:0!important}
-.cockpit .map:has(.nav-search){
- --nav-keyboard-height:clamp(198px,28vh,270px);
- --nav-keyboard-foot: min(8px,env(safe-area-inset-bottom,0px));
- --nav-search-inset: max(8px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));
-}
-.cockpit .map .overlay.nav-search,
-.cockpit .map.searchmode .overlay.nav-search,
-.cockpit:has(.nav-search) .map .overlay.nav-search,
-.cockpit:has(.nav-search) .map.searchmode .overlay.nav-search{
- left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
- top:8px!important;bottom:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot) + 8px)!important;
- width:auto!important;max-width:none!important;max-height:none!important;
- transform:none!important;
-}
-.cockpit .map .overlay.nav-search .inner{height:100%;min-height:0;padding:12px;gap:8px;overflow:hidden}
-.cockpit .map .nav-search .inner>.row:first-child{position:absolute;right:12px;top:12px;height:46px;z-index:4}
-.cockpit .nav-search .nav-overlay-title{display:none}
-.cockpit .map .nav-search-field{margin-right:112px;flex-shrink:0}
-.cockpit .map .nav-search-heading{flex-shrink:0;margin:0}
-.cockpit .map .nav-suggestions{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+
 .cockpit .map.searchmode .keyboard{
  left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
  top:auto!important;bottom:0!important;
@@ -686,24 +524,9 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 .cockpit .map.searchmode .keyboard .keyrow{flex:1;min-height:0;gap:5px!important}
 .cockpit .map.searchmode .keyboard .keyrow button{height:auto!important;min-height:44px!important;padding:4px 0!important;font-size:clamp(15px,1.3vw,22px)}
-.cockpit .nav-browse .favs{scrollbar-width:none;-ms-overflow-style:none}
-.cockpit .nav-browse .favs::-webkit-scrollbar{display:none;width:0;height:0}
-.cockpit .nav-search-trigger .nav-search-text{white-space:nowrap;font-size:clamp(15px,1.5vw,20px)}
-.cockpit .nav-preview-address{line-height:1.4;overflow-wrap:anywhere}
-@media(orientation:landscape) and (max-height:500px){
- .cockpit .map:has(.nav-search){--nav-keyboard-height:198px}
- .cockpit .map .overlay.nav-search .inner{padding:6px;gap:4px}
- .cockpit .map .nav-search .inner>.row:first-child{right:6px;top:6px}
- .cockpit .map .nav-search-heading{display:none}
- .cockpit .map .nav-search .suggestion{min-height:44px;padding:4px 8px}
- .cockpit .map .nav-search .suggestion .circle{width:30px;height:30px}
-}
 
 /* Expand downward only, preserving the search field and current scroll position. */
-.cockpit:has(.nav-search) .map:not(.searchmode) .overlay.nav-search{
- bottom:max(8px,env(safe-area-inset-bottom,0px))!important;
-}
-.cockpit .map .nav-search .suggestion{flex-shrink:0}
+
 
 /* One keyboard bottom accent only. No second outer border; leave keyboard,
    rows, keys, and result panel at their existing positions and dimensions. */
@@ -872,18 +695,9 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
    During live guidance the dock stays available, so turn instructions are
    shifted beyond the physical dock and the device's left safe-area inset. */
 @media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
- .cockpit:has(.mg-route-preview-pane) .dock,
- .cockpit:has(.mg-route-banner.mg-route-ready) .dock{display:none!important}
- .cockpit:has(.mg-route-preview-pane) .body,
- .cockpit:has(.mg-route-banner.mg-route-ready) .body{gap:0!important}
- .cockpit:has(.mg-route-preview-pane) .workspace,
- .cockpit:has(.mg-route-banner.mg-route-ready) .workspace{min-width:0;width:100%}
- .cockpit .mg-navigation .mg-route-banner.mg-route-ready{
-   max-height:calc(100dvh - 16px);overflow-y:auto;overscroll-behavior:contain;
- }
- .cockpit .mg-navigation .mg-guidance-banner{
-   left:calc(max(4px,env(safe-area-inset-left,0px)) + 76px)!important;
- }
+ .cockpit:has(.mg-route-preview-pane) .dock{display:none!important}
+ .cockpit:has(.mg-route-preview-pane) .body{gap:0!important}
+ .cockpit:has(.mg-route-preview-pane) .workspace{min-width:0;width:100%}
 }
 
 /* Driving status stays readable over the Google map. Uses the SAME status
