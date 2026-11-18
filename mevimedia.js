@@ -564,6 +564,16 @@
   function repeat(){st.repeat=(st.repeat+1)%3;persist();redraw()}
   function stop(){if(player){player.pause();closeVideo()}}
   Object.assign(window,{
+    meviSpectrumPlayer:()=>player,
+    async meviSpectrumPlayFile(file){
+      if(!file||!supported(file))return false;
+      const item=makeTrack(file,'');
+      await loadFiles([file],'Car HiFi');
+      const index=st.tracks.findIndex(track=>track.key===item.key);
+      if(index<0)return false;
+      play(index);
+      return true;
+    },
     meviRadioHTML:radioHTML,meviRadioAction:radioAction,
     meviRadioAddStation:addRadioStation,meviRadioAddFromForm:addRadioFromForm,meviRadioRemoveStation:removeRadioStation,
     meviMediaHTML:html,meviMediaFolder:chooseFolder,meviMediaFiles:chooseFiles,meviMediaLoadFiles:loadFiles,
