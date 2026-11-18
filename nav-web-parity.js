@@ -1,17 +1,17 @@
-/* One destination search / address-book UI for Web and future Android WebView.
-   Native opt-in requires an explicitly injected provider; existing hybrid APK is unchanged. */
+/* Sole destination search and address-book UI for Web/PWA and Android WebView.
+   Android uses its native Places/book provider; there is no legacy dialog fallback. */
 (function(){
 'use strict';
 const native=!!window.MeviNativeBridge?.postMessage;
 const injected=window.MeviSharedNavigationProvider;
-if(native&&!injected)return; // Fable's current native dialogs remain the default.
+if(native&&!injected)return; // Do not open an unbound UI or fall back to removed Kotlin dialogs.
 const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
 let selectedReturnView='search',externalMapPlace=false;
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
-const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const safe=shared.escapeHtml;
 const paths={
  back:'<path d="m15 18-6-6 6-6"/><path d="M9 12h12"/>',
  home:'<path d="m3 10 9-7 9 7"/><path d="M5 9v12h14V9"/><path d="M9 21v-8h6v8"/>',
@@ -125,9 +125,7 @@ function poiHTML(){
  (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
  '<div id="suggestions" class="mg-parity-results mg-poi-results" aria-live="polite">'+poiRows()+'</div></div></div>';
 }
-function placeKey(p){
- return p?.placeId?'p:'+p.placeId:Number.isFinite(p?.lat)&&Number.isFinite(p?.lng)?'c:'+p.lat.toFixed(5)+','+p.lng.toFixed(5):'';
-}
+function placeKey(p){return shared.destinationKey(p)}
 function isPlaceSaved(){
  const key=placeKey(placeState);
  return !!key&&data().favorites.some(item=>placeKey(item)===key);
@@ -529,7 +527,8 @@ function filterBook(q){filter=q;refreshBook()}
 function nativeFailure(e){window.MeviAndroidSharedNav?.showError?.(e);window.alert?.('Adressbuch: '+(e?.message||e))}
 function nativeImport(){if(provider.importPicker)void provider.importPicker().catch(nativeFailure)}
 window.openSearch=open;
-window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
-window.MeviWebNavParity={selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+function overlayHTML(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
+window.searchOverlay=overlayHTML;
+window.MeviWebNavParity={overlayHTML,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
