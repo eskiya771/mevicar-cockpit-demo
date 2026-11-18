@@ -31,16 +31,18 @@ const icons={
    checkForUpdate, openDashboardSearch, openDashboardAddressBook, showGuidanceMap.
    Clock, build and update texts are filled by their existing owners via the ids. */
 function panel(){
- return `<div class="mg-dash-panel">
+ return `<div class="mg-dash-panel" data-route-active="false">
   <header class="mg-dash-head">
    <time id="statusClock" class="mg-dash-clock" aria-label="Aktuelle Uhrzeit">--:--</time>
    <div class="mg-dash-build"><span id="buildVersion" aria-label="Geladene Version">Build ${placeholder}</span><span id="updateMessage" aria-live="polite"></span></div>
-   <button type="button" id="updateBtn" class="mg-dash-update" title="Auf Updates prüfen" aria-label="Auf Updates prüfen" onclick="checkForUpdate()"></button>
+   <div class="mg-dash-head-tools" role="group" aria-label="Dashboard-Aktionen">
+    <button type="button" id="updateBtn" class="mg-dash-update" title="Auf Updates prüfen" aria-label="Auf Updates prüfen" onclick="checkForUpdate()"></button>
+    <button type="button" class="mg-dash-action mg-dash-fullmap" data-dash-action="full" title="Dashboard schließen, Karte im Vollbild" aria-label="Vollbild: Dashboard schließen" onclick="showGuidanceMap()">${icon(icons.full)}<span>Vollbild</span></button>
+   </div>
   </header>
   <div class="mg-dash-actions" role="group" aria-label="Navigation bedienen">
    <button type="button" class="mg-dash-action" data-dash-action="search" onclick="openDashboardSearch()">${icon(icons.search)}<span>Ziel suchen</span></button>
    <button type="button" class="mg-dash-action" data-dash-action="book" onclick="openDashboardAddressBook()">${icon(icons.book)}<span>Adressbuch</span></button>
-   <button type="button" class="mg-dash-action mg-dash-fullmap" data-dash-action="full" title="Dashboard schließen, Karte im Vollbild" aria-label="Vollbild: Dashboard schließen" onclick="showGuidanceMap()">${icon(icons.full)}<span>Vollbild</span></button>
   </div>
   ${html(true)}
  </div>`;
@@ -48,6 +50,8 @@ function panel(){
 function paint(container,data){
  if(!container?.querySelector)return;
  const info=data||{},format=root.MeviNavRouteDetails;
+ const panel=container.querySelector('.mg-dash-panel');
+ if(panel?.dataset)panel.dataset.routeActive=info.routeActive===true?'true':'false';
  // Web guidance and the Android SDK both supply raw metrics.
  // avgKmh remains an input for compatibility with older callers only.
  const rawAverage=Number.isFinite(info.drivenMeters)&&Number.isFinite(info.elapsedMs)?

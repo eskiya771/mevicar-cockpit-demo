@@ -795,14 +795,24 @@ function guidanceTrip(){
    at most once a second and only while the dashboard paints; an APK without
    the action leaves the placeholders. */
 let nativeMetrics=null,nativeMetricsAt=0,nativeMetricsBusy=false;
+function nativeDashboardViewData(metrics){
+ const data=metrics||{};
+ // Older APK bridges have no routeActive field: retain guidance/route preview.
+ const active=typeof data.routeActive==='boolean'?data.routeActive:
+  !!nativePreview||data.remainingMeters!=null||data.remainingSeconds!=null;
+ return {...data,routeActive:active};
+}
 function nativeDashboardData(){
  const now=Date.now();
  if(!nativeMetricsBusy&&now-nativeMetricsAt>=900){
   nativeMetricsBusy=true;nativeMetricsAt=now;
-  nativeRequest('navigation.metrics').then(reply=>{nativeMetrics=reply?.metrics||null})
-   .catch(()=>{nativeMetrics=null}).finally(()=>{nativeMetricsBusy=false});
+  nativeRequest('navigation.metrics').then(reply=>{
+   nativeMetrics=reply?.metrics||null;
+   const dashboard=document.getElementById('mg-nav-dashboard-split');
+   if(dashboard)window.MeviNavDashboard?.paint?.(dashboard,nativeDashboardViewData(nativeMetrics));
+  }).catch(()=>{nativeMetrics=null}).finally(()=>{nativeMetricsBusy=false});
  }
- return now-nativeMetricsAt<=5000?nativeMetrics:null;
+ return nativeDashboardViewData(now-nativeMetricsAt<=5000?nativeMetrics:null);
 }
 function guidanceDashboardData(){
  if(nativeMode())return nativeDashboardData();
@@ -813,6 +823,7 @@ function guidanceDashboardData(){
   routeData?Math.max(0,Math.round(Number(routeData.distanceMeters)||0)):null;
  const elapsed=guidanceStartedAt===null?null:now-guidanceStartedAt;
  return {
+  routeActive:!!routeData||guidanceActive,
   nextCameraMeters:window.MeviRoadAssist?.nextCameraDistanceMeters?.()??null,
   speedKmh:!simulation&&guidanceSpeedTimestamp!==null&&now-guidanceSpeedTimestamp<=8000?guidanceCurrentSpeed:null,
   arrivalEpochMs:seconds===null?null:now+seconds*1000,

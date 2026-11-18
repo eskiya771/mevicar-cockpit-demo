@@ -170,3 +170,23 @@ html[data-theme="liquidglass"] .mg-dash-speed{background:linear-gradient(155deg,
  .mg-dashboard-compact .mg-dash-speed .mg-dash-value strong{font-size:clamp(36px,8vh,60px)}
  .mg-dashboard-compact .mg-dash-label{font-size:clamp(9px,1.5vh,11px)}
 }
+
+/* Upper right: update and fullscreen are equal-size icon buttons. */
+.mg-dash-head-tools{display:flex;align-items:center;gap:clamp(4px,.7vw,10px);min-width:0}
+.side.mg-nav-dashboard-side .mg-dash-head-tools .mg-dash-fullmap{
+ width:var(--dash-touch);height:var(--dash-touch);min-width:44px;min-height:44px;padding:0;flex:none;
+}
+.mg-dash-head-tools .mg-dash-fullmap span{display:none}
+.mg-dash-head-tools .mg-dash-fullmap .mg-dash-icon{width:clamp(20px,3.5vh,30px);height:clamp(20px,3.5vh,30px)}
+/* Only search and address book occupy the second row. */
+.mg-dash-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-actions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+/* Idle: do not waste space on route metrics until a route exists. */
+.mg-dash-panel[data-route-active="false"]>.mg-nav-dashboard.mg-dashboard-compact{
+ flex:0 0 auto;height:clamp(106px,22vh,240px);grid-template-columns:minmax(0,1fr);
+ grid-template-rows:minmax(0,1fr);
+}
+.mg-dash-panel[data-route-active="false"] .mg-dashboard-compact .mg-dash-cell:not(.mg-dash-speed){display:none}
+.mg-dash-panel[data-route-active="false"] .mg-dashboard-compact .mg-dash-speed{grid-column:1;grid-row:1}
