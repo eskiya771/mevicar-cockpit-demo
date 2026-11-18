@@ -489,3 +489,26 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  font-size:clamp(10px,1.9vh,13px);
  font-weight:750;color:var(--guidance-accent);opacity:.93;
 }
+
+
+/* Native Google map stays to the right; both variants reuse guidanceMenuBodyHTML. */
+.mg-native-guidance-menu .mg-native-setup{display:none!important}
+.mg-native-guidance-pane{
+ --guidance-panel:var(--route-pane-bg);--guidance-text:var(--route-ink);
+ --guidance-muted:var(--route-muted);--guidance-accent:var(--route-accent);
+ overflow:hidden;box-shadow:8px 0 20px #07111c77;
+}
+.mg-native-guidance-pane #mg-guidance-menu-actions,
+.mg-native-guidance-pane #mg-guidance-menu-details{
+ flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;
+}
+.mg-native-guidance-pane [hidden]{display:none!important}
+.mg-navigation .mg-native-guidance-pane button{
+ display:block;width:100%;min-height:44px;margin:4px 0;padding:8px 13px;text-align:left;
+ font:inherit;font-weight:650;background:#1b394c;color:var(--guidance-text);
+ border:1px solid #5e91a18c;border-radius:10px;
+}
+.mg-navigation .mg-native-guidance-pane .mg-guidance-menu-heading button{
+ width:46px;flex:0 0 46px;text-align:center;
+}
+.mg-navigation .mg-native-guidance-pane .mg-guidance-menu-stop{background:#743545;color:#ffebf1}

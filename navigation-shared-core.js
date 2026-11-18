@@ -48,7 +48,7 @@ function createProvider(methods){
  const required=['isReady','read','search','choose','saveSlot','saveFavorite','searchNearby','write'];
  if(!methods||required.some(key=>typeof methods[key]!=='function'))throw new TypeError('Navigation provider: missing method');
  // The UI communicates solely through this interface, not through any Google SDK.
- // Place details are optional for older/injected providers (the APK keeps native dialogs).
+ // Place details are optional for a browser provider; Android has no parallel dialog.
  const adapter=Object.fromEntries(required.map(key=>[key,(...args)=>methods[key](...args)]));
  adapter.details=typeof methods.details==='function'?(...args)=>methods.details(...args):async()=>null;
  adapter.startRoute=typeof methods.startRoute==='function'?(...args)=>methods.startRoute(...args):async()=>false;
@@ -57,7 +57,7 @@ function createProvider(methods){
  adapter.addStop=typeof methods.addStop==='function'?(...args)=>methods.addStop(...args):async()=>false;
  adapter.removeStop=typeof methods.removeStop==='function'?(...args)=>methods.removeStop(...args):async()=>false;
  adapter.resolveStop=typeof methods.resolveStop==='function'?(...args)=>methods.resolveStop(...args):async()=>null;
- for(const key of ['editSaved','moveFavorite','removeEntry','clearHistory','importPicker','exportPicker','cancel','savePlace']){
+ for(const key of ['editSaved','moveFavorite','removeEntry','clearHistory','importPicker','exportPicker','cancel','savePlace','externalDetails','routeExternal']){
    if(typeof methods[key]==='function')adapter[key]=(...args)=>methods[key](...args);
   }
   return Object.freeze(adapter);

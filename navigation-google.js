@@ -231,6 +231,82 @@ async function openNativeMap(){
   return true;
  }catch(e){status('Android-Karte: '+(e.message||e));return false}
 }
+
+/* One shared guidance menu: Android returns SDK data, not a parallel UI. */
+let nativeGuidancePane='',nativeGuidanceState={muted:false,roadEnabled:false,roadVoice:false,details:[]};
+let nativeGuidanceFetch=null,nativeGuidanceSerial=0;
+function nativeGuidanceMode(){return nativeMode()?nativeGuidancePane:''}
+function nativeGuidanceMuted(){return nativeGuidanceState.muted===true}
+function nativeGuidanceRoadEnabled(){return nativeGuidanceState.roadEnabled===true}
+function nativeGuidanceRoadVoice(){return nativeGuidanceState.roadVoice===true}
+function nativeGuidanceDetailsHTML(){
+ const rows=Array.isArray(nativeGuidanceState.details)?nativeGuidanceState.details:[];
+ return rows.length?guidanceRowsHTML(rows.filter(r=>r&&typeof r.label==='string'&&typeof r.value==='string').map(r=>[r.label,r.value])):
+  '<p class="mg-search-message">Routendetails werden geladen …</p>';
+}
+function paintNativeGuidanceMenu(){
+ if(!nativeGuidancePane)return;
+ const details=document.querySelector('.mg-native-guidance-pane .mg-guidance-details-content');
+ if(details&&nativeGuidancePane==='details')details.innerHTML=nativeGuidanceDetailsHTML();
+ const voice=document.querySelector('.mg-native-guidance-pane #mg-voice-toggle');
+ if(voice){voice.textContent='Ton: '+(nativeGuidanceMuted()?'aus':'an');voice.setAttribute('aria-pressed',String(!nativeGuidanceMuted()))}
+ const road=document.querySelector('.mg-native-guidance-pane #mg-road-voice-toggle');
+ if(road){road.textContent='Blitzer-Stimme: '+(nativeGuidanceRoadVoice()?'an':'aus');road.setAttribute('aria-pressed',String(nativeGuidanceRoadVoice()))}
+}
+async function refreshNativeGuidanceMenu(){
+ if(!nativeMode()||!nativeGuidancePane)return false;
+ if(nativeGuidanceFetch)return nativeGuidanceFetch;
+ const serial=++nativeGuidanceSerial;
+ nativeGuidanceFetch=nativeRequest('navigation.guidance.read').then(reply=>{
+  if(serial!==nativeGuidanceSerial||!nativeGuidancePane)return false;
+  if(reply.guiding===false){closeNativeGuidanceMenu();return false}
+  const roadVisibilityChanged=nativeGuidanceState.roadEnabled!==(reply.roadEnabled===true);
+  nativeGuidanceState={muted:reply.muted===true,roadEnabled:reply.roadEnabled===true,
+   roadVoice:reply.roadVoice===true,details:Array.isArray(reply.details)?reply.details:[]};
+  if(roadVisibilityChanged)window.meviGoogleRerender?.();
+  else paintNativeGuidanceMenu();
+  return true;
+ }).catch(e=>{status('Routendetails: '+(e.message||e));return false})
+ .finally(()=>{nativeGuidanceFetch=null});
+ return nativeGuidanceFetch;
+}
+function toggleNativeGuidanceMenu(){
+ if(!nativeMode())return false;
+ if(nativeGuidancePane){closeNativeGuidanceMenu();return false}
+ nativeGuidancePane='actions';window.meviNativeGuidanceFocusMap?.();window.meviGoogleRerender?.();
+ void refreshNativeGuidanceMenu();return true;
+}
+function closeNativeGuidanceMenu(){
+ if(!nativeGuidancePane)return false;
+ nativeGuidancePane='';nativeGuidanceSerial++;window.meviGoogleRerender?.();return true;
+}
+function nativeGuidanceShowDetails(){
+ if(!nativeGuidancePane)return;
+ nativeGuidancePane='details';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
+}
+function nativeGuidanceBack(){
+ if(!nativeGuidancePane)return;
+ nativeGuidancePane='actions';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
+}
+async function nativeGuidanceAction(action){
+ if(!nativeMode()||!nativeGuidancePane)return false;
+ try{
+  if(action==='stopSearch'){
+   closeNativeGuidanceMenu();
+   if(!window.MeviAndroidSharedNav?.openSharedStopSearch)throw new Error('Gemeinsame Stopp-Suche fehlt.');
+   await window.MeviAndroidSharedNav.openSharedStopSearch();return true;
+  }
+  if(action==='end'){closeNativeGuidanceMenu();await nativeRequest('navigation.stop');return true}
+  if(action==='overview'){closeNativeGuidanceMenu();await nativeRequest('navigation.guidance.overview');return true}
+  const wire={voice:'navigation.guidance.voice',roadVoice:'navigation.guidance.roadVoice'}[action];
+  if(!wire)return false;
+  nativeGuidanceSerial++;
+  const reply=await nativeRequest(wire);
+  nativeGuidanceState={muted:reply.muted===true,roadEnabled:reply.roadEnabled===true,
+   roadVoice:reply.roadVoice===true,details:Array.isArray(reply.details)?reply.details:[]};
+  paintNativeGuidanceMenu();return true;
+ }catch(e){status('Navigationsmenü: '+(e.message||e));return false}
+}
 /** Second tap on the Navi dock button while the map is already in front: the APK
  * opens or closes its guidance actions (stop search, sound, overview, end).
  * Older APKs and a map without guidance ignore it. */
@@ -248,14 +324,10 @@ function toggleNativeDashboard(){
 }
 async function openNativeSearch(){
  try{
-  if(window.MeviAndroidSharedNav?.isOptedIn?.()){
-   await window.MeviAndroidSharedNav.connect();
-   window.MeviWebNavParity?.open();
-   return true;
-  }
-  const caps=await nativeRequest('capabilities');
-  if(!caps.capabilities?.nativePlacesSearch)throw new Error('Die installierte APK unterstützt die native Zielsuche noch nicht.');
-  await nativeRequest('navigation.search');
+  if(!window.MeviAndroidSharedNav?.connect||!window.MeviWebNavParity?.open)
+   throw new Error('Gemeinsame Navi-Oberfläche fehlt. Bitte die APK/Web-Dateien aktualisieren.');
+  await window.MeviAndroidSharedNav.connect();
+  window.MeviWebNavParity.open();
   return true;
  }catch(e){status('Android-Zielsuche: '+(e.message||e));return false}
 }
@@ -739,6 +811,10 @@ function guidanceDashboardData(){
   maxKmh:!simulation?guidanceMaxSpeed:null
  };
 }
+function guidanceRowsHTML(rows){
+ return '<dl class="mg-guidance-detail-list">'+rows.map(([label,value])=>
+  '<div class="mg-guidance-detail-row"><dt>'+text(label)+'</dt><dd>'+text(value)+'</dd></div>').join('')+'</dl>';
+}
 function guidanceDetailsHTML(){
  const now=Date.now(),remaining=Math.max(0,Math.round(Number.isFinite(liveTripMeters)?liveTripMeters:(routeData?.distanceMeters||0)));
  const seconds=Math.max(0,Math.round(Number.isFinite(liveTripMinutes)?liveTripMinutes*60:(routeData?.durationMillis||0)/1000));
@@ -774,8 +850,7 @@ function guidanceDetailsHTML(){
  add('Ansagen',voiceMuted?'aus':'an');
  const roadNote=window.MeviRoadAssist?.routeNote?.();
  if(roadNote)add('Blitzer',roadNote);
- return '<dl class="mg-guidance-detail-list">'+rows.map(([label,value])=>
-  '<div class="mg-guidance-detail-row"><dt>'+text(label)+'</dt><dd>'+text(value)+'</dd></div>').join('')+'</dl>';
+ return guidanceRowsHTML(rows);
 }
 function geoPoint(input){
  if(!input)return null;
@@ -1219,7 +1294,10 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location"'+(guidanceActive?' hidden':'')+' onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,toggleNativeDashboard,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={refreshNativeRoutePreview:readNativePreview,
+ toggleNativeGuidanceMenu,closeNativeGuidanceMenu,refreshNativeGuidanceMenu,nativeGuidanceMode,
+ nativeGuidanceMuted,nativeGuidanceRoadEnabled,nativeGuidanceRoadVoice,nativeGuidanceDetailsHTML,
+ nativeGuidanceShowDetails,nativeGuidanceBack,nativeGuidanceAction,guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,toggleNativeDashboard,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();

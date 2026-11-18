@@ -1205,6 +1205,28 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  font-weight:750;color:var(--guidance-accent);opacity:.93;
 }
 
+
+/* Native Google map stays to the right; both variants reuse guidanceMenuBodyHTML. */
+.mg-native-guidance-menu .mg-native-setup{display:none!important}
+.mg-native-guidance-pane{
+ --guidance-panel:var(--route-pane-bg);--guidance-text:var(--route-ink);
+ --guidance-muted:var(--route-muted);--guidance-accent:var(--route-accent);
+ overflow:hidden;box-shadow:8px 0 20px #07111c77;
+}
+.mg-native-guidance-pane #mg-guidance-menu-actions,
+.mg-native-guidance-pane #mg-guidance-menu-details{
+ flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;
+}
+.mg-native-guidance-pane [hidden]{display:none!important}
+.mg-navigation .mg-native-guidance-pane button{
+ display:block;width:100%;min-height:44px;margin:4px 0;padding:8px 13px;text-align:left;
+ font:inherit;font-weight:650;background:#1b394c;color:var(--guidance-text);
+ border:1px solid #5e91a18c;border-radius:10px;
+}
+.mg-navigation .mg-native-guidance-pane .mg-guidance-menu-heading button{
+ width:46px;flex:0 0 46px;text-align:center;
+}
+.mg-navigation .mg-native-guidance-pane .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
 </style><link rel="stylesheet" href="./nav-dashboard.css"><style id="mevicar-navigation-parity-styles">/* Shared destination search and address book. */
 .mg-navigation .mg-parity-shade{
  position:fixed;inset:0;z-index:2147480000;font-family:Roboto,"Segoe UI",system-ui,sans-serif;
@@ -4527,7 +4549,6 @@ html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border
 .cockpit .full:has(>.tt-root)>.row,.cockpit .side:has(>.tt-root)>h3{display:none}
 .app-home-grid{grid-template-rows:repeat(5,minmax(0,1fr))}
 .app-home-grid .app-home-icon{height:min(100%,12vh);width:min(100%,12vh)}
-
 </style><style id="mevicar-bottle-game-style">/* MeviCar Next · Wer ist schuld? – responsive landscape bottle spinner */
 .wis-root{
  --wis-neon:#63e7ed;
@@ -4968,7 +4989,6 @@ html.mevi-tv-theater .tv-stage movi-player{
 .tv-native-direct [data-act="xtream-settings"],
 .tv-native-direct [data-act="proxy-status"] {display:none!important}
 .tv-engine {display:block;width:100%;min-height:44px;font:inherit;margin-top:8px}
-
 </style><style id="mevicar-display-profiles">/* MeviCar Next – five supported landscape CSS-viewport profiles:
    iPhone 17 874×402; S20 FE 915×412; DeX 1920×1200;
    FullHD 1920×1080; panoramic 1920×720.
@@ -6144,7 +6164,7 @@ document.addEventListener('touchstart',onSplitTwoFingerStart,{passive:true});
 document.addEventListener('touchmove',onSplitTwoFingerMove,{passive:true});
 document.addEventListener('touchend',onSplitTwoFingerEnd,{passive:true});
 document.addEventListener('touchcancel',()=>{twoFingerStart=null},{passive:true});
-let navCaret=0;function openSearch(){if(window.MeviGoogleNav?.isNativeMode?.()){void window.MeviGoogleNav.openNativeSearch();return}if(!window.MeviGoogleNav?.hasKey?.()){openCredentialSettings();return}window.MeviGoogleNav?.changeQuery('');navCaret=0;s.numericKeyboard=false;s.keyShift=true;s.app='nav';s.mode='map';s.nav='search';s.keyboard=true;s.query='';render();setTimeout(()=>{const e=$('searchInput');if(e)e.focus({preventScroll:true})},0)}window.meviGoogleDestination=(name,address,options={})=>{s.destination=name;s.query=name;if(options.skipPreview)return;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviGoogleRouteReady=()=>{};window.meviGoogleRerender=()=>render();window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};function navCaretHTML(){const q=s.query||'';const pos=Math.min(navCaret,q.length);return '<span class="nav-entry-before">'+esc(q.slice(0,pos))+'</span><span class="nav-entry-caret" aria-hidden="true"></span><span class="nav-entry-after">'+esc(q.slice(pos))+'</span>'}function syncNavCaret(){const mirror=$('navEntryMirror');if(mirror)mirror.innerHTML=navCaretHTML();const placeholder=$('navEntryPlaceholder');if(placeholder)placeholder.hidden=!!s.query}function positionNavCaret(event){const mirror=$('navEntryMirror');if(!mirror)return;const rect=mirror.getBoundingClientRect();const x=Math.max(0,event.clientX-rect.left);const ctx=document.createElement('canvas').getContext('2d');const style=getComputedStyle(mirror);ctx.font=style.font;let best=0,dist=Infinity;for(let i=0;i<=s.query.length;i++){const d=Math.abs(ctx.measureText(s.query.slice(0,i)).width-x);if(d<dist){dist=d;best=i}}navCaret=best;syncNavCaret();if(!s.keyboard)showKeyboard()}function updateQuery(v){s.query=v;window.MeviGoogleNav?.changeQuery(v);syncNavCaret();const e=$('suggestions');if(e)e.innerHTML=resultsHTML();const clear=$('navClearQuery');if(clear)clear.hidden=!s.query;const heading=$('navResultHeading');if(heading)heading.textContent=s.query.trim()?'Suchergebnisse':'Vorschläge und letzte Ziele'}function clearNavQuery(){s.query='';navCaret=0;const input=$('searchInput');if(input)input.value='';updateQuery('');if(!s.keyboard)showKeyboard()}function key(k){navCaret=Math.min(navCaret,s.query.length);if(k==='back'){if(navCaret>0){s.query=s.query.slice(0,navCaret-1)+s.query.slice(navCaret);navCaret--}}else{const value=k==='space'?' ':(s.keyShift?k:k.toLowerCase());s.query=s.query.slice(0,navCaret)+value+s.query.slice(navCaret);navCaret+=value.length}const e=$('searchInput');if(e){e.value=s.query;e.focus({preventScroll:true})}updateQuery(s.query);if(s.keyShift&&k!=='back'&&k!=='space'&&!s.numericKeyboard){s.keyShift=false;refreshKeyboard()}}function hideKeyboard(){s.keyboard=false;render()}function showKeyboard(){s.keyboard=true;render();setTimeout(()=>{$('searchInput')?.focus({preventScroll:true})},0)}function selectPlace(name){window.MeviGoogleNav?.selectName(name)}async function startRoute(){const n=window.MeviGoogleNav;if(!n)return false;const ready=await n.calculateRoute();if(!ready)return false;if(ready==='native')return true;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render();return true}
+let navCaret=0;function openSearch(){if(window.MeviGoogleNav?.isNativeMode?.()){void window.MeviGoogleNav.openNativeSearch();return}if(!window.MeviGoogleNav?.hasKey?.()){openCredentialSettings();return}window.MeviGoogleNav?.changeQuery('');navCaret=0;s.numericKeyboard=false;s.keyShift=true;s.app='nav';s.mode='map';s.nav='search';s.keyboard=true;s.query='';render();setTimeout(()=>{const e=$('searchInput');if(e)e.focus({preventScroll:true})},0)}window.meviGoogleDestination=(name,address,options={})=>{s.destination=name;s.query=name;if(options.skipPreview)return;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviGoogleRouteReady=()=>{};window.meviNativeGuidanceFocusMap=()=>{if(window.MeviGoogleNav?.isNativeMode?.()){s.app='nav';s.mode='map';s.keyboard=false}};window.meviGoogleRerender=()=>render();window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};function navCaretHTML(){const q=s.query||'';const pos=Math.min(navCaret,q.length);return '<span class="nav-entry-before">'+esc(q.slice(0,pos))+'</span><span class="nav-entry-caret" aria-hidden="true"></span><span class="nav-entry-after">'+esc(q.slice(pos))+'</span>'}function syncNavCaret(){const mirror=$('navEntryMirror');if(mirror)mirror.innerHTML=navCaretHTML();const placeholder=$('navEntryPlaceholder');if(placeholder)placeholder.hidden=!!s.query}function positionNavCaret(event){const mirror=$('navEntryMirror');if(!mirror)return;const rect=mirror.getBoundingClientRect();const x=Math.max(0,event.clientX-rect.left);const ctx=document.createElement('canvas').getContext('2d');const style=getComputedStyle(mirror);ctx.font=style.font;let best=0,dist=Infinity;for(let i=0;i<=s.query.length;i++){const d=Math.abs(ctx.measureText(s.query.slice(0,i)).width-x);if(d<dist){dist=d;best=i}}navCaret=best;syncNavCaret();if(!s.keyboard)showKeyboard()}function updateQuery(v){s.query=v;window.MeviGoogleNav?.changeQuery(v);syncNavCaret();const e=$('suggestions');if(e)e.innerHTML=resultsHTML();const clear=$('navClearQuery');if(clear)clear.hidden=!s.query;const heading=$('navResultHeading');if(heading)heading.textContent=s.query.trim()?'Suchergebnisse':'Vorschläge und letzte Ziele'}function clearNavQuery(){s.query='';navCaret=0;const input=$('searchInput');if(input)input.value='';updateQuery('');if(!s.keyboard)showKeyboard()}function key(k){navCaret=Math.min(navCaret,s.query.length);if(k==='back'){if(navCaret>0){s.query=s.query.slice(0,navCaret-1)+s.query.slice(navCaret);navCaret--}}else{const value=k==='space'?' ':(s.keyShift?k:k.toLowerCase());s.query=s.query.slice(0,navCaret)+value+s.query.slice(navCaret);navCaret+=value.length}const e=$('searchInput');if(e){e.value=s.query;e.focus({preventScroll:true})}updateQuery(s.query);if(s.keyShift&&k!=='back'&&k!=='space'&&!s.numericKeyboard){s.keyShift=false;refreshKeyboard()}}function hideKeyboard(){s.keyboard=false;render()}function showKeyboard(){s.keyboard=true;render();setTimeout(()=>{$('searchInput')?.focus({preventScroll:true})},0)}function selectPlace(name){window.MeviGoogleNav?.selectName(name)}async function startRoute(){const n=window.MeviGoogleNav;if(!n)return false;const ready=await n.calculateRoute();if(!ready)return false;if(ready==='native')return true;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render();return true}
 async function beginNavigation(){const n=window.MeviGoogleNav;if(!n)return;const started=await n.startGuidance();if(!started)return;if(started==='native'){s.nav='ready';s.mode='map';s.app='nav';return} s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function beginNavigationDemo(){const n=window.MeviGoogleNav;if(!n?.startDemo())return;s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function returnToRoute(){window.MeviGoogleNav?.stopGuidance({keepRoute:true});s.nav='ready';s.route=true;s.app='nav';s.mode='map';render()}
@@ -6179,7 +6199,7 @@ function readyRouteOverlay(ctx){
    ${ctx.native?'':'<button type="button" class="mg-route-preview-demo" onclick="beginNavigationDemo()">Demo-Fahrt</button>'}
   </div>
   <div class="mg-route-preview-actions">
-   ${stops.length<maxStops?'<button type="button" onclick="MeviWebNavParity.openStopSearch()">Stopp hinzufügen</button>':''}
+   ${stops.length<maxStops?`<button type="button" onclick="${ctx.native?'MeviAndroidSharedNav.openSharedStopSearch().catch(e=>MeviAndroidSharedNav.showError(e))':'MeviWebNavParity.openStopSearch()'}">Stopp hinzufügen</button>`:''}
    <button type="button" class="mg-route-preview-start" onclick="MeviGoogleNav.previewStart()" aria-label="Navigation starten">Los</button>
   </div>
  </aside>`;
@@ -6218,6 +6238,33 @@ function showGuidanceMap(){
  s.app='nav';s.mode='map';s.keyboard=false;
  render();
 }
+function guidanceMenuBodyHTML(native=false){
+ const n=window.MeviGoogleNav;
+ const details=native&&n?.nativeGuidanceMode?.()==='details';
+ const muted=native&&n?.nativeGuidanceMuted?.()===true;
+ const close=native?'MeviGoogleNav.closeNativeGuidanceMenu()':'toggleGuidanceMenu(false)';
+ const back=native?'MeviGoogleNav.nativeGuidanceBack()':'toggleGuidanceMenu(true)';
+ const stopSearch=native?"MeviGoogleNav.nativeGuidanceAction('stopSearch')":'MeviWebNavParity.openStopSearch()';
+ const openDetails=native?'MeviGoogleNav.nativeGuidanceShowDetails()':'showGuidanceDetails()';
+ const voice=native?"MeviGoogleNav.nativeGuidanceAction('voice')":'MeviGoogleNav.toggleVoice()';
+ const overview=native?"MeviGoogleNav.nativeGuidanceAction('overview')":'toggleGuidanceMenu(false);MeviGoogleNav.showOverview()';
+ const end=native?"MeviGoogleNav.nativeGuidanceAction('end')":'stopRoute()';
+ const road=native&&n?.nativeGuidanceRoadEnabled?.()?
+  `<button type="button" id="mg-road-voice-toggle" onclick="MeviGoogleNav.nativeGuidanceAction('roadVoice')">Blitzer-Stimme: ${n?.nativeGuidanceRoadVoice?.()?'an':'aus'}</button>`:'';
+ return `<div id="mg-guidance-menu-actions" ${details?'hidden':''}>
+    <div class="mg-guidance-menu-heading"><button type="button" onclick="${close}" aria-label="Zurück zur Karte">←</button><strong>Navigation</strong></div>
+    <button type="button" onclick="${stopSearch}">Stopp suchen</button>
+    <button type="button" onclick="${openDetails}">Routendetails</button>
+    <button type="button" id="mg-voice-toggle" aria-pressed="${!muted}" onclick="${voice}">Ton: ${muted?'aus':'an'}</button>
+    ${road}
+    <button type="button" onclick="${overview}">Übersicht</button>
+    <button type="button" class="mg-guidance-menu-stop" onclick="${end}">Navigation beenden</button>
+   </div>
+   <div id="mg-guidance-menu-details" ${details?'':'hidden'}>
+    <div class="mg-guidance-menu-heading"><button type="button" onclick="${back}" aria-label="Zurück zum Navigationsmenü">←</button><strong>Routendetails</strong></div>
+    <div class="mg-guidance-details-content">${native?n?.nativeGuidanceDetailsHTML?.()||'':n?.guidanceDetailsHTML?.()||''}</div>
+   </div>`;
+}
 function activeGuidanceOverlay(compact=false){
  const n=window.MeviGoogleNav,trip=n?.guidanceTrip?.()||{};
  return `<div class="mg-web-guidance ${compact?'mg-web-guidance-split':''}">
@@ -6237,18 +6284,7 @@ function activeGuidanceOverlay(compact=false){
    </button>
   </div>
   <aside id="mg-guidance-menu" class="mg-guidance-menu" aria-label="Navigationsmenü" hidden>
-   <div id="mg-guidance-menu-actions">
-    <div class="mg-guidance-menu-heading"><button type="button" onclick="toggleGuidanceMenu(false)" aria-label="Zurück zur Karte">←</button><strong>Navigation</strong></div>
-    <button type="button" onclick="MeviWebNavParity.openStopSearch()">Stopp suchen</button>
-    <button type="button" onclick="showGuidanceDetails()">Routendetails</button>
-    <button type="button" id="mg-voice-toggle" aria-pressed="true" onclick="MeviGoogleNav.toggleVoice()">Ton: an</button>
-    <button type="button" onclick="toggleGuidanceMenu(false);MeviGoogleNav.showOverview()">Übersicht</button>
-    <button type="button" class="mg-guidance-menu-stop" onclick="stopRoute()">Navigation beenden</button>
-   </div>
-   <div id="mg-guidance-menu-details" hidden>
-    <div class="mg-guidance-menu-heading"><button type="button" onclick="toggleGuidanceMenu(true)" aria-label="Zurück zum Navigationsmenü">←</button><strong>Routendetails</strong></div>
-    <div class="mg-guidance-details-content">${n?.guidanceDetailsHTML?.()||''}</div>
-   </div>
+   ${guidanceMenuBodyHTML(false)}
   </aside>`}
  </div>`;
 }
@@ -6256,7 +6292,10 @@ function mapHTML(){
  const n=window.MeviGoogleNav;
  // The Android APK uses its native Navigation and Places SDKs, not Maps JavaScript.
  if(n?.isNativeMode?.()){
-  // Opt-in shared search UI: drawn by the Web layer while the native map is hidden.
+  const nativeMenuMode=n?.nativeGuidanceMode?.();
+  if(nativeMenuMode&&s.app==='nav'&&s.mode==='map')
+   return `<div class="map mg-navigation mg-route-preview-layout mg-native-guidance-menu">${n.mapBackdrop()}<aside class="mg-route-preview-pane mg-native-guidance-pane" aria-label="Navigationsmenü">${guidanceMenuBodyHTML(true)}</aside></div>`;
+  // Shared search UI: drawn by the Web layer while the native map is hidden.
   if(window.MeviAndroidSharedNav?.isOptedIn?.()&&s.app==='nav'&&s.nav==='search')
    return `<div class="map mg-navigation mg-native-shared-search ${s.keyboard?'searchmode':''}"><div id="mg-map" class="mg-map mg-native-map" aria-hidden="true"></div>${searchOverlay()}</div>`;
   const preview=s.app==='nav'&&s.mode==='map'?n.nativeRoutePreview?.():null;
@@ -6316,7 +6355,7 @@ DOCK_COLORS.lightshow='#dc7dff';DOCK_COLORS.tachonext='#23eaff';DOCK_COLORS.sudo
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');const nav=window.MeviGoogleNav;const showNavHeader=s.app==='nav'&&s.mode!=='split'&&s.nav==='browse'&&!!nav?.hasKey?.();$('cockpit').classList.toggle('nav-status-only',showNavHeader);$('cockpit').classList.toggle('mg-web-header',showNavHeader&&!nav?.isNativeMode?.());$('cockpit').classList.toggle('mg-driving-status',s.app==='nav'&&s.nav==='driving'&&!nav?.isNativeMode?.());let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3>'+(s.app==='navdashboard'?'<button type="button" onclick="showGuidanceMap()">Karte</button>':'')+'</div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();$('screen').innerHTML=html;if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.6", "build": 1212, "commit": "106fa085d910f90edfea3f8065841d3bb6e02499"};
+const CURRENT_BUILD={"version":"0.6.6","build":1236,"commit":"120721b9fe683736b97d76258be70133eda8fa23"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -7016,6 +7055,82 @@ async function openNativeMap(){
   return true;
  }catch(e){status('Android-Karte: '+(e.message||e));return false}
 }
+
+/* One shared guidance menu: Android returns SDK data, not a parallel UI. */
+let nativeGuidancePane='',nativeGuidanceState={muted:false,roadEnabled:false,roadVoice:false,details:[]};
+let nativeGuidanceFetch=null,nativeGuidanceSerial=0;
+function nativeGuidanceMode(){return nativeMode()?nativeGuidancePane:''}
+function nativeGuidanceMuted(){return nativeGuidanceState.muted===true}
+function nativeGuidanceRoadEnabled(){return nativeGuidanceState.roadEnabled===true}
+function nativeGuidanceRoadVoice(){return nativeGuidanceState.roadVoice===true}
+function nativeGuidanceDetailsHTML(){
+ const rows=Array.isArray(nativeGuidanceState.details)?nativeGuidanceState.details:[];
+ return rows.length?guidanceRowsHTML(rows.filter(r=>r&&typeof r.label==='string'&&typeof r.value==='string').map(r=>[r.label,r.value])):
+  '<p class="mg-search-message">Routendetails werden geladen …</p>';
+}
+function paintNativeGuidanceMenu(){
+ if(!nativeGuidancePane)return;
+ const details=document.querySelector('.mg-native-guidance-pane .mg-guidance-details-content');
+ if(details&&nativeGuidancePane==='details')details.innerHTML=nativeGuidanceDetailsHTML();
+ const voice=document.querySelector('.mg-native-guidance-pane #mg-voice-toggle');
+ if(voice){voice.textContent='Ton: '+(nativeGuidanceMuted()?'aus':'an');voice.setAttribute('aria-pressed',String(!nativeGuidanceMuted()))}
+ const road=document.querySelector('.mg-native-guidance-pane #mg-road-voice-toggle');
+ if(road){road.textContent='Blitzer-Stimme: '+(nativeGuidanceRoadVoice()?'an':'aus');road.setAttribute('aria-pressed',String(nativeGuidanceRoadVoice()))}
+}
+async function refreshNativeGuidanceMenu(){
+ if(!nativeMode()||!nativeGuidancePane)return false;
+ if(nativeGuidanceFetch)return nativeGuidanceFetch;
+ const serial=++nativeGuidanceSerial;
+ nativeGuidanceFetch=nativeRequest('navigation.guidance.read').then(reply=>{
+  if(serial!==nativeGuidanceSerial||!nativeGuidancePane)return false;
+  if(reply.guiding===false){closeNativeGuidanceMenu();return false}
+  const roadVisibilityChanged=nativeGuidanceState.roadEnabled!==(reply.roadEnabled===true);
+  nativeGuidanceState={muted:reply.muted===true,roadEnabled:reply.roadEnabled===true,
+   roadVoice:reply.roadVoice===true,details:Array.isArray(reply.details)?reply.details:[]};
+  if(roadVisibilityChanged)window.meviGoogleRerender?.();
+  else paintNativeGuidanceMenu();
+  return true;
+ }).catch(e=>{status('Routendetails: '+(e.message||e));return false})
+ .finally(()=>{nativeGuidanceFetch=null});
+ return nativeGuidanceFetch;
+}
+function toggleNativeGuidanceMenu(){
+ if(!nativeMode())return false;
+ if(nativeGuidancePane){closeNativeGuidanceMenu();return false}
+ nativeGuidancePane='actions';window.meviNativeGuidanceFocusMap?.();window.meviGoogleRerender?.();
+ void refreshNativeGuidanceMenu();return true;
+}
+function closeNativeGuidanceMenu(){
+ if(!nativeGuidancePane)return false;
+ nativeGuidancePane='';nativeGuidanceSerial++;window.meviGoogleRerender?.();return true;
+}
+function nativeGuidanceShowDetails(){
+ if(!nativeGuidancePane)return;
+ nativeGuidancePane='details';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
+}
+function nativeGuidanceBack(){
+ if(!nativeGuidancePane)return;
+ nativeGuidancePane='actions';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
+}
+async function nativeGuidanceAction(action){
+ if(!nativeMode()||!nativeGuidancePane)return false;
+ try{
+  if(action==='stopSearch'){
+   closeNativeGuidanceMenu();
+   if(!window.MeviAndroidSharedNav?.openSharedStopSearch)throw new Error('Gemeinsame Stopp-Suche fehlt.');
+   await window.MeviAndroidSharedNav.openSharedStopSearch();return true;
+  }
+  if(action==='end'){closeNativeGuidanceMenu();await nativeRequest('navigation.stop');return true}
+  if(action==='overview'){closeNativeGuidanceMenu();await nativeRequest('navigation.guidance.overview');return true}
+  const wire={voice:'navigation.guidance.voice',roadVoice:'navigation.guidance.roadVoice'}[action];
+  if(!wire)return false;
+  nativeGuidanceSerial++;
+  const reply=await nativeRequest(wire);
+  nativeGuidanceState={muted:reply.muted===true,roadEnabled:reply.roadEnabled===true,
+   roadVoice:reply.roadVoice===true,details:Array.isArray(reply.details)?reply.details:[]};
+  paintNativeGuidanceMenu();return true;
+ }catch(e){status('Navigationsmenü: '+(e.message||e));return false}
+}
 /** Second tap on the Navi dock button while the map is already in front: the APK
  * opens or closes its guidance actions (stop search, sound, overview, end).
  * Older APKs and a map without guidance ignore it. */
@@ -7033,14 +7148,10 @@ function toggleNativeDashboard(){
 }
 async function openNativeSearch(){
  try{
-  if(window.MeviAndroidSharedNav?.isOptedIn?.()){
-   await window.MeviAndroidSharedNav.connect();
-   window.MeviWebNavParity?.open();
-   return true;
-  }
-  const caps=await nativeRequest('capabilities');
-  if(!caps.capabilities?.nativePlacesSearch)throw new Error('Die installierte APK unterstützt die native Zielsuche noch nicht.');
-  await nativeRequest('navigation.search');
+  if(!window.MeviAndroidSharedNav?.connect||!window.MeviWebNavParity?.open)
+   throw new Error('Gemeinsame Navi-Oberfläche fehlt. Bitte die APK/Web-Dateien aktualisieren.');
+  await window.MeviAndroidSharedNav.connect();
+  window.MeviWebNavParity.open();
   return true;
  }catch(e){status('Android-Zielsuche: '+(e.message||e));return false}
 }
@@ -7524,6 +7635,10 @@ function guidanceDashboardData(){
   maxKmh:!simulation?guidanceMaxSpeed:null
  };
 }
+function guidanceRowsHTML(rows){
+ return '<dl class="mg-guidance-detail-list">'+rows.map(([label,value])=>
+  '<div class="mg-guidance-detail-row"><dt>'+text(label)+'</dt><dd>'+text(value)+'</dd></div>').join('')+'</dl>';
+}
 function guidanceDetailsHTML(){
  const now=Date.now(),remaining=Math.max(0,Math.round(Number.isFinite(liveTripMeters)?liveTripMeters:(routeData?.distanceMeters||0)));
  const seconds=Math.max(0,Math.round(Number.isFinite(liveTripMinutes)?liveTripMinutes*60:(routeData?.durationMillis||0)/1000));
@@ -7559,8 +7674,7 @@ function guidanceDetailsHTML(){
  add('Ansagen',voiceMuted?'aus':'an');
  const roadNote=window.MeviRoadAssist?.routeNote?.();
  if(roadNote)add('Blitzer',roadNote);
- return '<dl class="mg-guidance-detail-list">'+rows.map(([label,value])=>
-  '<div class="mg-guidance-detail-row"><dt>'+text(label)+'</dt><dd>'+text(value)+'</dd></div>').join('')+'</dl>';
+ return guidanceRowsHTML(rows);
 }
 function geoPoint(input){
  if(!input)return null;
@@ -8004,11 +8118,13 @@ function guidanceRunning(){return guidanceActive}
 function routeReadyHTML(){return '<div class="mg-ready-summary"><strong>'+text(routeSummary)+'</strong><div class="mg-ready-steps">'+stepsHTML(4)+'</div></div>'}
 function locationButton(){return '<button type="button" class="mg-my-location"'+(guidanceActive?' hidden':'')+' onclick="MeviGoogleNav.recenter()" aria-label="Auf eigenen Standort zentrieren" title="Auf eigenen Standort zentrieren">◎</button>'}
 function routeInfo(){return routeSummary}
-window.MeviGoogleNav={guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,toggleNativeDashboard,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
+window.MeviGoogleNav={refreshNativeRoutePreview:readNativePreview,
+ toggleNativeGuidanceMenu,closeNativeGuidanceMenu,refreshNativeGuidanceMenu,nativeGuidanceMode,
+ nativeGuidanceMuted,nativeGuidanceRoadEnabled,nativeGuidanceRoadVoice,nativeGuidanceDetailsHTML,
+ nativeGuidanceShowDetails,nativeGuidanceBack,nativeGuidanceAction,guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,toggleNativeActions,toggleNativeDashboard,resultsHTML,changeQuery,pick,buttons,favoritesHTML,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,originDescription,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,routeReadyHTML,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML,selectName:async(name)=>{changeQuery(name);await search(name,requestSerial);if(suggestions[0])await pick('suggest',0)}};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();
-
 
 </script><script id="mevicar-android-addressbook-script">/* Native address-book adapter, Stage 1: one Android DestinationStore, zero copied data.
    This does not replace Fable's native Places UI until its separate provider is ready.
@@ -8256,7 +8372,7 @@ function createProvider(methods){
  const required=['isReady','read','search','choose','saveSlot','saveFavorite','searchNearby','write'];
  if(!methods||required.some(key=>typeof methods[key]!=='function'))throw new TypeError('Navigation provider: missing method');
  // The UI communicates solely through this interface, not through any Google SDK.
- // Place details are optional for older/injected providers (the APK keeps native dialogs).
+ // Place details are optional for a browser provider; Android has no parallel dialog.
  const adapter=Object.fromEntries(required.map(key=>[key,(...args)=>methods[key](...args)]));
  adapter.details=typeof methods.details==='function'?(...args)=>methods.details(...args):async()=>null;
  adapter.startRoute=typeof methods.startRoute==='function'?(...args)=>methods.startRoute(...args):async()=>false;
@@ -8265,7 +8381,7 @@ function createProvider(methods){
  adapter.addStop=typeof methods.addStop==='function'?(...args)=>methods.addStop(...args):async()=>false;
  adapter.removeStop=typeof methods.removeStop==='function'?(...args)=>methods.removeStop(...args):async()=>false;
  adapter.resolveStop=typeof methods.resolveStop==='function'?(...args)=>methods.resolveStop(...args):async()=>null;
- for(const key of ['editSaved','moveFavorite','removeEntry','clearHistory','importPicker','exportPicker','cancel','savePlace']){
+ for(const key of ['editSaved','moveFavorite','removeEntry','clearHistory','importPicker','exportPicker','cancel','savePlace','externalDetails','routeExternal']){
    if(typeof methods[key]==='function')adapter[key]=(...args)=>methods[key](...args);
   }
   return Object.freeze(adapter);
@@ -8367,17 +8483,15 @@ root.MeviNavigationShared=Object.freeze({
  destination,distinct,snapshot,createProvider,createBrowserProvider,ICONS,SLOTS,defaultIcon,effectiveIcon,editSaved,moveFavorite,exportAddressBook,importAddressBook
 });
 })(window);
-
-</script><script id="mevicar-native-ui-provider-script">/* Opt-in shared navigation UI provider for the Android Hybrid WebView.
+</script><script id="mevicar-native-ui-provider-script">/* Default shared navigation UI provider for the Android Hybrid WebView.
    The native Kotlin DestinationStore owns the book; Android Places owns search;
    the native navigation owns the route (navigation.route.* only reads it and
    adds or removes single stops).
-   Disabled unless ?sharedNavPreview=1 on this DEVELOPMENT branch.
+   Required on Android: no fallback to separate native search dialogs.
    Does not expose a Web Google key or create shadow browser storage. */
 (function(root){
 'use strict';
-if(!root.MeviNativeBridge?.postMessage ||
-   new URLSearchParams(root.location?.search||'').get('sharedNavPreview')!=='1')return;
+if(!root.MeviNativeBridge?.postMessage)return;
 const book=root.MeviNativeBook,places=root.MeviAndroidPlaces,nav=root.MeviGoogleNav;
 const shared=root.MeviNavigationShared;
 if(!book||!places||!nav?.nativeRequest||!shared)return;
@@ -8481,6 +8595,25 @@ async function details(kind,index){
  resolvedPlace={...resolved,fetchedAt:Date.now()};
  const {openingNote,...detail}=resolved;
  return {...detail,hours:openingNote?[openingNote]:[]};
+}
+/** Details from a tap on the native Google map, not from a search-result index. */
+async function externalDetails(place){
+ await connect();
+ if(!place?.placeId)return null; // Long-pressed coordinates need no Places lookup.
+ const result=await places.resolve(place,place.name);
+ const {openingNote,...detail}=result;
+ return {...detail,hours:openingNote?[openingNote]:[]};
+}
+async function routeExternal(place){
+ await connect();
+ const point=shared.destination(place);
+ if(!point||!valid(point))throw new Error('Kartenpunkt hat keine gültige Position.');
+ await nativeRequest('navigation.open',{
+  lat:point.lat,lng:point.lng,title:point.name,
+  placeId:point.placeId||'',address:point.address||''
+ });
+ root.MeviWebNavParity?.close();
+ return true;
 }
 // Favorite toggle of the shared place view as single native book operations.
 async function savePlace(place,saved){
@@ -8612,20 +8745,32 @@ function setOpen(value){
  if(!searchOpen)places.cancel();
  else void refreshRoute();
 }
+async function openMapPlace(place){
+ await connect();
+ await refreshRoute();
+ if(!root.MeviWebNavParity?.openMapPlace)throw new Error('Gemeinsame Ortsansicht fehlt.');
+ return root.MeviWebNavParity.openMapPlace(place);
+}
+async function openSharedStopSearch(){
+ await connect();
+ await refreshRoute();
+ if(!route.hasRoute)throw new Error('Keine aktive oder geplante Route vorhanden.');
+ if(!root.MeviWebNavParity?.openStopSearch)throw new Error('Gemeinsame Navi-Oberfläche fehlt.');
+ root.MeviWebNavParity.openStopSearch();
+}
 const methods={
  isReady:()=>ready,read,search,choose,saveSlot,saveFavorite,searchNearby,
  write:()=>{throw new Error('Android-Daten dürfen nur mit einzelnen nativen Aktionen geändert werden.')},
- details,savePlace,routeContext,addStop,removeStop,resolveStop,startRoute,
+ details,externalDetails,routeExternal,savePlace,routeContext,addStop,removeStop,resolveStop,startRoute,
  editSaved,moveFavorite,removeEntry,clearHistory,importPicker,exportPicker,
  cancel:()=>places.cancel()
 };
 root.MeviSharedNavigationProvider=Object.freeze(methods);
 root.MeviAndroidSharedNav=Object.freeze({
- connect,refreshBook,refreshRoute,setOpen,isOpen:()=>searchOpen,isOptedIn:()=>true,
+ connect,refreshBook,refreshRoute,setOpen,openMapPlace,openSharedStopSearch,isOpen:()=>searchOpen,isOptedIn:()=>true,
  isReady:()=>ready,showError:warn
 });
 })(window);
-
 </script><script id="mevicar-navigation-parity-script">/* One destination search / address-book UI for Web and future Android WebView.
    Native opt-in requires an explicitly injected provider; existing hybrid APK is unchanged. */
 (function(){
@@ -8637,7 +8782,7 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
-let selectedReturnView='search';
+let selectedReturnView='search',externalMapPlace=false;
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const paths={
@@ -8713,7 +8858,7 @@ function searchHTML(){
  (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
  '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
 }
-/* POI list and place card mirror Fable's NavPoiListPanel / NavPlaceSheet.
+/* Single POI list and place card for Web and Android map interactions.
    Details are fetched only after one item is opened (Google Enterprise billing). */
 const placeTypes={gas_station:'Tankstelle',electric_vehicle_charging_station:'Ladestation',parking:'Parkplatz',
  restaurant:'Restaurant',fast_food_restaurant:'Schnellrestaurant',cafe:'Café',bakery:'Bäckerei',
@@ -8886,12 +9031,12 @@ function open(){
  }
  const context=provider.routeContext();
  returnNav=context.nativeOwned?'browse':s.nav==='preview'?'preview':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
- view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
+ externalMapPlace=false;view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();window.MeviAndroidSharedNav?.setOpen(true);
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
 function close(){
- pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
+ externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
  rerender();window.MeviAndroidSharedNav?.setOpen(false);provider.cancel?.();
 }
 function input(value){
@@ -8973,7 +9118,7 @@ function openStopSearch(){
  if(context.stops.length>=context.maxStops){stopError='Maximal acht Zwischenstopps möglich.';return}
  returnNav=context.nativeOwned?'browse':context.active?'driving':'ready';stopMode=true;stopError='';pendingSlot='';pendingFavorite=false;
  view='search';tab='recent';s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
- provider.search('');rerender();
+ provider.search('');window.MeviAndroidSharedNav?.setOpen(true);rerender();
 }
 async function finishStop(place){
  if(!place)return false;
@@ -9004,6 +9149,33 @@ function backToSearch(){
  placeSerial++;placeState=null;poiState=null;view='search';s.query='';
  provider.search('');rerender();
 }
+/** Native map taps enter the normal place card, without a parallel Kotlin UI.
+    A coordinate-only tap is a real destination; Places details require an ID. */
+function openMapPlace(place){
+ if(!native)return false;
+ const item=shared.destination(place);
+ if(!item||!Number.isFinite(item.lat)||!Number.isFinite(item.lng))return false;
+ externalMapPlace=true;returnNav='browse';stopMode=false;stopError='';
+ pendingSlot='';pendingFavorite=false;editor=null;poiState=null;
+ placeState=item;placeIndex=-1;placeBack='search';
+ placeError='';placeLoading=!!item.placeId;view='place';s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;
+ const serial=++placeSerial;
+ window.MeviAndroidSharedNav?.setOpen(true);
+ rerender();
+ if(item.placeId&&provider.externalDetails){
+  void Promise.resolve(provider.externalDetails(item)).then(detail=>{
+   if(serial!==placeSerial||!externalMapPlace||view!=='place')return;
+   if(detail)placeState={...placeState,...detail};
+   else placeError='Google-Ortsdetails sind nicht verfügbar.';
+  }).catch(error=>{
+   if(serial===placeSerial&&externalMapPlace&&view==='place')
+    placeError='Ortsdaten konnten nicht geladen werden: '+String(error.message||error);
+  }).finally(()=>{
+   if(serial===placeSerial&&externalMapPlace&&view==='place'){placeLoading=false;rerender()}
+  });
+ }
+ return true;
+}
 async function showPlace(index){
  const items=view==='results'?data().poiResults:data().suggestions;
  if(!Number.isInteger(index)||!items?.[index])return;
@@ -9022,9 +9194,11 @@ async function showPlace(index){
  if(serial===placeSerial&&view==='place'){placeLoading=false;rerender()}
 }
 function retryPlace(){
+ if(externalMapPlace&&placeState){openMapPlace(placeState);return}
  if(view==='place'&&placeIndex>=0)void showPlace(placeIndex);
 }
 function backFromPlace(){
+ if(externalMapPlace){close();return}
  if(s.nav==='preview'){
   placeSerial++;placeLoading=false;placeState=null;view=selectedReturnView;
   s.nav='search';s.keyboard=false;s.query='';provider.search('');rerender();return;
@@ -9061,6 +9235,13 @@ async function routeResult(index){
 async function routePlace(){
  if(s.nav==='preview'){await window.startRoute?.();return}
  if(!placeState||!Number.isFinite(placeState.lat)||!Number.isFinite(placeState.lng))return;
+ if(externalMapPlace){
+  try{
+   if(!provider.routeExternal)throw new Error('Kartenpunkt-Navigation ist nicht verfügbar.');
+   await provider.routeExternal({...placeState});
+  }catch(error){nativeFailure(error)}
+  return;
+ }
  await routeResult(placeIndex);
 }
 
@@ -9122,10 +9303,9 @@ function nativeFailure(e){window.MeviAndroidSharedNav?.showError?.(e);window.ale
 function nativeImport(){if(provider.importPicker)void provider.importPicker().catch(nativeFailure)}
 window.openSearch=open;
 window.searchOverlay=function(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()};
-window.MeviWebNavParity={selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
-})();
-</script><script id="mevicar-homeassistant-script">/* MeviCar Next – Home Assistant. Mirrors Classic's FamilyPanel and separate
+})();</script><script id="mevicar-homeassistant-script">/* MeviCar Next – Home Assistant. Mirrors Classic's FamilyPanel and separate
    Road Assist API access without copying secrets or weakening HA security. */
 (function(){
  'use strict';
@@ -9580,7 +9760,7 @@ const state={tab:'agenda',month:new Date().getMonth(),year:new Date().getFullYea
   googleCalendars:[],googleEvents:[],imports:[],loading:false,message:'',error:'',
   mounted:false,timer:null,requestId:0,googlePending:false,lastRefresh:0};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
-const $$=id=>document.getElementById(id);
+const $=id=>document.getElementById(id);
 function saveSettings(){
  try{localStorage.setItem(STORE,JSON.stringify({clientId:state.clientId,hidden:state.hidden}))}catch{}
 }
@@ -9930,8 +10110,8 @@ function html(compact=false){
 }
 function paint(){
  const root=document.querySelector('.mevi-cal-shell');if(!root)return;
- const content=$$('mevi-cal-content');if(content)content.innerHTML=root.classList.contains('compact')&&state.tab!=='sources'?compactHTML():contentHTML();
- const status=$$('mevi-cal-status');if(status)status.innerHTML=statusHTML();
+ const content=$('mevi-cal-content');if(content)content.innerHTML=root.classList.contains('compact')&&state.tab!=='sources'?compactHTML():contentHTML();
+ const status=$('mevi-cal-status');if(status)status.innerHTML=statusHTML();
  for(const button of root.querySelectorAll('.mevi-cal-tabs button')){
   const key=button.textContent==='7 Tage'?'agenda':button.textContent==='Monat'?'month':'sources';
   const active=key===state.tab;button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));
@@ -9941,7 +10121,7 @@ function tab(value){if(!['agenda','month','sources'].includes(value))return;stat
 function month(offset){const d=new Date(state.year,state.month+offset,1);state.month=d.getMonth();state.year=d.getFullYear();state.selectedDay=dayKey(d);paint()}
 function today(){const d=new Date();state.month=d.getMonth();state.year=d.getFullYear();state.selectedDay=dayKey(d);paint()}
 function day(value){if(!/^\d{4}-\d{2}-\d{2}$/.test(value))return;state.selectedDay=value;paint()}
-function chooseFile(){$$('mevi-cal-file')?.click()}
+function chooseFile(){$('mevi-cal-file')?.click()}
 async function importFile(file){
  if(!file)return;
  state.error='';state.message='';
@@ -15989,7 +16169,6 @@ function unmount(){clearTimeout(timer);timer=null;paused=true;document.removeEve
 function mount(){unmount();root=document.querySelector('.tt-root');if(!root)return;if(!game)game=new Game();root.addEventListener('click',click);document.addEventListener('keydown',key);document.addEventListener('visibilitychange',visibility);draw();}
 global.meviTetrisHTML=html;global.meviTetrisMount=mount;global.meviTetrisUnmount=unmount;
 })(typeof window==='undefined'?globalThis:window);
-
 </script><script id="mevicar-bottle-game-script">/* MeviCar Next – "Wer ist schuld?" party bottle spinner.
    A local, playful random selector: no server, no personal data, no hidden weighting. */
 (function(root){
@@ -16320,7 +16499,6 @@ Object.assign(api,{connect,active,remove,view,episodes,playbackURL,epg,normalize
 if(typeof module!=='undefined'&&module.exports)module.exports=api;
 global.meviXtream=api;
 })(typeof window==='undefined'?globalThis:window);
-
 </script><script>/* MeviTV: public broadcaster HLS streams, local favorites and user playlists. */
 (function(global){
 'use strict';
@@ -17304,6 +17482,5 @@ global.meviTVHTML=html;global.meviTVMount=mount;global.meviTVUnmount=unmount;glo
 // Begin fetching the last IPTV catalogue at app startup, before TV is opened.
 void restoreLastPlaylist();
 })(typeof window==='undefined'?globalThis:window);
-
 </script></body></html>
 

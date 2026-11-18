@@ -1,13 +1,12 @@
-/* Opt-in shared navigation UI provider for the Android Hybrid WebView.
+/* Default shared navigation UI provider for the Android Hybrid WebView.
    The native Kotlin DestinationStore owns the book; Android Places owns search;
    the native navigation owns the route (navigation.route.* only reads it and
    adds or removes single stops).
-   Disabled unless ?sharedNavPreview=1 on this DEVELOPMENT branch.
+   Required on Android: no fallback to separate native search dialogs.
    Does not expose a Web Google key or create shadow browser storage. */
 (function(root){
 'use strict';
-if(!root.MeviNativeBridge?.postMessage ||
-   new URLSearchParams(root.location?.search||'').get('sharedNavPreview')!=='1')return;
+if(!root.MeviNativeBridge?.postMessage)return;
 const book=root.MeviNativeBook,places=root.MeviAndroidPlaces,nav=root.MeviGoogleNav;
 const shared=root.MeviNavigationShared;
 if(!book||!places||!nav?.nativeRequest||!shared)return;
@@ -111,6 +110,25 @@ async function details(kind,index){
  resolvedPlace={...resolved,fetchedAt:Date.now()};
  const {openingNote,...detail}=resolved;
  return {...detail,hours:openingNote?[openingNote]:[]};
+}
+/** Details from a tap on the native Google map, not from a search-result index. */
+async function externalDetails(place){
+ await connect();
+ if(!place?.placeId)return null; // Long-pressed coordinates need no Places lookup.
+ const result=await places.resolve(place,place.name);
+ const {openingNote,...detail}=result;
+ return {...detail,hours:openingNote?[openingNote]:[]};
+}
+async function routeExternal(place){
+ await connect();
+ const point=shared.destination(place);
+ if(!point||!valid(point))throw new Error('Kartenpunkt hat keine gültige Position.');
+ await nativeRequest('navigation.open',{
+  lat:point.lat,lng:point.lng,title:point.name,
+  placeId:point.placeId||'',address:point.address||''
+ });
+ root.MeviWebNavParity?.close();
+ return true;
 }
 // Favorite toggle of the shared place view as single native book operations.
 async function savePlace(place,saved){
@@ -242,16 +260,29 @@ function setOpen(value){
  if(!searchOpen)places.cancel();
  else void refreshRoute();
 }
+async function openMapPlace(place){
+ await connect();
+ await refreshRoute();
+ if(!root.MeviWebNavParity?.openMapPlace)throw new Error('Gemeinsame Ortsansicht fehlt.');
+ return root.MeviWebNavParity.openMapPlace(place);
+}
+async function openSharedStopSearch(){
+ await connect();
+ await refreshRoute();
+ if(!route.hasRoute)throw new Error('Keine aktive oder geplante Route vorhanden.');
+ if(!root.MeviWebNavParity?.openStopSearch)throw new Error('Gemeinsame Navi-Oberfläche fehlt.');
+ root.MeviWebNavParity.openStopSearch();
+}
 const methods={
  isReady:()=>ready,read,search,choose,saveSlot,saveFavorite,searchNearby,
  write:()=>{throw new Error('Android-Daten dürfen nur mit einzelnen nativen Aktionen geändert werden.')},
- details,savePlace,routeContext,addStop,removeStop,resolveStop,startRoute,
+ details,externalDetails,routeExternal,savePlace,routeContext,addStop,removeStop,resolveStop,startRoute,
  editSaved,moveFavorite,removeEntry,clearHistory,importPicker,exportPicker,
  cancel:()=>places.cancel()
 };
 root.MeviSharedNavigationProvider=Object.freeze(methods);
 root.MeviAndroidSharedNav=Object.freeze({
- connect,refreshBook,refreshRoute,setOpen,isOpen:()=>searchOpen,isOptedIn:()=>true,
+ connect,refreshBook,refreshRoute,setOpen,openMapPlace,openSharedStopSearch,isOpen:()=>searchOpen,isOptedIn:()=>true,
  isReady:()=>ready,showError:warn
 });
 })(window);
