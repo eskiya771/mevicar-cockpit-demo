@@ -9,7 +9,7 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
-let selectedReturnView='search',externalMapPlace=false;
+let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false;
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=shared.escapeHtml;
 const paths={
@@ -253,13 +253,14 @@ function open(){
   return;
  }
  const context=provider.routeContext();
+ bookOpenedFromSearch=false;
  returnNav=context.nativeOwned?'browse':s.nav==='preview'?'preview':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
  externalMapPlace=false;view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();window.MeviAndroidSharedNav?.setOpen(true);
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
 function close(){
- externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
+ bookOpenedFromSearch=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
  window.meviNavSearchClosed?.();
  rerender();window.MeviAndroidSharedNav?.setOpen(false);provider.cancel?.();
 }
@@ -479,14 +480,19 @@ function book(){
   void window.MeviAndroidSharedNav.connect().then(book).catch(e=>window.MeviAndroidSharedNav.showError?.(e));
   return;
  }
- if(s.nav!=='search'){
+ // Back returns to the entry view; only a book opened from search returns to search.
+ bookOpenedFromSearch=s.nav==='search';
+ if(!bookOpenedFromSearch){
   returnNav=provider.routeContext().nativeOwned?'browse':s.nav;
   s.query='';stopMode=false;stopError='';pendingSlot='';pendingFavorite=false;editor=null;
   provider.search('');
  }
  view='book';s.nav='search';s.keyboard=false;filter='';rerender();window.MeviAndroidSharedNav?.setOpen(true)
 }
-function bookBack(){editor=null;view='search';s.query='';provider.search('');rerender()}
+function bookBack(){
+ if(!bookOpenedFromSearch){close();return}
+ editor=null;view='search';s.query='';provider.search('');rerender();
+}
 function add(){pendingFavorite=true;view='search';s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
 function write(changes){provider.write(changes);rerender()}
 async function remove(kind,i){
