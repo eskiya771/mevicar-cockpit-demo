@@ -1,14 +1,14 @@
 /* Shared Web/APK app shell. The renderer is loaded only when this app opens. */
 (function () {
   'use strict';
-  const effects = ['Laser-Show', 'Galaxie', 'Neon-Tunnel', 'Energiekern'];
+  const effects = ['Laser Valley', 'Black Hole', 'Hyperdrive', 'Solar Storm'];
   const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const state = { effect: 0, auto: !reduced, paused: !!reduced, speed: 1, quality: 'auto', time: 0 };
   let active = null;
   function html() {
     return `<section class="d3-root" aria-label="3D Demo"><div class="d3-stage"></div>
       <header class="d3-heading"><div><span class="d3-eyebrow">MEVICAR · 3D EXPERIENCE</span><h2>Neon Universe</h2></div><span class="d3-badge">LIVE 3D</span></header>
-      <div class="d3-caption"><span class="d3-index">01 / 04</span><strong class="d3-name">Laser-Show</strong><span class="d3-hint">Ziehen verändert die Perspektive</span></div>
+      <div class="d3-caption"><span class="d3-index">01 / 04</span><strong class="d3-name">Laser Valley</strong><span class="d3-hint">Ziehen verändert die Perspektive</span></div>
       <div class="d3-message" role="status">3D-Szene wird geladen …</div>
       <div class="d3-panel"><div class="d3-effects" role="group" aria-label="3D Effekt">${effects.map((name, i) => `<button type="button" data-effect="${i}" aria-pressed="false"><span>0${i + 1}</span>${name}</button>`).join('')}</div>
       <div class="d3-controls"><button type="button" data-action="pause">Pause</button><button type="button" data-action="auto" aria-pressed="false">Auto-Show</button><label>Tempo <select aria-label="Animationstempo" data-control="speed"><option value="0.5">0,5×</option><option value="1">1×</option><option value="1.5">1,5×</option><option value="2">2×</option></select></label><label>Qualität <select aria-label="Grafikqualität" data-control="quality"><option value="auto">Auto</option><option value="eco">Sparsam</option><option value="high">Hoch</option></select></label></div></div>

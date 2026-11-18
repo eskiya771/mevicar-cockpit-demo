@@ -25,85 +25,201 @@ export function createDemo(host, state, onChange, onFailure) {
     const sprite = new THREE.Sprite(mat(new THREE.SpriteMaterial({ map: glow, color, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true, opacity: .8 })));
     sprite.scale.setScalar(size); parent.add(sprite); return sprite;
   }
-  function stars(count, galaxy = false) {
+  function stars(count) {
     const positions = new Float32Array(count * 3), colors = new Float32Array(count * 3), color = new THREE.Color();
     for (let i = 0; i < count; i++) {
-      const r = galaxy ? Math.pow(Math.random(), .6) * 8 : 7 + Math.random() * 24;
-      const a = galaxy ? (i % 5) / 5 * Math.PI * 2 + r * .55 + (Math.random() - .5) * .6 : Math.random() * Math.PI * 2;
-      positions[i*3] = Math.cos(a)*r; positions[i*3+1] = galaxy ? (Math.random()-.5)*(.2+r*.09) : (Math.random()-.5)*22; positions[i*3+2] = Math.sin(a)*r;
-      color.setHSL(galaxy ? .52 + r*.025 : .56 + Math.random()*.24, .8, .5 + Math.random()*.3);
+      const r = 7 + Math.random() * 24;
+      const a = Math.random() * Math.PI * 2;
+      positions[i*3] = Math.cos(a)*r; positions[i*3+1] = (Math.random()-.5)*22; positions[i*3+2] = Math.sin(a)*r;
+      color.setHSL(.56 + Math.random()*.24, .8, .5 + Math.random()*.3);
       color.toArray(colors,i*3);
     }
     const geometry = geo(new THREE.BufferGeometry());
     geometry.setAttribute('position',new THREE.BufferAttribute(positions,3)); geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
-    const object = new THREE.Points(geometry,mat(new THREE.PointsMaterial({ size: galaxy ? .11 : .065, map: glow, vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false })));
+    const object = new THREE.Points(geometry,mat(new THREE.PointsMaterial({ size: .065, map: glow, vertexColors:true, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false })));
     group.add(object); return object;
   }
-  function ring(radius, tube, color, parent = group) { return mesh(new THREE.TorusGeometry(radius,tube,8,96),basic(color),parent); }
   function clearScene() { world.clear(); geometries.forEach(g=>g.dispose()); materials.forEach(m=>m.dispose()); geometries.clear(); materials.clear(); }
-  function select(effect) {
-    if(disposed)return;
-    clearScene(); state.effect = effect; autoTime = 0;
-    group = new THREE.Group(); world.add(group); yaw = 0; pitch = 0;
-    if (effect === 0) {
-      distance = 12;
-      stars(1500);
-      const grid = new THREE.GridHelper(60,60,0x3a1b80,0x112746); grid.position.y = -2.8; group.add(grid); geometries.add(grid.geometry); materials.add(grid.material);
-      const nucleus = new THREE.Group(); group.add(nucleus);
-      const knot = mesh(new THREE.TorusKnotGeometry(1.15,.025,220,8,2,3),basic(0x72fff4),nucleus);
-      const orbit = ring(1.75,.018,0xb866ff,nucleus); orbit.rotation.x = .8;
-      halo(0x722bff,5,nucleus);
-      const beams = [];
-      const cylinder = geo(new THREE.CylinderGeometry(.018,.018,1,6));
-      const up = new THREE.Vector3(0,1,0), dir = new THREE.Vector3(), end = new THREE.Vector3();
-      for(let i=0;i<20;i++) {
-        const pivot = new THREE.Vector3((i-9.5)*.57,-2.7,-1);
-        const color = new THREE.Color().setHSL(.48+(i/20)*.35,1,.65);
-        const beam = new THREE.Mesh(cylinder,basic(color,.7)); group.add(beam);
-        const haze = new THREE.Mesh(cylinder,basic(color,.035)); group.add(haze);
-        const foot = halo(color,.7); foot.position.copy(pivot);
-        beams.push({beam,haze,pivot});
+  // Surface animation runs on the GPU. Meshes and buffers stay fixed between frames.
+  function surface(geometry, fragment, { additive = false, vertex = '' } = {}) {
+    const material = mat(new THREE.ShaderMaterial({
+      uniforms: { clock: { value: 0 } },
+      side: THREE.DoubleSide,
+      transparent: additive,
+      depthWrite: !additive,
+      blending: additive ? THREE.AdditiveBlending : THREE.NormalBlending,
+      vertexShader: `
+        uniform float clock;
+        varying vec3 local;
+        varying vec2 coords;
+        void main() {
+          vec3 p = position;
+          coords = uv;
+          ${vertex}
+          local = p;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.);
+        }`,
+      fragmentShader: `
+        uniform float clock;
+        varying vec3 local;
+        varying vec2 coords;
+        float filament(float phase, float width) {
+          float d = abs(sin(phase));
+          return exp(-d * d / max(width, fwidth(phase) * fwidth(phase)));
+        }
+        void main() {
+          ${fragment}
+          #include <colorspace_fragment>
+        }`
+    }));
+    return mesh(geometry, material);
+  }
+
+  function laserValley() {
+    distance = 10;
+    stars(1900);
+    const land = new THREE.PlaneGeometry(72, 86, 144, 128);
+    land.rotateX(-Math.PI / 2);
+    land.translate(0, -2.6, -31);
+    const terrain = surface(land, `
+      vec2 cell = local.xz * .78;
+      vec2 lines = abs(fract(cell - .5) - .5) / max(fwidth(cell), vec2(.001));
+      float grid = exp(-min(lines.x, lines.y) * 1.2);
+      float sweep = exp(-pow(sin(local.z * .13 + clock * 1.35) * 3., 2.));
+      vec3 color = mix(vec3(.008,.009,.04), vec3(.065,.012,.13), clamp(local.y * .17 + .4, 0., 1.));
+      vec3 neon = mix(vec3(.01,.65,1.), vec3(.95,.025,.35), smoothstep(3.,10.,abs(local.x)));
+      gl_FragColor = vec4(color + neon * grid * (.3 + sweep) * exp(-abs(local.z) * .022), 1.);
+    `, { vertex: `
+      float z = p.z - clock * 2.;
+      float ridge = sin(p.x * .72 + z * .21) + .55 * cos(z * .61 - p.x * .36);
+      p.y += smoothstep(2.4, 11., abs(p.x)) * (3.4 + ridge * 2.1);
+    ` });
+    const sun = surface(new THREE.CircleGeometry(6.7, 96), `
+      float stripes = smoothstep(-.16,.12,sin(coords.y*105. + clock*.65) + (coords.y-.35)*4.);
+      if (stripes < .05) discard;
+      gl_FragColor = vec4(mix(vec3(1.,.025,.18),vec3(1.,.77,.09),coords.y)*stripes,1.);
+    `);
+    sun.position.set(0, 4.5, -24);
+    halo(0xff345a, 23).position.copy(sun.position);
+    const fans = [];
+    const ray = new THREE.ConeGeometry(.48, 13, 14, 1, true);
+    ray.translate(0, -6.5, 0);
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < 8; i++) {
+        const beam = mesh(ray, basic(i % 3 ? 0x29e8ff : 0xff358f, .12));
+        beam.position.set(side * (3.6 + i * .23), -2.4, 2 - i * 1.8);
+        beam.rotation.order = 'YXZ';
+        fans.push({beam, side, i});
       }
-      tick = t => {
-        knot.rotation.set(t*.19,t*.27,0); orbit.rotation.y=t*.3;
-        nucleus.position.y=.15+Math.sin(t*.5)*.3;
-        beams.forEach(({beam,haze,pivot},i)=>{
-          end.set(Math.sin(t*.38+i*.33)*8,5.5+Math.sin(t*.4+i*.7)*2,-5+Math.cos(t*.23+i*.5)*5);
-          dir.copy(end).sub(pivot);const length=dir.length();dir.normalize();
-          beam.position.copy(pivot).add(end).multiplyScalar(.5);beam.quaternion.setFromUnitVectors(up,dir);beam.scale.y=length;
-          haze.position.copy(beam.position);haze.quaternion.copy(beam.quaternion);haze.scale.set(14,length,14);
-        });
-      };
-    } else if(effect === 1) {
-      distance=13; const galaxy=stars(16000,true); stars(1300);
-      const core=halo(0xafdfff,3.5); const warm=halo(0xffb5fc,1.4); warm.position.y=.1;
-      group.rotation.x=.45;
-      tick=t=>{ galaxy.rotation.y=t*.065;core.material.opacity=.65+Math.sin(t*.8)*.1; };
-    } else if(effect === 2) {
-      distance=3.5; stars(1600);
-      const rings=[];
-      for(let i=0;i<42;i++) {
-        const color=new THREE.Color().setHSL(.5+i*.009,1,.6);
-        const hoop=mesh(new THREE.TorusGeometry(4.2,.025,6,6),basic(color));
-        rings.push(hoop);
-      }
-      tick=t=>rings.forEach((hoop,i)=>{
-        const z=-((i*2.2-t*5)%92+92)%92;
-        hoop.position.set(Math.sin(z*.035+t*.3)*1.5,Math.cos(z*.035+t*.3)*1.1,z);
-        hoop.rotation.z=z*.035+t*.1;hoop.material.opacity=Math.max(.06,1+z/100);hoop.material.transparent=true;
-      });
-    } else {
-      distance=10; stars(2500);
-      const core=mesh(new THREE.IcosahedronGeometry(1.4,2),mat(new THREE.MeshBasicMaterial({color:0x74f5ff,wireframe:true,transparent:true,opacity:.7,blending:THREE.AdditiveBlending})));
-      halo(0x614aff,5);halo(0x50ffe3,2.5);
-      const orbits=Array.from({length:7},(_,i)=>{const r=ring(2+i*.19,.016,new THREE.Color().setHSL(.48+i*.047,1,.65));r.rotation.set(i*.48,i*.63,0);return r;});
-      const count=3500,positions=new Float32Array(count*3);
-      for(let i=0;i<count;i++) {const a=Math.random()*Math.PI*2,b=Math.acos(2*Math.random()-1),r=3+Math.random()*2;positions.set([r*Math.sin(b)*Math.cos(a),r*Math.cos(b),r*Math.sin(b)*Math.sin(a)],i*3);}
-      const geometry=geo(new THREE.BufferGeometry());geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));
-      const particles=new THREE.Points(geometry,mat(new THREE.PointsMaterial({size:.055,map:glow,color:0xa18aff,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false})));group.add(particles);
-      tick=t=>{ core.rotation.set(t*.12,t*.21,0);core.scale.setScalar(1+Math.sin(t*1.2)*.08);particles.rotation.y=-t*.07;orbits.forEach((r,i)=>{r.rotation.x=t*.15+i*.48;r.rotation.y=t*(i%2?-.13:.13)+i*.63;}); };
     }
-    onChange(); render();
+    return t => {
+      terrain.material.uniforms.clock.value = sun.material.uniforms.clock.value = t;
+      for (const {beam, side, i} of fans) {
+        beam.rotation.set(Math.PI + .27 * Math.cos(t*.63 + i*.19), t*.21, side * (.52 + .45*Math.sin(t*.89+i*.36)));
+      }
+    };
+  }
+
+  function blackHole() {
+    distance = 10;
+    stars(6000);
+    const disk = surface(new THREE.RingGeometry(1.22, 5.8, 160, 16), `
+      float r = length(local.xy);
+      float a = atan(local.y,local.x);
+      float phase = 5.*a + 16.*log(r) - clock*3./sqrt(r);
+      float gas = .5+.5*sin(r*37. + 2.*sin(phase) + sin(3.*a-clock+r*9.));
+      float swirls = .5+.5*cos(phase + 1.2*sin(phase*2.));
+      float falloff = exp(-(r-1.22)*.55) * (1.-smoothstep(4.2,5.8,r));
+      vec3 color = mix(vec3(.97,.16,.025),vec3(1.,.84,.44),gas*gas);
+      gl_FragColor = vec4(color*(.28+gas*.8+swirls*.3), falloff);
+    `, { additive: true });
+    disk.rotation.set(-1.35, .02, 0);
+    mesh(new THREE.SphereGeometry(1.34, 64, 40), mat(new THREE.MeshBasicMaterial({color:0x020106})));
+    const lens = surface(new THREE.RingGeometry(1.32, 2.42, 144), `
+      float r = length(local.xy);
+      float a = atan(local.y,local.x);
+      float warp = r - 1.38 - .13*(.5+.5*sin(a));
+      float band = exp(-abs(warp)*10.);
+      float ripple = .55+.45*sin(warp*140. + 3.*sin(a*7.-clock*1.7));
+      gl_FragColor = vec4(mix(vec3(1.,.22,.045),vec3(1.,.93,.72),band), band*(.45+.55*ripple));
+    `, { additive: true });
+    group.rotation.z = -.21;
+    return t => {
+      disk.material.uniforms.clock.value = lens.material.uniforms.clock.value = t;
+      disk.rotation.x = -1.34 + .12*Math.sin(t*.24);
+    };
+  }
+
+  function hyperspace() {
+    distance = 1;
+    const path = new THREE.CylinderGeometry(4, 4, 116, 96, 110, true);
+    path.rotateX(Math.PI/2);
+    path.translate(0,0,-50);
+    const tunnel = surface(path, `
+      float depth = -local.z;
+      float a = coords.x * 6.2831853;
+      float track = a*6. + depth*.17 + .8*sin(depth*.12-clock*.7);
+      float runner = depth*.17 + clock*3. + .48*sin(track);
+      float rail = filament(track,.004);
+      float pulse = filament(runner,.012);
+      float tile = filament(a*18.+depth*.2,.01);
+      vec3 hue = mix(vec3(.015,.55,1.),vec3(.86,.025,.52),.5+.5*sin(track*.5));
+      vec3 c = hue*(.025 + .9*rail + .58*pulse + .13*tile) + vec3(.6,.82,1.)*rail*pulse;
+      gl_FragColor = vec4(mix(vec3(.035,.008,.105),c,exp(-max(depth,0.)*.024)),1.);
+    `, { vertex: `
+      float z = p.z;
+      p.xy += vec2(sin(z*.056 + clock*.42), cos(z*.073+clock*.35)) * smoothstep(0.,32.,-z)*5.;
+    ` });
+    return t => { tunnel.material.uniforms.clock.value=t; tunnel.rotation.z=.16*Math.sin(t*.32); };
+  }
+
+  function solarStorm() {
+    distance = 8;
+    stars(3500);
+    const star = surface(new THREE.SphereGeometry(1.95, 96, 64), `
+      vec3 p = normalize(local);
+      vec3 q = p*5. + vec3(clock*.19,0.,-clock*.13);
+      for(int i=0; i<3; i++) q += .62*sin(q.yzx*1.62 + float(i) + clock*.17);
+      float fold = sin(q.x*3. + cos(q.z*3.) + sin(q.y*4.));
+      float veins = exp(-abs(fold)*6.);
+      float hot = .5+.5*sin(q.x+q.y*1.8+q.z);
+      vec3 c = mix(vec3(.24,.009,.003),vec3(1.,.36,.018),hot) + vec3(1.,.72,.18)*veins;
+      gl_FragColor = vec4(c,1.);
+    `);
+    halo(0xff5414, 8.8);
+    const loops = [];
+    for (let i=0; i<16; i++) {
+      const base = new THREE.Group();
+      base.rotation.set(i*.84, i*2.399, i*.45);
+      group.add(base);
+      const points = [];
+      for (let j=0; j<=44; j++) {
+        const a = j*Math.PI/44;
+        points.push(new THREE.Vector3(Math.cos(a)*.67,1.7+Math.sin(a)*(1+i%4*.22),.24*Math.sin(2*a)));
+      }
+      const strand = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points),54,.021,6,false),basic(0xffa147,.88),base);
+      loops.push(strand);
+    }
+    return t => {
+      star.material.uniforms.clock.value=t;
+      group.rotation.y=t*.14;
+      loops.forEach((strand,i)=>{
+        strand.scale.y=.93+.14*Math.sin(t*1.12+i);
+        strand.rotation.y=.55*Math.sin(t*.57+i);
+      });
+    };
+  }
+
+  function select(effect) {
+    if (disposed) return;
+    clearScene();
+    state.effect = effect;
+    autoTime = yaw = pitch = 0;
+    group = new THREE.Group();
+    world.add(group);
+    tick = [laserValley, blackHole, hyperspace, solarStorm][effect]();
+    onChange();
+    render();
   }
   function resize() {
     if(disposed)return;
@@ -115,8 +231,9 @@ export function createDemo(host, state, onChange, onFailure) {
   function render() {
     if(disposed||!group)return;
     tick(state.time);
+    const drift = state.effect === 2 ? 0 : Math.sin(state.time * .22) * .11;
     const d=distance*(camera.aspect<1.1?1.35:1);
-    camera.position.set(Math.sin(yaw)*d, Math.sin(pitch)*d+(state.effect===1?5:1), Math.cos(yaw)*d);
+    camera.position.set(Math.sin(yaw + drift)*d, Math.sin(pitch)*d+(state.effect===2?0:1), Math.cos(yaw + drift)*d);
     camera.lookAt(0,state.effect===2?0:-.2,state.effect===2?-25:0);
     renderer.render(world,camera);
   }
