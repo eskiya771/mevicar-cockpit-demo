@@ -118,6 +118,9 @@ function localMatches(query){
 }
 function searchRows(){
  const d=data(),q=(s.query||'').trim();
+ // On iPhone the initial keyboard state is deliberately blank: no recent
+ // destinations should appear behind the virtual keys until typing starts.
+ if(touchKeyboard&&keyboardVisible&&!q)return '';
  if(q){
   const local=localMatches(q);
   const remote=q.length<2?'<div class="mg-parity-empty">Für Online-Ergebnisse mindestens zwei Zeichen eingeben.</div>':
@@ -164,19 +167,31 @@ function touchKeyboardHTML(){
   (keyboardVisible?'':' hidden')+' role="group" aria-label="Tastatur ohne Wortvorschläge">'+
   rows.map(row=>'<div class="mg-touch-key-row">'+row.map(keyHTML).join('')+'</div>').join('')+'</div>';
 }
+function refreshSearchRows(){
+ const results=document.getElementById?.('suggestions');
+ if(results&&view==='search')results.innerHTML=searchRows();
+}
 function focusSearch(){
  if(!touchKeyboard||view!=='search')return;
  keyboardVisible=true;
  document.querySelector?.('.mg-parity-shade')?.classList?.add('mg-parity-keyboard-open');
  const keyboard=document.getElementById?.('mg-parity-touch-keyboard');
  if(keyboard)keyboard.hidden=false;
+ refreshSearchRows();
 }
 function hideSearchKeyboard(){
+ if(!touchKeyboard||!keyboardVisible)return;
  keyboardVisible=false;
  document.querySelector?.('.mg-parity-shade')?.classList?.remove('mg-parity-keyboard-open');
  const keyboard=document.getElementById?.('mg-parity-touch-keyboard');
  if(keyboard)keyboard.hidden=true;
  document.getElementById?.('searchInput')?.blur?.();
+ // Closing an unused keyboard restores the normal search start page with
+ // quick destinations, recent history and stored targets. Keep the input DOM.
+ refreshSearchRows();
+}
+function blankResultsTapped(){
+ if(touchKeyboard&&keyboardVisible&&!(s.query||'').trim())hideSearchKeyboard();
 }
 function resultsScrolled(){
  if(touchKeyboard&&keyboardVisible)hideSearchKeyboard();
@@ -232,7 +247,7 @@ function searchHTML(){
   '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
   tabs()+(manage?manageActions():'')+
   (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
-  '<div class="mg-parity-results" id="suggestions" aria-live="polite" onscroll="MeviWebNavParity.resultsScrolled()">'+searchRows()+'</div>'+touchKeyboardHTML()+'</div></div>';
+  '<div class="mg-parity-results" id="suggestions" aria-live="polite" onclick="MeviWebNavParity.blankResultsTapped()" onscroll="MeviWebNavParity.resultsScrolled()">'+searchRows()+'</div>'+touchKeyboardHTML()+'</div></div>';
 }
 /* Single POI list and place card for Web and Android map interactions.
    Details are fetched only after one item is opened (Google Enterprise billing). */
@@ -674,6 +689,6 @@ function nativeImport(){if(provider.importPicker)void provider.importPicker().ca
 window.openSearch=open;
 function overlayHTML(){return view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
 window.searchOverlay=overlayHTML;
-window.MeviWebNavParity={overlayHTML,focusSearch,hideSearchKeyboard,resultsScrolled,typeKey,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={overlayHTML,focusSearch,hideSearchKeyboard,blankResultsTapped,resultsScrolled,typeKey,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
