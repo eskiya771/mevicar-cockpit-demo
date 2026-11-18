@@ -1,4 +1,4 @@
-/* Car HiFi uses the persistent MeviMedia player or a listen-only microphone tap. */
+/* Car HiFi follows the active MeviCar player or a user-approved audio input. */
 (() => {
   'use strict';
   const names = ['Classic VFD', 'Spiegelband', 'Peak Line', 'Neonring', 'Oszilloskop',
@@ -7,7 +7,16 @@
   const key = 'mevicar-spectrum-effect';
   let effect = 0;
   try { const n = Number(localStorage.getItem(key)); if (Number.isInteger(n) && names[n]) effect = n; } catch {}
-  let session, mediaGraph;
+  let session, playbackContext;
+  const sources = new WeakMap();
+  const canShare = () => typeof navigator.mediaDevices?.getDisplayMedia === 'function';
+  function releasePlayer(player) {
+    const source = sources.get(player);
+    if (!source) return;
+    if (session?.tapSource === source) disposeInput(session);
+    source.disconnect();
+    sources.delete(player);
+  }
   const clamp = n => Math.min(1, Math.max(0, n));
   const options = () => names.map((name, i) => `<option value="${i}"${i === effect ? ' selected' : ''}>${name}</option>`).join('');
   function html() {
@@ -16,7 +25,7 @@
       <div class="sp-display"><canvas aria-label="Musikvisualisierung"></canvas><div class="sp-notice" role="status"></div></div>
       <div class="sp-controls"><div class="sp-selector"><button data-act="prev" aria-label="Vorheriger Effekt">‹</button>
       <select aria-label="Visualisierungseffekt">${options()}</select><button data-act="next" aria-label="Nächster Effekt">›</button><span class="sp-count"></span></div>
-      <div class="sp-inputs"><button data-act="media">Medien</button><button data-act="file">Datei öffnen</button><button data-act="mic">Mikrofon</button></div></div>
+      <div class="sp-inputs"><button data-act="media">Auto</button>${canShare() ? '<button data-act="tab">Tab-Ton</button>' : ''}<button data-act="file">Datei öffnen</button><button data-act="mic">Mikrofon</button></div></div>
       <input type="file" accept="audio/*,.flac,.m4a,.opus" hidden></section>`;
   }
   function analyzer(context) {
@@ -25,13 +34,13 @@
     return node;
   }
   function disposeInput(s) {
-    ++s.request;
-    if (s.mic) {
-      s.mic.stream.getTracks().forEach(t => t.stop());
-      s.mic.input?.disconnect(); s.mic.context.close().catch(() => {}); s.mic = null;
+    ++s.request; s.lastSignal = null;
+    if (s.capture) {
+      s.capture.stream.getTracks().forEach(t => t.stop());
+      s.capture.input?.disconnect(); s.capture.context.close().catch(() => {}); s.capture = null;
     }
     if (s.pendingContext) { s.pendingContext.close().catch(() => {}); s.pendingContext = null; }
-    if (s.mediaTap) { mediaGraph.source.disconnect(s.mediaTap); s.mediaTap = null; }
+    if (s.tapSource) { s.tapSource.disconnect(s.node); s.tapSource = null; }
     s.node = null; s.levels.fill(0); s.peaks.fill(0); s.wave.fill(128); s.history.forEach(row => row.fill(0));
   }
   function stop() {
@@ -49,7 +58,7 @@
   function syncControls(s) {
     s.root.querySelector('select').value = String(effect);
     s.root.querySelector('.sp-count').textContent = String(effect + 1).padStart(2, '0') + ' / 10';
-    for (const mode of ['mic','media']) s.root.querySelector('[data-act="'+mode+'"]').setAttribute('aria-pressed', String(s.mode === mode));
+    for (const mode of ['mic','media','tab']) s.root.querySelector('[data-act="'+mode+'"]')?.setAttribute('aria-pressed', String(s.mode === mode));
   }
   function select(s, value) {
     effect = (value + names.length) % names.length;
@@ -61,49 +70,58 @@
   async function connect(s, mode) {
     disposeInput(s); s.mode = mode; s.error = ''; syncControls(s);
     const id = s.request, current = () => session === s && s.request === id;
+    if (mode === 'media') {
+      s.player = window.meviSpectrumPlayer?.();
+      s.owner = window.meviSpectrumSource?.();
+    }
     const Context = contextType();
     if (!Context) { s.error = 'Audioanalyse ist in diesem Browser nicht verfügbar.'; return; }
     try {
       if (mode === 'media') {
-        const player = window.meviSpectrumPlayer?.();
-        if (!player || !player.src.startsWith('blob:')) return;
-        // One source per player for its lifetime. Its audible output stays connected across app switches.
-        if (!mediaGraph) {
-          const context = new Context();
-          try {
-            await context.resume();
-            if (!current()) { await context.close(); return; }
-            const source = context.createMediaElementSource(player);
-            source.connect(context.destination);
-            mediaGraph = { context, source };
-          } catch (e) { if (!mediaGraph) await context.close().catch(() => {}); throw e; }
+        const player = s.player;
+        if (!player || !(player.src.startsWith('blob:') || (s.owner === 'radio' && player.crossOrigin === 'anonymous'))) return;
+        playbackContext ||= new Context();
+        await playbackContext.resume();
+        if (!current() || player !== window.meviSpectrumPlayer?.()) return;
+        let source = sources.get(player);
+        if (!source) {
+          source = playbackContext.createMediaElementSource(player);
+          source.connect(playbackContext.destination);
+          sources.set(player, source);
         }
-        await mediaGraph.context.resume();
-        if (!current()) return;
-        s.node = s.mediaTap = analyzer(mediaGraph.context);
-        mediaGraph.source.connect(s.node);
+        s.node = analyzer(playbackContext);
+        source.connect(s.node);
+        s.tapSource = source;
       } else {
-        if (!navigator.mediaDevices?.getUserMedia) throw new Error('Mikrofon benötigt eine sichere Verbindung und Browserfreigabe.');
+        const tab = mode === 'tab';
         const context = s.pendingContext = new Context();
         const ready = context.resume();
         ready.catch(() => {});
-        const stream = await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
+        const stream = tab
+          ? await navigator.mediaDevices.getDisplayMedia({video:true, audio:true})
+          : await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false}});
         if (!current()) { stream.getTracks().forEach(t => t.stop()); return; }
+        if (!stream.getAudioTracks().length) {
+          stream.getTracks().forEach(t => t.stop());
+          disposeInput(s); s.mode = ''; syncControls(s);
+          s.error = 'Kein Ton freigegeben. Tab-Ton wählen und „Tab-Audio teilen“ aktivieren.';
+          return;
+        }
         s.pendingContext = null;
-        s.mic = { context, stream };
-        const input = s.mic.input = context.createMediaStreamSource(stream); s.node = analyzer(context); input.connect(s.node);
+        s.capture = { context, stream };
+        const input = s.capture.input = context.createMediaStreamSource(stream); s.node = analyzer(context); input.connect(s.node);
         await ready;
         if (!current()) return;
-        stream.getAudioTracks()[0]?.addEventListener('ended', () => {
+        for (const track of stream.getTracks()) track.addEventListener('ended', () => {
           if (!current()) return;
-          disposeInput(s); s.mode = ''; s.error = 'Mikrofon getrennt. Zum Verbinden erneut antippen.'; syncControls(s);
+          disposeInput(s); s.mode = ''; s.error = 'Audiofreigabe beendet. Quelle erneut wählen.'; syncControls(s);
         }, {once:true});
       }
       if (current()) updateRanges(s);
     } catch (e) {
       if (!current()) return;
       disposeInput(s); s.mode = ''; syncControls(s);
-      s.error = e.name === 'NotAllowedError' ? 'Mikrofonfreigabe fehlt. Zugriff erlauben oder eine Musikdatei öffnen.' :
+      s.error = mode === 'tab' ? 'Tab-Ton nicht verfügbar. Tab mit Audio freigeben oder Mikrofon wählen.' : mode === 'mic' && e.name === 'NotAllowedError' ? 'Mikrofonfreigabe fehlt. Zugriff erlauben oder eine Musikdatei öffnen.' :
         e.name === 'NotFoundError' ? 'Kein Mikrofon gefunden. Wähle eine Musikdatei.' : 'Audioeingang nicht verfügbar. Quelle erneut wählen.';
     }
   }
@@ -207,9 +225,9 @@
       const action=e.target.closest('[data-act]')?.dataset.act;
       if(action==='prev'||action==='next')select(s,effect+(action==='next'?1:-1));
       else if(action==='file')root.querySelector('input').click();
-      else if(action==='mic'&&s.mode==='mic')connect(s,'media');
-      else if(action==='media' && s.mode==='media' && s.node?.context.state==='running')window.meviMediaToggle?.();
-      else if(action==='media'||action==='mic')connect(s,action);
+      else if((action==='mic'||action==='tab')&&s.mode===action)connect(s,'media');
+      else if(action==='media' && s.mode==='media' && s.owner==='media' && s.node?.context.state==='running')window.meviMediaToggle?.();
+      else if(action==='media'||action==='mic'||action==='tab')connect(s,action);
     };
     root.querySelector('select').onchange=e=>select(s,Number(e.target.value));
     root.querySelector('input').onchange=async e=>{
@@ -226,15 +244,32 @@
       if(w<1||h<1)return;
       if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
       s.g.setTransform(dpr,0,0,dpr,0,0);sample(s,dt);draw(s,w,h);
-      const running=s.node?.context.state==='running',playing=s.mode==='mic'?!!s.mic:window.meviSpectrumPlayer?.()?.paused===false;
-      const mediaButton=s.root.querySelector('[data-act=media]');
-      const caption=s.mode==='media'&&running?(playing?'Pause':'Abspielen'):'Medien';
-      if(mediaButton.textContent!==caption)mediaButton.textContent=caption;
-      const live=running&&playing;
-      indicator(s,live?(s.mode==='mic'?'Mikrofon live':'Medien live'):'Bereit',!!live);
-      message(s,s.error || (live?'':s.mode==='mic'?'Mikrofon wird verbunden …':s.node && !running?'Für die Analyse auf Medien tippen.':s.node?'Wiedergabe pausiert.':'Musikdatei öffnen oder Mikrofon einschalten.'));
+      const owner = window.meviSpectrumSource?.(), player = window.meviSpectrumPlayer?.();
+      if (s.mode === 'media' && (s.owner !== owner || s.player !== player)) connect(s,'media');
+      const automatic = s.mode === 'media', radio = owner === 'radio';
+      const running = s.node?.context.state === 'running';
+      const playing = automatic ? player?.paused === false && (!radio || player.readyState >= 2) : !!s.capture;
+      const live = !!(running && playing);
+      const mediaButton = s.root.querySelector('[data-act=media]');
+      const caption = automatic && owner === 'media' && running ? (playing?'Pause':'Abspielen') : 'Auto';
+      if (mediaButton.textContent !== caption) mediaButton.textContent = caption;
+      indicator(s, live ? (s.mode==='mic'?'Mikrofon live':s.mode==='tab'?'Tab-Ton live':radio?'Radio live':'Medien live') : 'Bereit', live);
+      let hint = '';
+      if (live && s.mode === 'tab') {
+        if (s.freq.some(value => value > 0)) s.lastSignal = now;
+        s.lastSignal ??= now;
+        if (now - s.lastSignal > 3000) hint = 'Kein hörbares Tab-Signal. Wiedergabe und Audiofreigabe prüfen.';
+      } else if (!live) {
+        if (s.mode === 'tab' || s.mode === 'mic') hint = 'Audioeingang wird verbunden …';
+        else if (automatic && player && playbackContext?.state === 'suspended') hint = 'Für die Analyse auf Auto tippen.';
+        else if (automatic && owner === 'spotify') hint = canShare() ? 'Spotify läuft auf diesem Gerät? Musik-Tab mit Ton teilen oder Mikrofon wählen.' : 'Für Spotify aus den Lautsprechern Mikrofon wählen.';
+        else if (automatic && radio && player && player.crossOrigin !== 'anonymous') hint = 'Dieser Sender erlaubt nur Wiedergabe. Für die Analyse Mikrofon wählen.';
+        else if (automatic && radio) hint = player ? 'Warte auf Radiosignal …' : 'Radio starten oder andere Quelle wählen.';
+        else hint = s.node ? 'Wiedergabe pausiert.' : 'Radio starten, Musikdatei öffnen oder Mikrofon wählen.';
+      }
+      message(s,s.error || hint);
     }
     s.frame=requestAnimationFrame(frame);
   }
-  window.MeviSpectrum={html,mount,stop};
+  window.MeviSpectrum={html,mount,stop,releasePlayer};
 })();

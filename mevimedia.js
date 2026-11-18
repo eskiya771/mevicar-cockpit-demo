@@ -319,7 +319,7 @@
   function detachRadio(){
     radioSerial++;clearRadioTimers();
     const old=radioPlayer;radioPlayer=null;
-    if(old){old.pause();old.removeAttribute('src');old.load();old.remove();}
+    if(old){window.MeviSpectrum?.releasePlayer(old);old.pause();old.removeAttribute('src');old.load();old.remove();}
   }
   function paintRadio(){
     const status=$('mm-radio-status');if(status)status.textContent=radioState.status;
@@ -358,30 +358,42 @@
     }
     paintRadio();
   }
-  function radioStart(){
+  const playbackOnlyStations = new Set();
+  function radioStart(playbackOnly = false){
     onSourceChanged('radio');
     if(navigator.onLine===false){
       radioState.wanted=true;radioState.resume=true;radioState.status='Offline · Wiederverbindung automatisch';paintRadio();return;
     }
     detachRadio();
     const station=radioStation(),serial=radioSerial,audio=document.createElement('audio');
+    const analyse = !playbackOnly && !playbackOnlyStations.has(station.url) &&
+      'crossOrigin' in audio && !!(window.AudioContext || window.webkitAudioContext);
+    if(analyse) audio.crossOrigin = 'anonymous';
+    let started = false;
+    // A station may allow normal playback while denying Web Audio access.
+    const retryPlaybackOnly = () => {
+      if (!analyse || started || !active()) return false;
+      radioStart(true);
+      return true;
+    };
     radioPlayer=audio;radioState.wanted=true;radioState.resume=true;radioState.pendingRemove=null;
     radioState.status='Livestream wird geladen …';
     audio.id='mevi-radio-audio';audio.hidden=true;audio.preload='none';audio.volume=radioState.volume;
     document.body.appendChild(audio);
     const active=()=>serial===radioSerial&&radioPlayer===audio&&radioState.wanted;
-    const armTimeout=()=>{if(radioTimer!==null)return;radioTimer=setTimeout(()=>{if(active())radioFail('Stream antwortet nicht · Erneut starten oder Sender wechseln');},15000);};
-    audio.addEventListener('playing',()=>{if(!active())return;clearRadioTimers();radioState.retries=0;radioState.resume=false;radioState.status='LIVE · '+station.name;paintRadio();});
+    const armTimeout=()=>{if(radioTimer!==null)return;radioTimer=setTimeout(()=>{if(active()&&!retryPlaybackOnly())radioFail('Stream antwortet nicht · Erneut starten oder Sender wechseln');},15000);};
+    audio.addEventListener('playing',()=>{if(!active())return;started=true;if(playbackOnly)playbackOnlyStations.add(station.url);clearRadioTimers();radioState.retries=0;radioState.resume=false;radioState.status='LIVE · '+station.name;paintRadio();});
     for(const event of ['waiting','stalled'])audio.addEventListener(event,()=>{if(!active()||(event==='stalled'&&audio.readyState>=3))return;radioState.status='Verbindung wird gepuffert …';paintRadio();armTimeout();});
     audio.addEventListener('pause',()=>{if(active())radioFail('Wiedergabe unterbrochen · Erneut starten');});
     audio.addEventListener('ended',()=>{if(active())radioFail('Stream beendet · Erneut starten');});
-    audio.addEventListener('error',()=>{if(active())radioFail('Stream nicht erreichbar · Internet prüfen oder Sender wechseln');});
+    audio.addEventListener('error',()=>{if(active()&&!retryPlaybackOnly())radioFail('Stream nicht erreichbar · Internet prüfen oder Sender wechseln');});
     audio.addEventListener('volumechange',()=>{if(!active())return;radioState.volume=audio.volume;saveRadio();const input=$('mm-radio-volume');if(input)input.value=String(Math.round(audio.volume*100));});
     if('mediaSession'in navigator&&'MediaMetadata'in window){try{navigator.mediaSession.metadata=new window.MediaMetadata({title:station.name,artist:station.description,album:'MeviCar Internetradio'});}catch{}}
     audio.src=station.url;armTimeout();paintRadio();
     try{Promise.resolve(audio.play()).catch(error=>{
       if(!active())return;
       if(error?.name==='NotAllowedError')radioFail('Browser blockiert Wiedergabe · Abspielen erneut drücken',{retry:false,stop:true});
+      else if(retryPlaybackOnly())return;
       else if(error?.name==='NotSupportedError')radioFail('Streamformat wird nicht unterstützt · Anderen Sender wählen',{retry:false,stop:true});
       else radioFail('Stream nicht abspielbar · Erneut starten oder Sender wechseln');
     });}
@@ -564,7 +576,8 @@
   function repeat(){st.repeat=(st.repeat+1)%3;persist();redraw()}
   function stop(){if(player){player.pause();closeVideo()}}
   Object.assign(window,{
-    meviSpectrumPlayer:()=>player,
+    meviSpectrumSource:()=>audioOwner,
+    meviSpectrumPlayer:()=>audioOwner==='radio'?radioPlayer:audioOwner==='media'?player:null,
     async meviSpectrumPlayFile(file){
       if(!file||!supported(file))return false;
       const item=makeTrack(file,'');

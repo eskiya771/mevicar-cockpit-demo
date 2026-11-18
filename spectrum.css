@@ -6,3 +6,5 @@
 .sp-controls{justify-content:space-between;flex-wrap:wrap}.sp-unit button,.sp-unit select{box-sizing:border-box;font:600 14px/1 system-ui,sans-serif;color:#dae4e0;background:#202d2d;border:1px solid #40534e;border-radius:8px;min-height:44px;padding:0 13px;cursor:pointer}.sp-unit button:focus-visible,.sp-unit select:focus-visible{outline:2px solid #63e2b0;outline-offset:-3px}.sp-unit button[aria-pressed=true]{background:#25493e;border-color:#5ead8a;color:#9bf7cb}.sp-selector button{font-size:22px;width:44px;padding:0}.sp-selector select{background:#172321;min-width:0;max-width:100%}.sp-count{color:#94ab9e;white-space:nowrap}
 @container(max-width:620px){.sp-unit .sp-controls{gap:5px}.sp-count{display:none}.sp-inputs,.sp-selector{gap:4px}.sp-unit button,.sp-unit select{padding-inline:8px;font-size:12px}.sp-selector button{font-size:21px}.sp-status{letter-spacing:.02em}}
 @container(max-width:440px){.sp-controls{display:grid;grid-template-columns:1fr}.sp-inputs>button,.sp-selector select{flex:1}.sp-top small{font-size:8px}.sp-status{font-size:9px}}
+
+@container(max-width:440px){.sp-inputs{flex-wrap:wrap}.sp-inputs>button{flex:1 1 auto}}
