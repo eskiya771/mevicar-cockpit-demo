@@ -193,12 +193,15 @@ function updateMatch(){
  currentMatch={...candidate,ahead};
 }
 /** Returns only a current route-matched Road Assist alert; no secondary geometry. */
+const nativeGuidance=()=>window.MeviGoogleNav?.isNativeMode?.()===true;
 function nextCameraDistanceMeters(){
+ if(nativeGuidance())return null; // Native SDK owns the road/camera distance.
  if(!guiding||demo||!settings.enabled||!connected||!positionOnRoute||!currentMatch||
     !fixAt||Date.now()-fixAt>MAX_FIX_AGE||fixAccuracy>MAX_ACCURACY)return null;
  return Number.isFinite(currentMatch.ahead)&&currentMatch.ahead>=0?currentMatch.ahead:null;
 }
 function maybeSpeak(){
+ if(nativeGuidance())return; // Never speak browser warnings over native TTS.
  if(!guiding||demo||!settings.enabled||!settings.voice||!currentMatch)return;
  if(!fixAt||Date.now()-fixAt>MAX_FIX_AGE||fixAccuracy>MAX_ACCURACY)return;
  const id=currentMatch.camera.id,dist=currentMatch.ahead;
@@ -230,6 +233,7 @@ function summaryHTML(){
    '</div><small>Nur geprüfte Positionen auf der Google-Route · keine Vollständigkeitsgarantie</small></div>';
 }
 function overlayHTML(){
+ if(nativeGuidance())return ''; // Native GoogleMap owns the warning banner.
  // Like the native Road Assist banner, only real upcoming matched cameras are
  // shown over the map. Diagnostics remain available in the Road Assist app.
  if(!guiding||demo||!settings.enabled||!connected||!positionOnRoute||!currentMatch)return '';
