@@ -42,7 +42,7 @@ html[data-theme="cyberpunk"] .full h3,html[data-theme="cyberpunk"] .side h3,html
 html[data-theme="cyberpunk"] button{background:linear-gradient(150deg,#361541,#211632);border-color:#aa329a;color:#ffe6fc}
 html[data-theme="cyberpunk"] .grid button{background:radial-gradient(circle at 50% 10%,#84277966,transparent 72%),linear-gradient(155deg,#300f3d,#17152c);border:1px solid #eb42cf8c;box-shadow:inset 0 1px #ffcdfb12,0 0 14px #f32ad024;border-radius:18px;font-weight:650}
 html[data-theme="cyberpunk"] .grid .bigicon{color:#ff3ce3;font-size:clamp(34px,8.5vh,66px);line-height:1;text-shadow:0 0 14px #ff1eca,0 0 28px #ff1eca86}
-html[data-theme="cyberpunk"] :is(.active,.primary,.media-play,.status-right button){background:linear-gradient(135deg,#9c168f,#4e1975);border-color:#ff66e2;box-shadow:0 0 15px #ed24c74d}
+html[data-theme="cyberpunk"] :is(.active,.primary,.media-play){background:linear-gradient(135deg,#9c168f,#4e1975);border-color:#ff66e2;box-shadow:0 0 15px #ed24c74d}
 html[data-theme="cyberpunk"] :is(.glass,.preview,.overlay){background:linear-gradient(145deg,#351341e8,#181b38ed);border-color:#d535c888;box-shadow:0 0 28px #ee2bc43a,0 15px 38px #0008}
 html[data-theme="cyberpunk"] :is(.suggestion,.routeopt,.media-card,.calculator-display,.searchbox,.keyboard,.navbanner,.map-weather,.map-badge){background:#2c1438ed;border-color:#aa329a88}
 html[data-theme="cyberpunk"] .side .grid button{min-height:70px}
@@ -67,7 +67,7 @@ html[data-theme="liquidglass"] .dock .ico{font-size:clamp(23px,4vh,34px);color:#
 html[data-theme="liquidglass"] :is(.full,.side,.glass,.preview,.overlay){background:linear-gradient(140deg,#e6f2ff35,#aacbde18 65%,#f7faff26);border:1px solid #eff8ff6f;border-radius:24px;box-shadow:inset 0 1px #ffffff63,0 14px 35px #051b3560;backdrop-filter:blur(26px) saturate(165%);-webkit-backdrop-filter:blur(26px) saturate(165%)}
 html[data-theme="liquidglass"] .full h3,html[data-theme="liquidglass"] .side h3,html[data-theme="liquidglass"] .status{color:#b9eaff}
 html[data-theme="liquidglass"] button{background:linear-gradient(145deg,#e4f0ff32,#8fa9ce18);border:1px solid #ebf6ff65;border-radius:17px;color:#f8fbff;box-shadow:inset 0 1px #ffffff36,0 4px 12px #0618322a}
-html[data-theme="liquidglass"] :is(.active,.primary,.media-play,.status-right button){background:linear-gradient(135deg,#a9d6ff67,#6f95dd66);border-color:#f0faffb0;box-shadow:inset 0 1px #fff9,0 7px 18px #68bbff35}
+html[data-theme="liquidglass"] :is(.active,.primary,.media-play){background:linear-gradient(135deg,#a9d6ff67,#6f95dd66);border-color:#f0faffb0;box-shadow:inset 0 1px #fff9,0 7px 18px #68bbff35}
 html[data-theme="liquidglass"] .grid button{background:linear-gradient(155deg,#ffffff35,#9fb7e320);border:1px solid #ffffff75;border-radius:23px;box-shadow:inset 0 1px #fff9,0 10px 28px #061e3851}
 html[data-theme="liquidglass"] .grid .bigicon{font-size:clamp(32px,7.6vh,60px);color:#edf6ff;text-shadow:0 4px 13px #8dcdfd}
 html[data-theme="liquidglass"] :is(.suggestion,.routeopt,.media-card,.calculator-display,.searchbox,.keyboard,.navbanner,.map-weather,.map-badge){background:#d0e8ff28;border:1px solid #f4faff62;box-shadow:inset 0 1px #ffffff3d;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:18px}
@@ -230,45 +230,29 @@ html[data-theme="liquidglass"] .dock button.active .ico .app-illustration{filter
   .dock button .dock-label{font-size:clamp(8px,1.3vh,10px)}
 }
 
-/* Status and action glyphs share the exact SVG paths, colours and line weights. */
-.status-action,.tool-control{
+/* Action glyphs share the exact SVG paths, colours and line weights. */
+.tool-control{
   display:inline-flex;justify-content:center;align-items:center;gap:4px;
   min-width:0;line-height:1;
 }
-.status-right .status-action{white-space:nowrap;padding:2px 8px;gap:4px}
-.toolbar-icon,.status-icon{
+.toolbar-icon{
   display:inline-grid;place-items:center;flex:none;
   width:clamp(13px,1.9vh,18px);height:clamp(13px,1.9vh,18px);
   color:inherit;--app-icon-second:#b6d5e7;
 }
-.toolbar-icon .app-illustration,.status-icon .app-illustration{
+.toolbar-icon .app-illustration{
   width:100%;height:100%;filter:none;
 }
-.status-chip{display:inline-flex;align-items:center;gap:3px;flex-shrink:0;font-size:11px;color:#b6c7d7}
-.status-chip .status-icon{color:#7db5c9}
-.status-time{flex-shrink:0;font-variant-numeric:tabular-nums;font-size:11px;letter-spacing:.03em;color:#bed8e7}
-.status-right #updateBtn.checking .toolbar-icon{animation:mevicar-refresh-spin .8s linear infinite}
+#updateBtn.checking .toolbar-icon{animation:mevicar-refresh-spin .8s linear infinite}
 @keyframes mevicar-refresh-spin{to{transform:rotate(360deg)}}
 .tool-control .toolbar-icon{width:19px;height:19px}
 .map-tools .map-control{padding:7px!important;min-width:40px;min-height:40px}
 .map-tools .map-control .tool-label{display:none}
 .map-tools .map-control .toolbar-icon{width:25px;height:25px}
 .close-control{padding:5px 9px}
-html[data-theme="cyberpunk"] .status-action .toolbar-icon{color:#eaa6e8;--app-icon-second:#ff74e0}
-html[data-theme="cyberpunk"] .status-chip .status-icon{color:#b695d4;--app-icon-second:#f4abec}
-html[data-theme="cyberpunk"] .status-action:hover .toolbar-icon{color:#ff62db;filter:drop-shadow(0 0 4px #e33dce)}
-html[data-theme="liquidglass"] .status-action .toolbar-icon,html[data-theme="liquidglass"] .status-chip .status-icon{color:#e1f1ff;--app-icon-second:#a3d1fa}
-@media(max-width:800px){
-  .status-right .status-action{padding:2px 5px!important;min-width:22px}
-  .status-right .status-action .tool-label{display:none}
-  .status-chip{font-size:10px;gap:1px}
-  .status-time{font-size:10px}
-  .status-right{gap:3px}
-  .status-right .toolbar-icon,.status-right .status-icon{width:13px;height:13px}
-}
 @media(prefers-reduced-motion:reduce){
   .dock button{transition:none}
-  .status-right #updateBtn.checking .toolbar-icon{animation:none}
+  #updateBtn.checking .toolbar-icon{animation:none}
 }
 
 /* Branded Spotify SVG and source-aware Audio player.

@@ -260,6 +260,7 @@ function open(){
 }
 function close(){
  externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
+ window.meviNavSearchClosed?.();
  rerender();window.MeviAndroidSharedNav?.setOpen(false);provider.cancel?.();
 }
 function input(value){

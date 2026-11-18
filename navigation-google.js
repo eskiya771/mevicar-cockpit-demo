@@ -50,29 +50,6 @@ function nativeRequest(action,fields={}){
   catch(error){clearTimeout(timeout);nativeRequests.delete(id);reject(new Error('Android-Bridge nicht erreichbar'))}
  });
 }
-/** Keep the SDK map exactly inside the Web cockpit's #mg-map rectangle.
- * Never cover the dock or the right-hand split app. No web key is involved.
- */
-let nativeHeaderCapability,sharedNativeHeader=false;
-const usesSharedNativeHeader=()=>nativeMode()&&sharedNativeHeader;
-function syncNativeHeader() {
- const slot=document.getElementById('mg-native-header-slot');
- if(!slot)return null;
- const header=slot.parentElement;
- if(!nativeHeaderCapability){
-  nativeHeaderCapability=nativeRequest('capabilities').then(result=>{
-   if(result.capabilities?.nativeNavigationHeader){
-    header.classList.add('mg-native-header'); // Older APK: keep its own native toolbar.
-    syncNativeLayout(true);
-   }else{
-    sharedNativeHeader=true; // Current APK: one common HTML toolbar.
-    window.meviGoogleRerender?.();
-   }
-  }).catch(()=>{nativeHeaderCapability=null});
- }
- const rect=slot.getBoundingClientRect();
- return rect.width>0&&rect.height>0?rect:null;
-}
 /** Tell the APK which cockpit theme is active so the native controls match.
  * Sent once per change; an older APK rejects the action, which is ignored.
  */
@@ -120,13 +97,16 @@ function settleNativeLayout(){
  settleTimers.forEach(clearTimeout);
  settleTimers=[160,600,1500].map(ms=>setTimeout(()=>syncNativeLayout(false,true),ms));
 }
+/** Keep the SDK map exactly inside the Web cockpit's #mg-map rectangle.
+ * Never cover the dock or the right-hand split app (dashboard included): the
+ * map is only resized, never re-initialised. No web key is involved.
+ */
 function syncNativeLayout(force=false,settling=false){
  if(!nativeMode())return;
  if(!settling)settleNativeLayout();
  syncNativeTheme();
  handOverFavorites();
  const el=document.getElementById('mg-map');
- const header=el?syncNativeHeader():null;
  const rect=el?.getBoundingClientRect?.();
  const vw=Number(window.innerWidth),vh=Number(window.innerHeight);
  const usable=!window.MeviAndroidSharedNav?.isOpen?.()&&rect&&rect.width>=1&&rect.height>=1&&vw>0&&vh>0;
@@ -142,14 +122,6 @@ function syncNativeLayout(force=false,settling=false){
  }:{visible:false};
  if(usable&&!nativeAddressBook)
   fields.favorites=cache.favorites.slice(0,8).filter(valid).map(d=>({lat:d.lat,lng:d.lng,title:d.name.slice(0,120)}));
- if(usable&&header){
-  const x=Math.round(header.left),y=Math.round(header.top);
-  const width=Math.min(Math.round(header.right),Math.round(rect.right))-x;
-  const height=Math.min(Math.round(header.bottom),Math.round(rect.top))-y;
-  if(x>=0&&y>=0&&width>=220&&height>=40){
-   fields.header={x,y,width,height};
-  }
- }
  const signature=JSON.stringify(fields);
  if(!force&&signature===lastNativeLayout)return;
  lastNativeLayout=signature;
@@ -240,13 +212,6 @@ async function openNativeMap(){
  }catch(e){status('Android-Karte: '+(e.message||e));return false}
 }
 
-async function toggleNativeFullscreen(){
- if(!nativeMode()||!sharedNativeHeader)return false;
- try{
-  const reply=await nativeRequest('navigation.fullscreen');
-  return reply.fullscreen===true;
- }catch(error){status('Navi-Vollbild: '+(error.message||error));return false}
-}
 /* Native Google SDK arrival state; only the shared cockpit renders controls. */
 let nativeArrival=null,arrivalActionBusy=false;
 function currentNativeArrival(){return nativeMode()?nativeArrival:null}
@@ -355,13 +320,6 @@ async function nativeGuidanceAction(action){
   paintNativeGuidanceMenu();return true;
  }catch(e){status('Navigationsmenü: '+(e.message||e));return false}
 }
-/* Navi dock toggles the native right-hand dashboard without changing the
-   bottom trip strip's actions/menu trigger. */
-function toggleNativeDashboard(){
- if(!nativeMode())return false;
- nativeRequest('navigation.dashboard').catch(()=>{});
- return true;
-}
 async function openNativeSearch(){
  try{
   if(!window.MeviAndroidSharedNav?.connect||!window.MeviWebNavParity?.open)
@@ -432,10 +390,15 @@ async function mount(nextState){
  state=nextState||state;mounted=true;const el=document.getElementById('mg-map');
  if(nativeMode()){syncNativeLayout();watchNativePreview(el);return}
  if(!el||!key())return;
+ /* render() rebuilds the page markup (dashboard split, other apps). The one
+    live map moves into the new slot instead of being created again, so the
+    route, markers and camera survive every switch. */
+ const kept=map&&mapElement&&mapElement!==el&&el.replaceWith?mapElement:null;
+ if(kept){el.replaceWith(kept);window.google?.maps?.event?.trigger?.(map,'resize')}
  try{
    await load();
-   if(!document.contains(el))return;
-   if(mapElement!==el){
+   if(!document.contains(kept||el))return;
+   if(!kept&&mapElement!==el){
      mapElement=el;
      map=new google.maps.Map(el,{center:current||FALLBACK_CENTER,zoom:12,disableDefaultUI:true,zoomControl:true,clickableIcons:false,gestureHandling:'greedy',backgroundColor:'#152536'});
      map.addListener('click',event=>{
@@ -828,7 +791,21 @@ function guidanceTrip(){
 }
 /* Android NavRouteDetails.rows semantics over the existing browser route/GPS
    state: no duplicate Web view, no new directions calculation. */
+/* Android: raw drive metrics of the SDK for the same dashboard renderer. Asked
+   at most once a second and only while the dashboard paints; an APK without
+   the action leaves the placeholders. */
+let nativeMetrics=null,nativeMetricsAt=0,nativeMetricsBusy=false;
+function nativeDashboardData(){
+ const now=Date.now();
+ if(!nativeMetricsBusy&&now-nativeMetricsAt>=900){
+  nativeMetricsBusy=true;nativeMetricsAt=now;
+  nativeRequest('navigation.metrics').then(reply=>{nativeMetrics=reply?.metrics||null})
+   .catch(()=>{nativeMetrics=null}).finally(()=>{nativeMetricsBusy=false});
+ }
+ return now-nativeMetricsAt<=5000?nativeMetrics:null;
+}
 function guidanceDashboardData(){
+ if(nativeMode())return nativeDashboardData();
  const now=Date.now();
  const seconds=Number.isFinite(liveTripMinutes)?Math.max(0,Math.round(liveTripMinutes*60)):
   routeData?Math.max(0,Math.round((Number(routeData.durationMillis)||0)/1000)):null;
@@ -1286,7 +1263,7 @@ window.MeviGoogleNav={refreshNativeRoutePreview:readNativePreview,
  currentNativeArrival,showNativeArrival,closeNativeArrival,nativeArrivalAction,
  toggleNativeGuidanceMenu,closeNativeGuidanceMenu,refreshNativeGuidanceMenu,nativeGuidanceMode,
  nativeGuidanceMuted,nativeGuidanceRoadEnabled,nativeGuidanceRoadVoice,nativeGuidanceDetailsHTML,
- nativeGuidanceShowDetails,nativeGuidanceBack,nativeGuidanceAction,guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,usesSharedNativeHeader,toggleNativeFullscreen,toggleNativeDashboard,changeQuery,pick,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML};
+ nativeGuidanceShowDetails,nativeGuidanceBack,nativeGuidanceAction,guidanceTrip,guidanceDashboardData,guidanceDetailsHTML,browserRoutePreview,nativeRoutePreview:()=>nativePreview,previewStart,previewEnd,previewRemoveStop,previewToggleOption,webData,webWrite,webSaveSelectedSlot,webPoi,webPlaceDetails,webResolveStop,routeContext,addRouteStop,removeRouteStop,mount,mapBackdrop,syncNativeLayout,isNativeMode:nativeMode,nativeRequest,destinationName:()=>selected?.name||'',nativeBusy,openNativeMap,openNativeSearch,changeQuery,pick,saveFavorite,removeFavorite,isFavorite,selectedDestination:()=>selected?{...selected}:null,selectedAddress,selectOriginOnMap,cancelOriginSelection,chooseOriginPoint,isManualOrigin:()=>!!manualOrigin,setKey,removeKey,hasKey:()=>nativeMode()||!!key(),calculateRoute,startGuidance,startDemo,stopGuidance,toggleVoice,announceRoadAssist,showOverview,followMyLocation,recenter,paintGuidance,hasPlannedRoute,guidanceRunning,locationButton,routeInfo,myLocation,setupHTML};
 // Repaint after this defer-like script loads; the inline cockpit rendered before it.
 if (typeof window.render === 'function') window.render();
 })();

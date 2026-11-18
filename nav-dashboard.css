@@ -26,8 +26,6 @@
 .mg-dash-camera strong{font-size:clamp(22px,4.8vh,42px)!important;line-height:1.06!important;white-space:nowrap!important;font-variant-numeric:tabular-nums}
 .mg-dash-maximum{grid-column:3;grid-row:3}
 .mg-dash-maximum .mg-dash-value strong{font-size:clamp(25px,5.5vh,52px)}
-.mg-dashboard-standalone{padding:0;margin:0;background:#071725;color:#f0faff}
-.mg-dashboard-standalone #nav-dashboard-root{height:100vh;height:100dvh;box-sizing:border-box;padding:7px;overflow:hidden}
 @media(orientation:landscape) and (max-height:480px){
  .mg-dash-cell{padding:5px 7px}
  .mg-dash-label{font-size:clamp(10px,2.3vh,13px)}
@@ -43,18 +41,86 @@
  .mg-dash-speed .mg-dash-value strong{font-size:clamp(40px,12vw,65px)}
 }
 
-/* Shared compact raster: Web uses the ordinary 36%-wide right .side pane,
-   Android Navigation SDK loads the identical renderer in its right panel. */
+/* Shared compact raster in the ordinary right .side pane of the split screen;
+   browser and APK WebView render the identical markup. */
 .side.mg-nav-dashboard-side{
  overflow:hidden;min-height:0;min-width:0;
  padding:clamp(4px,.75vw,12px);gap:clamp(3px,.6vh,7px);
 }
-.side.mg-nav-dashboard-side .row{flex:0 0 auto;min-width:0}
-.side.mg-nav-dashboard-side .row button{
- padding:3px 10px;border:1px solid #3b7c97;border-radius:8px;
- background:#12384b;font-size:clamp(10px,2vh,13px);
-}
 .mg-dashboard-split-content{flex:1;min-width:0;min-height:0;overflow:hidden}
+
+/* Dashboard panel: head (clock, build, update), controls, trip data. */
+.mg-dash-panel{
+ --dash-bg:#102434;--dash-border:#427b95;--dash-ink:#f0faff;--dash-sub:#b9d5e5;--dash-accent:#72edff;
+ --dash-button:#12384b;--dash-touch:clamp(44px,7.4vh,72px);
+ display:flex;flex-direction:column;gap:clamp(4px,.9vh,10px);
+ width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;
+ color:var(--dash-ink);font-family:system-ui,-apple-system,"Roboto",sans-serif;
+}
+.mg-dash-panel *{box-sizing:border-box}
+.mg-dash-panel>.mg-nav-dashboard{flex:1 1 0;height:auto}
+.mg-dash-head{
+ flex:0 0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;
+ gap:clamp(6px,.9vw,14px);min-width:0;min-height:var(--dash-touch);
+}
+.mg-dash-clock{
+ font-size:clamp(26px,5.6vh,54px);font-weight:820;line-height:1;letter-spacing:-.04em;
+ font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--dash-ink);
+}
+.mg-dash-build{display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0}
+.mg-dash-build span{
+ font-size:clamp(10px,1.7vh,15px);font-weight:650;line-height:1.15;color:var(--dash-sub);
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
+}
+.mg-dash-build #updateMessage{color:var(--dash-accent)}
+.mg-dash-build #updateMessage:empty{display:none}
+.side.mg-nav-dashboard-side .mg-dash-update,
+.side.mg-nav-dashboard-side .mg-dash-action{
+ display:inline-flex;align-items:center;justify-content:center;margin:0;min-width:0;
+ border:1px solid var(--dash-border);border-radius:clamp(9px,1.2vw,15px);
+ background:var(--dash-button);color:var(--dash-ink);box-shadow:none;cursor:pointer;
+ font:inherit;font-weight:750;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.side.mg-nav-dashboard-side .mg-dash-update{
+ width:var(--dash-touch);height:var(--dash-touch);min-width:44px;min-height:44px;padding:0;flex:none;
+}
+.mg-dash-update .toolbar-icon{display:inline-flex;width:58%;height:58%}
+.mg-dash-update .toolbar-icon svg{width:100%;height:100%}
+.mg-dash-update .tool-label{display:none}
+.mg-dash-update:disabled{opacity:.72}
+.mg-dash-actions{
+ flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:clamp(4px,.7vw,10px);min-width:0;
+}
+.side.mg-nav-dashboard-side .mg-dash-action{
+ flex-direction:row;gap:clamp(4px,.5vw,9px);min-height:var(--dash-touch);
+ padding:2px clamp(3px,.5vw,10px);font-size:clamp(12px,2.1vh,19px);line-height:1.08;
+}
+.mg-dash-action span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mg-dash-icon{flex:none;width:clamp(17px,3vh,28px);height:clamp(17px,3vh,28px);fill:currentColor}
+.side.mg-nav-dashboard-side .mg-dash-fullmap{border-color:var(--dash-accent);color:var(--dash-accent)}
+.side.mg-nav-dashboard-side :is(.mg-dash-update,.mg-dash-action):active{filter:brightness(1.25)}
+.side.mg-nav-dashboard-side :is(.mg-dash-update,.mg-dash-action):focus-visible{outline:2px solid var(--dash-accent);outline-offset:1px}
+html[data-theme="cyberpunk"] :is(.mg-dash-panel,.mg-nav-dashboard){
+ --dash-bg:#1a0c2c;--dash-border:#a32d9b;--dash-ink:#fff2ff;--dash-sub:#e6b6ea;--dash-accent:#ff64e8;--dash-button:#2a1040;
+}
+html[data-theme="cyberpunk"] .mg-dash-speed{background:linear-gradient(155deg,#32104a,#150a26)}
+html[data-theme="liquidglass"] :is(.mg-dash-panel,.mg-nav-dashboard){
+ --dash-bg:#e9f3ff1c;--dash-border:#eff8ff6f;--dash-ink:#f5f9ff;--dash-sub:#cfe6f7;--dash-accent:#b9eaff;--dash-button:#e9f3ff26;
+}
+html[data-theme="liquidglass"] .mg-dash-speed{background:linear-gradient(155deg,#e6f2ff3a,#aacbde1c)}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-panel{--dash-touch:44px;gap:4px}
+ .mg-dash-clock{font-size:clamp(24px,7vh,32px)}
+ .mg-dash-build span{font-size:10px}
+ .side.mg-nav-dashboard-side .mg-dash-action{font-size:clamp(10.5px,2.9vh,13px);gap:3px;padding:2px 3px}
+ .mg-dash-icon{width:15px;height:15px}
+ /* Two labelled controls keep their full text; the full-map control is an icon square. */
+ .mg-dash-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+ .side.mg-nav-dashboard-side .mg-dash-fullmap{min-width:48px;padding:2px}
+ .mg-dash-fullmap span{display:none}
+ .mg-dash-fullmap .mg-dash-icon{width:20px;height:20px}
+}
 .mg-nav-dashboard.mg-dashboard-compact{
  grid-template-columns:repeat(2,minmax(0,1fr));
  grid-template-rows:minmax(0,1.22fr) repeat(3,minmax(0,1fr));
@@ -69,6 +135,14 @@
 .mg-dashboard-compact .mg-dash-speed .mg-dash-value{flex-direction:row;align-items:baseline;gap:5px}
 .mg-dashboard-compact .mg-dash-speed .mg-dash-value strong{font-size:clamp(39px,7.5vh,74px)}
 .mg-dashboard-compact .mg-dash-speed .mg-dash-value small{font-size:clamp(10px,2vh,17px)}
+/* Tall displays: the speed tile is large, so its value fills it. */
+@media(min-height:600px){
+ .mg-dashboard-compact .mg-dash-speed{padding-inline:clamp(12px,1.6vw,28px)}
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-label{font-size:clamp(15px,2.1vh,24px)}
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-value{gap:10px}
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-value strong{font-size:clamp(72px,13vh,150px)}
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-value small{font-size:clamp(16px,2.6vh,28px)}
+}
 .mg-dashboard-compact .mg-dash-arrival{grid-column:1;grid-row:2}
 .mg-dashboard-compact .mg-dash-time{grid-column:2;grid-row:2}
 .mg-dashboard-compact .mg-dash-distance{grid-column:1;grid-row:3}
@@ -79,6 +153,17 @@
 .mg-dashboard-compact .mg-dash-value small{font-size:clamp(9px,1.6vh,14px)}
 .mg-dashboard-compact .mg-dash-camera strong{
  font-size:clamp(16px,3.6vh,29px)!important;white-space:nowrap;
+}
+/* Tall displays: tiles are large, so labels and values grow with them. */
+@media(min-height:600px){
+ .mg-dashboard-compact .mg-dash-cell{padding:clamp(10px,1.5vh,18px) clamp(12px,1vw,20px)}
+ .mg-dashboard-compact .mg-dash-label{font-size:clamp(14px,1.9vh,20px)}
+ .mg-dashboard-compact .mg-dash-cell>strong,
+ .mg-dashboard-compact .mg-dash-value strong{font-size:clamp(32px,4.6vh,50px)}
+ .mg-dashboard-compact .mg-dash-camera strong{font-size:clamp(32px,4.6vh,50px)!important}
+ /* "12 Std. 30 Min." is the longest value and must stay inside its tile. */
+ .mg-dashboard-compact .mg-dash-time>strong{font-size:clamp(25px,3.3vh,36px)}
+ .mg-dashboard-compact .mg-dash-value small{font-size:clamp(14px,2vh,22px)}
 }
 @media(orientation:landscape) and (max-height:420px){
  .mg-dashboard-compact .mg-dash-cell{padding:3px 5px}

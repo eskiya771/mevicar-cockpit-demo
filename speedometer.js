@@ -272,8 +272,6 @@
       demoBtn.setAttribute('aria-pressed', String(mode === 'demo'));
       demoBtn.textContent = mode === 'demo' ? 'Demo aus' : 'Demo';
     }
-    const chip = document.getElementById('gpsSignalIcon');
-    if (chip) chip.dataset.state = mode === 'demo' ? 'demo' : (gpsWanted && live.gpsAccuracyM != null ? 'on' : 'off');
   }
 
   function settle() {

@@ -124,7 +124,6 @@ html,body{min-height:0;overscroll-behavior:none}
 
 /* UX quality round 3 – touch targets tested on all five landscape profiles. */
 .status{height:clamp(36px,4.5vh,44px);align-items:center;flex:none}
-.status .status-action{display:inline-flex;align-items:center;justify-content:center;min-height:clamp(34px,4.2vh,42px);padding:5px clamp(8px,.8vw,13px)}
 :is(.mm-shell,.sp-shell).is-compact .mm-mode-button{min-height:44px;padding:7px clamp(6px,.65vw,11px);font-size:clamp(11px,1.55vh,15px)}
 .mm-shell.is-compact .mm-compact-toggle button{min-height:44px}
 .mm-shell .mm-icon-button{min-height:44px;min-width:44px;width:44px;height:44px}
@@ -287,9 +286,6 @@ html,body{min-height:0;overscroll-behavior:none}
    border:1px solid #9ad5ec45;pointer-events:auto;
  }
  .cockpit .status>span:first-child{display:none;}
- .cockpit .status-right{gap:4px;}
- .cockpit .status .status-action{min-height:30px;height:30px;padding:3px 7px;font-size:11px;}
- .cockpit .status-chip{font-size:10px;}
  .cockpit .dock.left{width:62px;padding:3px;gap:3px;border-radius:10px;}
  .cockpit .dock.left button{min-height:44px;}
 }
@@ -502,10 +498,10 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 
 
-/* Global build/update/GPS/LTE/clock overlay belongs to standalone navigation only.
-   App-owned telemetry headers remain visible in full and split layouts. */
+/* The workspace has no title bar: the navigation main page is map only. Clock,
+   build and update live in the dashboard split (nav-dashboard.css). The element
+   only carries the trip row while guidance runs behind another app. */
 .cockpit .workspace > .status{display:none!important;}
-.cockpit.nav-status-only .workspace > .status{display:flex!important;}
 
 /* Standalone Tacho Next embedded as an app, never inherits card scrolling. */
 .tacho-next-host{padding:0!important;overflow:hidden!important;min-height:0!important;display:flex!important;flex-direction:column!important;}
@@ -563,9 +559,6 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 .cockpit .map.searchmode .keyboard .keyrow{position:relative;z-index:1}
 
-/* Native Android actions share the cockpit header in standalone navigation. */
-.cockpit.nav-status-only .workspace:has(> .mg-native-header),
-.cockpit.mg-web-header .workspace { gap: 2px; }
 #mg-native-header-slot { display: none; }
 /* Next manoeuvre and arrival time while another app covers the native map. */
 #mg-native-trip {
@@ -578,7 +571,7 @@ html,body{min-height:0;overscroll-behavior:none}
 }
 #mg-native-trip[hidden] { display: none; }
 /* Guidance behind another app: the otherwise hidden header becomes one compact trip row. */
-.cockpit.mg-trip-active:not(.nav-status-only) .workspace > .status {
+.cockpit.mg-trip-active .workspace > .status {
  display: flex !important;
  position: static !important;
  flex: 0 0 24px;
@@ -597,99 +590,8 @@ html,body{min-height:0;overscroll-behavior:none}
  font-size: 13px;
  line-height: 24px;
 }
-.cockpit.mg-trip-active:not(.nav-status-only) .workspace > .status > :not(#mg-native-trip) { display: none !important; }
-.cockpit.mg-trip-active:not(.nav-status-only) #mg-native-trip { flex: 0 1 auto; text-align: center; }
-.cockpit.nav-status-only .workspace > .status.mg-native-header,
-.cockpit.mg-web-header .workspace > .status {
- position: static !important;
- width: auto;
- max-width: none;
- height: 40px;
- min-height: 40px;
- box-sizing: border-box;
- gap: 8px;
- padding: 0 6px 0 0;
- border: 0;
- border-radius: 0;
- background: transparent;
- backdrop-filter: none;
-}
-.status.mg-native-header #mg-native-header-slot {
- display: block;
- order: -1;
- flex: 0 0 clamp(220px, 33%, 440px);
- align-self: stretch;
-}
-.cockpit .status.mg-native-header #meviPlatformHeader,
-.cockpit.mg-web-header .status #meviPlatformHeader {
- display: block;
- margin-left: auto;
- min-width: 0;
- white-space: nowrap;
- overflow: hidden;
- text-overflow: ellipsis;
-}
-.status.mg-native-header .status-right,
-.cockpit.mg-web-header .status-right {
- flex: 0 1 auto;
- min-width: 0;
- white-space: nowrap;
-}
-.status.mg-native-header #updateMessage,
-.cockpit.mg-web-header #updateMessage {
- min-width: 0;
- overflow: hidden;
- text-overflow: ellipsis;
-}
-@media (max-width: 700px) {
- .status.mg-native-header #updateMessage,
- .status.mg-native-header .status-chip { display: none; }
-}
-
-.mg-web-nav-actions { display: none; }
-.cockpit.mg-web-header {
- --nav-header-ink: #edf9ff;
- --nav-header-stroke: #448899;
- --nav-header-fill: #101b2c;
-}
-html[data-theme="cyberpunk"] .cockpit.mg-web-header {
- --nav-header-ink: #ffe8fb;
- --nav-header-stroke: #b03a9c;
- --nav-header-fill: #120820;
-}
-html[data-theme="liquidglass"] .cockpit.mg-web-header {
- --nav-header-ink: #f4f8ff;
- --nav-header-stroke: #7fa9c9;
- --nav-header-fill: #152842;
-}
-.cockpit.mg-web-header .mg-web-nav-actions {
- display: flex;
- order: -1;
- flex: 0 0 auto;
- align-items: center;
- gap: clamp(4px, .55vw, 9px);
-}
-.mg-web-nav-actions button {
- min-height: 36px;
- padding: 4px clamp(7px, .8vw, 14px);
- border: 1px solid var(--nav-header-stroke);
- border-radius: 13px;
- color: var(--nav-header-ink);
- background: var(--nav-header-fill);
- white-space: nowrap;
- font-size: clamp(12px, 1.9vh, 17px);
-}
-@media (max-width: 700px), (orientation: portrait) {
- .cockpit.mg-web-header .status #meviPlatformHeader,
- .cockpit.mg-web-header .status-chip { display: none; }
- .cockpit.mg-web-header .status-right { margin-left: auto; }
-}
-@media (max-width: 440px) {
- .cockpit.mg-web-header #buildVersion,
- .cockpit.mg-web-header #updateMessage,
- .cockpit.mg-web-header .status-time { display: none; }
-}
-
+.cockpit.mg-trip-active .workspace > .status > :not(#mg-native-trip) { display: none !important; }
+.cockpit.mg-trip-active #mg-native-trip { flex: 0 1 auto; text-align: center; }
 /* Compact landscape navigation: reserve the full viewport for a ready-route
    sheet (Android-style), then restore the app dock after the sheet closes.
    During live guidance the dock stays available, so turn instructions are
@@ -699,73 +601,3 @@ html[data-theme="liquidglass"] .cockpit.mg-web-header {
  .cockpit:has(.mg-route-preview-pane) .body{gap:0!important}
  .cockpit:has(.mg-route-preview-pane) .workspace{min-width:0;width:100%}
 }
-
-/* Driving status stays readable over the Google map. Uses the SAME status
-   elements as browse/update; only layout changes, never a second version label. */
-.cockpit.mg-driving-status .workspace > .status{
- display:flex!important;position:fixed!important;
- z-index:24;top:max(7px,env(safe-area-inset-top,0px));
- right:max(7px,env(safe-area-inset-right,0px));left:auto;
- width:auto;height:36px;min-height:36px;max-width:min(43vw,390px);
- box-sizing:border-box;align-items:center;justify-content:flex-end;
- gap:10px;padding:3px 11px;
- border:1px solid #5c99ac;background:#091b2a!important;color:#e8f9ff!important;
- border-radius:12px;box-shadow:0 5px 15px #071521a6;
- backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
- font-size:12px;white-space:nowrap;overflow:hidden;
- pointer-events:auto;
-}
-.cockpit.mg-driving-status .status #meviPlatformHeader{
- display:block!important;overflow:hidden;text-overflow:ellipsis;min-width:0;
- font-size:11px;font-weight:750;letter-spacing:.03em;color:#e8f9ff;
-}
-.cockpit.mg-driving-status .status .status-right{display:flex;align-items:center;min-width:0;gap:5px}
-.cockpit.mg-driving-status .status #buildVersion{
- display:inline!important;font-size:11px;color:#fff;white-space:nowrap;opacity:1;
-}
-.cockpit.mg-driving-status .status .mg-web-nav-actions,
-.cockpit.mg-driving-status .status #mg-native-header-slot,
-.cockpit.mg-driving-status .status #updateBtn,
-.cockpit.mg-driving-status .status #updateMessage,
-.cockpit.mg-driving-status .status .status-chip,
-.cockpit.mg-driving-status .status .status-time{display:none!important}
-@media(orientation:landscape) and (max-height:480px){
- .cockpit.mg-driving-status .workspace > .status{height:32px;min-height:32px;max-width:min(43vw,350px);padding:3px 8px}
- .cockpit.mg-driving-status .status #meviPlatformHeader,
- .cockpit.mg-driving-status .status #buildVersion{font-size:10px}
-}
-
-
-/* Browse uses the same title/update elements as guidance. Opaque surfaces are
-   required over the bright map in every theme, including the idle update state. */
-.cockpit.mg-web-header .workspace > .status{
- height:44px;min-height:44px;gap:6px;
-}
-.cockpit.mg-web-header .status #meviPlatformHeader,
-.cockpit.mg-web-header .status .status-right{
- background:var(--nav-header-fill)!important;color:var(--nav-header-ink)!important;
- border:1px solid var(--nav-header-stroke);border-radius:12px;
- box-shadow:0 4px 12px #07152180;opacity:1;
- min-height:44px;box-sizing:border-box;padding:0 10px;
-}
-.cockpit.mg-web-header .status #meviPlatformHeader{
- line-height:42px;font-weight:750;
-}
-.cockpit.mg-web-header .status .status-right{display:flex;align-items:center;gap:7px}
-.cockpit.mg-web-header .status #buildVersion,
-.cockpit.mg-web-header .status #updateMessage{color:var(--nav-header-ink);opacity:1}
-.cockpit.mg-web-header .status #updateBtn{
- color:var(--nav-header-ink)!important;opacity:1!important;
- width:44px;min-width:44px;height:44px;
-}
-@media(orientation:landscape) and (max-height:480px){
- .cockpit.mg-web-header .status .status-chip,
- .cockpit.mg-web-header .status .status-time{display:none}
- .cockpit.mg-web-header .status #meviPlatformHeader{font-size:10px;padding-inline:8px}
- .cockpit.mg-web-header .status #buildVersion,
- .cockpit.mg-web-header .status #updateMessage{font-size:10px}
-}
-.cockpit.mg-web-header .status #updateBtn .toolbar-icon{
- width:22px;height:22px;color:var(--nav-header-ink);--app-icon-second:var(--nav-header-ink);
-}
-.cockpit.mg-web-header .status #updateBtn .app-illustration{opacity:1}
