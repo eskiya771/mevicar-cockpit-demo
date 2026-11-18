@@ -13,14 +13,14 @@ import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-WEB_BUILD = 1248
-SOURCE_SHA = "ddd11767db047e3c23314ac1166caf533ed87969"
-EXPECTED_VERSION = "0.6.6"
+WEB_BUILD = 1249
+SOURCE_SHA = "58cd48d3fc82c96acd2943c10be5f01dc38ec37f"
+EXPECTED_VERSION = "0.6.7"
 ALLOWED_SUFFIXES = {".js", ".css", ".html", ".json", ".mjs", ".webmanifest", ".png", ".svg", ".wasm", ".txt", ".map"}
 SKIP = {"index.html", "source-index.html", "build-info.json", "proxy-release.json", "offline-bundle.json", "offline-bundle.zip"}
 NEW_NAV_ASSETS = {"navigation-shared-core.js", "navigation-google.js", "nav-web-parity.js", "nav-dashboard.js", "nav-route-details.js", "nav-trip.js", "nav-trip.html", "nav-trip.css"}
 
-with tempfile.TemporaryDirectory(prefix="mevicar-web-1248-") as temp:
+with tempfile.TemporaryDirectory(prefix="mevicar-web-1249-") as temp:
     work = Path(temp)
     (work / "dist").mkdir()
     (work / "scripts").mkdir()
@@ -62,11 +62,11 @@ with tempfile.TemporaryDirectory(prefix="mevicar-web-1248-") as temp:
         assert json.loads(archive.read("build-info.json")) == info
     html = (dist / "index.html").read_text(encoding="utf-8")
     for token in ["mevicar-route-detail-script", "mevicar-shared-navigation-script", "mevicar-navigation-script",
-                  "mevicar-navigation-parity-script", "mevicar-trip-script", '"build": 1248']:
+                  "mevicar-navigation-parity-script", "mevicar-trip-script", '"build": 1249']:
         assert token in html, f"Missing compiled HTML module: {token}"
     for path in ["index.html", "build-info.json", "proxy-release.json",
                  "offline-bundle.zip", "offline-bundle.json", "sw.js"]:
         shutil.copy2(dist / path, ROOT / path)
-    print("Prepared full Web/PWA + matching offline bundle B1248")
+    print("Prepared full Web/PWA + matching offline bundle B1249")
     print("HTML bytes:", (ROOT / "index.html").stat().st_size)
     print("Archive SHA-256:", hashlib.sha256((ROOT / "offline-bundle.zip").read_bytes()).hexdigest())
