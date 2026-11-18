@@ -76,12 +76,41 @@ function tabs(){
   '<button type="button" class="'+(tab==='favorites'?'selected':'')+'" aria-pressed="'+(tab==='favorites')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button>'+
   '<button type="button" class="mg-parity-manage-toggle" aria-pressed="'+manage+'" onclick="MeviWebNavParity.toggleManage()">'+(manage?'Fertig':'Verwalten')+'</button></div>';
 }
+// Keep only one result per physical target, even if a saved favourite and
+// a recent destination carry different provider IDs. This affects only the
+// displayed search results: the underlying favourite and history remain intact.
+function normalizedDestinationText(value){
+ return String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'')
+  .toLocaleLowerCase('de-DE').replace(/ß/g,'ss')
+  .replace(/\bstr\.(?=\s|$)/g,'strasse')
+  .replace(/[^a-z0-9]+/g,' ').trim().replace(/\s+/g,' ');
+}
+function sameSearchDestination(a,b){
+ if(!a||!b)return false;
+ if(a.placeId&&b.placeId&&a.placeId===b.placeId)return true;
+ const ka=shared.destinationKey(a),kb=shared.destinationKey(b);
+ if(ka&&kb&&ka===kb)return true;
+ const addressA=normalizedDestinationText(a.address);
+ const addressB=normalizedDestinationText(b.address);
+ if(addressA&&addressB&&addressA===addressB)return true;
+ const nameA=normalizedDestinationText(a.name),nameB=normalizedDestinationText(b.name);
+ // Different addresses with the same street/name must not be merged.
+ if(!nameA||nameA!==nameB)return false;
+ if(!Number.isFinite(a.lat)||!Number.isFinite(a.lng)||
+    !Number.isFinite(b.lat)||!Number.isFinite(b.lng))return false;
+ return shared.distanceMeters(a,b)<=15;
+}
 function localMatches(query){
- const q=query.toLocaleLowerCase('de-DE'),d=data(),matches=[];
+ const q=query.toLocaleLowerCase('de-DE'),d=data(),matches=[],shown=[];
  const add=(item,kind,index)=>{
-  if(item&&[item.name,item.address,item.note].filter(Boolean).join(' ').toLocaleLowerCase('de-DE').includes(q))
-   matches.push(row(item,kind,index,manage));
+  if(!item||![item.name,item.address,item.note].filter(Boolean).join(' ').toLocaleLowerCase('de-DE').includes(q))return;
+  if(shown.some(previous=>sameSearchDestination(previous,item)))return;
+  shown.push(item);
+  // Keep the source's real index. A filtered result must still select or edit
+  // the correct favourite, quick slot or history record on Web AND Android.
+  matches.push(row(item,kind,index,manage));
  };
+ // A saved slot or favourite wins over the same place in recent history.
  for(const kind of ['home','work'])add(d.slots[kind],kind,0);
  d.favorites.forEach((item,i)=>add(item,'favorites',i));
  d.recent.forEach((item,i)=>add(item,'recent',i));
