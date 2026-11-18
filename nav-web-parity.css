@@ -224,3 +224,61 @@ html[data-theme="liquidglass"] .mg-parity-shade{
   left:0;top:0;bottom:0;width:100%;max-width:100%;border-radius:0;
  }
 }
+
+/* iPhone landscape: keep address suggestions readable above a compact keyboard.
+   No native iOS prediction row, no form-navigation accessory toolbar. */
+.mg-parity-touch-keyboard[hidden]{display:none!important}
+.mg-navigation .mg-parity-touch-keyboard{
+ flex:0 0 auto;display:flex;flex-direction:column;gap:clamp(4px,.9vh,7px);
+ width:100%;min-width:0;padding:clamp(5px,1vh,9px);
+ border-radius:clamp(13px,2.5vh,22px);
+ background:color-mix(in srgb,var(--nav-search-surface) 73%,#101014);
+ border:1px solid var(--nav-search-stroke);
+ touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+.mg-parity-touch-keyboard .mg-touch-key-row{
+ display:flex;gap:clamp(3px,.5vw,7px);min-width:0;
+ height:clamp(36px,9vh,52px);flex:0 0 auto;
+}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key{
+ flex:1 1 0;min-width:0;height:100%;
+ display:flex;align-items:center;justify-content:center;
+ padding:0 2px;border:0;border-radius:clamp(7px,1.4vh,11px);
+ background:color-mix(in srgb,var(--nav-search-ink) 20%,var(--nav-search-surface));
+ color:var(--nav-search-ink);box-shadow:0 1px 1px #0006;
+ font-family:system-ui,sans-serif;font-weight:500;
+ font-size:clamp(16px,4.9vh,28px);line-height:1;
+ -webkit-tap-highlight-color:transparent;
+}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key:active{
+ background:var(--nav-search-accent);color:#12212c;
+}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-shift,
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-backspace,
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-numbers,
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-abc{
+ flex:1.35 1 0;background:color-mix(in srgb,var(--nav-search-dim) 22%,var(--nav-search-background));
+}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-space{flex:5 1 0;font-size:clamp(13px,2.3vh,17px)}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-done{flex:1.35 1 0;font-size:clamp(12px,2.4vh,17px)}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-search{
+ flex:1.8 1 0;font-size:clamp(13px,2.7vh,18px);
+ font-weight:700;background:var(--nav-search-accent);color:#0b2331;
+}
+/* The user is typing: POI chips, tabs and management must not steal the
+   precious vertical space needed to read and tap the live result list. */
+.mg-parity-shade.mg-parity-keyboard-open #mg-parity-controls,
+.mg-parity-shade.mg-parity-keyboard-open .mg-parity-tabs,
+.mg-parity-shade.mg-parity-keyboard-open .mg-parity-manage-actions,
+.mg-parity-shade.mg-parity-querying .mg-parity-tabs,
+.mg-parity-shade.mg-parity-querying .mg-parity-manage-actions{
+ display:none!important;
+}
+.mg-parity-keyboard-open .mg-parity-layout{gap:clamp(3px,.7vh,6px)}
+.mg-parity-keyboard-open .mg-parity-results{flex:1 1 0;min-height:60px}
+.mg-parity-keyboard-open .mg-parity-row{min-height:clamp(47px,12vh,75px)}
+@media(orientation:landscape) and (max-height:520px){
+ .mg-parity-keyboard-open .mg-parity-top{height:clamp(42px,10.5vh,52px)}
+ .mg-parity-keyboard-open .mg-parity-shade{padding:4px}
+ .mg-parity-keyboard-open .mg-parity-section-title{padding:2px 5px}
+}

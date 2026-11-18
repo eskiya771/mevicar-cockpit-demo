@@ -9,6 +9,13 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
+// iPhone landscape uses a compact in-page keyboard without iOS predictive
+// and input accessory bars; Android and desktop keep their system keyboard.
+const ua=typeof navigator==='undefined'?'':String(navigator.userAgent||'');
+const iosDevice=/iPhone|iPad|iPod/.test(ua)||
+ (typeof navigator!=='undefined'&&navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const touchKeyboard=!native&&iosDevice&&!!window.matchMedia?.('(orientation: landscape)')?.matches;
+let keyboardVisible=false,keyboardUpper=false,keyboardNumbers=false;
 let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false,manage=false;
 let tab='recent',view='search',pendingSlot='',pendingFavorite=false,gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=shared.escapeHtml;
@@ -105,15 +112,98 @@ function manageActions(){
    '<input id="mg-parity-import" type="file" accept=".json,application/json" hidden onchange="MeviWebNavParity.importBook(this.files[0])">')+
   '<button type="button" onclick="MeviWebNavParity.clearHistory()">Verlauf löschen</button></div>';
 }
+function touchKeyboardHTML(){
+ if(!touchKeyboard)return '';
+ const letters=keyboardUpper?['QWERTZUIOPÜ','ASDFGHJKLÖÄ']:['qwertzuiopü','asdfghjklöä'];
+ const rows=keyboardNumbers?
+  [['1','2','3','4','5','6','7','8','9','0'],
+   ['-','/',':',';','(',')','€','&','@'],
+   ['abc','.',',','?','!','apostrophe','backspace']]:
+  [Array.from(letters[0]),Array.from(letters[1]),
+   ['shift',...Array.from(keyboardUpper?'YXCVBNM':'yxcvbnm'),'backspace']];
+ rows.push([keyboardNumbers?'abc':'numbers','space','done','search']);
+ const labels={shift:'⇧',backspace:'⌫',numbers:'123',abc:'ABC',space:'Leerzeichen',
+  done:'Fertig',search:'Suchen',apostrophe:"'"};
+ const keyHTML=key=>{
+  const label=labels[key]||key;
+  const kind=['shift','backspace','numbers','abc','done','search','space'].includes(key)?key:'letter';
+  return '<button type="button" data-key="'+safe(key)+'" class="mg-touch-key mg-touch-key-'+kind+
+   '" aria-label="'+safe(label)+'" onmousedown="event.preventDefault()" onclick="MeviWebNavParity.typeKey(this.dataset.key)">'+
+   safe(label)+'</button>';
+ };
+ return '<div class="mg-parity-touch-keyboard" id="mg-parity-touch-keyboard"'+
+  (keyboardVisible?'':' hidden')+' role="group" aria-label="Tastatur ohne Wortvorschläge">'+
+  rows.map(row=>'<div class="mg-touch-key-row">'+row.map(keyHTML).join('')+'</div>').join('')+'</div>';
+}
+function focusSearch(){
+ if(!touchKeyboard||view!=='search')return;
+ keyboardVisible=true;
+ document.querySelector?.('.mg-parity-shade')?.classList?.add('mg-parity-keyboard-open');
+ const keyboard=document.getElementById?.('mg-parity-touch-keyboard');
+ if(keyboard)keyboard.hidden=false;
+}
+function hideSearchKeyboard(){
+ keyboardVisible=false;
+ document.querySelector?.('.mg-parity-shade')?.classList?.remove('mg-parity-keyboard-open');
+ const keyboard=document.getElementById?.('mg-parity-touch-keyboard');
+ if(keyboard)keyboard.hidden=true;
+ document.getElementById?.('searchInput')?.blur?.();
+}
+function resultsScrolled(){
+ if(touchKeyboard&&keyboardVisible)hideSearchKeyboard();
+}
+function updateKeyboard(){
+ const element=document.getElementById?.('mg-parity-touch-keyboard');
+ if(element)element.outerHTML=touchKeyboardHTML();
+}
+function typeKey(key){
+ if(!touchKeyboard)return;
+ if(key==='done'){hideSearchKeyboard();return}
+ if(key==='search'){hideSearchKeyboard();submitSearch();return}
+ if(key==='shift'){keyboardUpper=!keyboardUpper;updateKeyboard();return}
+ if(key==='numbers'||key==='abc'){keyboardNumbers=key==='numbers';keyboardUpper=false;updateKeyboard();return}
+ const field=document.getElementById?.('searchInput');
+ const value=field?.value??s.query??'';
+ const start=Number.isInteger(field?.selectionStart)?field.selectionStart:value.length;
+ const end=Number.isInteger(field?.selectionEnd)?field.selectionEnd:start;
+ const insert=key==='space'?' ':key==='apostrophe'?"'":key;
+ let next,pos;
+ if(key==='backspace'){
+  if(end>start){next=value.slice(0,start)+value.slice(end);pos=start}
+  else{
+   const before=Array.from(value.slice(0,start)).slice(0,-1).join('');
+   next=before+value.slice(end);pos=before.length;
+  }
+ }else{
+  next=(value.slice(0,start)+insert+value.slice(end)).slice(0,200);
+  pos=Math.min(200,start+insert.length);
+  if(keyboardUpper){keyboardUpper=false;updateKeyboard()}
+ }
+ if(field){field.value=next;field.focus?.({preventScroll:true});field.setSelectionRange?.(pos,pos)}
+ input(next);
+}
+function fitVisualViewport(){
+ // Resize the shared overlay above a native Android / system keyboard.
+ if(touchKeyboard||!window.visualViewport)return;
+ const shade=document.querySelector?.('.mg-parity-shade:not(.mg-parity-selected)');
+ if(!shade)return;
+ const vv=window.visualViewport;
+ shade.style.top=Math.max(0,Math.round(vv.offsetTop||0))+'px';
+ shade.style.bottom='auto';
+ shade.style.height=Math.max(180,Math.round(vv.height))+'px';
+}
+window.visualViewport?.addEventListener?.('resize',fitVisualViewport);
+window.visualViewport?.addEventListener?.('scroll',fitVisualViewport);
 function searchHTML(){
- return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Zielsuche und Adressbuch"><div class="mg-parity-layout">'+
+ return '<div class="mg-parity-shade'+(keyboardVisible?' mg-parity-keyboard-open':'')+
+  ((s.query||'').trim()?' mg-parity-querying':'')+'" role="dialog" aria-modal="true" aria-label="Zielsuche und Adressbuch"><div class="mg-parity-layout">'+
   '<div class="mg-parity-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.close()" aria-label="Zurück">'+ico('back')+'</button>'+
-  '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="search" placeholder="Adresse, Ort, Favorit oder POI" aria-label="Adresse, Ort oder POI" autocomplete="off" spellcheck="false" maxlength="200" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
+  '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="text" placeholder="Adresse, Ort, Favorit oder POI" aria-label="Adresse, Ort oder POI" inputmode="'+(touchKeyboard?'none':'search')+'" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="200" onfocus="MeviWebNavParity.focusSearch()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
   '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
   '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
   tabs()+(manage?manageActions():'')+
   (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
-  '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
+  '<div class="mg-parity-results" id="suggestions" aria-live="polite" onscroll="MeviWebNavParity.resultsScrolled()">'+searchRows()+'</div>'+touchKeyboardHTML()+'</div></div>';
 }
 /* Single POI list and place card for Web and Android map interactions.
    Details are fetched only after one item is opened (Google Enterprise billing). */
@@ -258,19 +348,20 @@ function open(){
   return;
  }
  const context=provider.routeContext();
- bookOpenedFromSearch=false;manage=false;
+ bookOpenedFromSearch=false;manage=false;keyboardVisible=false;keyboardUpper=false;keyboardNumbers=false;
  returnNav=context.nativeOwned?'browse':s.nav==='preview'?'preview':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
  externalMapPlace=false;view='search';tab='recent';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
- provider.search('');rerender();window.MeviAndroidSharedNav?.setOpen(true);
+ provider.search('');rerender();fitVisualViewport();window.MeviAndroidSharedNav?.setOpen(true);
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
 function close(){
- bookOpenedFromSearch=false;manage=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
+ bookOpenedFromSearch=false;manage=false;keyboardVisible=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
  window.meviNavSearchClosed?.();
  rerender();window.MeviAndroidSharedNav?.setOpen(false);provider.cancel?.();
 }
 function input(value){
  s.query=String(value||'');provider.search(s.query);
+ document.querySelector?.('.mg-parity-shade')?.classList?.toggle('mg-parity-querying',!!s.query.trim());
  const controls=document.getElementById('mg-parity-controls');if(controls)controls.hidden=!!s.query.trim();
  const clear=document.querySelector('.mg-parity-clear');
  if(clear)clear.hidden=!s.query;
@@ -279,7 +370,10 @@ function input(value){
  const results=document.getElementById('suggestions');
  if(results&&view==='search')results.innerHTML=searchRows();
 }
-function clear(){s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
+function clear(){
+ s.query='';provider.search('');rerender();
+ document.getElementById?.('searchInput')?.focus?.({preventScroll:true});
+}
 function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
 function toggleManage(){manage=!manage;if(manage)tab='favorites';rerender()}
 async function choose(kind,index){
@@ -323,6 +417,7 @@ function slot(k){
  document.getElementById('searchInput')?.focus({preventScroll:true});
 }
 function poi(type,query){
+ keyboardVisible=false;
  stopError='';poiState={type,query,sort:'distance',openNow:false,alongRoute:stopMode&&provider.routeContext().hasRoute};
  view='results';s.nav='search';s.keyboard=false;s.query=query;
  provider.search(query);
@@ -481,6 +576,7 @@ async function routePlace(){
 }
 
 function submitSearch(){
+ keyboardVisible=false;
  const q=String(s.query||'').trim();
  if(q.length<2)return;
  poi('text',q);
@@ -549,6 +645,6 @@ function nativeImport(){if(provider.importPicker)void provider.importPicker().ca
 window.openSearch=open;
 function overlayHTML(){return view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
 window.searchOverlay=overlayHTML;
-window.MeviWebNavParity={overlayHTML,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={overlayHTML,focusSearch,hideSearchKeyboard,resultsScrolled,typeKey,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
