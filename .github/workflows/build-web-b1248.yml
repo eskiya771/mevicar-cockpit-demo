@@ -1,0 +1,42 @@
+name: Build MeviCar Next Web B1248
+on:
+  push:
+    branches: [release/web-b1248-single-source]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify shared navigation source syntax
+        run: |
+          node --check navigation-google.js
+          node --check navigation-shared-core.js
+          node --check navigation-android-provider.js
+          node --check nav-web-parity.js
+          node --check nav-dashboard.js
+          node --check nav-trip.js
+          node --check nav-route-details.js
+      - name: Assemble complete release and matching offline bundle
+        run: python3 release-src/build-release.py
+      - name: Commit verified release files to staging branch
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html build-info.json proxy-release.json offline-bundle.json offline-bundle.zip sw.js
+          git diff --cached --stat
+          git diff --cached --quiet && { echo "Missing generated release changes"; exit 1; }
+          git commit -m "build(web): B1248 from mevicar-next@ddd11767"
+          git push origin HEAD:release/web-b1248-single-source
