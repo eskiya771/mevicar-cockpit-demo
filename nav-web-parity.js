@@ -9,8 +9,8 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
-let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false;
-let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
+let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false,manage=false;
+let tab='recent',view='search',pendingSlot='',pendingFavorite=false,gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=shared.escapeHtml;
 const paths={
  back:'<path d="m15 18-6-6 6-6"/><path d="M9 12h12"/>',
@@ -63,25 +63,57 @@ function rows(kind,manage=false){
 const categories=[['home','Zuhause','home'],['work','Arbeit','work'],['fuel','Tanken','Tankstelle'],['charge','Laden','Ladestation'],['parking','Parken','Parkplatz'],['food','Essen','Restaurant'],['cafe','Café','Café'],['cart','Einkaufen','Supermarkt'],['rest','Rastplatz','Rastplatz WC'],['wrench','Werkstatt','Autowerkstatt']];
 function chips(){return '<div class="mg-parity-chips" aria-label="Schnellziele und POI-Kategorien">'+categories.map(([icon,label,q],i)=>
  '<button type="button" onclick="'+(i<2?'MeviWebNavParity.slot(\''+icon+'\')':'MeviWebNavParity.poi(\''+icon+'\',\''+q+'\')')+'">'+ico(icon)+'<span>'+label+'</span></button>').join('')+'</div>'}
-function tabs(){return '<div class="mg-parity-tabs"><button type="button" class="'+(tab==='recent'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button><button type="button" class="'+(tab==='favorites'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button><button type="button" class="mg-parity-book-tab" onclick="MeviWebNavParity.book()">Adressbuch</button></div>'}
+function tabs(){
+ return '<div class="mg-parity-tabs" role="group" aria-label="Gespeicherte Ziele und Verlauf">'+
+  '<button type="button" class="'+(tab==='recent'?'selected':'')+'" aria-pressed="'+(tab==='recent')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button>'+
+  '<button type="button" class="'+(tab==='favorites'?'selected':'')+'" aria-pressed="'+(tab==='favorites')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button>'+
+  '<button type="button" class="mg-parity-manage-toggle" aria-pressed="'+manage+'" onclick="MeviWebNavParity.toggleManage()">'+(manage?'Fertig':'Verwalten')+'</button></div>';
+}
+function localMatches(query){
+ const q=query.toLocaleLowerCase('de-DE'),d=data(),matches=[];
+ const add=(item,kind,index)=>{
+  if(item&&[item.name,item.address,item.note].filter(Boolean).join(' ').toLocaleLowerCase('de-DE').includes(q))
+   matches.push(row(item,kind,index,manage));
+ };
+ for(const kind of ['home','work'])add(d.slots[kind],kind,0);
+ d.favorites.forEach((item,i)=>add(item,'favorites',i));
+ d.recent.forEach((item,i)=>add(item,'recent',i));
+ return matches.join('');
+}
 function searchRows(){
  const d=data(),q=(s.query||'').trim();
  if(q){
-  if(q.length<2)return '<div class="mg-parity-empty">Mindestens zwei Zeichen eingeben.</div>';
-  return d.suggestions.length?d.suggestions.map((item,i)=>row({name:item.name,address:item.address||'Google Places'},'suggest',i,false)).join(''):'<div class="mg-parity-empty">'+safe(d.error||'Google Places sucht Adressen …')+'</div>';
+  const local=localMatches(q);
+  const remote=q.length<2?'<div class="mg-parity-empty">Für Online-Ergebnisse mindestens zwei Zeichen eingeben.</div>':
+   d.suggestions.length?d.suggestions.map((item,i)=>row({name:item.name,address:item.address||'Google Places'},'suggest',i,false)).join(''):
+   '<div class="mg-parity-empty">'+safe(d.error||'Google Places sucht Adressen …')+'</div>';
+  return (local?'<div class="mg-parity-section-title">Deine Ziele</div>'+local:'')+
+   '<div class="mg-parity-section-title">Adressen und Orte</div>'+remote;
  }
- if(tab==='recent')return rows('recent');
- return '<div class="mg-parity-slot-rows">'+(d.slots.home?row(d.slots.home,'home',0,false):'')+(d.slots.work?row(d.slots.work,'work',0,false):'')+'</div>'+
- rows('favorites');
+ if(tab==='recent')return rows('recent',manage);
+ return '<div class="mg-parity-slot-rows">'+(['home','work'].map(k=>d.slots[k]?
+  row(d.slots[k],k,0,manage):manage?
+  '<button type="button" class="mg-parity-empty-slot" onclick="MeviWebNavParity.slot(\''+k+'\')">'+ico(k)+' '+(k==='home'?'Zuhause':'Arbeit')+' festlegen</button>':'').join(''))+'</div>'+
+  rows('favorites',manage);
+}
+function manageActions(){
+ return '<div class="mg-parity-manage-actions" role="group" aria-label="Ziele verwalten">'+
+  '<button type="button" onclick="MeviWebNavParity.add()">'+ico('plus')+' Hinzufügen</button>'+
+  '<button type="button" onclick="MeviWebNavParity.exportBook()">Exportieren</button>'+
+  (provider.importPicker?'<button type="button" onclick="MeviWebNavParity.nativeImport()">Importieren</button>':
+   '<button type="button" onclick="document.getElementById(\'mg-parity-import\').click()">Importieren</button>'+
+   '<input id="mg-parity-import" type="file" accept=".json,application/json" hidden onchange="MeviWebNavParity.importBook(this.files[0])">')+
+  '<button type="button" onclick="MeviWebNavParity.clearHistory()">Verlauf löschen</button></div>';
 }
 function searchHTML(){
- return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Ziel suchen"><div class="mg-parity-layout">'+
- '<div class="mg-parity-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.close()" aria-label="Zurück">'+ico('back')+'</button>'+
- '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="search" placeholder="Adresse, Ort oder POI" aria-label="Adresse, Ort oder POI" autocomplete="off" spellcheck="false" maxlength="200" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
- '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
- '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+tabs()+'</div>'+
- (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
- '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
+ return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Zielsuche und Adressbuch"><div class="mg-parity-layout">'+
+  '<div class="mg-parity-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.close()" aria-label="Zurück">'+ico('back')+'</button>'+
+  '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="search" placeholder="Adresse, Ort, Favorit oder POI" aria-label="Adresse, Ort oder POI" autocomplete="off" spellcheck="false" maxlength="200" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
+  '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
+  '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
+  tabs()+(manage?manageActions():'')+
+  (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
+  '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
 }
 /* Single POI list and place card for Web and Android map interactions.
    Details are fetched only after one item is opened (Google Enterprise billing). */
@@ -161,35 +193,8 @@ function placeHTML(){
  (point||p.placeId?'<button type="button" onclick="MeviWebNavParity.savePlace()">'+(saved?'Gespeichert ✓':'Speichern')+'</button>':'')+
  '</div></div></div>';
 }
-function bookItems(items,kind){
- const q=filter.toLocaleLowerCase('de-DE').trim();
- return items.map((d,i)=>({d,i})).filter(x=>!q||(x.d.name+' '+(x.d.address||'')+' '+(x.d.note||'')).toLocaleLowerCase('de-DE').includes(q))
- .map(x=>row(x.d,kind,x.i,true)).join('')||'<div class="mg-parity-empty">Keine passenden Ziele.</div>';
-}
-function bookBody(){
- const d=data(),slots=['home','work'];
- return '<div class="mg-parity-book-grid"><section><h3>SCHNELLZIELE</h3>'+
- slots.map(k=>{
-  const item=d.slots[k];
-  if(filter&&!item)return '';
-  if(item&&filter&&!(item.name+' '+item.address+' '+(item.note||'')).toLocaleLowerCase('de-DE').includes(filter.toLocaleLowerCase('de-DE')))return '';
-  return item?row(item,k,0,true):'<button type="button" class="mg-parity-empty-slot" onclick="MeviWebNavParity.slot(\''+k+'\')">'+ico(k)+' '+(k==='home'?'Zuhause':'Arbeit')+' festlegen</button>';
- }).join('')+
- '<h3>FAVORITEN ('+d.favorites.length+')</h3>'+bookItems(d.favorites,'favorites')+'</section><section><div class="mg-parity-book-row"><h3>ZULETZT ('+d.recent.length+')</h3><button type="button" onclick="MeviWebNavParity.clearHistory()">Verlauf löschen</button></div>'+bookItems(d.recent,'recent')+'</section></div>';
-}
-function bookHTML(){
- return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Adressbuch"><div class="mg-parity-layout">'+
- '<div class="mg-parity-top mg-parity-book-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.bookBack()" aria-label="Zurück">'+ico('back')+'</button>'+
- '<strong>Adressbuch</strong><input id="mg-parity-filter" type="search" placeholder="Adressbuch filtern" value="'+safe(filter)+'" onkeydown="event.stopPropagation()" oninput="MeviWebNavParity.filter(this.value)">'+
- '<button type="button" class="mg-parity-add" onclick="MeviWebNavParity.add()">'+ico('plus')+' Hinzufügen</button></div>'+
- '<div class="mg-parity-book-content" id="mg-parity-book-body">'+bookBody()+'</div>'+
- '<div class="mg-parity-footer"><button type="button" onclick="MeviWebNavParity.exportBook()">Exportieren</button>'+
- (provider.importPicker?'<button type="button" onclick="MeviWebNavParity.nativeImport()">Importieren</button>':
- '<button type="button" onclick="document.getElementById(\'mg-parity-import\').click()">Importieren</button>'+
- '<input id="mg-parity-import" type="file" accept=".json,application/json" hidden onchange="MeviWebNavParity.importBook(this.files[0])">')+'</div></div></div>';
-}
 function editHTML(){
- if(!editor)return bookHTML();
+ if(!editor)return searchHTML();
  const glyphs=shared.ICONS.map(k=>'<button type="button" title="'+safe(k)+'" aria-label="Symbol '+safe(k)+'" aria-pressed="'+(editor.icon===k)+'" class="'+(editor.icon===k?'selected':'')+'" onclick="MeviWebNavParity.editIcon(\''+k+'\')">'+ico(k)+'</button>').join('');
  const roles=[['','Favorit'],['home','Zuhause'],['work','Arbeit']].map(([key,label])=>
   '<button type="button" class="'+(editor.slot===key?'selected':'')+'" aria-pressed="'+(editor.slot===key)+'" onclick="MeviWebNavParity.editSlot(\''+key+'\')">'+label+'</button>').join('');
@@ -220,7 +225,7 @@ function editSlot(slot){
  if(editor.icon===shared.defaultIcon(editor.slot))editor.icon=shared.defaultIcon(slot);
  editor.slot=slot;rerender();
 }
-function cancelEdit(){editor=null;editError='';view='book';rerender()}
+function cancelEdit(){editor=null;editError='';view='search';rerender()}
 async function saveEdit(){
  if(!editor)return;
  try{
@@ -230,13 +235,13 @@ async function saveEdit(){
   if(occupied&&!window.confirm((current.slot==='home'?'Zuhause':'Arbeit')+' ist bereits „'+book.slots[current.slot].name+'“. Dieses Schnellziel ersetzen?'))return;
   if(provider.editSaved)await provider.editSaved(current.kind,current.index,current);
   else write(changes);
-  editor=null;editError='';view='book';rerender();
+  editor=null;editError='';view='search';rerender();
  }catch(e){editError=String(e.message||e);rerender()}
 }
 function removeEdited(){
  if(!editor)return;
  const {kind,index}=editor;
- editor=null;editError='';view='book';remove(kind,index);
+ editor=null;editError='';view='search';remove(kind,index);
 }
 async function move(index,delta){
  try{
@@ -253,14 +258,14 @@ function open(){
   return;
  }
  const context=provider.routeContext();
- bookOpenedFromSearch=false;
+ bookOpenedFromSearch=false;manage=false;
  returnNav=context.nativeOwned?'browse':s.nav==='preview'?'preview':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
- externalMapPlace=false;view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
+ externalMapPlace=false;view='search';tab='recent';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();window.MeviAndroidSharedNav?.setOpen(true);
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
 function close(){
- bookOpenedFromSearch=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
+ bookOpenedFromSearch=false;manage=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
  window.meviNavSearchClosed?.();
  rerender();window.MeviAndroidSharedNav?.setOpen(false);provider.cancel?.();
 }
@@ -269,9 +274,14 @@ function input(value){
  const controls=document.getElementById('mg-parity-controls');if(controls)controls.hidden=!!s.query.trim();
  const clear=document.querySelector('.mg-parity-clear');
  if(clear)clear.hidden=!s.query;
+ // Local saved/recent results must update immediately, even below Places'
+ // two-character threshold. Keep the input DOM intact so the caret stays put.
+ const results=document.getElementById('suggestions');
+ if(results&&view==='search')results.innerHTML=searchRows();
 }
 function clear(){s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
 function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
+function toggleManage(){manage=!manage;if(manage)tab='favorites';rerender()}
 async function choose(kind,index){
  try{
   const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
@@ -285,7 +295,7 @@ async function choose(kind,index){
    if(place)await finishStop(place);
    return;
   }
-  if(!saveOnly)selectedReturnView=view==='book'?'book':'search';
+  if(!saveOnly)selectedReturnView='search';
   // The Android APK routes stored targets immediately. Match that flow in
   // the Web browser, without showing the intermediate Place-details dialog.
   // Search hits, stop selection, saving and native bridge paths are unchanged.
@@ -296,7 +306,7 @@ async function choose(kind,index){
   if(savingFavorite)await provider.saveFavorite();
   if(saveOnly){
    pendingSlot='';pendingFavorite=false;
-   view=savingFavorite?'book':'search';s.nav='search';s.query='';
+   view='search';tab=savingFavorite?'favorites':tab;manage=manage||savingFavorite;s.nav='search';s.query='';
    provider.search('');rerender();
   }else if(directRoute){
    s.nav='browse';s.keyboard=false;s.mode='map';rerender();
@@ -475,25 +485,31 @@ function submitSearch(){
  if(q.length<2)return;
  poi('text',q);
 }
+// Backward-compatible Android/book entry: the same shared search screen.
 function book(){
  if(!provider.isReady()&&window.MeviAndroidSharedNav?.isOptedIn?.()){
   void window.MeviAndroidSharedNav.connect().then(book).catch(e=>window.MeviAndroidSharedNav.showError?.(e));
   return;
  }
- // Back returns to the entry view; only a book opened from search returns to search.
  bookOpenedFromSearch=s.nav==='search';
  if(!bookOpenedFromSearch){
-  returnNav=provider.routeContext().nativeOwned?'browse':s.nav;
-  s.query='';stopMode=false;stopError='';pendingSlot='';pendingFavorite=false;editor=null;
-  provider.search('');
+  const previousNav=s.nav,fromDashboard=s.app==='navdashboard'&&s.mode==='split';
+  if(fromDashboard&&typeof window.openDashboardSearch==='function')window.openDashboardSearch();
+  else open();
+  // A direct Adressbuch call must restore its original route/map state.
+  returnNav=provider.routeContext().nativeOwned?'browse':previousNav;
+  bookOpenedFromSearch=false;
  }
- view='book';s.nav='search';s.keyboard=false;filter='';rerender();window.MeviAndroidSharedNav?.setOpen(true)
+ manage=true;tab='favorites';view='search';s.nav='search';s.keyboard=false;rerender();
 }
 function bookBack(){
  if(!bookOpenedFromSearch){close();return}
- editor=null;view='search';s.query='';provider.search('');rerender();
+ manage=false;tab='recent';s.query='';provider.search('');rerender();
 }
-function add(){pendingFavorite=true;view='search';s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
+function add(){
+ pendingFavorite=true;manage=true;tab='favorites';view='search';s.query='';
+ provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true});
+}
 function write(changes){provider.write(changes);rerender()}
 async function remove(kind,i){
  const d=data(),arr=kind==='recent'?d.recent:kind==='favorites'?d.favorites:[];
@@ -527,13 +543,12 @@ async function importBook(file){
   window.alert(result.added+' Ziele importiert'+(result.skipped?' · '+result.skipped+' ohne nutzbare Koordinaten übersprungen':'')+'.');
  }catch(e){window.alert('Adressbuch konnte nicht importiert werden: '+(e.message||e))}
 }
-function refreshBook(){const el=document.getElementById('mg-parity-book-body');if(el)el.innerHTML=bookBody()}
-function filterBook(q){filter=q;refreshBook()}
+function filterBook(q){input(q);rerender()}
 function nativeFailure(e){window.MeviAndroidSharedNav?.showError?.(e);window.alert?.('Adressbuch: '+(e?.message||e))}
 function nativeImport(){if(provider.importPicker)void provider.importPicker().catch(nativeFailure)}
 window.openSearch=open;
-function overlayHTML(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
+function overlayHTML(){return view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
 window.searchOverlay=overlayHTML;
-window.MeviWebNavParity={overlayHTML,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={overlayHTML,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();

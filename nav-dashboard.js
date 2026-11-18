@@ -24,11 +24,10 @@ function html(compact=false){
 const icon=path=>'<svg class="mg-dash-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="'+path+'"/></svg>';
 const icons={
  search:'M10.5 4a6.5 6.5 0 0 1 5.2 10.4l4.2 4.2-1.4 1.4-4.2-4.2A6.5 6.5 0 1 1 10.5 4zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z',
- book:'M6 3h11a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2V4a1 1 0 0 1 1-1zm1 2v12h10V5H7zm2 2h6v2H9V7zm0 4h6v2H9v-2z',
  full:'M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z'
 };
 /* The controls call the existing handlers of the shared page (index.html):
-   checkForUpdate, openDashboardSearch, openDashboardAddressBook, showGuidanceMap.
+   checkForUpdate, openDashboardSearch, showGuidanceMap.
    Clock, build and update texts are filled by their existing owners via the ids. */
 function panel(){
  return `<div class="mg-dash-panel" data-route-active="false">
@@ -42,7 +41,6 @@ function panel(){
   </header>
   <div class="mg-dash-actions" role="group" aria-label="Navigation bedienen">
    <button type="button" class="mg-dash-action" data-dash-action="search" onclick="openDashboardSearch()">${icon(icons.search)}<span>Ziel suchen</span></button>
-   <button type="button" class="mg-dash-action" data-dash-action="book" onclick="openDashboardAddressBook()">${icon(icons.book)}<span>Adressbuch</span></button>
   </div>
   ${html(true)}
  </div>`;

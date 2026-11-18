@@ -1166,35 +1166,32 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-distance{flex:0 0 auto;font-size:clamp(12px,2.35vh,21px);color:var(--nav-search-dim);white-space:nowrap}
 .mg-parity-empty{padding:clamp(13px,3vh,30px);font-size:clamp(13px,2.2vh,20px);color:var(--nav-search-dim)}
 .mg-navigation .mg-parity-empty-slot{border:0;background:var(--nav-search-surface);border-radius:12px;padding:12px 17px;text-align:left;font-size:clamp(13px,2.4vh,20px);min-height:44px}
-.mg-parity-book-top{gap:clamp(5px,1vw,14px)}
-.mg-parity-book-top strong{font-size:clamp(17px,3.2vh,29px);white-space:nowrap}
-#mg-parity-filter{flex:1;min-width:0;max-width:950px;height:90%;border:0;border-radius:14px;background:var(--nav-search-surface);color:var(--nav-search-ink);padding:0 14px;font-size:clamp(14px,2.5vh,22px)}
-.mg-navigation .mg-parity-add{height:90%;border-radius:12px;border:0;background:var(--nav-search-accent);color:#0d2132;white-space:nowrap;font-size:clamp(13px,2.4vh,20px);display:flex;gap:7px;align-items:center;padding:0 clamp(8px,1.4vw,20px)}
-.mg-parity-add svg{width:20px;height:20px}
-.mg-parity-book-content{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain}
-.mg-parity-book-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(9px,1.5vw,20px);height:100%}
-.mg-parity-book-grid section{min-width:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px}
-.mg-parity-book-grid h3{font-size:clamp(13px,2.1vh,18px);margin:10px 6px 3px;color:var(--nav-search-dim);letter-spacing:.025em}
-.mg-parity-book-grid .mg-parity-row{min-height:clamp(50px,10vh,75px)}
-.mg-parity-book-grid .mg-parity-description strong{font-size:clamp(13px,2.35vh,19px)}
-.mg-parity-book-grid .mg-parity-description small{font-size:clamp(11px,1.8vh,15px)}
-.mg-parity-book-grid .mg-parity-symbol{flex-basis:24px}
-.mg-parity-book-grid .mg-parity-distance{display:none}
-.mg-navigation .mg-parity-inline{flex:0 0 clamp(35px,4.5vw,48px);padding:5px;background:transparent;border:0;border-radius:0;color:var(--nav-search-dim)}
+/* Management belongs to the unified search view. */
+.mg-parity-tabs{min-width:0;overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
+.mg-parity-tabs::-webkit-scrollbar{display:none}
+.mg-navigation .mg-parity-tabs button{flex:0 0 auto;white-space:nowrap}
+.mg-navigation .mg-parity-tabs .mg-parity-manage-toggle[aria-pressed="true"]{
+ border:1px solid var(--nav-search-accent);color:var(--nav-search-accent)
+}
+.mg-parity-manage-actions{display:flex;gap:clamp(4px,.7vw,10px);overflow-x:auto;flex:0 0 auto;scrollbar-width:none}
+.mg-parity-manage-actions::-webkit-scrollbar{display:none}
+.mg-navigation .mg-parity-manage-actions button{
+ display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
+ min-height:44px;padding:5px clamp(9px,1.1vw,16px);
+ border-radius:12px;border:1px solid var(--nav-search-stroke);
+ background:var(--nav-search-surface);color:var(--nav-search-ink);
+ font-size:clamp(12px,2.2vh,18px);white-space:nowrap
+}
+.mg-parity-manage-actions svg{width:18px;height:18px}
+.mg-parity-section-title{flex:0 0 auto;font-size:clamp(12px,2.15vh,17px);font-weight:650;
+ color:var(--nav-search-dim);padding:clamp(4px,.6vh,8px) 5px}
+.mg-navigation .mg-parity-inline{flex:0 0 clamp(44px,5vw,56px);min-width:44px;min-height:44px;padding:5px;background:transparent;border:0;border-radius:0;color:var(--nav-search-dim)}
 .mg-parity-inline svg{width:19px;height:19px}
-.mg-parity-book-row{display:flex;align-items:center;justify-content:space-between;gap:5px}
-.mg-navigation .mg-parity-book-row button{border:0;background:var(--nav-search-surface);padding:8px;font-size:clamp(11px,2vh,15px)}
-.mg-parity-footer{display:flex;gap:8px;align-items:center;flex:0 0 auto}
-.mg-navigation .mg-parity-footer button{background:var(--nav-search-surface);border:0;border-radius:12px;padding:clamp(8px,1.7vh,15px) 18px;font-size:clamp(13px,2.1vh,18px)}
 .mg-parity-empty-slot{display:flex;align-items:center;gap:8px}
 .mg-parity-empty-slot svg{width:20px;height:20px}
 @media(max-width:850px), (max-height:440px){
  .mg-navigation .mg-parity-shade{padding: max(4px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))}
  .mg-parity-field>svg{display:none}
- .mg-parity-book-grid{grid-template-columns:1fr;gap:6px;height:auto}
- .mg-parity-book-grid section{overflow:visible}
- .mg-parity-book-content{overflow-y:auto}
- .mg-parity-book-top strong{font-size:15px}
  .mg-parity-top{height:clamp(42px,10.5vh,56px)}
  .mg-parity-row{min-height:clamp(47px,12.3vh,68px)}
 }
@@ -1210,9 +1207,6 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .mg-parity-layout{margin-left:0}
  .mg-parity-top{height:clamp(46px,9vh,72px)}
  .mg-parity-chips button{max-width:none}
- .mg-parity-book-grid{grid-template-columns:1fr;height:auto}
- .mg-parity-book-grid section{overflow:visible}
- .mg-parity-book-top strong{display:none}
 }
 
 /* Android-style edit sheet: shared search UI, keyboard-safe, no extra scroll in cockpit. */
@@ -1240,10 +1234,10 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-navigation .mg-parity-edit-actions button{border:0;background:#211332;color:#f8e9f8;
  border-radius:12px;padding:10px 17px;min-height:clamp(44px,9vh,58px);font-size:clamp(14px,2.4vh,20px)}
 .mg-navigation .mg-parity-edit-actions .mg-parity-edit-save{background:#55e5f6;color:#09252e}
-.mg-navigation .mg-parity-book-grid .mg-parity-inline[disabled]{opacity:.3;pointer-events:none}
+.mg-navigation .mg-parity-inline[disabled]{opacity:.3;pointer-events:none}
 @media(max-width:850px),(max-height:440px){
- .mg-navigation .mg-parity-book-grid .mg-parity-inline{flex-basis:clamp(27px,5vw,34px);padding:3px}
- .mg-navigation .mg-parity-book-grid .mg-parity-entry{padding:5px 7px;gap:5px}
+ .mg-navigation .mg-parity-inline{flex-basis:44px;padding:3px}
+ .mg-navigation .mg-parity-row .mg-parity-entry{padding:5px 7px;gap:5px}
  .mg-parity-edit-scroll{gap:5px;padding:4px}
  .mg-parity-edit-actions{gap:5px}
  .mg-navigation .mg-parity-edit-actions button{padding:6px 12px}
@@ -5656,7 +5650,6 @@ document.addEventListener('touchend',onSplitTwoFingerEnd,{passive:true});
 document.addEventListener('touchcancel',()=>{twoFingerStart=null},{passive:true});
 /* The shared Android/Web navigation module owns the sole search UI. */
 function openSearch(){return window.MeviWebNavParity?.open()}
-function openAddressBook(){return window.MeviWebNavParity?.book?.()}
 window.meviGoogleDestination=(name,address,options={})=>{s.destination=name;s.query=name;if(options.skipPreview)return;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviNativeGuidanceFocusMap=()=>{if(window.MeviGoogleNav?.isNativeMode?.()){s.app='nav';s.mode='map';s.keyboard=false}};window.meviGoogleRerender=()=>render();window.meviNativeArrivalFocusMap=()=>{s.app='nav';s.mode='map';s.nav='ready';s.keyboard=false;render()};window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};async function startRoute(){const n=window.MeviGoogleNav;if(!n)return false;const ready=await n.calculateRoute();if(!ready)return false;if(ready==='native')return true;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render();return true}
 async function beginNavigation(){const n=window.MeviGoogleNav;if(!n)return;const started=await n.startGuidance();if(!started)return;if(started==='native'){s.nav='ready';s.mode='map';s.app='nav';return} s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function beginNavigationDemo(){const n=window.MeviGoogleNav;if(!n?.startDemo())return;s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
@@ -5857,7 +5850,7 @@ APP_VECTORS.spectrum='<path class="main" d="M15 88h90 M22 74V55 M36 74V37 M51 74
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='spectrum'&&s.mode==='full')html='<div class="full spectrum-host">'+appBody()+'</div>';else if(s.app==='demo3d'&&s.mode==='full')html='<div class="full d3-host">'+appBody()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='spectrum'?'spectrum-host':s.app==='demo3d'?'d3-host':s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='spectrum'||s.app==='demo3d'||s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty'||s.app==='navdashboard')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();window.MeviDemo3D?.unmount();if(s.app!=='spectrum')window.MeviSpectrum?.stop();$('screen').innerHTML=html;if(s.app==='spectrum')window.MeviSpectrum?.mount();window.MeviDemo3D?.mount();paintDashboardHead();if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.7", "build": 1344, "commit": "dbbeefab699fbe618778f25ec3ad36783506ce2e"};
+const CURRENT_BUILD={"version": "0.6.7", "build": 1345, "commit": "5c8a6dcac70a7eb1d6dfaf7c7fdc53eb153c3c62"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -5885,7 +5878,6 @@ function paintDashboardHead(){const u=$('updateBtn');if(!u)return;u.innerHTML=to
 /* The shared search needs the full map; the dashboard comes back when it closes. */
 function leaveDashboardForSearch(){dashboardReturn=s.app==='navdashboard'&&s.mode==='split';if(dashboardReturn){s.app='nav';s.mode='map'}}
 function openDashboardSearch(){leaveDashboardForSearch();return openSearch()}
-function openDashboardAddressBook(){leaveDashboardForSearch();return openAddressBook()}
 window.meviNavSearchClosed=()=>{if(!dashboardReturn)return;dashboardReturn=false;const n=window.MeviGoogleNav;if(s.app==='nav'&&s.mode==='map'&&s.nav!=='preview'&&s.nav!=='search'&&!n?.nativeRoutePreview?.()&&!n?.currentNativeArrival?.()){s.app='navdashboard';s.mode='split'}};
 function setPlatformLabel(){const label=NATIVE_BUILD?'APP':'WEB';const header=$('meviPlatformHeader')?.querySelector('b');if(header)header.textContent='NEXT '+label;const launcher=$('meviPlatformLauncher');if(launcher)launcher.textContent='MEVICAR NEXT '+label;document.title='MeviCar Next '+(NATIVE_BUILD?'App':'Web')}
 function initBuild(){const e=$('buildVersion');if(e){e.textContent=NATIVE_BUILD?'Web '+CURRENT_BUILD.build+' · APK '+NATIVE_BUILD.build:'Web Build '+CURRENT_BUILD.build;e.title=versionTitle()}}async function checkForUpdate(){return checkForUpdateImpl(false)}async function checkForUpdateImpl(silent=false){const m={set textContent(v){updateText=String(v);paintUpdateState()}};if(!silent){updateChecking=true;m.textContent='Prüfe …'}try{
@@ -8447,8 +8439,8 @@ const nav=window.MeviGoogleNav;
 const shared=window.MeviNavigationShared;
 if(!shared||(!nav&&!injected))return;
 const provider=injected?shared.createProvider(injected):shared.createBrowserProvider(nav);
-let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false;
-let tab='recent',view='search',pendingSlot='',pendingFavorite=false,filter='',gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
+let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false,manage=false;
+let tab='recent',view='search',pendingSlot='',pendingFavorite=false,gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=shared.escapeHtml;
 const paths={
  back:'<path d="m15 18-6-6 6-6"/><path d="M9 12h12"/>',
@@ -8501,25 +8493,57 @@ function rows(kind,manage=false){
 const categories=[['home','Zuhause','home'],['work','Arbeit','work'],['fuel','Tanken','Tankstelle'],['charge','Laden','Ladestation'],['parking','Parken','Parkplatz'],['food','Essen','Restaurant'],['cafe','Café','Café'],['cart','Einkaufen','Supermarkt'],['rest','Rastplatz','Rastplatz WC'],['wrench','Werkstatt','Autowerkstatt']];
 function chips(){return '<div class="mg-parity-chips" aria-label="Schnellziele und POI-Kategorien">'+categories.map(([icon,label,q],i)=>
  '<button type="button" onclick="'+(i<2?'MeviWebNavParity.slot(\''+icon+'\')':'MeviWebNavParity.poi(\''+icon+'\',\''+q+'\')')+'">'+ico(icon)+'<span>'+label+'</span></button>').join('')+'</div>'}
-function tabs(){return '<div class="mg-parity-tabs"><button type="button" class="'+(tab==='recent'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button><button type="button" class="'+(tab==='favorites'?'selected':'')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button><button type="button" class="mg-parity-book-tab" onclick="MeviWebNavParity.book()">Adressbuch</button></div>'}
+function tabs(){
+ return '<div class="mg-parity-tabs" role="group" aria-label="Gespeicherte Ziele und Verlauf">'+
+  '<button type="button" class="'+(tab==='recent'?'selected':'')+'" aria-pressed="'+(tab==='recent')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button>'+
+  '<button type="button" class="'+(tab==='favorites'?'selected':'')+'" aria-pressed="'+(tab==='favorites')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button>'+
+  '<button type="button" class="mg-parity-manage-toggle" aria-pressed="'+manage+'" onclick="MeviWebNavParity.toggleManage()">'+(manage?'Fertig':'Verwalten')+'</button></div>';
+}
+function localMatches(query){
+ const q=query.toLocaleLowerCase('de-DE'),d=data(),matches=[];
+ const add=(item,kind,index)=>{
+  if(item&&[item.name,item.address,item.note].filter(Boolean).join(' ').toLocaleLowerCase('de-DE').includes(q))
+   matches.push(row(item,kind,index,manage));
+ };
+ for(const kind of ['home','work'])add(d.slots[kind],kind,0);
+ d.favorites.forEach((item,i)=>add(item,'favorites',i));
+ d.recent.forEach((item,i)=>add(item,'recent',i));
+ return matches.join('');
+}
 function searchRows(){
  const d=data(),q=(s.query||'').trim();
  if(q){
-  if(q.length<2)return '<div class="mg-parity-empty">Mindestens zwei Zeichen eingeben.</div>';
-  return d.suggestions.length?d.suggestions.map((item,i)=>row({name:item.name,address:item.address||'Google Places'},'suggest',i,false)).join(''):'<div class="mg-parity-empty">'+safe(d.error||'Google Places sucht Adressen …')+'</div>';
+  const local=localMatches(q);
+  const remote=q.length<2?'<div class="mg-parity-empty">Für Online-Ergebnisse mindestens zwei Zeichen eingeben.</div>':
+   d.suggestions.length?d.suggestions.map((item,i)=>row({name:item.name,address:item.address||'Google Places'},'suggest',i,false)).join(''):
+   '<div class="mg-parity-empty">'+safe(d.error||'Google Places sucht Adressen …')+'</div>';
+  return (local?'<div class="mg-parity-section-title">Deine Ziele</div>'+local:'')+
+   '<div class="mg-parity-section-title">Adressen und Orte</div>'+remote;
  }
- if(tab==='recent')return rows('recent');
- return '<div class="mg-parity-slot-rows">'+(d.slots.home?row(d.slots.home,'home',0,false):'')+(d.slots.work?row(d.slots.work,'work',0,false):'')+'</div>'+
- rows('favorites');
+ if(tab==='recent')return rows('recent',manage);
+ return '<div class="mg-parity-slot-rows">'+(['home','work'].map(k=>d.slots[k]?
+  row(d.slots[k],k,0,manage):manage?
+  '<button type="button" class="mg-parity-empty-slot" onclick="MeviWebNavParity.slot(\''+k+'\')">'+ico(k)+' '+(k==='home'?'Zuhause':'Arbeit')+' festlegen</button>':'').join(''))+'</div>'+
+  rows('favorites',manage);
+}
+function manageActions(){
+ return '<div class="mg-parity-manage-actions" role="group" aria-label="Ziele verwalten">'+
+  '<button type="button" onclick="MeviWebNavParity.add()">'+ico('plus')+' Hinzufügen</button>'+
+  '<button type="button" onclick="MeviWebNavParity.exportBook()">Exportieren</button>'+
+  (provider.importPicker?'<button type="button" onclick="MeviWebNavParity.nativeImport()">Importieren</button>':
+   '<button type="button" onclick="document.getElementById(\'mg-parity-import\').click()">Importieren</button>'+
+   '<input id="mg-parity-import" type="file" accept=".json,application/json" hidden onchange="MeviWebNavParity.importBook(this.files[0])">')+
+  '<button type="button" onclick="MeviWebNavParity.clearHistory()">Verlauf löschen</button></div>';
 }
 function searchHTML(){
- return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Ziel suchen"><div class="mg-parity-layout">'+
- '<div class="mg-parity-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.close()" aria-label="Zurück">'+ico('back')+'</button>'+
- '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="search" placeholder="Adresse, Ort oder POI" aria-label="Adresse, Ort oder POI" autocomplete="off" spellcheck="false" maxlength="200" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
- '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
- '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+tabs()+'</div>'+
- (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
- '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
+ return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Zielsuche und Adressbuch"><div class="mg-parity-layout">'+
+  '<div class="mg-parity-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.close()" aria-label="Zurück">'+ico('back')+'</button>'+
+  '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="search" placeholder="Adresse, Ort, Favorit oder POI" aria-label="Adresse, Ort oder POI" autocomplete="off" spellcheck="false" maxlength="200" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
+  '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
+  '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
+  tabs()+(manage?manageActions():'')+
+  (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
+  '<div class="mg-parity-results" id="suggestions" aria-live="polite">'+searchRows()+'</div></div></div>';
 }
 /* Single POI list and place card for Web and Android map interactions.
    Details are fetched only after one item is opened (Google Enterprise billing). */
@@ -8599,35 +8623,8 @@ function placeHTML(){
  (point||p.placeId?'<button type="button" onclick="MeviWebNavParity.savePlace()">'+(saved?'Gespeichert ✓':'Speichern')+'</button>':'')+
  '</div></div></div>';
 }
-function bookItems(items,kind){
- const q=filter.toLocaleLowerCase('de-DE').trim();
- return items.map((d,i)=>({d,i})).filter(x=>!q||(x.d.name+' '+(x.d.address||'')+' '+(x.d.note||'')).toLocaleLowerCase('de-DE').includes(q))
- .map(x=>row(x.d,kind,x.i,true)).join('')||'<div class="mg-parity-empty">Keine passenden Ziele.</div>';
-}
-function bookBody(){
- const d=data(),slots=['home','work'];
- return '<div class="mg-parity-book-grid"><section><h3>SCHNELLZIELE</h3>'+
- slots.map(k=>{
-  const item=d.slots[k];
-  if(filter&&!item)return '';
-  if(item&&filter&&!(item.name+' '+item.address+' '+(item.note||'')).toLocaleLowerCase('de-DE').includes(filter.toLocaleLowerCase('de-DE')))return '';
-  return item?row(item,k,0,true):'<button type="button" class="mg-parity-empty-slot" onclick="MeviWebNavParity.slot(\''+k+'\')">'+ico(k)+' '+(k==='home'?'Zuhause':'Arbeit')+' festlegen</button>';
- }).join('')+
- '<h3>FAVORITEN ('+d.favorites.length+')</h3>'+bookItems(d.favorites,'favorites')+'</section><section><div class="mg-parity-book-row"><h3>ZULETZT ('+d.recent.length+')</h3><button type="button" onclick="MeviWebNavParity.clearHistory()">Verlauf löschen</button></div>'+bookItems(d.recent,'recent')+'</section></div>';
-}
-function bookHTML(){
- return '<div class="mg-parity-shade" role="dialog" aria-modal="true" aria-label="Adressbuch"><div class="mg-parity-layout">'+
- '<div class="mg-parity-top mg-parity-book-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.bookBack()" aria-label="Zurück">'+ico('back')+'</button>'+
- '<strong>Adressbuch</strong><input id="mg-parity-filter" type="search" placeholder="Adressbuch filtern" value="'+safe(filter)+'" onkeydown="event.stopPropagation()" oninput="MeviWebNavParity.filter(this.value)">'+
- '<button type="button" class="mg-parity-add" onclick="MeviWebNavParity.add()">'+ico('plus')+' Hinzufügen</button></div>'+
- '<div class="mg-parity-book-content" id="mg-parity-book-body">'+bookBody()+'</div>'+
- '<div class="mg-parity-footer"><button type="button" onclick="MeviWebNavParity.exportBook()">Exportieren</button>'+
- (provider.importPicker?'<button type="button" onclick="MeviWebNavParity.nativeImport()">Importieren</button>':
- '<button type="button" onclick="document.getElementById(\'mg-parity-import\').click()">Importieren</button>'+
- '<input id="mg-parity-import" type="file" accept=".json,application/json" hidden onchange="MeviWebNavParity.importBook(this.files[0])">')+'</div></div></div>';
-}
 function editHTML(){
- if(!editor)return bookHTML();
+ if(!editor)return searchHTML();
  const glyphs=shared.ICONS.map(k=>'<button type="button" title="'+safe(k)+'" aria-label="Symbol '+safe(k)+'" aria-pressed="'+(editor.icon===k)+'" class="'+(editor.icon===k?'selected':'')+'" onclick="MeviWebNavParity.editIcon(\''+k+'\')">'+ico(k)+'</button>').join('');
  const roles=[['','Favorit'],['home','Zuhause'],['work','Arbeit']].map(([key,label])=>
   '<button type="button" class="'+(editor.slot===key?'selected':'')+'" aria-pressed="'+(editor.slot===key)+'" onclick="MeviWebNavParity.editSlot(\''+key+'\')">'+label+'</button>').join('');
@@ -8658,7 +8655,7 @@ function editSlot(slot){
  if(editor.icon===shared.defaultIcon(editor.slot))editor.icon=shared.defaultIcon(slot);
  editor.slot=slot;rerender();
 }
-function cancelEdit(){editor=null;editError='';view='book';rerender()}
+function cancelEdit(){editor=null;editError='';view='search';rerender()}
 async function saveEdit(){
  if(!editor)return;
  try{
@@ -8668,13 +8665,13 @@ async function saveEdit(){
   if(occupied&&!window.confirm((current.slot==='home'?'Zuhause':'Arbeit')+' ist bereits „'+book.slots[current.slot].name+'“. Dieses Schnellziel ersetzen?'))return;
   if(provider.editSaved)await provider.editSaved(current.kind,current.index,current);
   else write(changes);
-  editor=null;editError='';view='book';rerender();
+  editor=null;editError='';view='search';rerender();
  }catch(e){editError=String(e.message||e);rerender()}
 }
 function removeEdited(){
  if(!editor)return;
  const {kind,index}=editor;
- editor=null;editError='';view='book';remove(kind,index);
+ editor=null;editError='';view='search';remove(kind,index);
 }
 async function move(index,delta){
  try{
@@ -8691,14 +8688,14 @@ function open(){
   return;
  }
  const context=provider.routeContext();
- bookOpenedFromSearch=false;
+ bookOpenedFromSearch=false;manage=false;
  returnNav=context.nativeOwned?'browse':s.nav==='preview'?'preview':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
- externalMapPlace=false;view='search';tab='recent';filter='';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
+ externalMapPlace=false;view='search';tab='recent';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();window.MeviAndroidSharedNav?.setOpen(true);
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
 function close(){
- bookOpenedFromSearch=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
+ bookOpenedFromSearch=false;manage=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
  window.meviNavSearchClosed?.();
  rerender();window.MeviAndroidSharedNav?.setOpen(false);provider.cancel?.();
 }
@@ -8707,9 +8704,14 @@ function input(value){
  const controls=document.getElementById('mg-parity-controls');if(controls)controls.hidden=!!s.query.trim();
  const clear=document.querySelector('.mg-parity-clear');
  if(clear)clear.hidden=!s.query;
+ // Local saved/recent results must update immediately, even below Places'
+ // two-character threshold. Keep the input DOM intact so the caret stays put.
+ const results=document.getElementById('suggestions');
+ if(results&&view==='search')results.innerHTML=searchRows();
 }
 function clear(){s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
 function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
+function toggleManage(){manage=!manage;if(manage)tab='favorites';rerender()}
 async function choose(kind,index){
  try{
   const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
@@ -8723,7 +8725,7 @@ async function choose(kind,index){
    if(place)await finishStop(place);
    return;
   }
-  if(!saveOnly)selectedReturnView=view==='book'?'book':'search';
+  if(!saveOnly)selectedReturnView='search';
   // The Android APK routes stored targets immediately. Match that flow in
   // the Web browser, without showing the intermediate Place-details dialog.
   // Search hits, stop selection, saving and native bridge paths are unchanged.
@@ -8734,7 +8736,7 @@ async function choose(kind,index){
   if(savingFavorite)await provider.saveFavorite();
   if(saveOnly){
    pendingSlot='';pendingFavorite=false;
-   view=savingFavorite?'book':'search';s.nav='search';s.query='';
+   view='search';tab=savingFavorite?'favorites':tab;manage=manage||savingFavorite;s.nav='search';s.query='';
    provider.search('');rerender();
   }else if(directRoute){
    s.nav='browse';s.keyboard=false;s.mode='map';rerender();
@@ -8913,25 +8915,31 @@ function submitSearch(){
  if(q.length<2)return;
  poi('text',q);
 }
+// Backward-compatible Android/book entry: the same shared search screen.
 function book(){
  if(!provider.isReady()&&window.MeviAndroidSharedNav?.isOptedIn?.()){
   void window.MeviAndroidSharedNav.connect().then(book).catch(e=>window.MeviAndroidSharedNav.showError?.(e));
   return;
  }
- // Back returns to the entry view; only a book opened from search returns to search.
  bookOpenedFromSearch=s.nav==='search';
  if(!bookOpenedFromSearch){
-  returnNav=provider.routeContext().nativeOwned?'browse':s.nav;
-  s.query='';stopMode=false;stopError='';pendingSlot='';pendingFavorite=false;editor=null;
-  provider.search('');
+  const previousNav=s.nav,fromDashboard=s.app==='navdashboard'&&s.mode==='split';
+  if(fromDashboard&&typeof window.openDashboardSearch==='function')window.openDashboardSearch();
+  else open();
+  // A direct Adressbuch call must restore its original route/map state.
+  returnNav=provider.routeContext().nativeOwned?'browse':previousNav;
+  bookOpenedFromSearch=false;
  }
- view='book';s.nav='search';s.keyboard=false;filter='';rerender();window.MeviAndroidSharedNav?.setOpen(true)
+ manage=true;tab='favorites';view='search';s.nav='search';s.keyboard=false;rerender();
 }
 function bookBack(){
  if(!bookOpenedFromSearch){close();return}
- editor=null;view='search';s.query='';provider.search('');rerender();
+ manage=false;tab='recent';s.query='';provider.search('');rerender();
 }
-function add(){pendingFavorite=true;view='search';s.query='';provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true})}
+function add(){
+ pendingFavorite=true;manage=true;tab='favorites';view='search';s.query='';
+ provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true});
+}
 function write(changes){provider.write(changes);rerender()}
 async function remove(kind,i){
  const d=data(),arr=kind==='recent'?d.recent:kind==='favorites'?d.favorites:[];
@@ -8965,14 +8973,13 @@ async function importBook(file){
   window.alert(result.added+' Ziele importiert'+(result.skipped?' · '+result.skipped+' ohne nutzbare Koordinaten übersprungen':'')+'.');
  }catch(e){window.alert('Adressbuch konnte nicht importiert werden: '+(e.message||e))}
 }
-function refreshBook(){const el=document.getElementById('mg-parity-book-body');if(el)el.innerHTML=bookBody()}
-function filterBook(q){filter=q;refreshBook()}
+function filterBook(q){input(q);rerender()}
 function nativeFailure(e){window.MeviAndroidSharedNav?.showError?.(e);window.alert?.('Adressbuch: '+(e?.message||e))}
 function nativeImport(){if(provider.importPicker)void provider.importPicker().catch(nativeFailure)}
 window.openSearch=open;
-function overlayHTML(){return view==='book'?bookHTML():view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
+function overlayHTML(){return view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
 window.searchOverlay=overlayHTML;
-window.MeviWebNavParity={overlayHTML,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={overlayHTML,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();</script><script id="mevicar-homeassistant-script">/* MeviCar Next – Home Assistant. Mirrors Classic's FamilyPanel and separate
    Road Assist API access without copying secrets or weakening HA security. */
