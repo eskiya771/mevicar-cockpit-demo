@@ -41,8 +41,7 @@ async function refreshRoute(){
  if(changed&&searchOpen)root.render?.();
  return routeContext();
 }
-const valid=d=>d&&Number.isFinite(d.lat)&&Number.isFinite(d.lng)&&
- Math.abs(d.lat)<=90&&Math.abs(d.lng)<=180;
+const valid=d=>shared.validCoordinates(d);
 const copy=v=>JSON.parse(JSON.stringify(v));
 const id=()=>('web-'+Date.now().toString(36)+'-'+(++sequence).toString(36));
 const nativeRequest=(action,fields)=>nav.nativeRequest(action,fields||{});
@@ -135,7 +134,7 @@ async function savePlace(place,saved){
  await connect();
  const item=shared.destination(place);
  if(!item)throw new Error('Ort kann nicht gespeichert werden.');
- const key=x=>x.placeId?'p:'+x.placeId:valid(x)?'c:'+x.lat.toFixed(5)+','+x.lng.toFixed(5):'';
+ const key=shared.destinationKey;
  if(saved){
   const old=read().favorites.find(x=>key(x)&&key(x)===key(item));
   if(!old)return false;
@@ -235,8 +234,7 @@ async function removeEntry(kind,index){
   data.slots[kind];
  if(!item)return false;
  if(kind==='recent'){
-  const key=item.placeId?'p:'+item.placeId:
-   'c:'+Math.round(item.lat*1e5)+':'+Math.round(item.lng*1e5);
+  const key=shared.destinationKey(item);
   await book.removeRecent(key);
  }else await book.remove(item.id);
  return true;

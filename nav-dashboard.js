@@ -4,20 +4,8 @@
 'use strict';
 const placeholder='–';
 const rounded=value=>Number.isFinite(value)&&value>=0?String(Math.round(value)):placeholder;
-const clock=value=>Number.isFinite(value)&&value>0?
- new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(value)):placeholder;
-function distance(value){
- if(!Number.isFinite(value)||value<0)return placeholder;
- if(value<1000)return Math.round(value)+' m';
- return (value/1000).toLocaleString('de-DE',{minimumFractionDigits:1,maximumFractionDigits:1})+' km';
-}
-function duration(value){
- if(!Number.isFinite(value)||value<0)return placeholder;
- const minutes=Math.ceil(value/60);
- if(minutes<60)return minutes+' Min.';
- const hours=Math.floor(minutes/60),rest=minutes%60;
- return hours+' Std.'+(rest?' '+rest+' Min.':'');
-}
+/* Formatting and average speed come exclusively from nav-route-details.js.
+   The standalone Android dashboard loads that same module before this renderer. */
 function html(compact=false){
  return `<section class="mg-nav-dashboard${compact?' mg-dashboard-compact':''}" role="group" aria-label="Fahrtdashboard">
   <div class="mg-dash-cell mg-dash-speed"><span class="mg-dash-label">Geschwindigkeit</span>
@@ -34,15 +22,21 @@ function html(compact=false){
 }
 function paint(container,data){
  if(!container?.querySelector)return;
- const info=data||{};
+ const info=data||{},format=root.MeviNavRouteDetails;
+ // Web guidance and the Android SDK both supply raw metrics.
+ // avgKmh remains an input for compatibility with older callers only.
+ const rawAverage=Number.isFinite(info.drivenMeters)&&Number.isFinite(info.elapsedMs)?
+  format?.averageKmh(info.drivenMeters,info.elapsedMs):info.avgKmh;
+ const valid=value=>Number.isFinite(value)&&value>=0;
  const values={
   speed:rounded(info.speedKmh),
-  arrival:clock(info.arrivalEpochMs),
-  time:duration(info.remainingSeconds),
-  distance:distance(info.remainingMeters),
-  average:rounded(info.avgKmh),
+  arrival:Number.isFinite(info.arrivalEpochMs)&&info.arrivalEpochMs>0?
+   format?.clock(info.arrivalEpochMs,false)||placeholder:placeholder,
+  time:valid(info.remainingSeconds)?format?.duration(info.remainingSeconds,'ceil')||placeholder:placeholder,
+  distance:valid(info.remainingMeters)?format?.distance(info.remainingMeters,'dashboard')||placeholder:placeholder,
+  average:rounded(rawAverage),
   maximum:rounded(info.maxKmh),
-  camera:distance(info.nextCameraMeters)
+  camera:valid(info.nextCameraMeters)?format?.distance(info.nextCameraMeters,'dashboard')||placeholder:placeholder
  };
  for(const [key,value] of Object.entries(values)){
   const element=container.querySelector('[data-dash="'+key+'"]');

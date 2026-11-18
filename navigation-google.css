@@ -349,22 +349,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
  pointer-events:auto;
 }
-.mg-navigation .mg-guidance-trip button{
- border:0;border-radius:11px;color:var(--guidance-text);
- cursor:pointer;font:inherit;min-height:44px;
-}
-.mg-guidance-trip-main{
- display:flex;align-items:center;gap:clamp(7px,1.5vw,18px);
- min-width:0;flex:1;text-align:left;background:transparent;
- padding:5px 8px;overflow:hidden;
-}
-.mg-guidance-trip-main strong{flex:0 0 auto;font-size:clamp(13px,2.6vh,18px);white-space:nowrap}
-.mg-guidance-trip-main span{
- font-size:clamp(12px,2vh,15px);white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis;color:var(--guidance-muted);
-}
-.mg-guidance-trip-main #mg-trip-next-stop{color:var(--guidance-accent);flex:1;min-width:0}
-.mg-guidance-trip-main #mg-trip-muted{color:var(--guidance-muted)}
 .mg-navigation .mg-guidance-menu{
  position:absolute;z-index:9;top:max(7px,env(safe-area-inset-top,0px));
  bottom:calc(70px + env(safe-area-inset-bottom,0px));
@@ -405,9 +389,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-web-guidance #mg-next-turn{font-size:13px;-webkit-line-clamp:2}
  .mg-navigation.mg-web-driving .mg-guidance-trip{height:50px}
  .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
- .mg-guidance-trip-main{gap:8px}
- .mg-guidance-trip-main strong{font-size:12px}
- .mg-guidance-trip-main span{font-size:11px}
  .mg-navigation .mg-guidance-menu{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
 }
 @media(orientation:portrait){
@@ -484,13 +465,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
   max-width:calc(60vw - var(--mg-split-nav-left) - 8px);
  }
 }
-.mg-guidance-trip-main .mg-trip-menu-hint{
- flex:0 0 auto;
- font-size:clamp(10px,1.9vh,13px);
- font-weight:750;color:var(--guidance-accent);opacity:.93;
-}
-
-
 /* Native Google map stays to the right; both variants reuse guidanceMenuBodyHTML. */
 .mg-native-guidance-menu .mg-native-setup{display:none!important}
 .mg-native-guidance-pane{
@@ -512,3 +486,12 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  width:46px;flex:0 0 46px;text-align:center;
 }
 .mg-navigation .mg-native-guidance-pane .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
+
+/* Shared arrival card outside the native map touch area. */
+.mg-native-arrival .mg-native-setup{display:none!important}
+.mg-arrival-pane{justify-content:center}
+.mg-arrival-content{display:flex;flex-direction:column;align-items:stretch;gap:clamp(8px,2vh,16px);text-align:center;min-width:0}
+.mg-arrival-content h2{font-size:clamp(19px,3.8vh,32px);margin:0;line-height:1.15}
+.mg-arrival-content p{font-size:clamp(13px,2.5vh,21px);margin:0;overflow-wrap:anywhere;color:var(--route-muted)}
+.mg-arrival-actions{display:flex;flex-direction:column;gap:clamp(6px,1.5vh,12px)}
+.mg-navigation .mg-arrival-pane button{min-height:44px;font-weight:750;font-size:clamp(12px,2.5vh,19px)}
