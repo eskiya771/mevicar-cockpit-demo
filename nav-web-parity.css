@@ -65,14 +65,22 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-distance{flex:0 0 auto;font-size:clamp(14px,1.1vw,18px);line-height:1.2;color:var(--nav-search-dim);white-space:nowrap}
 .mg-parity-empty{padding:clamp(13px,3vh,30px);font-size:clamp(13px,2.2vh,20px);color:var(--nav-search-dim)}
 .mg-navigation .mg-parity-empty-slot{border:0;background:var(--nav-search-surface);border-radius:12px;padding:12px 17px;text-align:left;font-size:clamp(13px,2.4vh,20px);min-height:44px}
-/* Management belongs to the unified search view. */
+/* Tabs left, address-book management aligned right in the SAME toolbar row. */
+.mg-parity-toolbar{
+ display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;
+ gap:clamp(6px,1vw,18px);min-width:0;width:100%;
+}
 .mg-parity-tabs{min-width:0;overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
 .mg-parity-tabs::-webkit-scrollbar{display:none}
 .mg-navigation .mg-parity-tabs button{flex:0 0 auto;white-space:nowrap}
 .mg-navigation .mg-parity-tabs .mg-parity-manage-toggle[aria-pressed="true"]{
  border:1px solid var(--nav-search-accent);color:var(--nav-search-accent)
 }
-.mg-parity-manage-actions{display:flex;gap:clamp(4px,.7vw,10px);overflow-x:auto;flex:0 0 auto;scrollbar-width:none}
+.mg-parity-manage-actions{
+ display:flex;align-items:center;justify-content:flex-end;
+ gap:clamp(4px,.7vw,10px);overflow-x:auto;
+ flex:0 1 auto;min-width:0;margin-left:auto;scrollbar-width:none
+}
 .mg-parity-manage-actions::-webkit-scrollbar{display:none}
 .mg-navigation .mg-parity-manage-actions button{
  display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
@@ -82,6 +90,12 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  font-size:clamp(12px,2.2vh,18px);white-space:nowrap
 }
 .mg-parity-manage-actions svg{width:18px;height:18px}
+/* Only narrow portrait windows need a second line. Landscape keeps
+   the tab selection at left and the three actions at the right edge. */
+@media(max-width:720px){
+ .mg-parity-toolbar{flex-wrap:wrap}
+ .mg-parity-manage-actions{flex:1 1 100%;justify-content:flex-end;margin-left:0}
+}
 .mg-parity-section-title{flex:0 0 auto;font-size:clamp(13px,1.1vw,17px);font-weight:650;
  color:var(--nav-search-dim);padding:clamp(4px,.6vh,8px) 5px}
 .mg-navigation .mg-parity-inline{flex:0 0 clamp(44px,5vw,56px);min-width:44px;min-height:44px;padding:5px;background:transparent;border:0;border-radius:0;color:var(--nav-search-dim)}
@@ -272,10 +286,8 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 /* The user is typing: POI chips, tabs and management must not steal the
    precious vertical space needed to read and tap the live result list. */
 .mg-parity-shade.mg-parity-keyboard-open #mg-parity-controls,
-.mg-parity-shade.mg-parity-keyboard-open .mg-parity-tabs,
-.mg-parity-shade.mg-parity-keyboard-open .mg-parity-manage-actions,
-.mg-parity-shade.mg-parity-querying .mg-parity-tabs,
-.mg-parity-shade.mg-parity-querying .mg-parity-manage-actions{
+.mg-parity-shade.mg-parity-keyboard-open .mg-parity-toolbar,
+.mg-parity-shade.mg-parity-querying .mg-parity-toolbar{
  display:none!important;
 }
 .mg-parity-keyboard-open .mg-parity-layout{gap:clamp(3px,.7vh,6px)}

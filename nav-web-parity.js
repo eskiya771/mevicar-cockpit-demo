@@ -311,7 +311,7 @@ function searchHTML(){
   '<div class="mg-parity-field">'+ico(pendingSlot||'search')+purpose+'<input id="searchInput" type="text" placeholder="'+(slotName?'Adresse festlegen':'Adresse, Ort, Favorit oder POI')+'" aria-label="'+(slotName?'Adresse für '+slotName+' festlegen':'Adresse, Ort oder POI')+'" inputmode="'+(touchKeyboard?'none':'search')+'" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="200" onfocus="MeviWebNavParity.focusSearch()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
   '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
   '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
-  tabs()+manageActions()+
+  '<div class="mg-parity-toolbar" role="group" aria-label="Ziele und Verwaltung">'+tabs()+manageActions()+'</div>'+
   (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
   '<div class="mg-parity-results" id="suggestions" aria-live="polite" onclick="MeviWebNavParity.blankResultsTapped()" onscroll="MeviWebNavParity.resultsScrolled()">'+searchRows()+'</div>'+touchKeyboardHTML()+'</div></div>';
 }

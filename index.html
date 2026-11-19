@@ -1167,14 +1167,22 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 .mg-parity-distance{flex:0 0 auto;font-size:clamp(14px,1.1vw,18px);line-height:1.2;color:var(--nav-search-dim);white-space:nowrap}
 .mg-parity-empty{padding:clamp(13px,3vh,30px);font-size:clamp(13px,2.2vh,20px);color:var(--nav-search-dim)}
 .mg-navigation .mg-parity-empty-slot{border:0;background:var(--nav-search-surface);border-radius:12px;padding:12px 17px;text-align:left;font-size:clamp(13px,2.4vh,20px);min-height:44px}
-/* Management belongs to the unified search view. */
+/* Tabs left, address-book management aligned right in the SAME toolbar row. */
+.mg-parity-toolbar{
+ display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;
+ gap:clamp(6px,1vw,18px);min-width:0;width:100%;
+}
 .mg-parity-tabs{min-width:0;overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
 .mg-parity-tabs::-webkit-scrollbar{display:none}
 .mg-navigation .mg-parity-tabs button{flex:0 0 auto;white-space:nowrap}
 .mg-navigation .mg-parity-tabs .mg-parity-manage-toggle[aria-pressed="true"]{
  border:1px solid var(--nav-search-accent);color:var(--nav-search-accent)
 }
-.mg-parity-manage-actions{display:flex;gap:clamp(4px,.7vw,10px);overflow-x:auto;flex:0 0 auto;scrollbar-width:none}
+.mg-parity-manage-actions{
+ display:flex;align-items:center;justify-content:flex-end;
+ gap:clamp(4px,.7vw,10px);overflow-x:auto;
+ flex:0 1 auto;min-width:0;margin-left:auto;scrollbar-width:none
+}
 .mg-parity-manage-actions::-webkit-scrollbar{display:none}
 .mg-navigation .mg-parity-manage-actions button{
  display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
@@ -1184,6 +1192,12 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  font-size:clamp(12px,2.2vh,18px);white-space:nowrap
 }
 .mg-parity-manage-actions svg{width:18px;height:18px}
+/* Only narrow portrait windows need a second line. Landscape keeps
+   the tab selection at left and the three actions at the right edge. */
+@media(max-width:720px){
+ .mg-parity-toolbar{flex-wrap:wrap}
+ .mg-parity-manage-actions{flex:1 1 100%;justify-content:flex-end;margin-left:0}
+}
 .mg-parity-section-title{flex:0 0 auto;font-size:clamp(13px,1.1vw,17px);font-weight:650;
  color:var(--nav-search-dim);padding:clamp(4px,.6vh,8px) 5px}
 .mg-navigation .mg-parity-inline{flex:0 0 clamp(44px,5vw,56px);min-width:44px;min-height:44px;padding:5px;background:transparent;border:0;border-radius:0;color:var(--nav-search-dim)}
@@ -1374,10 +1388,8 @@ html[data-theme="liquidglass"] .mg-parity-shade{
 /* The user is typing: POI chips, tabs and management must not steal the
    precious vertical space needed to read and tap the live result list. */
 .mg-parity-shade.mg-parity-keyboard-open #mg-parity-controls,
-.mg-parity-shade.mg-parity-keyboard-open .mg-parity-tabs,
-.mg-parity-shade.mg-parity-keyboard-open .mg-parity-manage-actions,
-.mg-parity-shade.mg-parity-querying .mg-parity-tabs,
-.mg-parity-shade.mg-parity-querying .mg-parity-manage-actions{
+.mg-parity-shade.mg-parity-keyboard-open .mg-parity-toolbar,
+.mg-parity-shade.mg-parity-querying .mg-parity-toolbar{
  display:none!important;
 }
 .mg-parity-keyboard-open .mg-parity-layout{gap:clamp(3px,.7vh,6px)}
@@ -5946,7 +5958,7 @@ APP_VECTORS.spectrum='<path class="main" d="M15 88h90 M22 74V55 M36 74V37 M51 74
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='spectrum'&&s.mode==='full')html='<div class="full spectrum-host">'+appBody()+'</div>';else if(s.app==='demo3d'&&s.mode==='full')html='<div class="full d3-host">'+appBody()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='spectrum'?'spectrum-host':s.app==='demo3d'?'d3-host':s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='spectrum'||s.app==='demo3d'||s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty'||s.app==='navdashboard')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();window.MeviDemo3D?.unmount();if(s.app!=='spectrum')window.MeviSpectrum?.stop();$('screen').innerHTML=html;if(s.app==='spectrum')window.MeviSpectrum?.mount();window.MeviDemo3D?.mount();paintDashboardHead();if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version":"0.6.7","build":1368,"commit":"848c0064d9c0cd1c2d87e60c5e52607de5bc3484"};
+const CURRENT_BUILD={"version":"0.6.7","build":1369,"commit":"bd7c3365a4b56507d06cf8f9ad203120b39113c9"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -8837,7 +8849,7 @@ function searchHTML(){
   '<div class="mg-parity-field">'+ico(pendingSlot||'search')+purpose+'<input id="searchInput" type="text" placeholder="'+(slotName?'Adresse festlegen':'Adresse, Ort, Favorit oder POI')+'" aria-label="'+(slotName?'Adresse für '+slotName+' festlegen':'Adresse, Ort oder POI')+'" inputmode="'+(touchKeyboard?'none':'search')+'" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="200" onfocus="MeviWebNavParity.focusSearch()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
   '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
   '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
-  tabs()+manageActions()+
+  '<div class="mg-parity-toolbar" role="group" aria-label="Ziele und Verwaltung">'+tabs()+manageActions()+'</div>'+
   (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
   '<div class="mg-parity-results" id="suggestions" aria-live="polite" onclick="MeviWebNavParity.blankResultsTapped()" onscroll="MeviWebNavParity.resultsScrolled()">'+searchRows()+'</div>'+touchKeyboardHTML()+'</div></div>';
 }
