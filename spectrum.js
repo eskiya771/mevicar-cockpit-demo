@@ -10,6 +10,58 @@
   let session, playbackContext;
   const sources = new WeakMap();
   const canShare = () => typeof navigator.mediaDevices?.getDisplayMedia === 'function';
+  const isIOS = /iPhone|iPad|iPod/.test(String(navigator.userAgent||'')) ||
+    (navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+  const isPlaying = player => !!player && player.paused === false && player.readyState >= 2;
+  // This is a playback-timed visual EFFECT, never PCM/FFT data. Spotify's
+  // protected SDK audio is not exposed to third-party Web Audio analysis.
+  function syncSpectrum(s, state, now, dt) {
+    const track=String(state.track||'');
+    let seed=2166136261;
+    for(let i=0;i<track.length;i++)seed=Math.imul(seed^track.charCodeAt(i),16777619)>>>0;
+    const progress=(Number(state.progressMs)||0)/1000;
+    // Repeatable motion aligned to the track's reported playhead.
+    // Nominal beat rate varies with track identity, but isn't actual BPM.
+    const nominalBpm=98+(seed%57),phase=progress*nominalBpm/60;
+    const beat=Math.pow(Math.max(0,Math.cos(2*Math.PI*phase)),9);
+    const off=Math.sin(progress*2.35+(seed%79));
+    const variation=(x,t)=>Math.sin(x*12.9898+t*78.233+seed*.000001)*43758.5453%1;
+    for(let i=0;i<bands;i++){
+      const t=i/(bands-1);
+      const bass=Math.pow(1-t,1.75);
+      const wave=Math.abs(Math.sin(progress*(2.2+i*.045)+i*.59+off*.35));
+      const treble=Math.abs(Math.cos(progress*(5+i*.13)+i*1.32));
+      const shift=Math.abs(variation(i,Math.floor(progress*6))) * .17;
+      const target=state.playing?clamp((.18+.34*wave+.14*treble+shift+.38*beat*bass)*(.84-.34*t)):0;
+      const easing=state.playing?Math.min(1,dt*14):Math.min(1,dt*8);
+      s.levels[i]+=(target-s.levels[i])*easing;
+      s.peaks[i]=Math.max(s.levels[i],s.peaks[i]-dt*.39);
+    }
+    for(let j=0;j<s.wave.length;j++){
+      const a=j/s.wave.length;
+      s.wave[j]=Math.round(128+(state.playing?42:0)*
+        (Math.sin((a*12+progress*1.9)*2*Math.PI)*
+         .67+Math.sin((a*29-progress*.65)*2*Math.PI)*.33));
+    }
+    s.head=(s.head+1)%s.history.length;s.history[s.head].set(s.levels);
+  }
+  function playbackSyncState(s, now) {
+    const owner=window.meviSpectrumSource?.();
+    if(owner==='spotify'){
+      window.meviSpotifySpectrumPoll?.();
+      const state=window.meviSpotifySpectrumState?.();
+      return state?.available ? state : {source:'spotify',playing:false,available:false};
+    }
+    // When a radio station denies CORS, we can synchronize animation to its
+    // actual play/pause state but must not call that a frequency measurement.
+    if(owner==='radio' && !s.node){
+      const player=window.meviSpectrumPlayer?.();
+      return {source:'radio',playing:isPlaying(player),available:!!player,
+        track:player?.currentSrc||player?.src||'radio',
+        progressMs:Math.max(0,now-(s.radioEpoch||now)),durationMs:0};
+    }
+    return null;
+  }
   function releasePlayer(player) {
     const source = sources.get(player);
     if (!source) return;
@@ -25,7 +77,7 @@
       <div class="sp-display"><canvas aria-label="Musikvisualisierung"></canvas><div class="sp-notice" role="status"></div></div>
       <div class="sp-controls"><div class="sp-selector"><button data-act="prev" aria-label="Vorheriger Effekt">‹</button>
       <select aria-label="Visualisierungseffekt">${options()}</select><button data-act="next" aria-label="Nächster Effekt">›</button><span class="sp-count"></span></div>
-      <div class="sp-inputs"><button data-act="media">Auto</button>${canShare() ? '<button data-act="tab">Tab-Ton</button>' : ''}<button data-act="file">Datei öffnen</button><button data-act="mic">Mikrofon</button></div></div>
+      <div class="sp-inputs"><button data-act="media">Direkt</button>${canShare() ? '<button data-act="tab">Tab-Ton</button>' : ''}<button data-act="file">Datei öffnen</button><button data-act="mic">Mikrofon</button></div></div>
       <input type="file" accept="audio/*,.flac,.m4a,.opus" hidden></section>`;
   }
   function analyzer(context) {
@@ -73,16 +125,33 @@
     if (mode === 'media') {
       s.player = window.meviSpectrumPlayer?.();
       s.owner = window.meviSpectrumSource?.();
+      s.radioEpoch = performance.now();
     }
     const Context = contextType();
-    if (!Context) { s.error = 'Audioanalyse ist in diesem Browser nicht verfügbar.'; return; }
+    // Spotify does not expose PCM or FFT bins, but its *playback clock* can
+    // drive the display without an AudioContext or microphone permission.
+    if(mode==='media'&&s.owner==='spotify')return;
+    if (!Context) {
+      if(mode==='media'&&s.owner==='radio')return; // truthful playback-sync fallback
+      s.error = 'Audioanalyse ist in diesem Browser nicht verfügbar.';return;
+    }
     try {
       if (mode === 'media') {
         const player = s.player;
         if (!player || !(player.src.startsWith('blob:') || (s.owner === 'radio' && player.crossOrigin === 'anonymous'))) return;
         playbackContext ||= new Context();
+        // Call resume directly during Auto's tap. Don't await a promise that
+        // iOS can leave pending while no user activation is available.
+        // Routing media through a suspended AudioContext can mute playback.
+        // Await activation before inserting the audio element into the graph.
+        // On iOS the pending promise is retried by tapping "Auto"; stale
+        // connections are discarded via the current() request guard.
         await playbackContext.resume();
         if (!current() || player !== window.meviSpectrumPlayer?.()) return;
+        if(playbackContext.state!=='running'){
+          s.error='Für die Radio-Frequenzanalyse einmal „Direkt“ antippen.';
+          return;
+        }
         let source = sources.get(player);
         if (!source) {
           source = playbackContext.createMediaElementSource(player);
@@ -131,6 +200,7 @@
     for (let i = 0; i <= bands; i++) s.edges[i] = Math.min(s.node.frequencyBinCount - 1, Math.round(32 * (max/32) ** (i/bands) / hz));
   }
   function sample(s, dt) {
+    if(s.sync && !s.node){syncSpectrum(s,s.sync,performance.now(),dt);return}
     const node = s.node;
     if (node) { node.getByteFrequencyData(s.freq); node.getByteTimeDomainData(s.wave); }
     for (let i = 0; i < bands; i++) {
@@ -212,7 +282,7 @@
   }
   function mount() {
     const root=document.querySelector('.sp-unit'); if(!root)return;
-    const s=session || {events:new AbortController(),request:0,mode:'media',error:'',levels:new Float32Array(bands),peaks:new Float32Array(bands),edges:new Uint16Array(bands+1),
+    const s=session || {events:new AbortController(),request:0,mode:'media',error:'',sync:null,levels:new Float32Array(bands),peaks:new Float32Array(bands),edges:new Uint16Array(bands+1),
       wave:new Uint8Array(4096).fill(128),freq:new Uint8Array(2048),history:Array.from({length:48},()=>new Float32Array(bands)),head:0};
     const fresh=!session;session=s;cancelAnimationFrame(s.frame);
     s.root=root;s.canvas=root.querySelector('canvas');s.g=s.canvas.getContext('2d');s.notice=root.querySelector('.sp-notice');s.status=root.querySelector('.sp-status');syncControls(s);
@@ -242,28 +312,37 @@
       const dt=Math.min(.15,(now-last)/1000);last=now;
       const c=s.canvas,w=c.clientWidth,h=c.clientHeight,dpr=Math.min(2,window.devicePixelRatio||1);
       if(w<1||h<1)return;
+      const owner=window.meviSpectrumSource?.(),player=window.meviSpectrumPlayer?.();
+      if(s.mode==='media'&&(s.owner!==owner||s.player!==player)){
+        s.sync=null;connect(s,'media');
+      }
+      s.sync=s.mode==='media'?playbackSyncState(s,now):null;
       if(c.width!==Math.round(w*dpr)||c.height!==Math.round(h*dpr)){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
       s.g.setTransform(dpr,0,0,dpr,0,0);sample(s,dt);draw(s,w,h);
-      const owner = window.meviSpectrumSource?.(), player = window.meviSpectrumPlayer?.();
-      if (s.mode === 'media' && (s.owner !== owner || s.player !== player)) connect(s,'media');
-      const automatic = s.mode === 'media', radio = owner === 'radio';
-      const running = s.node?.context.state === 'running';
-      const playing = automatic ? player?.paused === false && (!radio || player.readyState >= 2) : !!s.capture;
-      const live = !!(running && playing);
+      const automatic=s.mode==='media',radio=owner==='radio',spotify=owner==='spotify';
+      const running=s.node?.context.state==='running';
+      const playing=automatic ? isPlaying(player) : !!s.capture;
+      const directLive=!!(running&&playing);
+      const syncLive=!!(s.sync?.available&&s.sync.playing);
+      const live=directLive||syncLive;
       const mediaButton = s.root.querySelector('[data-act=media]');
-      const caption = automatic && owner === 'media' && running ? (playing?'Pause':'Abspielen') : 'Auto';
+      const caption = automatic && owner === 'media' && running ? (playing?'Pause':'Abspielen') : 'Direkt';
       if (mediaButton.textContent !== caption) mediaButton.textContent = caption;
-      indicator(s, live ? (s.mode==='mic'?'Mikrofon live':s.mode==='tab'?'Tab-Ton live':radio?'Radio live':'Medien live') : 'Bereit', live);
+      indicator(s, syncLive ? (spotify?'Spotify · Sync-Animation':'Radio · Sync-Animation') :
+        directLive ? (s.mode==='mic'?'Mikrofon live':s.mode==='tab'?'Tab-Ton live':radio?'Radio FFT':'Medien FFT') :
+        'Bereit', live);
       let hint = '';
-      if (live && s.mode === 'tab') {
+      if (syncLive){
+        hint=''; // the header explicitly labels the non-FFT animation
+      } else if (live && s.mode === 'tab') {
         if (s.freq.some(value => value > 0)) s.lastSignal = now;
         s.lastSignal ??= now;
         if (now - s.lastSignal > 3000) hint = 'Kein hörbares Tab-Signal. Wiedergabe und Audiofreigabe prüfen.';
       } else if (!live) {
         if (s.mode === 'tab' || s.mode === 'mic') hint = 'Audioeingang wird verbunden …';
-        else if (automatic && player && playbackContext?.state === 'suspended') hint = 'Für die Analyse auf Auto tippen.';
-        else if (automatic && owner === 'spotify') hint = canShare() ? 'Spotify läuft auf diesem Gerät? Musik-Tab mit Ton teilen oder Mikrofon wählen.' : 'Für Spotify aus den Lautsprechern Mikrofon wählen.';
-        else if (automatic && radio && player && player.crossOrigin !== 'anonymous') hint = 'Dieser Sender erlaubt nur Wiedergabe. Für die Analyse Mikrofon wählen.';
+        else if (automatic && player && playbackContext?.state === 'suspended') hint = 'Für die Analyse auf Direkt tippen.';
+        else if (automatic && owner === 'spotify') hint = 'Spotify-Player starten und auf diesem Gerät abspielen. Für Spotify gibt es keine direkten FFT-Daten.';
+        else if (automatic && radio && player && player.crossOrigin !== 'anonymous') hint = 'Dieser Sender erlaubt keine FFT-Auslesung. Automatischer Wiedergabe-Sync verfügbar.';
         else if (automatic && radio) hint = player ? 'Warte auf Radiosignal …' : 'Radio starten oder andere Quelle wählen.';
         else hint = s.node ? 'Wiedergabe pausiert.' : 'Radio starten, Musikdatei öffnen oder Mikrofon wählen.';
       }
@@ -271,5 +350,13 @@
     }
     s.frame=requestAnimationFrame(frame);
   }
-  window.MeviSpectrum={html,mount,stop,releasePlayer};
+  function status(){
+    if(!session)return {active:false,source:'',mode:'',fft:false,sync:false,playing:false,level:0};
+    const s=session,source=window.meviSpectrumSource?.()||'';
+    const playing=!!(s.sync?.playing || (s.node && isPlaying(s.player)));
+    return {active:true,source,mode:s.mode,fft:!!s.node,
+      sync:!!s.sync?.available,playing,
+      level:s.levels.reduce((sum,v)=>sum+v,0)/bands};
+  }
+  window.MeviSpectrum={html,mount,stop,releasePlayer,isActive:()=>!!session,status};
 })();

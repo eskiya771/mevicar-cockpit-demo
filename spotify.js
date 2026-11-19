@@ -2032,6 +2032,32 @@
     tickTimer = null;
     st.mounted = false;
   }
+  // Public, read-only playback clock for the Spectrum display.
+  // No protected audio samples, no OAuth token, no second Spotify player.
+  // Only the *local MeviCar* SDK device is eligible for sync.
+  function spectrumState() {
+    const player = st.player;
+    const local = !!(st.webDeviceId && player?.device?.id === st.webDeviceId);
+    const duration = Number(player?.item?.duration_ms) || 0;
+    const elapsed = Math.max(0,Number(st.progressBase) || 0) +
+      (player?.is_playing && local ? Math.max(0,Date.now()-st.playerAt) : 0);
+    return {
+      source:'spotify', playing:!!(local && player?.is_playing),
+      available:local, track:local?(player?.item?.uri || ''):'',
+      progressMs:local?(duration?Math.min(duration,elapsed):elapsed):0,
+      durationMs:local?duration:0
+    };
+  }
+  let lastSpectrumPoll = 0;
+  function spectrumPoll() {
+    const now=Date.now();
+    if (!st.token || !st.webDeviceId || document.hidden || st.mounted ||
+        now-lastSpectrumPoll<3500) return;
+    lastSpectrumPoll=now;
+    // Update the existing Spotify state for a display that stays open while
+    // the full Spotify UI is unmounted. No extra device or audio instance.
+    poll(false).catch(()=>{});
+  }
   function debug() {
     return {
       client: !!st.clientId,
@@ -2103,6 +2129,8 @@
     meviSpotifyPauseForSource: pauseForSource,
     meviSpotifyParseLink: parseLink,
     meviSpotifyDebug: debug,
+    meviSpotifySpectrumState: spectrumState,
+    meviSpotifySpectrumPoll: spectrumPoll,
     MeviSpotify: {
       parseLink,
       redirectUri,
