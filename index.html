@@ -1388,236 +1388,237 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .mg-parity-keyboard-open .mg-parity-shade{padding:4px}
  .mg-parity-keyboard-open .mg-parity-section-title{padding:2px 5px}
 }
-</style><style id="mevicar-homeassistant-styles">/* Home Assistant Next – independent, no-scroll cockpit app.
-   The dashboard uses HA's native frontend authentication; the REST views
-   use a session-memory token (never localStorage or GitHub). */
+</style><style id="mevicar-homeassistant-styles">/* Home Assistant Next: native dashboard, device list and PIN gate.
+   Colours come from the custom properties on .ha-shell; themes only override those.
+   The token lives in session memory only (never localStorage or GitHub). */
 .ha-host{padding:0!important;overflow:hidden!important;display:flex;min-width:0;min-height:0}
 .ha-host>.ha-shell{flex:1}
-.ha-shell{--ha-accent:#61e1fc;min-height:0;min-width:0;width:100%;height:100%;
- display:flex;flex-direction:column;overflow:hidden;color:#eaf8ff;
- background:linear-gradient(135deg,#1c3a55 0%,#14253e 65%,#243653 100%);
- border:1px solid #75bbd23b;border-radius:15px;font-family:inherit;}
-.ha-shell button{min-width:0;touch-action:manipulation}
-.ha-header{flex:none;display:flex;align-items:center;justify-content:space-between;
- gap:10px;padding:clamp(7px,1.2vh,13px) clamp(10px,1.3vw,21px);
- background:linear-gradient(110deg,#1a4257,#1b304f);border-bottom:1px solid #84c5f438}
-.ha-title{display:flex;flex-direction:column;gap:2px;min-width:0}
-.ha-title small{font-size:clamp(9px,1.25vh,12px);letter-spacing:.12em;color:#a2eafb;font-weight:750}
-.ha-title b{font-size:clamp(17px,2.4vh,25px);letter-spacing:.045em;font-weight:850}
-.ha-head-actions{display:flex;gap:6px;flex:none}
-.ha-head-actions button{display:grid;place-items:center;width:clamp(34px,5.1vh,46px);height:clamp(34px,5.1vh,46px);
- font-size:clamp(17px,2.6vh,26px);border-radius:11px;background:#25495d;border:1px solid #a0def15e}
-.ha-tabs{flex:none;display:flex;gap:5px;padding:6px clamp(9px,1.2vw,18px);
- border-bottom:1px solid #83c0e331;background:#101f32c2;overflow-x:auto;scrollbar-width:none}
-.ha-tabs::-webkit-scrollbar{display:none}
-.ha-tab{flex:1;min-height:clamp(32px,5.2vh,46px);white-space:nowrap;
- font-size:clamp(11px,1.7vh,16px);font-weight:780;padding:6px;
- background:#344b63;border:1px solid #8ab9d163;border-radius:10px;color:#d5edfa}
-.ha-tab.active{border-color:#86f4e9;background:linear-gradient(125deg,#19667a,#216279);
- box-shadow:0 0 12px #54e4f83d;color:#fff}
-.ha-status-row{flex:none;min-height:27px;display:flex;align-items:center;padding:4px 14px;
- border-bottom:1px solid #8fb9d527;background:#10233995}
-.ha-status{font-size:clamp(10px,1.35vh,13px);color:#bdcfdc}
-.ha-status-ok{color:#81f2bf}
-.ha-status-error{color:#ffc5ca;line-height:1.3}
-.ha-main{flex:1;min-height:0;min-width:0;display:flex;overflow:hidden}
-.ha-dashboard-view,.ha-entities,.ha-radar-view,.ha-settings{display:flex;flex-direction:column;
- width:100%;height:100%;min-width:0;min-height:0;overflow:hidden}
-.ha-note{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
- background:#112c3cf2;padding:6px clamp(8px,1vw,14px);font-size:clamp(10px,1.4vh,13px);color:#cbe8f4}
-.ha-note button{flex:none;background:#256177;border:1px solid #85dffa82;padding:7px 10px;
- color:#e9fdff;border-radius:10px;font-weight:750}
-.ha-embed{flex:1;position:relative;min-width:0;min-height:0;background:#091b2b}
-.ha-embed iframe{display:block;border:0;width:100%;height:100%;background:#142339}
-.ha-embed-help{position:absolute;z-index:2;bottom:8px;left:50%;transform:translateX(-50%);
- pointer-events:none;max-width:calc(100% - 24px);width:max-content;
- border:1px solid #86cdd346;border-radius:10px;background:#0b2232c9;
- padding:5px 10px;color:#d4eafa;font-size:clamp(9px,1.25vh,12px);text-align:center}
-.ha-entity-summary{flex:none;padding:6px 13px;font-size:clamp(10px,1.35vh,13px);color:#b1d8ed}
-.ha-filters{flex:none;display:flex;align-items:center;gap:8px;padding:9px 13px 2px;min-width:0}
-.ha-filters input{flex:1;min-width:100px;border-radius:10px;padding:10px 12px;
- background:#0b2236;border:1px solid #88d6ec65;color:#f1fdff;min-height:37px}
-.ha-filter-buttons{display:flex;align-items:center;gap:4px;flex:none}
-.ha-filter-buttons button{padding:8px 10px;min-height:34px;font-size:clamp(10px,1.35vh,13px);border-radius:9px}
-.ha-filter-buttons button.active{background:#12677d;border-color:#52e8eb}
-.ha-entity-list,.ha-radar-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
- padding:5px clamp(9px,1vw,15px) 14px;scrollbar-width:thin}
-.ha-device-row,.ha-radar-item{display:flex;gap:clamp(9px,1vw,16px);align-items:center;
- padding:clamp(8px,1.2vh,13px);border:1px solid #9ac5d64d;border-radius:13px;
- background:linear-gradient(125deg,#31516dba,#314760a6);margin-bottom:6px;min-height:56px}
-.ha-device-icon,.ha-radar-pin{flex:none;width:clamp(34px,4.8vh,47px);height:clamp(34px,4.8vh,47px);
- display:grid;place-items:center;font-size:clamp(19px,3vh,26px);border-radius:11px;background:#1a3b57}
-.ha-device-copy,.ha-radar-item>div{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px}
-.ha-device-copy strong,.ha-radar-item strong{font-size:clamp(12px,1.8vh,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ha-device-copy span,.ha-radar-item>div>span{font-size:clamp(9px,1.35vh,12px);color:#b4cad8;
- overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ha-device-state{font-size:clamp(11px,1.7vh,15px);font-variant-numeric:tabular-nums;flex:none}
-.ha-device-action{flex:none;min-width:clamp(51px,5.2vw,72px);min-height:37px;padding:5px 10px;
- background:#365065;border:1px solid #91bfd88f;font-size:12px;font-weight:850}
-.ha-device-action.is-on{background:#168767;color:#e9fff3;border-color:#8bffc1}
-.ha-device-row.ha-unavailable{opacity:.56}
-.ha-device-action:disabled{cursor:not-allowed;opacity:.6}
-.ha-radar-title{flex:none;display:flex;align-items:center;justify-content:space-between;gap:7px;
- padding:12px 16px 8px;flex-wrap:wrap}
-.ha-radar-title b{font-size:clamp(15px,2.4vh,21px)}
-.ha-radar-title span,.ha-footnote{font-size:clamp(10px,1.45vh,13px);color:#bed9e6}
-.ha-radar-pin{color:#ffb9be;font-size:23px}
-.ha-radar-badge{flex:none;font-size:clamp(10px,1.5vh,14px);color:#fff;background:#2c4b62;border-radius:9px;padding:6px}
-.ha-footnote{flex:none;padding:7px 14px;border-top:1px solid #7ccad73b}
-.ha-login-prompt{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;align-items:center;
- justify-content:center;text-align:center;gap:11px;padding:20px}
-.ha-large-icon{font-size:clamp(38px,7vh,70px);color:#8cdded}
-.ha-login-prompt h3{margin:0;font-size:clamp(16px,2.8vh,25px)}
-.ha-login-prompt p{max-width:520px;color:#afcbdc;line-height:1.5;margin:0}
-.ha-login-prompt button,.ha-save-config{background:#116b84;border-color:#6fe9f0;color:#f2fbff;font-weight:800}
-.ha-settings{overflow-y:auto;overscroll-behavior:contain}
-.ha-settings-content{display:flex;flex-direction:column;gap:9px;padding:clamp(12px,1.8vw,23px);
- max-width:780px;width:100%;margin:0 auto}
-.ha-settings-content h3{margin:0 0 2px;font-size:clamp(17px,2.4vh,25px)}
-.ha-settings-content p{margin:0 0 5px;line-height:1.5;color:#c9dfe8}
-.ha-settings-content label{font-size:clamp(11px,1.6vh,14px);font-weight:800}
-.ha-settings-content input{min-height:41px;width:100%;padding:9px 12px;border-radius:10px;
- border:1px solid #78c5d87c;background:#0b2336;color:#ecfbff}
-.ha-token-actions{display:flex;gap:8px;flex-wrap:wrap}
-.ha-settings-content button{min-height:37px;padding:8px 14px}
-.ha-security-note,.ha-cors-note{font-size:clamp(10px,1.4vh,13px);
- line-height:1.45;color:#c0dce9;border-left:3px solid #3aaac7;background:#122e44;
- padding:9px 11px;border-radius:5px}
-.ha-security-note{border-left-color:#83ddbc}
-.ha-settings-content code{color:#b6f7fb}
-.ha-feedback{color:#ffb6bc;min-height:16px;font-size:13px}
-.ha-empty{padding:23px 15px;text-align:center;color:#bdd4e1}
-.ha-shell.is-compact .ha-title small{font-size:9px}
-.ha-shell.is-compact .ha-title b{font-size:13px}
-.ha-shell.is-compact .ha-header{padding:4px 6px}
-.ha-shell.is-compact .ha-tab{padding:3px 5px;font-size:clamp(8px,1.1vw,11px)}
-.ha-shell.is-compact .ha-tabs{padding:3px 5px;gap:3px}
-.ha-shell.is-compact .ha-status-row{padding:3px 8px;min-height:21px}
-.ha-shell.is-compact .ha-note{flex-wrap:wrap;padding:4px 6px;font-size:10px}
-.ha-shell.is-compact .ha-note button{min-height:28px;padding:4px 7px;font-size:10px}
-.ha-shell.is-compact .ha-filters{flex-wrap:wrap;gap:4px;padding:6px}
-.ha-shell.is-compact .ha-filter-buttons{width:100%;justify-content:space-between}
-.ha-shell.is-compact .ha-device-state{font-size:10px}
-.ha-shell.is-compact .ha-device-icon{display:none}
-.ha-shell.is-compact .ha-device-row{padding:6px;gap:5px}
-.ha-shell.is-compact .ha-device-action{min-height:30px;min-width:42px;padding:4px 5px}
-.ha-shell.is-compact .ha-embed-help{font-size:9px}
-@media (orientation:landscape) and (max-height:460px){
- .ha-header{padding:4px 9px}.ha-title b{font-size:14px}
- .ha-head-actions button{width:31px;height:31px;padding:2px}
- .ha-tabs{padding:3px 5px}.ha-tab{min-height:28px;padding:3px 5px;font-size:10px}
- .ha-status-row{min-height:20px;padding:2px 8px}
- .ha-note{padding:3px 6px;gap:4px}.ha-note button{padding:4px 6px;font-size:10px}
- .ha-device-row,.ha-radar-item{min-height:42px;padding:5px}
- .ha-settings-content{gap:4px;padding:8px}.ha-settings-content input{min-height:30px;padding:4px}
- .ha-settings-content button{min-height:29px;padding:4px 8px}
- .ha-embed-help{bottom:2px;padding:3px 5px;font-size:9px}
+.ha-shell{
+ --ha-bg:radial-gradient(120% 90% at 100% 0%,#1d5a7c55,transparent 60%),radial-gradient(90% 80% at 0% 100%,#3b3a8640,transparent 65%),linear-gradient(160deg,#12283f,#0c1a2c 60%,#141f3a);
+ --ha-hero:linear-gradient(120deg,#1f6485,#27437f 55%,#4b3b88);
+ --ha-surface:#ffffff0f;--ha-surface-2:#ffffff1c;--ha-line:#a8d8ff2b;--ha-text:#eef6ff;--ha-muted:#a9bdd3;
+ --ha-accent:#5fdcf8;--ha-accent-ink:#04202b;--ha-on:#ffc857;--ha-ok:#5fe3a1;--ha-bad:#ffa0a0;--ha-radius:16px;
+ display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;grid-template-rows:auto auto minmax(0,1fr);
+ column-gap:10px;align-items:center;min-width:0;min-height:0;height:100%;overflow:hidden;
+ padding:8px 10px 0;color:var(--ha-text);background:var(--ha-bg);
+ border:1px solid var(--ha-line);border-radius:15px;font-size:14px;line-height:1.25;
+}
+.ha-shell *{min-width:0}
+/* Neutralise the global and themed button look; every HA button states its own surface below. */
+html .ha-shell button{background:none;border:0;box-shadow:none;border-radius:12px;color:inherit;padding:0;margin:0;
+ font:inherit;text-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none;-webkit-tap-highlight-color:transparent}
+.ha-shell button:focus-visible,.ha-shell input:focus-visible{outline:2px solid var(--ha-accent);outline-offset:2px}
+.ha-shell .ha-svg{width:20px;height:20px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* Header */
+.ha-header{display:contents}
+.ha-title{grid-column:1;grid-row:1;display:flex;align-items:center;gap:9px;white-space:nowrap}
+.ha-title b{font-size:15px;font-weight:650;letter-spacing:.01em}
+.ha-logo{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;color:var(--ha-accent-ink);
+ background:linear-gradient(145deg,var(--ha-accent),color-mix(in srgb,var(--ha-accent) 55%,#fff));box-shadow:0 4px 14px color-mix(in srgb,var(--ha-accent) 35%,transparent)}
+.ha-tabs{grid-column:2;grid-row:1;display:flex;gap:2px;padding:3px;border-radius:14px;background:var(--ha-surface);border:1px solid var(--ha-line)}
+html .ha-shell .ha-tab{min-height:44px;padding:0 16px;border-radius:11px;background:none;border:0;box-shadow:none;color:var(--ha-muted);font-weight:600;white-space:nowrap;transition:background .15s,color .15s}
+html .ha-shell .ha-tab.active{background:var(--ha-accent);color:var(--ha-accent-ink)}
+.ha-status-row{grid-column:3;grid-row:1;display:flex;justify-content:flex-end;overflow:hidden}
+.ha-status{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ha-muted);font-size:12px}
+.ha-status::before{content:"";display:inline-block;width:8px;height:8px;margin-right:7px;border-radius:50%;background:var(--ha-muted);opacity:.7}
+.ha-status-ok::before{background:var(--ha-ok);opacity:1;box-shadow:0 0 0 3px color-mix(in srgb,var(--ha-ok) 22%,transparent)}
+.ha-status-error{color:var(--ha-bad);white-space:normal}
+.ha-status-error::before{background:var(--ha-bad);opacity:1}
+.ha-status-row:has(.ha-status-error){grid-column:1/-1;grid-row:2;justify-content:flex-start;padding:6px 2px 0}
+.ha-head-actions{grid-column:4;grid-row:1;display:flex}
+html .ha-shell .ha-head-actions button{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;color:var(--ha-muted);background:var(--ha-surface);border:1px solid var(--ha-line)}
+html .ha-shell .ha-head-actions button:active{color:var(--ha-text);background:var(--ha-surface-2)}
+.ha-main{grid-column:1/-1;grid-row:3;align-self:stretch;display:flex;min-height:0;overflow:hidden;padding-top:8px}
+.ha-main>*{flex:1}
+
+/* Native dashboard */
+.ha-dashboard-native{display:flex;flex-direction:column;gap:10px;overflow:auto;overscroll-behavior:contain;padding:0 0 10px;scrollbar-width:thin;scrollbar-color:var(--ha-line) transparent}
+.ha-family-hero{position:relative;flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:14px 16px;overflow:hidden;
+ border-radius:20px;background:var(--ha-hero);border:1px solid var(--ha-line);box-shadow:inset 0 1px #ffffff26}
+.ha-family-hero::before{content:"";position:absolute;right:-60px;top:-90px;width:240px;height:240px;border-radius:50%;pointer-events:none;
+ background:radial-gradient(circle,color-mix(in srgb,var(--ha-on) 38%,transparent),transparent 68%)}
+.ha-family-hero>*{position:relative}
+.ha-hero-copy{flex:1 1 170px}
+.ha-hero-copy small{display:block;font-size:11px;font-weight:650;letter-spacing:.12em;text-transform:uppercase;opacity:.78}
+.ha-hero-copy h3{margin:2px 0 3px;font-size:clamp(20px,2.2vw,28px);font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.ha-hero-copy p{margin:0;font-size:13px;opacity:.9}
+.ha-hero-people{display:flex;flex:0 0 auto;padding-left:8px}
+.ha-hero-people i{display:grid;place-items:center;width:36px;height:36px;margin-left:-8px;border-radius:50%;font-style:normal;font-weight:700;
+ color:var(--ha-accent-ink);background:linear-gradient(145deg,#fff,var(--ha-accent));border:2px solid color-mix(in srgb,var(--ha-ok) 80%,#fff)}
+.ha-hero-stats{display:flex;flex:0 1 auto;flex-wrap:wrap;gap:8px}
+.ha-hero-stat{display:grid;grid-template-columns:auto auto;column-gap:8px;align-items:center;padding:7px 12px 7px 10px;border-radius:14px;
+ background:#ffffff1f;border:1px solid #ffffff24;white-space:nowrap}
+.ha-hero-stat .ha-svg{grid-row:1/3;width:22px;height:22px;opacity:.9}
+.ha-hero-stat b{font-size:15px;font-weight:700;line-height:1.15}
+.ha-hero-stat small{font-size:11px;opacity:.8;line-height:1.15}
+html .ha-shell .ha-hero-link{flex:0 0 auto;min-height:44px;padding:0 14px;border-radius:13px;font-weight:600;white-space:nowrap;background:#ffffff1f;border:1px solid #ffffff38}
+html .ha-shell .ha-hero-link:active{background:#ffffff38}
+
+.ha-sections{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+html .ha-shell .ha-sections button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 10px;border-radius:14px;
+ color:var(--ha-muted);background:var(--ha-surface);border:1px solid var(--ha-line);font-weight:600;transition:background .15s,color .15s,border-color .15s}
+.ha-sections button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ha-sections button b{flex:0 0 auto;min-width:22px;padding:2px 6px;border-radius:9px;font-size:11px;font-weight:700;text-align:center;background:var(--ha-surface-2)}
+html .ha-shell .ha-sections button[aria-pressed="true"]{color:var(--ha-text);background:color-mix(in srgb,var(--ha-accent) 18%,transparent);border-color:color-mix(in srgb,var(--ha-accent) 70%,transparent)}
+.ha-sections button[aria-pressed="true"] .ha-svg{color:var(--ha-accent)}
+.ha-sections button[aria-pressed="true"] b{background:var(--ha-accent);color:var(--ha-accent-ink)}
+
+.ha-dashboard-section{flex:0 0 auto;display:flex;flex-direction:column;gap:10px}
+.ha-dashboard-section h4{margin:4px 2px -2px;font-size:12px;font-weight:650;letter-spacing:.1em;text-transform:uppercase;color:var(--ha-muted)}
+.ha-dashboard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:10px}
+.ha-dashboard-grid.is-people{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
+.ha-hint,.ha-empty{margin:0;padding:12px 14px;border-radius:14px;color:var(--ha-muted);border:1px dashed var(--ha-line);font-size:13px}
+
+.ha-dashboard-tile{--tile:var(--ha-accent);display:flex;flex-direction:column;justify-content:space-between;gap:8px;min-height:112px;padding:10px 6px 10px 12px;
+ border-radius:var(--ha-radius);background:var(--ha-surface);border:1px solid var(--ha-line);box-shadow:inset 0 1px #ffffff12;transition:background .2s,border-color .2s}
+.ha-dashboard-tile.is-light{--tile:var(--ha-on)}
+.ha-dashboard-tile.is-active{background:linear-gradient(150deg,color-mix(in srgb,var(--tile) 26%,transparent),color-mix(in srgb,var(--tile) 7%,transparent)),var(--ha-surface);
+ border-color:color-mix(in srgb,var(--tile) 60%,transparent)}
+.ha-dashboard-tile.is-unavailable{opacity:.62}
+.ha-dashboard-tile-top{display:flex;align-items:center;gap:10px}
+.ha-dashboard-glyph{flex:0 0 auto;display:grid;place-items:center;width:40px;height:40px;border-radius:13px;color:var(--tile);
+ background:color-mix(in srgb,var(--tile) 16%,transparent)}
+.ha-dashboard-tile.is-active .ha-dashboard-glyph{color:var(--ha-accent-ink);background:var(--tile);box-shadow:0 0 18px color-mix(in srgb,var(--tile) 55%,transparent)}
+.ha-dashboard-tile-copy{flex:1 1 auto;display:flex;flex-direction:column;gap:2px}
+.ha-dashboard-tile-name{font-size:14px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ha-dashboard-tile-state{font-size:12px;color:var(--ha-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html .ha-shell .ha-dashboard-favorite{flex:0 0 auto;width:44px;height:44px;border-radius:50%;background:none;border:0;box-shadow:none;font-size:19px;line-height:1;color:var(--ha-muted)}
+html .ha-shell .ha-dashboard-favorite[aria-pressed="true"]{color:var(--ha-on)}
+.ha-dashboard-tile-foot{display:flex;align-items:center;gap:10px;min-height:44px;padding-right:6px}
+.ha-dashboard-level{flex:1 1 auto;height:6px;border-radius:3px;overflow:hidden;background:var(--ha-surface-2)}
+.ha-dashboard-level.is-hidden{visibility:hidden}
+.ha-dashboard-level i{display:block;height:100%;border-radius:3px;background:var(--tile);transition:width .25s}
+html .ha-shell .ha-dashboard-toggle{position:relative;flex:0 0 auto;width:56px;height:44px;border-radius:22px;background:none;border:0;box-shadow:none}
+.ha-dashboard-toggle::before{content:"";position:absolute;left:2px;right:2px;top:7px;bottom:7px;border-radius:15px;background:var(--ha-surface-2);
+ border:1px solid var(--ha-line);transition:background .2s,border-color .2s}
+.ha-dashboard-toggle i{position:absolute;left:6px;top:11px;width:22px;height:22px;border-radius:50%;background:var(--ha-text);box-shadow:0 2px 5px #0006;transition:transform .2s}
+.ha-dashboard-toggle.is-on::before{background:var(--tile);border-color:var(--tile)}
+.ha-dashboard-toggle.is-on i{transform:translateX(22px);background:#fff}
+.ha-dashboard-toggle.is-busy{opacity:.55}
+.ha-dashboard-readonly{flex:0 0 auto;font-size:12px;color:var(--ha-muted)}
+.ha-dashboard-value{display:flex;align-items:baseline;gap:5px;white-space:nowrap;overflow:hidden}
+.ha-dashboard-value b{font-size:30px;font-weight:650;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.ha-dashboard-value small{font-size:14px;color:var(--ha-muted)}
+.ha-dashboard-value.is-text b{font-size:18px;overflow:hidden;text-overflow:ellipsis}
+
+.ha-person{display:flex;align-items:center;gap:12px;min-height:68px;padding:10px 12px;border-radius:var(--ha-radius);background:var(--ha-surface);border:1px solid var(--ha-line);box-shadow:inset 0 1px #ffffff12}
+.ha-person>i{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;font-style:normal;font-size:18px;font-weight:700;
+ background:var(--ha-surface-2);border:2px solid var(--ha-line);color:var(--ha-muted)}
+.ha-person.is-home>i{color:var(--ha-accent-ink);background:linear-gradient(145deg,#fff,var(--ha-accent));border-color:var(--ha-ok);box-shadow:0 0 0 3px color-mix(in srgb,var(--ha-ok) 22%,transparent)}
+.ha-person>div{display:flex;flex-direction:column;gap:3px}
+.ha-person strong{font-size:15px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ha-person small{align-self:flex-start;padding:2px 8px;border-radius:9px;font-size:11px;font-weight:600;color:var(--ha-muted);background:var(--ha-surface-2)}
+.ha-person.is-home small{color:var(--ha-ok);background:color-mix(in srgb,var(--ha-ok) 16%,transparent)}
+
+/* PIN gate and "not connected" prompt */
+.ha-pin,.ha-login-prompt{flex:0 1 auto;align-self:center;margin:0 auto 8px;width:min(100%,360px);max-height:100%;overflow:auto;padding:14px 16px;
+ border-radius:20px;background:var(--ha-surface);border:1px solid var(--ha-line);box-shadow:inset 0 1px #ffffff1c,0 18px 40px #0000004d}
+.ha-prompt-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;color:var(--ha-accent);background:color-mix(in srgb,var(--ha-accent) 16%,transparent)}
+.ha-pin{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;row-gap:2px;align-items:center}
+.ha-pin .ha-prompt-icon{grid-row:1/3}
+.ha-pin label{align-self:end;font-size:16px;font-weight:650}
+.ha-pin p{align-self:start;margin:0;font-size:12px;color:var(--ha-muted)}
+.ha-pin-row{grid-column:1/-1;display:flex;gap:8px;margin-top:10px}
+.ha-pin input{flex:1 1 auto;min-height:46px;padding:0 14px;border-radius:13px;border:1px solid var(--ha-line);background:#0000003d;color:var(--ha-text);
+ font:inherit;font-size:20px;letter-spacing:.35em;text-align:center}
+html .ha-shell .ha-pin button{flex:0 0 auto;min-height:46px;padding:0 16px;border-radius:13px;font-weight:650;background:var(--ha-accent);color:var(--ha-accent-ink)}
+.ha-pin output{grid-column:1/-1;min-height:16px;margin-top:6px;font-size:12px;color:var(--ha-bad);text-align:center}
+.ha-login-prompt{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:12px;align-items:center}
+.ha-login-prompt .ha-prompt-icon{grid-row:1/3}
+.ha-login-prompt h3{margin:0;font-size:16px;font-weight:650}
+.ha-login-prompt p{margin:2px 0 0;font-size:13px;color:var(--ha-muted)}
+
+/* Device list */
+.ha-entities{display:flex;flex-direction:column;gap:8px;min-height:0;padding-bottom:8px}
+.ha-filters{flex:0 0 auto;display:flex;gap:8px;align-items:center}
+.ha-filters input{flex:1 1 140px;min-height:50px;padding:0 14px;border-radius:14px;border:1px solid var(--ha-line);background:var(--ha-surface);color:var(--ha-text);font:inherit;font-size:16px}
+.ha-filters input::placeholder{color:var(--ha-muted)}
+.ha-filter-buttons{flex:0 0 auto;display:flex;gap:2px;padding:3px;border-radius:14px;background:var(--ha-surface);border:1px solid var(--ha-line)}
+html .ha-shell .ha-filter-buttons button{min-height:44px;padding:0 12px;border-radius:11px;background:none;border:0;box-shadow:none;color:var(--ha-muted);font-weight:600;white-space:nowrap}
+html .ha-shell .ha-filter-buttons button.active{background:var(--ha-surface-2);color:var(--ha-text)}
+.ha-entity-summary{flex:0 0 auto;font-size:12px;color:var(--ha-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ha-entity-list{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:6px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--ha-line) transparent}
+.ha-device-row{flex:0 0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;gap:10px;min-height:56px;padding:6px 8px 6px 10px;
+ border-radius:14px;background:var(--ha-surface);border:1px solid var(--ha-line)}
+.ha-device-row.ha-unavailable{opacity:.6}
+.ha-device-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;color:var(--ha-accent);background:color-mix(in srgb,var(--ha-accent) 14%,transparent)}
+.ha-device-copy{display:flex;flex-direction:column;gap:1px}
+.ha-device-copy strong{font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ha-device-copy span{font-size:11px;color:var(--ha-muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ha-device-state{max-width:34vw;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html .ha-shell .ha-device-action{min-width:58px;min-height:44px;padding:0 12px;border-radius:12px;font-weight:700;font-size:12px;letter-spacing:.04em;
+ color:var(--ha-text);background:var(--ha-surface-2);border:1px solid var(--ha-line)}
+html .ha-shell .ha-device-action.is-on{color:var(--ha-accent-ink);background:var(--ha-accent);border-color:var(--ha-accent)}
+.ha-shell button:disabled{opacity:.5;cursor:default}
+
+/* Narrow split column */
+.ha-shell.is-compact{column-gap:6px;padding:6px 8px 0}
+.ha-shell.is-compact .ha-title b{display:none}
+html .ha-shell.is-compact .ha-tab{padding:0 11px}
+.ha-shell.is-compact .ha-family-hero{padding:12px}
+.ha-shell.is-compact .ha-hero-copy{flex-basis:150px}
+.ha-shell.is-compact .ha-hero-stats{flex:1 1 100%}
+.ha-shell.is-compact .ha-hero-stat{flex:1 1 0;padding:6px 8px;column-gap:6px}
+html .ha-shell.is-compact .ha-hero-link{flex:1 1 100%}
+.ha-shell.is-compact .ha-sections{gap:6px}
+html .ha-shell.is-compact .ha-sections button{gap:5px;padding:0 6px;font-size:13px}
+.ha-shell.is-compact .ha-dashboard-grid{grid-template-columns:repeat(auto-fill,minmax(168px,1fr))}
+.ha-shell.is-compact .ha-filters{flex-wrap:wrap}
+.ha-shell.is-compact .ha-filter-buttons{flex:1 1 auto}
+html .ha-shell.is-compact .ha-filter-buttons button{flex:1 1 auto}
+.ha-shell.is-compact .ha-device-row{grid-template-columns:auto minmax(0,1fr) auto}
+.ha-shell.is-compact .ha-device-state{grid-column:2;grid-row:2;max-width:none;text-align:left;font-size:12px;color:var(--ha-muted)}
+.ha-shell.is-compact .ha-device-icon{grid-row:1/3}
+html .ha-shell.is-compact .ha-device-action{grid-column:3;grid-row:1/3}
+/* Narrow split column (phones): status as a dot only, section tabs without icons, stats stacked. */
+.ha-shell{container:ha-shell/inline-size}
+@container ha-shell (max-width:420px){
+ .ha-status-row:not(:has(.ha-status-error)){min-width:18px;overflow:visible;justify-content:center}
+ .ha-status:not(.ha-status-error){font-size:0;overflow:visible}
+ .ha-status:not(.ha-status-error)::before{margin-right:0}
+ .ha-sections button .ha-svg{display:none}
+ .ha-hero-stat{grid-template-columns:auto;justify-items:center;text-align:center;padding:6px 4px}
+ .ha-hero-stat .ha-svg{grid-row:auto;width:18px;height:18px}
+ .ha-hero-stat small{font-size:10px}
 }
 
-/* Native HA dashboard for Next: iframe-free, driven by the authenticated HA API.
-   Keeps the Android Classic dashboard available as an external tab. */
-.ha-dashboard-native{flex:1;min-height:0;min-width:0;width:100%;height:100%;overflow-y:auto;
- overscroll-behavior:contain;padding:clamp(10px,1.6vw,20px);
- display:flex;flex-direction:column;gap:clamp(12px,1.7vh,18px);scrollbar-width:thin}
-.ha-dashboard-overview{border:1px solid #73d2ec52;border-radius:16px;padding:clamp(10px,1.6vw,18px);
- background:linear-gradient(125deg,#1a475e,#132b44);box-shadow:inset 0 1px #a7e9ed13}
-.ha-dashboard-intro{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.ha-dashboard-intro small{color:#66e8f4;letter-spacing:.17em;font-size:clamp(10px,1.35vh,12px);font-weight:800}
-.ha-dashboard-intro h3{margin:4px 0;font-size:clamp(21px,3.5vh,34px);color:#f5fcff;letter-spacing:-.02em}
-.ha-dashboard-intro p{margin:0;color:#b8d2e2;font-size:clamp(10px,1.5vh,14px)}
-.ha-dashboard-intro>button,.ha-dashboard-section-title button,.ha-dashboard-calltoaction button{
- border:1px solid #84d7ed86;border-radius:11px;padding:8px 12px;background:#236079;color:#edfaff;
- font-size:clamp(10px,1.5vh,14px);font-weight:800;min-height:38px}
-.ha-dashboard-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(5px,.8vw,12px);margin-top:clamp(10px,1.6vh,16px)}
-.ha-dashboard-stats>div{display:flex;flex-direction:column;gap:4px;border:1px solid #89d1e137;
- border-radius:12px;padding:clamp(8px,1.2vw,15px);background:#0e293e9a;min-width:0}
-.ha-dashboard-stats strong{font-size:clamp(20px,3.6vh,35px);color:#effaff;font-variant-numeric:tabular-nums}
-.ha-dashboard-stats span{font-size:clamp(10px,1.4vh,13px);color:#b5d3e2;overflow-wrap:anywhere}
-.ha-dashboard-section{display:flex;flex-direction:column;gap:9px;min-width:0}
-.ha-dashboard-section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
-.ha-dashboard-section-title h4{margin:0;font-size:clamp(15px,2.25vh,21px);font-weight:820;color:#eafcff}
-.ha-dashboard-section-title>span{font-size:clamp(10px,1.35vh,13px);color:#9dc6d5}
-.ha-dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));
- gap:clamp(6px,.9vw,12px);min-width:0}
-.ha-dashboard-tile{min-width:0;display:flex;flex-direction:column;gap:6px;min-height:clamp(130px,18vh,195px);
- padding:clamp(10px,1.2vw,16px);border-radius:15px;background:linear-gradient(145deg,#254760,#1c324d);
- border:1px solid #8ccce460;box-shadow:0 5px 14px #081a2b50}
-.ha-dashboard-tile.is-active{border-color:#63e6c79c;background:linear-gradient(140deg,#245569,#1b4056)}
-.ha-dashboard-tile.is-unavailable{opacity:.66}
-.ha-dashboard-tile-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.ha-dashboard-glyph{font-size:clamp(24px,3.6vh,36px);line-height:1}
-.ha-dashboard-favorite{display:grid;place-items:center;min-width:34px;min-height:34px;
- border:1px solid #83c6dd75;border-radius:10px;font-size:clamp(18px,2.4vh,23px);
- color:#a6dce9;background:#163c55}
-.ha-dashboard-favorite[aria-pressed="true"]{color:#ffe49a;background:#53452d;border-color:#eec477bd}
-.ha-dashboard-tile-name{font-size:clamp(13px,1.8vh,17px);line-height:1.2;white-space:nowrap;
- overflow:hidden;text-overflow:ellipsis;color:#f4fcff}
-.ha-dashboard-tile-state{color:#c9e0eb;font-size:clamp(11px,1.5vh,14px);
- overflow-wrap:anywhere;flex:1;min-height:0}
-.ha-dashboard-toggle{min-height:35px;border:1px solid #7acee097;border-radius:10px;
- padding:6px 10px;background:#26536f;color:#e9fcff;font-weight:800;font-size:clamp(11px,1.4vh,13px)}
-.ha-dashboard-toggle.is-on{background:#0f8169;color:#f1fff9;border-color:#80eabc}
-.ha-dashboard-readonly{font-size:clamp(10px,1.3vh,12px);color:#8fb6c9;min-height:34px;
- display:flex;align-items:center}
-.ha-dashboard-helper{font-size:clamp(11px,1.6vh,14px);margin:0;padding:17px;
- border:1px dashed #91cbe36a;border-radius:12px;color:#b8d9e6;background:#102d41}
-.ha-dashboard-disclaimer{font-size:clamp(10px,1.3vh,13px);color:#a7c4d5;
- border-top:1px solid #8ac0d033;padding:8px 1px}
-.ha-dashboard-unconnected{flex:1;min-height:0;display:flex;flex-direction:column;
- gap:12px;align-items:center;justify-content:center;text-align:center;padding:clamp(14px,3vw,28px)}
-.ha-dashboard-unconnected h3{margin:0;font-size:clamp(19px,3.2vh,28px)}
-.ha-dashboard-unconnected p{color:#b9d5e2;font-size:clamp(12px,1.7vh,16px);line-height:1.5;
- max-width:600px;margin:0}
-.ha-dashboard-icon{font-size:clamp(40px,7vh,70px);color:#77ebf2}
-.ha-dashboard-calltoaction{display:flex;gap:9px;flex-wrap:wrap;justify-content:center}
-.ha-shell.is-compact .ha-dashboard-native{padding:7px;gap:8px}
-.ha-shell.is-compact .ha-dashboard-overview{padding:9px}
-.ha-shell.is-compact .ha-dashboard-intro{align-items:flex-start}
-.ha-shell.is-compact .ha-dashboard-intro h3{font-size:17px}
-.ha-shell.is-compact .ha-dashboard-intro>button{min-height:30px;font-size:10px;padding:5px 6px}
-.ha-shell.is-compact .ha-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
-.ha-shell.is-compact .ha-dashboard-stats>div{padding:8px}
-.ha-shell.is-compact .ha-dashboard-stats strong{font-size:21px}
-.ha-shell.is-compact .ha-dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.ha-shell.is-compact .ha-dashboard-tile{min-height:114px;padding:8px;gap:4px}
-.ha-shell.is-compact .ha-dashboard-tile-name{font-size:11px}
-.ha-shell.is-compact .ha-dashboard-tile-state{font-size:10px}
-.ha-shell.is-compact .ha-dashboard-glyph{font-size:21px}
-.ha-shell.is-compact .ha-dashboard-favorite{min-width:28px;min-height:28px;font-size:17px}
-.ha-shell.is-compact .ha-dashboard-toggle{min-height:30px;padding:4px 6px;font-size:10px}
+/* Phone landscape */
 @media (orientation:landscape) and (max-height:460px){
- .ha-dashboard-native{padding:7px;gap:8px}
- .ha-dashboard-overview{padding:8px}
- .ha-dashboard-intro h3{font-size:18px}
- .ha-dashboard-intro>button{font-size:10px;min-height:30px;padding:4px 7px}
- .ha-dashboard-stats{margin-top:6px}
- .ha-dashboard-stats>div{padding:6px}
- .ha-dashboard-stats strong{font-size:19px}
- .ha-dashboard-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,155px),1fr));gap:6px}
- .ha-dashboard-tile{min-height:102px;padding:7px;gap:3px}
- .ha-dashboard-glyph{font-size:20px}
- .ha-dashboard-favorite{min-height:25px;min-width:25px;font-size:16px}
- .ha-dashboard-tile-name{font-size:11px}
- .ha-dashboard-tile-state{font-size:10px}
- .ha-dashboard-toggle{min-height:27px;font-size:10px;padding:4px 6px}
- .ha-dashboard-readonly{min-height:27px}
+ .ha-shell{padding-top:5px}
+ .ha-main{padding-top:6px}
+ .ha-logo{width:32px;height:32px}
+ .ha-family-hero{padding:9px 14px;border-radius:17px}
+ .ha-hero-copy small{display:none}
+ .ha-hero-copy h3{font-size:19px}
+ .ha-hero-copy p{font-size:12px}
+ .ha-hero-stat{padding:5px 10px 5px 8px}
+ .ha-dashboard-native{gap:8px}
+ .ha-dashboard-tile{min-height:104px}
+ .ha-entity-summary{display:none}
 }
 
-.ha-pin{margin:auto;display:grid;grid-template-columns:minmax(6em,10em) auto;gap:.6rem;padding:.7rem;align-items:center}
-.ha-pin label,.ha-pin output{grid-column:1/-1}
-.ha-pin label{font-size:1.3rem;font-weight:700}
-.ha-pin input,.ha-pin button,.ha-sections button,.ha-family-hero button{font:inherit;color:inherit;background:#223950;border:1px solid #688297;border-radius:.75rem;padding:.55em .9em}
-.ha-pin input{min-width:0;text-align:center;letter-spacing:.35em}
-.ha-family-hero{padding:clamp(12px,2vw,30px);border-radius:18px;background:linear-gradient(115deg,#103543,#18675e 65%,#79592d);color:white}
-.ha-family-hero h3{font-size:clamp(1.6rem,3.6vw,3.2rem);margin:.1em 0}
-.ha-family-hero button{float:right;font-size:.8rem}
-.ha-sections{display:flex;gap:.45rem}
-.ha-sections button[aria-pressed=true]{background:#a1e9d8;color:#103b37}
-.ha-person{display:flex;align-items:center;gap:.8rem;border:1px solid #486379;border-radius:14px;padding:.8rem;background:#1a3447;color:#fff}
-.ha-person i{display:grid;place-items:center;width:2.6em;height:2.6em;border-radius:50%;background:#325956;font-style:normal;font-weight:700}
-.ha-person small{display:block;color:#cedee9}
-.ha-person b{margin-left:auto;width:.65em;height:.65em;border-radius:50%;background:#93a2ad}
-.ha-person b.at-home{background:#60e1aa}
+/* Themes */
+html[data-theme="cyberpunk"] .ha-shell{
+ --ha-bg:radial-gradient(110% 90% at 100% 0%,#ff3ade2e,transparent 60%),radial-gradient(90% 80% at 0% 100%,#21ddf724,transparent 65%),linear-gradient(150deg,#1a0a29,#0e1026);
+ --ha-hero:linear-gradient(120deg,#5a1466,#2a1c66 58%,#0e4d6b);
+ --ha-surface:#ff64e812;--ha-surface-2:#ff64e826;--ha-line:#a32d9b6b;--ha-text:#fff2ff;--ha-muted:#d2b8de;
+ --ha-accent:#21ddf7;--ha-accent-ink:#06141f;--ha-on:#ff64e8;--ha-ok:#5dffc0;--ha-bad:#ff9db0;
+}
+html[data-theme="cyberpunk"] .ha-family-hero{box-shadow:inset 0 0 26px #ff3ade33,0 0 18px #ff22d62e}
+html[data-theme="liquidglass"] .ha-shell{
+ --ha-bg:radial-gradient(120% 90% at 100% 0%,#b9eaff2e,transparent 60%),radial-gradient(90% 80% at 0% 100%,#8fa9ce30,transparent 65%),linear-gradient(145deg,#0f2036,#081321);
+ --ha-hero:linear-gradient(135deg,#e4f0ff47,#8fa9ce29);
+ --ha-surface:#e4f0ff1c;--ha-surface-2:#e4f0ff30;--ha-line:#ebf6ff47;--ha-text:#f3f8ff;--ha-muted:#c6d5e8;
+ --ha-accent:#b9eaff;--ha-accent-ink:#082234;--ha-on:#ffe0a0;--ha-ok:#9ff0c8;--ha-bad:#ffb4b4;--ha-radius:20px;
+}
+html[data-theme="liquidglass"] .ha-family-hero,
+html[data-theme="liquidglass"] .ha-dashboard-tile,
+html[data-theme="liquidglass"] .ha-person,
+html[data-theme="liquidglass"] .ha-pin,
+html[data-theme="liquidglass"] .ha-login-prompt{box-shadow:inset 0 1px #ffffff52,0 8px 24px #061e3840;backdrop-filter:blur(25px) saturate(170%);-webkit-backdrop-filter:blur(25px) saturate(170%)}
+
+@media (prefers-reduced-motion:reduce){.ha-shell *{transition:none!important}}
 </style><style id="mevicar-calendar-styles">/* MeviCar Next Calendar — adaptive native landscape cockpit.
    Scroll only inside calendar content; fixed car dock remains untouched. */
 .full.calendar-host,.side.calendar-host{display:flex!important;flex-direction:column;
@@ -5703,7 +5704,6 @@ function openApp(id){
   if(s.app==='nav'&&s.mode==='map'&&s.nav!=='search'){showGuidanceDashboard();return}
   s.app='nav';s.mode='map';
  }else if(id==='demo3d'){
-  // 3D has its own immersive animation button; the dock must never toggle a split pane.
   if(s.app==='demo3d'&&s.mode==='full')return;
   s.app='demo3d';s.mode='full';
  }else if(s.app===id){s.mode=s.mode==='full'?'split':'full'}
@@ -5946,7 +5946,7 @@ APP_VECTORS.spectrum='<path class="main" d="M15 88h90 M22 74V55 M36 74V37 M51 74
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='spectrum'&&s.mode==='full')html='<div class="full spectrum-host">'+appBody()+'</div>';else if(s.app==='demo3d'&&s.mode==='full')html='<div class="full d3-host">'+appBody()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='spectrum'?'spectrum-host':s.app==='demo3d'?'d3-host':s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='spectrum'||s.app==='demo3d'||s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty'||s.app==='navdashboard')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();window.MeviDemo3D?.unmount();if(s.app!=='spectrum')window.MeviSpectrum?.stop();$('screen').innerHTML=html;if(s.app==='spectrum')window.MeviSpectrum?.mount();window.MeviDemo3D?.mount();paintDashboardHead();if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version":"0.6.8","build":1359,"commit":"4a34310f69916e49fc2cbce435f98d521b68efce"};
+const CURRENT_BUILD={"version": "0.6.7", "build": 1365, "commit": "72a6d4575f38df0053b0adbe0840bf978036afc8"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -9372,10 +9372,53 @@ window.render?.();
  }
  function label(entity){return String(entity.attributes?.friendly_name||entity.entity_id)}
  function byName(a,b){return label(a).localeCompare(label(b),'de')}
- function icon(entity){
-  const group=entity.entity_id.split('.')[0];
-  return ({light:'💡',switch:'⏻',sensor:'◉',binary_sensor:'◈',climate:'◉',
-   person:'●',device_tracker:'●',cover:'▤',automation:'⚙',lock:'🔒'})[group]||'⌂';
+ const iconPaths={
+  home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  light:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.3 1 2.2h5.2c0-.9.4-1.7 1-2.2A6 6 0 0 0 12 3z"/>',
+  power:'<path d="M12 3v9"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>',
+  temp:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 10v7"/>',
+  drop:'<path d="M12 3s6 6.3 6 11a6 6 0 0 1-12 0c0-4.7 6-11 6-11z"/>',
+  person:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+  family:'<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-5.8 6.5-5.8s6.5 2.2 6.5 5.8"/><circle cx="17.5" cy="9" r="2.4"/><path d="M17.2 14.3c2.5.3 4.3 2 4.3 4.9"/>',
+  gauge:'<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  cover:'<path d="M4 4h16M5 4v16h14V4M5 9h14M5 14h14"/>',
+  cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  refresh:'<path d="M20 11a8 8 0 0 0-14.3-4M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4M20 20v-4h-4"/>'
+ };
+ function svg(name){
+  return '<svg class="ha-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+
+   (iconPaths[name]||iconPaths.home)+'</svg>';
+ }
+ function iconName(entity){
+  const group=entity.entity_id.split('.')[0],a=entity.attributes||{};
+  if(group==='sensor'){
+   if(a.device_class==='humidity')return 'drop';
+   if(a.device_class==='temperature'||['°C','°F'].includes(a.unit_of_measurement))return 'temp';
+   return 'gauge';
+  }
+  return ({light:'light',switch:'power',binary_sensor:'gauge',climate:'temp',person:'person',
+   device_tracker:'person',cover:'cover',automation:'cog',lock:'lock'})[group]||'home';
+ }
+ function glyph(entity){return svg(iconName(entity))}
+ function fmt(value,digits=1){
+  if(value===null||value===undefined||String(value).trim()==='')return null;
+  const n=Number(value);
+  return Number.isFinite(n)?n.toLocaleString('de-DE',{maximumFractionDigits:digits}):null;
+ }
+ function stateWord(entity){
+  return ({on:'An',off:'Aus',unavailable:'Nicht verfügbar',unknown:'Unbekannt',heat:'Heizen',
+   cool:'Kühlen',auto:'Automatik',heat_cool:'Automatik',idle:'Bereit',home:'Zuhause',
+   not_home:'Unterwegs'})[entity.state]||detailState(entity);
+ }
+ function brightness(entity){
+  const b=Number(entity.attributes?.brightness);
+  return entity.state==='on'&&Number.isFinite(b)&&b>0?Math.max(1,Math.min(100,Math.round(b/255*100))):null;
+ }
+ function average(values){return values.length?values.reduce((a,b)=>a+b,0)/values.length:null}
+ function greeting(){
+  const h=new Date().getHours();
+  return h<5?'Gute Nacht':h<11?'Guten Morgen':h<18?'Guten Tag':'Guten Abend';
  }
  function getEntities(){
   let entries=state.states;
@@ -9407,34 +9450,73 @@ window.render?.();
   repaint();
  }
  function toggleFromDashboard(id){return toggle(id)}
+ function initial(name){return Array.from(String(name||'?').trim())[0]||'?'}
+ function updatedAt(entity){
+  const d=new Date(entity.last_updated||entity.last_changed||'');
+  if(Number.isNaN(d.getTime()))return '';
+  return 'Stand '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+ }
  function dashboardItem(entity){
   const id=entity.entity_id;
   if(!isValidEntityId(id))return '';
-  const domain=id.split('.')[0];
-  const interactive=clickable.has(domain)&&isAvailable(entity);
+  const domain=id.split('.')[0],attrs=entity.attributes||{};
+  const available=isAvailable(entity);
+  const control=clickable.has(domain);
+  const interactive=control&&available;
   const busy=state.busyIds.has(id);
   const active=entity.state==='on';
   const starred=state.favorites.includes(id);
-  return '<article class="ha-dashboard-tile'+(active?' is-active':'')+
-   (!isAvailable(entity)?' is-unavailable':'')+'">'+
-   '<div class="ha-dashboard-tile-top"><span class="ha-dashboard-glyph" aria-hidden="true">'+
-   esc(icon(entity))+'</span>'+
+  const name=label(entity);
+  let text=available?stateWord(entity):'Nicht verfügbar',foot;
+  if(control){
+   const pct=brightness(entity);
+   if(pct!==null)text+=' · '+pct+' %';
+   foot=(domain==='light'?'<span class="ha-dashboard-level" aria-hidden="true"><i style="width:'+
+    (active?(pct??100):0)+'%"></i></span>':'<span class="ha-dashboard-level is-hidden" aria-hidden="true"></span>')+
+    (interactive?'<button type="button" class="ha-dashboard-toggle'+(active?' is-on':'')+(busy?' is-busy':'')+
+    '" role="switch" aria-checked="'+active+'" aria-label="'+esc(name)+(active?' ausschalten':' einschalten')+
+    '" '+(busy?'disabled':'')+' onclick="MeviHA.toggleFromDashboard(\''+id+'\')"><i aria-hidden="true"></i></button>':
+    '<span class="ha-dashboard-readonly">Keine Verbindung</span>');
+  }else{
+   const climate=domain==='climate';
+   const value=available?fmt(climate?attrs.current_temperature:entity.state):null;
+   const unit=climate?'°':String(attrs.unit_of_measurement||'');
+   if(climate){
+    const target=fmt(attrs.temperature);
+    if(available&&target!==null)text+=' · Soll '+target+' °';
+   }else if(available&&value!==null)text=updatedAt(entity)||'Messwert';
+   foot='<span class="ha-dashboard-value'+(value===null?' is-text':'')+'"><b>'+
+    esc(value!==null?value:available?stateWord(entity):'–')+'</b>'+
+    (value!==null&&unit?'<small>'+esc(unit)+'</small>':'')+'</span>';
+  }
+  return '<article class="ha-dashboard-tile is-'+esc(iconName(entity))+(active?' is-active':'')+
+   (!available?' is-unavailable':'')+'">'+
+   '<div class="ha-dashboard-tile-top"><span class="ha-dashboard-glyph" aria-hidden="true">'+glyph(entity)+'</span>'+
+   '<div class="ha-dashboard-tile-copy"><strong class="ha-dashboard-tile-name">'+esc(name)+'</strong>'+
+   '<span class="ha-dashboard-tile-state">'+esc(text)+'</span></div>'+
    '<button type="button" class="ha-dashboard-favorite" aria-label="'+
    (starred?'Aus Favoriten entfernen':'Zu Favoriten hinzufügen')+'" aria-pressed="'+starred+
    '" title="'+(starred?'Favorit entfernen':'Zum Dashboard hinzufügen')+
    '" onclick="MeviHA.favoriteEntity(\''+id+'\')">'+(starred?'★':'☆')+'</button></div>'+
-   '<strong class="ha-dashboard-tile-name">'+esc(label(entity))+'</strong>'+
-   '<span class="ha-dashboard-tile-state">'+esc(detailState(entity))+'</span>'+
-   (interactive?'<button type="button" class="ha-dashboard-toggle'+(active?' is-on':'')+
-   '" '+(busy?'disabled':'')+' onclick="MeviHA.toggleFromDashboard(\''+id+'\')">'+
-   (busy?'Bitte warten …':active?'Ausschalten':'Einschalten')+'</button>':
-    '<span class="ha-dashboard-readonly">'+(!isAvailable(entity)?'Nicht verfügbar':'Statusanzeige')+'</span>')+
-   '</article>';
+   '<div class="ha-dashboard-tile-foot">'+foot+'</div></article>';
  }
  function personCard(entity){
   const name=label(entity);
   const status={home:'Zuhause',not_home:'Unterwegs',unknown:'Unbekannt',unavailable:'Nicht verfügbar'}[entity.state]||entity.state;
-  return `<article class="ha-person"><i aria-hidden="true">${esc(Array.from(name)[0])}</i><div><strong>${esc(name)}</strong><small>${esc(status)}</small></div><b class="${entity.state==='home'?'at-home':''}" aria-hidden="true"></b></article>`;
+  return '<article class="ha-person'+(entity.state==='home'?' is-home':'')+'"><i aria-hidden="true">'+
+   esc(initial(name))+'</i><div><strong>'+esc(name)+'</strong><small>'+esc(status)+'</small></div></article>';
+ }
+ function heroStats(entities,lights){
+  const numeric=e=>isAvailable(e)&&fmt(e.state)!==null;
+  const sensors=entities.filter(e=>e.entity_id.startsWith('sensor.')&&numeric(e));
+  const temps=sensors.filter(e=>['°C','°F'].includes(e.attributes?.unit_of_measurement));
+  const unit=temps[0]?.attributes?.unit_of_measurement;
+  const temp=average(temps.filter(e=>e.attributes.unit_of_measurement===unit).map(e=>Number(e.state)));
+  const humid=average(sensors.filter(e=>e.attributes?.device_class==='humidity').map(e=>Number(e.state)));
+  const stat=(name,value,caption)=>'<span class="ha-hero-stat">'+svg(name)+'<b>'+esc(value)+'</b><small>'+caption+'</small></span>';
+  return (temp!==null?stat('temp',fmt(temp)+' '+unit,'im Mittel'):'')+
+   (humid!==null?stat('drop',fmt(humid,0)+' %','Luftfeuchte'):'')+
+   (lights.length?stat('light',lights.filter(e=>e.state==='on').length+' / '+lights.length,'Licht an'):'');
  }
  function dashboardHTML(){
   if(!state.connected)return loginPrompt('Dashboard');
@@ -9445,17 +9527,30 @@ window.render?.();
    (e.entity_id.startsWith('sensor.')&&(['temperature','humidity'].includes(e.attributes?.device_class)||
    ['°C','°F'].includes(e.attributes?.unit_of_measurement))));
   const favorites=entities.filter(e=>state.favorites.includes(e.entity_id));
-  const grid=(items,render,empty)=>items.length?`<div class="ha-dashboard-grid">${items.map(render).join('')}</div>`:`<p>${empty}</p>`;
+  const grid=(items,render,empty,kind='')=>items.length?'<div class="ha-dashboard-grid'+kind+'">'+
+   items.map(render).join('')+'</div>':'<p class="ha-empty">'+empty+'</p>';
+  const counts={family:people.length,climate:climate.length,lights:lights.length};
+  const sectionIcons={family:'family',climate:'temp',lights:'light'};
   const tabs=Object.entries(sections).map(([id,title])=>
-   `<button type="button" aria-pressed="${section===id}" onclick="MeviHA.selectSection('${id}')">${title}</button>`).join('');
+   '<button type="button" aria-pressed="'+(section===id)+'" onclick="MeviHA.selectSection(\''+id+'\')">'+
+   svg(sectionIcons[id])+'<span>'+title+'</span><b>'+counts[id]+'</b></button>').join('');
   let content;
   if(section==='family'){
-   content=grid(people,personCard,'Keine Personen in Home Assistant gefunden.');
-   if(favorites.length)content+='<h4>Meine Favoriten</h4>'+grid(favorites,dashboardItem,'');
+   content=grid(people,personCard,'Keine Personen in Home Assistant gefunden.',' is-people');
+   content+=favorites.length?'<h4>Meine Favoriten</h4>'+grid(favorites,dashboardItem,''):
+    '<p class="ha-hint">☆ Tippe bei Klima oder Licht auf den Stern, um eine Kachel hier anzuheften.</p>';
   }else if(section==='climate')content=grid(climate,dashboardItem,'Keine Klimageräte oder Raumsensoren gefunden.');
   else content=grid(lights,dashboardItem,'Keine Leuchten gefunden.');
-  const count=people.filter(e=>e.state==='home').length;
-  return `<div class="ha-dashboard-native"><header class="ha-family-hero"><small>Mein Zuhause</small><h3>${people.length?count+' zuhause':'Anwesenheit offen'}</h3><span>${lights.filter(e=>e.state==='on').length} von ${lights.length} Leuchten an</span><button type="button" onclick="MeviHA.openDashboard()">Original-Dashboard ↗</button></header><nav class="ha-sections" aria-label="Dashboardbereiche">${tabs}</nav><section class="ha-dashboard-section"><h4>${sections[section]}</h4>${content}</section></div>`;
+  const home=people.filter(e=>e.state==='home');
+  const lit=lights.filter(e=>e.state==='on').length;
+  return '<div class="ha-dashboard-native"><header class="ha-family-hero">'+
+   '<div class="ha-hero-copy"><small>Mein Zuhause</small><h3>'+greeting()+'</h3><p>'+
+   (people.length?home.length+' zuhause':'Anwesenheit offen')+' · '+lit+' von '+lights.length+' Leuchten an</p></div>'+
+   (home.length?'<div class="ha-hero-people" aria-hidden="true">'+home.slice(0,4).map(e=>'<i>'+esc(initial(label(e)))+'</i>').join('')+'</div>':'')+
+   '<div class="ha-hero-stats">'+heroStats(entities,lights)+'</div>'+
+   '<button type="button" class="ha-hero-link" onclick="MeviHA.openDashboard()">Original-Dashboard ↗</button></header>'+
+   '<nav class="ha-sections" aria-label="Dashboardbereiche">'+tabs+'</nav>'+
+   '<section class="ha-dashboard-section">'+content+'</section></div>';
  }
  function deviceRow(entity){
   const domain=entity.entity_id.split('.')[0];
@@ -9464,10 +9559,10 @@ window.render?.();
   const active=entity.state==='on';
   const values=['unavailable','unknown'].includes(entity.state)?' ha-unavailable':'';
   return '<div class="ha-device-row'+values+'">'+
-   '<span class="ha-device-icon">'+esc(icon(entity))+'</span>'+
+   '<span class="ha-device-icon" aria-hidden="true">'+glyph(entity)+'</span>'+
    '<div class="ha-device-copy"><strong>'+esc(label(entity))+'</strong>'+
    '<span>'+esc(entity.entity_id)+'</span></div>'+
-   '<div class="ha-device-state">'+esc(detailState(entity))+'</div>'+
+   '<div class="ha-device-state">'+esc(stateWord(entity))+'</div>'+
    (canToggle?'<button type="button" class="ha-device-action'+(active?' is-on':'')+
     '" '+(busy||values?'disabled':'')+' onclick="MeviHA.toggle(\''+esc(entity.entity_id)+'\')">'+
     (busy?'…':active?'AUS':'EIN')+'</button>':'')+
@@ -9484,28 +9579,36 @@ window.render?.();
     '<div id="ha-entity-list" class="ha-entity-list">'+(getEntities().map(deviceRow).join('')||'<div class="ha-empty">Keine passenden Entitäten gefunden.</div>')+'</div></div>';
  }
  function loginPrompt(topic){
-  return `<div class="ha-login-prompt"><h3>${esc(topic)}</h3><p>Verbinde Home Assistant unter Einstellungen → Zugänge &amp; Schlüssel.</p></div>`;
+  return `<div class="ha-login-prompt"><span class="ha-prompt-icon" aria-hidden="true">${svg('home')}</span><h3>${esc(topic)}</h3><p>Verbinde Home Assistant unter Einstellungen → Zugänge &amp; Schlüssel.</p></div>`;
  }
  function viewHTML(){
-  if(!unlocked)return `<form class="ha-pin" onsubmit="event.preventDefault();if(!MeviHA.unlock(this.pin.value)){this.pin.value='';this.querySelector('output').textContent='PIN falsch. Erneut versuchen.';this.pin.focus()}"><label for="ha-pin">${viewNames[state.tab]} entsperren</label><input id="ha-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" aria-label="Vierstellige PIN" required><button>Entsperren</button><output aria-live="polite"></output></form>`;
+  if(!unlocked)return `<form class="ha-pin" onsubmit="event.preventDefault();if(!MeviHA.unlock(this.pin.value)){this.pin.value='';this.querySelector('output').textContent='PIN falsch. Erneut versuchen.';this.pin.focus()}"><span class="ha-prompt-icon" aria-hidden="true">${svg('lock')}</span><label for="ha-pin">${viewNames[state.tab]} entsperren</label><p>Vierstellige PIN eingeben</p><div class="ha-pin-row"><input id="ha-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" aria-label="Vierstellige PIN" required><button>Entsperren</button></div><output aria-live="polite"></output></form>`;
   return state.tab==='devices'?devicesHTML():dashboardHTML();
  }
  function html(compact=false){
   state.compact=!!compact;
   return '<section class="ha-shell'+(compact?' is-compact':'')+'" aria-label="Home Assistant">'+
-   '<header class="ha-header"><div class="ha-title"><small>MEVICAR NEXT · HOME ASSISTANT</small><b>HOME ASSISTANT</b></div>'+
-   '<div class="ha-head-actions"><button type="button" onclick="MeviHA.reload()" title="Neu laden" aria-label="Home Assistant aktualisieren">↻</button>'+
-   '</div></header>'+
+   '<header class="ha-header"><div class="ha-title"><span class="ha-logo" aria-hidden="true">'+svg('home')+'</span><b>Home Assistant</b></div>'+
    '<nav class="ha-tabs" aria-label="Home Assistant Seiten">'+Object.keys(viewNames).map(tabButton).join('')+'</nav>'+
+   '<div class="ha-head-actions"><button type="button" onclick="MeviHA.reload()" title="Neu laden" aria-label="Home Assistant aktualisieren">'+svg('refresh')+'</button>'+
+   '</div></header>'+
    '<div class="ha-status-row" id="ha-status-row">'+statusHTML()+'</div>'+
    '<main class="ha-main" id="ha-view">'+viewHTML()+'</main></section>';
  }
+ let lastScrollKey='';
  function repaint(replaceView=true){
   const root=document.querySelector('.ha-shell');
   if(!root)return;
   const row=get('ha-status-row');if(row)row.innerHTML=statusHTML();
   if(replaceView){
+   // Keep the list position across the 30 s refresh and after switching a device.
+   const scrollKey=state.tab+'/'+section+'/'+unlocked;
+   const scroller=root.querySelector('.ha-dashboard-native,.ha-entity-list');
+   const top=scroller&&scrollKey===lastScrollKey?scroller.scrollTop:0;
+   lastScrollKey=scrollKey;
    const v=get('ha-view');if(v)v.innerHTML=viewHTML();
+   const next=top?root.querySelector('.ha-dashboard-native,.ha-entity-list'):null;
+   if(next)next.scrollTop=top;
    for(const button of root.querySelectorAll('.ha-tab')){
     const selected=(button.textContent===viewNames[state.tab]);
     button.classList.toggle('active',selected);

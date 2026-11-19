@@ -97,10 +97,53 @@
  }
  function label(entity){return String(entity.attributes?.friendly_name||entity.entity_id)}
  function byName(a,b){return label(a).localeCompare(label(b),'de')}
- function icon(entity){
-  const group=entity.entity_id.split('.')[0];
-  return ({light:'💡',switch:'⏻',sensor:'◉',binary_sensor:'◈',climate:'◉',
-   person:'●',device_tracker:'●',cover:'▤',automation:'⚙',lock:'🔒'})[group]||'⌂';
+ const iconPaths={
+  home:'<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+  light:'<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.3 1 2.2h5.2c0-.9.4-1.7 1-2.2A6 6 0 0 0 12 3z"/>',
+  power:'<path d="M12 3v9"/><path d="M6.3 6.8a8 8 0 1 0 11.4 0"/>',
+  temp:'<path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/><path d="M12 10v7"/>',
+  drop:'<path d="M12 3s6 6.3 6 11a6 6 0 0 1-12 0c0-4.7 6-11 6-11z"/>',
+  person:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>',
+  family:'<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-5.8 6.5-5.8s6.5 2.2 6.5 5.8"/><circle cx="17.5" cy="9" r="2.4"/><path d="M17.2 14.3c2.5.3 4.3 2 4.3 4.9"/>',
+  gauge:'<path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+  cover:'<path d="M4 4h16M5 4v16h14V4M5 9h14M5 14h14"/>',
+  cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+  refresh:'<path d="M20 11a8 8 0 0 0-14.3-4M4 4v4h4"/><path d="M4 13a8 8 0 0 0 14.3 4M20 20v-4h-4"/>'
+ };
+ function svg(name){
+  return '<svg class="ha-svg" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'+
+   (iconPaths[name]||iconPaths.home)+'</svg>';
+ }
+ function iconName(entity){
+  const group=entity.entity_id.split('.')[0],a=entity.attributes||{};
+  if(group==='sensor'){
+   if(a.device_class==='humidity')return 'drop';
+   if(a.device_class==='temperature'||['°C','°F'].includes(a.unit_of_measurement))return 'temp';
+   return 'gauge';
+  }
+  return ({light:'light',switch:'power',binary_sensor:'gauge',climate:'temp',person:'person',
+   device_tracker:'person',cover:'cover',automation:'cog',lock:'lock'})[group]||'home';
+ }
+ function glyph(entity){return svg(iconName(entity))}
+ function fmt(value,digits=1){
+  if(value===null||value===undefined||String(value).trim()==='')return null;
+  const n=Number(value);
+  return Number.isFinite(n)?n.toLocaleString('de-DE',{maximumFractionDigits:digits}):null;
+ }
+ function stateWord(entity){
+  return ({on:'An',off:'Aus',unavailable:'Nicht verfügbar',unknown:'Unbekannt',heat:'Heizen',
+   cool:'Kühlen',auto:'Automatik',heat_cool:'Automatik',idle:'Bereit',home:'Zuhause',
+   not_home:'Unterwegs'})[entity.state]||detailState(entity);
+ }
+ function brightness(entity){
+  const b=Number(entity.attributes?.brightness);
+  return entity.state==='on'&&Number.isFinite(b)&&b>0?Math.max(1,Math.min(100,Math.round(b/255*100))):null;
+ }
+ function average(values){return values.length?values.reduce((a,b)=>a+b,0)/values.length:null}
+ function greeting(){
+  const h=new Date().getHours();
+  return h<5?'Gute Nacht':h<11?'Guten Morgen':h<18?'Guten Tag':'Guten Abend';
  }
  function getEntities(){
   let entries=state.states;
@@ -132,34 +175,73 @@
   repaint();
  }
  function toggleFromDashboard(id){return toggle(id)}
+ function initial(name){return Array.from(String(name||'?').trim())[0]||'?'}
+ function updatedAt(entity){
+  const d=new Date(entity.last_updated||entity.last_changed||'');
+  if(Number.isNaN(d.getTime()))return '';
+  return 'Stand '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+ }
  function dashboardItem(entity){
   const id=entity.entity_id;
   if(!isValidEntityId(id))return '';
-  const domain=id.split('.')[0];
-  const interactive=clickable.has(domain)&&isAvailable(entity);
+  const domain=id.split('.')[0],attrs=entity.attributes||{};
+  const available=isAvailable(entity);
+  const control=clickable.has(domain);
+  const interactive=control&&available;
   const busy=state.busyIds.has(id);
   const active=entity.state==='on';
   const starred=state.favorites.includes(id);
-  return '<article class="ha-dashboard-tile'+(active?' is-active':'')+
-   (!isAvailable(entity)?' is-unavailable':'')+'">'+
-   '<div class="ha-dashboard-tile-top"><span class="ha-dashboard-glyph" aria-hidden="true">'+
-   esc(icon(entity))+'</span>'+
+  const name=label(entity);
+  let text=available?stateWord(entity):'Nicht verfügbar',foot;
+  if(control){
+   const pct=brightness(entity);
+   if(pct!==null)text+=' · '+pct+' %';
+   foot=(domain==='light'?'<span class="ha-dashboard-level" aria-hidden="true"><i style="width:'+
+    (active?(pct??100):0)+'%"></i></span>':'<span class="ha-dashboard-level is-hidden" aria-hidden="true"></span>')+
+    (interactive?'<button type="button" class="ha-dashboard-toggle'+(active?' is-on':'')+(busy?' is-busy':'')+
+    '" role="switch" aria-checked="'+active+'" aria-label="'+esc(name)+(active?' ausschalten':' einschalten')+
+    '" '+(busy?'disabled':'')+' onclick="MeviHA.toggleFromDashboard(\''+id+'\')"><i aria-hidden="true"></i></button>':
+    '<span class="ha-dashboard-readonly">Keine Verbindung</span>');
+  }else{
+   const climate=domain==='climate';
+   const value=available?fmt(climate?attrs.current_temperature:entity.state):null;
+   const unit=climate?'°':String(attrs.unit_of_measurement||'');
+   if(climate){
+    const target=fmt(attrs.temperature);
+    if(available&&target!==null)text+=' · Soll '+target+' °';
+   }else if(available&&value!==null)text=updatedAt(entity)||'Messwert';
+   foot='<span class="ha-dashboard-value'+(value===null?' is-text':'')+'"><b>'+
+    esc(value!==null?value:available?stateWord(entity):'–')+'</b>'+
+    (value!==null&&unit?'<small>'+esc(unit)+'</small>':'')+'</span>';
+  }
+  return '<article class="ha-dashboard-tile is-'+esc(iconName(entity))+(active?' is-active':'')+
+   (!available?' is-unavailable':'')+'">'+
+   '<div class="ha-dashboard-tile-top"><span class="ha-dashboard-glyph" aria-hidden="true">'+glyph(entity)+'</span>'+
+   '<div class="ha-dashboard-tile-copy"><strong class="ha-dashboard-tile-name">'+esc(name)+'</strong>'+
+   '<span class="ha-dashboard-tile-state">'+esc(text)+'</span></div>'+
    '<button type="button" class="ha-dashboard-favorite" aria-label="'+
    (starred?'Aus Favoriten entfernen':'Zu Favoriten hinzufügen')+'" aria-pressed="'+starred+
    '" title="'+(starred?'Favorit entfernen':'Zum Dashboard hinzufügen')+
    '" onclick="MeviHA.favoriteEntity(\''+id+'\')">'+(starred?'★':'☆')+'</button></div>'+
-   '<strong class="ha-dashboard-tile-name">'+esc(label(entity))+'</strong>'+
-   '<span class="ha-dashboard-tile-state">'+esc(detailState(entity))+'</span>'+
-   (interactive?'<button type="button" class="ha-dashboard-toggle'+(active?' is-on':'')+
-   '" '+(busy?'disabled':'')+' onclick="MeviHA.toggleFromDashboard(\''+id+'\')">'+
-   (busy?'Bitte warten …':active?'Ausschalten':'Einschalten')+'</button>':
-    '<span class="ha-dashboard-readonly">'+(!isAvailable(entity)?'Nicht verfügbar':'Statusanzeige')+'</span>')+
-   '</article>';
+   '<div class="ha-dashboard-tile-foot">'+foot+'</div></article>';
  }
  function personCard(entity){
   const name=label(entity);
   const status={home:'Zuhause',not_home:'Unterwegs',unknown:'Unbekannt',unavailable:'Nicht verfügbar'}[entity.state]||entity.state;
-  return `<article class="ha-person"><i aria-hidden="true">${esc(Array.from(name)[0])}</i><div><strong>${esc(name)}</strong><small>${esc(status)}</small></div><b class="${entity.state==='home'?'at-home':''}" aria-hidden="true"></b></article>`;
+  return '<article class="ha-person'+(entity.state==='home'?' is-home':'')+'"><i aria-hidden="true">'+
+   esc(initial(name))+'</i><div><strong>'+esc(name)+'</strong><small>'+esc(status)+'</small></div></article>';
+ }
+ function heroStats(entities,lights){
+  const numeric=e=>isAvailable(e)&&fmt(e.state)!==null;
+  const sensors=entities.filter(e=>e.entity_id.startsWith('sensor.')&&numeric(e));
+  const temps=sensors.filter(e=>['°C','°F'].includes(e.attributes?.unit_of_measurement));
+  const unit=temps[0]?.attributes?.unit_of_measurement;
+  const temp=average(temps.filter(e=>e.attributes.unit_of_measurement===unit).map(e=>Number(e.state)));
+  const humid=average(sensors.filter(e=>e.attributes?.device_class==='humidity').map(e=>Number(e.state)));
+  const stat=(name,value,caption)=>'<span class="ha-hero-stat">'+svg(name)+'<b>'+esc(value)+'</b><small>'+caption+'</small></span>';
+  return (temp!==null?stat('temp',fmt(temp)+' '+unit,'im Mittel'):'')+
+   (humid!==null?stat('drop',fmt(humid,0)+' %','Luftfeuchte'):'')+
+   (lights.length?stat('light',lights.filter(e=>e.state==='on').length+' / '+lights.length,'Licht an'):'');
  }
  function dashboardHTML(){
   if(!state.connected)return loginPrompt('Dashboard');
@@ -170,17 +252,30 @@
    (e.entity_id.startsWith('sensor.')&&(['temperature','humidity'].includes(e.attributes?.device_class)||
    ['°C','°F'].includes(e.attributes?.unit_of_measurement))));
   const favorites=entities.filter(e=>state.favorites.includes(e.entity_id));
-  const grid=(items,render,empty)=>items.length?`<div class="ha-dashboard-grid">${items.map(render).join('')}</div>`:`<p>${empty}</p>`;
+  const grid=(items,render,empty,kind='')=>items.length?'<div class="ha-dashboard-grid'+kind+'">'+
+   items.map(render).join('')+'</div>':'<p class="ha-empty">'+empty+'</p>';
+  const counts={family:people.length,climate:climate.length,lights:lights.length};
+  const sectionIcons={family:'family',climate:'temp',lights:'light'};
   const tabs=Object.entries(sections).map(([id,title])=>
-   `<button type="button" aria-pressed="${section===id}" onclick="MeviHA.selectSection('${id}')">${title}</button>`).join('');
+   '<button type="button" aria-pressed="'+(section===id)+'" onclick="MeviHA.selectSection(\''+id+'\')">'+
+   svg(sectionIcons[id])+'<span>'+title+'</span><b>'+counts[id]+'</b></button>').join('');
   let content;
   if(section==='family'){
-   content=grid(people,personCard,'Keine Personen in Home Assistant gefunden.');
-   if(favorites.length)content+='<h4>Meine Favoriten</h4>'+grid(favorites,dashboardItem,'');
+   content=grid(people,personCard,'Keine Personen in Home Assistant gefunden.',' is-people');
+   content+=favorites.length?'<h4>Meine Favoriten</h4>'+grid(favorites,dashboardItem,''):
+    '<p class="ha-hint">☆ Tippe bei Klima oder Licht auf den Stern, um eine Kachel hier anzuheften.</p>';
   }else if(section==='climate')content=grid(climate,dashboardItem,'Keine Klimageräte oder Raumsensoren gefunden.');
   else content=grid(lights,dashboardItem,'Keine Leuchten gefunden.');
-  const count=people.filter(e=>e.state==='home').length;
-  return `<div class="ha-dashboard-native"><header class="ha-family-hero"><small>Mein Zuhause</small><h3>${people.length?count+' zuhause':'Anwesenheit offen'}</h3><span>${lights.filter(e=>e.state==='on').length} von ${lights.length} Leuchten an</span><button type="button" onclick="MeviHA.openDashboard()">Original-Dashboard ↗</button></header><nav class="ha-sections" aria-label="Dashboardbereiche">${tabs}</nav><section class="ha-dashboard-section"><h4>${sections[section]}</h4>${content}</section></div>`;
+  const home=people.filter(e=>e.state==='home');
+  const lit=lights.filter(e=>e.state==='on').length;
+  return '<div class="ha-dashboard-native"><header class="ha-family-hero">'+
+   '<div class="ha-hero-copy"><small>Mein Zuhause</small><h3>'+greeting()+'</h3><p>'+
+   (people.length?home.length+' zuhause':'Anwesenheit offen')+' · '+lit+' von '+lights.length+' Leuchten an</p></div>'+
+   (home.length?'<div class="ha-hero-people" aria-hidden="true">'+home.slice(0,4).map(e=>'<i>'+esc(initial(label(e)))+'</i>').join('')+'</div>':'')+
+   '<div class="ha-hero-stats">'+heroStats(entities,lights)+'</div>'+
+   '<button type="button" class="ha-hero-link" onclick="MeviHA.openDashboard()">Original-Dashboard ↗</button></header>'+
+   '<nav class="ha-sections" aria-label="Dashboardbereiche">'+tabs+'</nav>'+
+   '<section class="ha-dashboard-section">'+content+'</section></div>';
  }
  function deviceRow(entity){
   const domain=entity.entity_id.split('.')[0];
@@ -189,10 +284,10 @@
   const active=entity.state==='on';
   const values=['unavailable','unknown'].includes(entity.state)?' ha-unavailable':'';
   return '<div class="ha-device-row'+values+'">'+
-   '<span class="ha-device-icon">'+esc(icon(entity))+'</span>'+
+   '<span class="ha-device-icon" aria-hidden="true">'+glyph(entity)+'</span>'+
    '<div class="ha-device-copy"><strong>'+esc(label(entity))+'</strong>'+
    '<span>'+esc(entity.entity_id)+'</span></div>'+
-   '<div class="ha-device-state">'+esc(detailState(entity))+'</div>'+
+   '<div class="ha-device-state">'+esc(stateWord(entity))+'</div>'+
    (canToggle?'<button type="button" class="ha-device-action'+(active?' is-on':'')+
     '" '+(busy||values?'disabled':'')+' onclick="MeviHA.toggle(\''+esc(entity.entity_id)+'\')">'+
     (busy?'…':active?'AUS':'EIN')+'</button>':'')+
@@ -209,28 +304,36 @@
     '<div id="ha-entity-list" class="ha-entity-list">'+(getEntities().map(deviceRow).join('')||'<div class="ha-empty">Keine passenden Entitäten gefunden.</div>')+'</div></div>';
  }
  function loginPrompt(topic){
-  return `<div class="ha-login-prompt"><h3>${esc(topic)}</h3><p>Verbinde Home Assistant unter Einstellungen → Zugänge &amp; Schlüssel.</p></div>`;
+  return `<div class="ha-login-prompt"><span class="ha-prompt-icon" aria-hidden="true">${svg('home')}</span><h3>${esc(topic)}</h3><p>Verbinde Home Assistant unter Einstellungen → Zugänge &amp; Schlüssel.</p></div>`;
  }
  function viewHTML(){
-  if(!unlocked)return `<form class="ha-pin" onsubmit="event.preventDefault();if(!MeviHA.unlock(this.pin.value)){this.pin.value='';this.querySelector('output').textContent='PIN falsch. Erneut versuchen.';this.pin.focus()}"><label for="ha-pin">${viewNames[state.tab]} entsperren</label><input id="ha-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" aria-label="Vierstellige PIN" required><button>Entsperren</button><output aria-live="polite"></output></form>`;
+  if(!unlocked)return `<form class="ha-pin" onsubmit="event.preventDefault();if(!MeviHA.unlock(this.pin.value)){this.pin.value='';this.querySelector('output').textContent='PIN falsch. Erneut versuchen.';this.pin.focus()}"><span class="ha-prompt-icon" aria-hidden="true">${svg('lock')}</span><label for="ha-pin">${viewNames[state.tab]} entsperren</label><p>Vierstellige PIN eingeben</p><div class="ha-pin-row"><input id="ha-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" aria-label="Vierstellige PIN" required><button>Entsperren</button></div><output aria-live="polite"></output></form>`;
   return state.tab==='devices'?devicesHTML():dashboardHTML();
  }
  function html(compact=false){
   state.compact=!!compact;
   return '<section class="ha-shell'+(compact?' is-compact':'')+'" aria-label="Home Assistant">'+
-   '<header class="ha-header"><div class="ha-title"><small>MEVICAR NEXT · HOME ASSISTANT</small><b>HOME ASSISTANT</b></div>'+
-   '<div class="ha-head-actions"><button type="button" onclick="MeviHA.reload()" title="Neu laden" aria-label="Home Assistant aktualisieren">↻</button>'+
-   '</div></header>'+
+   '<header class="ha-header"><div class="ha-title"><span class="ha-logo" aria-hidden="true">'+svg('home')+'</span><b>Home Assistant</b></div>'+
    '<nav class="ha-tabs" aria-label="Home Assistant Seiten">'+Object.keys(viewNames).map(tabButton).join('')+'</nav>'+
+   '<div class="ha-head-actions"><button type="button" onclick="MeviHA.reload()" title="Neu laden" aria-label="Home Assistant aktualisieren">'+svg('refresh')+'</button>'+
+   '</div></header>'+
    '<div class="ha-status-row" id="ha-status-row">'+statusHTML()+'</div>'+
    '<main class="ha-main" id="ha-view">'+viewHTML()+'</main></section>';
  }
+ let lastScrollKey='';
  function repaint(replaceView=true){
   const root=document.querySelector('.ha-shell');
   if(!root)return;
   const row=get('ha-status-row');if(row)row.innerHTML=statusHTML();
   if(replaceView){
+   // Keep the list position across the 30 s refresh and after switching a device.
+   const scrollKey=state.tab+'/'+section+'/'+unlocked;
+   const scroller=root.querySelector('.ha-dashboard-native,.ha-entity-list');
+   const top=scroller&&scrollKey===lastScrollKey?scroller.scrollTop:0;
+   lastScrollKey=scrollKey;
    const v=get('ha-view');if(v)v.innerHTML=viewHTML();
+   const next=top?root.querySelector('.ha-dashboard-native,.ha-entity-list'):null;
+   if(next)next.scrollTop=top;
    for(const button of root.querySelectorAll('.ha-tab')){
     const selected=(button.textContent===viewNames[state.tab]);
     button.classList.toggle('active',selected);

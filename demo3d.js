@@ -95,14 +95,15 @@
     }, { signal });
     const message = root.querySelector('.d3-message');
     message.hidden = false; message.textContent = '3D-Szene wird geladen …';
-    const fail = () => {
+    const fail = reason => {
       if (active !== session) return;
       session.renderer?.dispose(); session.renderer = null; session.failed = true; paint(session);
       message.hidden = false;
-      message.innerHTML = '3D-Grafik ist gerade nicht verfügbar. WebGL 2 wird benötigt.<button type="button" data-action="retry">Erneut versuchen</button>';
+      message.innerHTML = (reason === 'load' ? '3D-Szene konnte nicht geladen werden.' : '3D-Grafik ist gerade nicht verfügbar. WebGL 2 wird benötigt.') + '<button type="button" data-action="retry">Erneut versuchen</button>';
     };
     try {
-      const { createDemo } = await import('./demo3d-scene.mjs');
+      const { createDemo } = await import('./demo3d-scene.mjs').catch(error => { console.warn('MeviCar 3D Demo (Laden):', error); fail('load'); return {}; });
+      if (!createDemo) return;
       if (active !== session || !root.isConnected) return;
       session.renderer = createDemo(root.querySelector('.d3-stage'), state, () => paint(session), fail);
       message.hidden = true;
