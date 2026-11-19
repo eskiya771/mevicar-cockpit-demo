@@ -1,0 +1,49 @@
+name: Package Android offline Web update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'build-info.json'
+      - '*.js'
+      - '*.css'
+      - '*.html'
+      - 'vendor/**'
+      - 'weather/**'
+      - 'scripts/package-offline-web.py'
+      - '.github/workflows/package-offline-web.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: mevicar-offline-package
+  cancel-in-progress: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Build complete verified offline ZIP and manifest
+        run: python scripts/package-offline-web.py
+      - name: Commit matching bundle and manifest
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add offline-bundle.zip offline-bundle.json
+          if git diff --cached --quiet; then
+            echo 'Offline package already current'
+          else
+            git commit -m "build: package Android offline Web for current site build"
+            git push origin HEAD:main
+          fi
