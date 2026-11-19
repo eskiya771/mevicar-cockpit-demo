@@ -16,9 +16,9 @@ const iosDevice=/iPhone|iPad|iPod/.test(ua)||
  (typeof navigator!=='undefined'&&navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const touchKeyboard=!native&&iosDevice&&!!window.matchMedia?.('(orientation: landscape)')?.matches;
 let keyboardVisible=false,keyboardUpper=false,keyboardNumbers=false;
-let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false,manage=false;
+let selectedReturnView='search',externalMapPlace=false,bookOpenedFromSearch=false;
 let quickBookBusy=false,quickSelecting=false;
-let tab='recent',view='search',pendingSlot='',pendingFavorite=false,gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
+let tab='favorites',view='search',pendingSlot='',pendingFavorite=false,gps=null,editor=null,editError='',poiState=null,placeState=null,placeIndex=-1,placeBack='search',placeSerial=0,placeLoading=false,placeError='',stopMode=false,returnNav='browse',stopError='';
 const safe=shared.escapeHtml;
 const paths={
  back:'<path d="m15 18-6-6 6-6"/><path d="M9 12h12"/>',
@@ -51,31 +51,30 @@ function distance(d){
  const km=shared.distanceMeters(p,d)/1000;
  return (km<10?km.toLocaleString('de-DE',{maximumFractionDigits:1}):Math.round(km).toLocaleString('de-DE'))+' km';
 }
-function row(d,kind,i,manage){
+function row(d,kind,i,editable){
  const glyph=kind==='recent'?'clock':shared.effectiveIcon(d,kind==='favorites'?'':kind);
  const detail=[d.address||'',d.note||''].filter(Boolean).join(' · ');
- const editControls=manage&&kind!=='recent'?
+ const editControls=editable&&kind!=='recent'?
    (kind==='favorites'?'<button type="button" class="mg-parity-inline" '+(i===0?'disabled ':'')+'onclick="MeviWebNavParity.move('+i+',-1)" aria-label="Nach oben">'+ico('up')+'</button>'+
     '<button type="button" class="mg-parity-inline" '+(i>=data().favorites.length-1?'disabled ':'')+'onclick="MeviWebNavParity.move('+i+',1)" aria-label="Nach unten">'+ico('down')+'</button>':'')+
    '<button type="button" class="mg-parity-inline" onclick="MeviWebNavParity.edit(\''+kind+'\','+i+')" aria-label="'+safe(d.name)+' bearbeiten">'+ico('edit')+'</button>':'';
- const removeControl=manage?'<button type="button" class="mg-parity-inline" onclick="MeviWebNavParity.remove(\''+kind+'\','+i+')" aria-label="'+safe(d.name)+' entfernen">'+ico('remove')+'</button>':'';
+ const removeControl=editable?'<button type="button" class="mg-parity-inline" onclick="MeviWebNavParity.remove(\''+kind+'\','+i+')" aria-label="'+safe(d.name)+' entfernen">'+ico('remove')+'</button>':'';
  return '<div class="mg-parity-row"><button type="button" class="mg-parity-entry" onclick="MeviWebNavParity.choose(\''+kind+'\','+i+')" aria-label="'+safe(d.name)+' auswählen">'+
  '<span class="mg-parity-symbol">'+ico(glyph)+'</span><span class="mg-parity-description"><strong>'+safe(d.name)+'</strong>'+
  (detail?'<small>'+safe(detail)+'</small>':'')+'</span><span class="mg-parity-distance">'+safe(distance(d))+'</span></button>'+
  editControls+removeControl+'</div>';
 }
-function rows(kind,manage=false){
+function rows(kind){
  const d=data(), items=kind==='recent'?d.recent:kind==='favorites'?d.favorites:d.slots[kind]?[d.slots[kind]]:[];
- return items.length?items.map((item,i)=>row(item,kind,i,manage)).join(''):'<div class="mg-parity-empty">'+(kind==='recent'?'Noch keine Ziele gefahren.':'Noch keine Ziele gespeichert.')+'</div>';
+ return items.length?items.map((item,i)=>row(item,kind,i,true)).join(''):'<div class="mg-parity-empty">'+(kind==='recent'?'Noch keine Ziele gefahren.':'Noch keine Ziele gespeichert.')+'</div>';
 }
 const categories=[['home','Zuhause','home'],['work','Arbeit','work'],['fuel','Tanken','Tankstelle'],['charge','Laden','Ladestation'],['parking','Parken','Parkplatz'],['food','Essen','Restaurant'],['cafe','Café','Café'],['cart','Einkaufen','Supermarkt'],['rest','Rastplatz','Rastplatz WC'],['wrench','Werkstatt','Autowerkstatt']];
 function chips(){return '<div class="mg-parity-chips" aria-label="Schnellziele und POI-Kategorien">'+categories.map(([icon,label,q],i)=>
  '<button type="button" onclick="'+(i<2?'MeviWebNavParity.slot(\''+icon+'\')':'MeviWebNavParity.poi(\''+icon+'\',\''+q+'\')')+'">'+ico(icon)+'<span>'+label+'</span></button>').join('')+'</div>'}
 function tabs(){
  return '<div class="mg-parity-tabs" role="group" aria-label="Gespeicherte Ziele und Verlauf">'+
-  '<button type="button" class="'+(tab==='recent'?'selected':'')+'" aria-pressed="'+(tab==='recent')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button>'+
   '<button type="button" class="'+(tab==='favorites'?'selected':'')+'" aria-pressed="'+(tab==='favorites')+'" onclick="MeviWebNavParity.tab(\'favorites\')">Gespeichert</button>'+
-  '<button type="button" class="mg-parity-manage-toggle" aria-pressed="'+manage+'" onclick="MeviWebNavParity.toggleManage()">'+(manage?'Fertig':'Verwalten')+'</button></div>';
+  '<button type="button" class="'+(tab==='recent'?'selected':'')+'" aria-pressed="'+(tab==='recent')+'" onclick="MeviWebNavParity.tab(\'recent\')">Zuletzt</button>'+'</div>';
 }
 // Keep only one result per physical target, even if a saved favourite and
 // a recent destination carry different provider IDs. This affects only the
@@ -109,7 +108,7 @@ function localMatches(query){
   shown.push(item);
   // Keep the source's real index. A filtered result must still select or edit
   // the correct favourite, quick slot or history record on Web AND Android.
-  matches.push(row(item,kind,index,manage));
+  matches.push(row(item,kind,index,false));
  };
  // A saved slot or favourite wins over the same place in recent history.
  for(const kind of ['home','work'])add(d.slots[kind],kind,0);
@@ -184,11 +183,11 @@ function searchRows(){
   return (local?'<div class="mg-parity-section-title">Deine Ziele</div>'+local:'')+
    '<div class="mg-parity-section-title">Adressen und Orte</div>'+remote;
  }
- if(tab==='recent')return rows('recent',manage);
+ if(tab==='recent')return rows('recent');
  return '<div class="mg-parity-slot-rows">'+(['home','work'].map(k=>d.slots[k]?
-  row(d.slots[k],k,0,manage):manage?
-  '<button type="button" class="mg-parity-empty-slot" onclick="MeviWebNavParity.slot(\''+k+'\')">'+ico(k)+' '+(k==='home'?'Zuhause':'Arbeit')+' festlegen</button>':'').join(''))+'</div>'+
-  rows('favorites',manage);
+  row(d.slots[k],k,0,true):
+  '<button type="button" class="mg-parity-empty-slot" onclick="MeviWebNavParity.slot(\''+k+'\')">'+ico(k)+' '+(k==='home'?'Zuhause':'Arbeit')+' festlegen</button>').join(''))+'</div>'+
+  rows('favorites');
 }
 function manageActions(){
  return '<div class="mg-parity-manage-actions" role="group" aria-label="Ziele verwalten">'+
@@ -300,7 +299,7 @@ function searchHTML(){
   '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="text" placeholder="Adresse, Ort, Favorit oder POI" aria-label="Adresse, Ort oder POI" inputmode="'+(touchKeyboard?'none':'search')+'" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="200" onfocus="MeviWebNavParity.focusSearch()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
   '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
   '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
-  tabs()+(manage?manageActions():'')+
+  tabs()+manageActions()+
   (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
   '<div class="mg-parity-results" id="suggestions" aria-live="polite" onclick="MeviWebNavParity.blankResultsTapped()" onscroll="MeviWebNavParity.resultsScrolled()">'+searchRows()+'</div>'+touchKeyboardHTML()+'</div></div>';
 }
@@ -447,14 +446,14 @@ function open(){
   return;
  }
  const context=provider.routeContext();
- bookOpenedFromSearch=false;manage=false;keyboardVisible=false;keyboardUpper=false;keyboardNumbers=false;
+ bookOpenedFromSearch=false;keyboardVisible=false;keyboardUpper=false;keyboardNumbers=false;
  returnNav=context.nativeOwned?'browse':s.nav==='preview'?'preview':context.active?'driving':context.hasRoute?'ready':'browse';stopMode=false;stopError='';
- externalMapPlace=false;view='search';tab='recent';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
+ externalMapPlace=false;view='search';tab='favorites';editor=null;poiState=null;placeState=null;placeSerial++;s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');rerender();fitVisualViewport();window.MeviAndroidSharedNav?.setOpen(true);
  if(navigator.geolocation&&!gps){navigator.geolocation.getCurrentPosition(p=>{gps={lat:p.coords.latitude,lng:p.coords.longitude};const el=document.getElementById('suggestions');if(el&&view==='search'&&!s.query)el.innerHTML=searchRows()},()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:4000})}
 }
 function close(){
- bookOpenedFromSearch=false;manage=false;keyboardVisible=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
+ bookOpenedFromSearch=false;keyboardVisible=false;externalMapPlace=false;pendingSlot='';pendingFavorite=false;editor=null;poiState=null;placeState=null;placeSerial++;stopMode=false;stopError='';view='search';s.nav=returnNav;s.keyboard=false;
  window.meviNavSearchClosed?.();
  rerender();window.MeviAndroidSharedNav?.setOpen(false);provider.cancel?.();
 }
@@ -474,7 +473,6 @@ function clear(){
  document.getElementById?.('searchInput')?.focus?.({preventScroll:true});
 }
 function setTab(value){tab=value==='favorites'?'favorites':'recent';rerender()}
-function toggleManage(){manage=!manage;if(manage)tab='favorites';rerender()}
 async function choose(kind,index){
  try{
   const savingSlot=pendingSlot,savingFavorite=pendingFavorite;
@@ -499,7 +497,7 @@ async function choose(kind,index){
   if(savingFavorite)await provider.saveFavorite();
   if(saveOnly){
    pendingSlot='';pendingFavorite=false;
-   view='search';tab=savingFavorite?'favorites':tab;manage=manage||savingFavorite;s.nav='search';s.query='';
+   view='search';tab=savingFavorite?'favorites':tab;s.nav='search';s.query='';
    provider.search('');rerender();
   }else if(directRoute){
    s.nav='browse';s.keyboard=false;s.mode='map';rerender();
@@ -546,7 +544,7 @@ function openStopSearch(){
  if(!context.hasRoute)return;
  if(context.stops.length>=context.maxStops){stopError='Maximal acht Zwischenstopps möglich.';return}
  returnNav=context.nativeOwned?'browse':context.active?'driving':'ready';stopMode=true;stopError='';pendingSlot='';pendingFavorite=false;
- view='search';tab='recent';s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
+ view='search';tab='favorites';s.app='nav';s.mode='map';s.nav='search';s.keyboard=false;s.query='';
  provider.search('');window.MeviAndroidSharedNav?.setOpen(true);rerender();
 }
 async function finishStop(place){
@@ -695,14 +693,14 @@ function book(){
   returnNav=provider.routeContext().nativeOwned?'browse':previousNav;
   bookOpenedFromSearch=false;
  }
- manage=true;tab='favorites';view='search';s.nav='search';s.keyboard=false;rerender();
+ tab='favorites';view='search';s.nav='search';s.keyboard=false;rerender();
 }
 function bookBack(){
  if(!bookOpenedFromSearch){close();return}
- manage=false;tab='recent';s.query='';provider.search('');rerender();
+ tab='favorites';s.query='';provider.search('');rerender();
 }
 function add(){
- pendingFavorite=true;manage=true;tab='favorites';view='search';s.query='';
+ pendingFavorite=true;tab='favorites';view='search';s.query='';
  provider.search('');rerender();document.getElementById('searchInput')?.focus({preventScroll:true});
 }
 function write(changes){provider.write(changes);rerender()}
@@ -744,6 +742,6 @@ function nativeImport(){if(provider.importPicker)void provider.importPicker().ca
 window.openSearch=open;
 function overlayHTML(){return view==='edit'?editHTML():view==='results'?poiHTML():view==='place'?placeHTML():searchHTML()}
 window.searchOverlay=overlayHTML;
-window.MeviWebNavParity={overlayHTML,quickDestinations,quickSelect,quickIcon:ico,focusSearch,hideSearchKeyboard,blankResultsTapped,resultsScrolled,typeKey,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,toggleManage,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
+window.MeviWebNavParity={overlayHTML,quickDestinations,quickSelect,quickIcon:ico,focusSearch,hideSearchKeyboard,blankResultsTapped,resultsScrolled,typeKey,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
