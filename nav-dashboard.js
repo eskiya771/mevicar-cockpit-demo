@@ -24,7 +24,8 @@ function html(compact=false){
 const icon=path=>'<svg class="mg-dash-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="'+path+'"/></svg>';
 const icons={
  search:'M10.5 4a6.5 6.5 0 0 1 5.2 10.4l4.2 4.2-1.4 1.4-4.2-4.2A6.5 6.5 0 1 1 10.5 4zm0 2a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z',
- full:'M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z'
+ full:'M4 4h6v2H6v4H4V4zm10 0h6v6h-2V6h-4V4zM4 14h2v4h4v2H4v-6zm14 0h2v6h-6v-2h4v-4z',
+ pin:'M12 22s7-6.1 7-12a7 7 0 0 0-14 0c0 5.9 7 12 7 12zm0-8.7a3.3 3.3 0 1 0 0-6.6 3.3 3.3 0 0 0 0 6.6z'
 };
 /* The controls call the existing handlers of the shared page (index.html):
    checkForUpdate, openDashboardSearch, showGuidanceMap.
@@ -42,14 +43,14 @@ function panel(){
   <div class="mg-dash-actions" role="group" aria-label="Navigation bedienen">
    <button type="button" class="mg-dash-action" data-dash-action="search" onclick="openDashboardSearch()">${icon(icons.search)}<span>Ziel suchen</span></button>
   </div>
-  ${html(true)}
   <section class="mg-dash-quick" aria-label="Gespeicherte Orte" data-dash-quick>
    <div class="mg-dash-quick-heading">
-    <strong>Orte</strong>
-    <span class="mg-dash-quick-hint" aria-hidden="true">Wischen ›</span>
+    <strong>${icon(icons.pin)}<span>Orte</span></strong>
+    <button type="button" class="mg-dash-quick-all" onclick="openDashboardSearch()" aria-label="Alle gespeicherten Orte anzeigen">Alle anzeigen ›</button>
    </div>
-   <div class="mg-dash-quick-rail" data-dash-quick-rail role="group" aria-label="Schnellziele"></div>
+   <div class="mg-dash-quick-rail" data-dash-quick-rail role="group" aria-label="Gespeicherte Ziele"></div>
   </section>
+  ${html(true)}
  </div>`;
 }
 // Read from the single search provider; do not re-render the full cockpit or

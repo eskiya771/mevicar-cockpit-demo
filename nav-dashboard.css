@@ -178,18 +178,13 @@ html[data-theme="liquidglass"] .mg-dash-speed{background:linear-gradient(155deg,
 }
 .mg-dash-head-tools .mg-dash-fullmap span{display:none}
 .mg-dash-head-tools .mg-dash-fullmap .mg-dash-icon{width:clamp(20px,3.5vh,30px);height:clamp(20px,3.5vh,30px)}
-/* Only search and address book occupy the second row. */
+/* One unified destination search occupies the second row. */
 .mg-dash-actions{grid-template-columns:minmax(0,1fr)}
 @media(orientation:landscape) and (max-height:480px){
  .mg-dash-actions{grid-template-columns:minmax(0,1fr)}
 }
-/* Idle: do not waste space on route metrics until a route exists. */
-.mg-dash-panel[data-route-active="false"]>.mg-nav-dashboard.mg-dashboard-compact{
- flex:0 0 auto;height:clamp(106px,22vh,240px);grid-template-columns:minmax(0,1fr);
- grid-template-rows:minmax(0,1fr);
-}
-.mg-dash-panel[data-route-active="false"] .mg-dashboard-compact .mg-dash-cell:not(.mg-dash-speed){display:none}
-.mg-dash-panel[data-route-active="false"] .mg-dashboard-compact .mg-dash-speed{grid-column:1;grid-row:1}
+/* Idle: header, search and places only. Keep all route metrics intact for guidance. */
+.mg-dash-panel[data-route-active="false"]>.mg-nav-dashboard.mg-dashboard-compact{display:none}
 
 /* Idle Navi split: Apple-Maps-style saved-place quick actions, driven by the
    single destination provider. During a route, the normal trip grid takes over. */
@@ -205,11 +200,21 @@ html[data-theme="liquidglass"] .mg-dash-speed{background:linear-gradient(155deg,
  flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:8px;
  min-height:clamp(25px,4.1vh,42px);color:var(--dash-ink);
 }
-.mg-dash-quick-heading strong{font-size:clamp(15px,2.7vh,25px);font-weight:780}
-.mg-dash-quick-hint{
- flex:0 0 auto;color:var(--dash-sub);
- font-size:clamp(11px,1.75vh,15px);white-space:nowrap;
+.mg-dash-quick-heading strong{
+ display:inline-flex;align-items:center;gap:clamp(5px,.8vw,12px);
+ font-size:clamp(15px,2.7vh,25px);font-weight:780;
 }
+.mg-dash-quick-heading .mg-dash-icon{width:clamp(18px,3.3vh,28px);height:clamp(18px,3.3vh,28px)}
+.side.mg-nav-dashboard-side .mg-dash-quick-all{
+ flex:0 0 auto;min-height:44px;padding:4px clamp(5px,.8vw,12px);
+ border:0;border-radius:8px;background:transparent;
+ color:var(--dash-sub);font:inherit;font-weight:650;font-size:clamp(11px,1.75vh,16px);
+ white-space:nowrap;cursor:pointer;touch-action:manipulation;
+}
+.side.mg-nav-dashboard-side .mg-dash-quick-all:focus-visible{
+ outline:2px solid var(--dash-accent);outline-offset:1px;
+}
+.side.mg-nav-dashboard-side .mg-dash-quick-all:active{color:var(--dash-accent)}
 .mg-dash-quick-rail{
  display:flex;align-items:flex-start;gap:clamp(7px,.8vw,14px);
  flex:1 1 0;min-height:0;min-width:0;overflow-x:auto;overflow-y:hidden;
