@@ -46,9 +46,31 @@ function panel(){
   <section class="mg-dash-quick" aria-label="Gespeicherte Orte" data-dash-quick>
    <div class="mg-dash-quick-heading">
     <strong>${icon(icons.pin)}<span>Orte</span></strong>
-    <button type="button" class="mg-dash-quick-all" onclick="openDashboardSearch()" aria-label="Alle gespeicherten Orte anzeigen">Alle anzeigen ›</button>
+    <span class="mg-dash-quick-hint" aria-hidden="true">Wischen ›</span>
    </div>
    <div class="mg-dash-quick-rail" data-dash-quick-rail role="group" aria-label="Gespeicherte Ziele"></div>
+   <section class="mg-dash-idle-speed" data-idle-speed-card aria-label="Digitaler GPS-Tachometer">
+    <div class="mg-dash-idle-speed-head">
+     <span>DIGITALTACHO</span>
+     <span class="mg-dash-idle-gps-state" data-idle-gps-status>GPS wird gesucht</span>
+    </div>
+    <div class="mg-dash-idle-speed-stage">
+     <svg class="mg-dash-idle-speed-arc" viewBox="0 0 360 155" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+      <defs><linearGradient id="mg-idle-speed-gradient" x1="0" y1="0" x2="1" y2="0">
+       <stop offset="0%" stop-color="#4de4fc"/><stop offset="55%" stop-color="#8fbaff"/>
+       <stop offset="100%" stop-color="#ff64e8"/>
+      </linearGradient></defs>
+      <path class="mg-dash-idle-speed-track" d="M 36 142 A 144 144 0 0 1 324 142" pathLength="100"/>
+      <path class="mg-dash-idle-speed-fill" d="M 36 142 A 144 144 0 0 1 324 142" pathLength="100"
+       stroke-dasharray="100" stroke-dashoffset="100" data-idle-speed-arc/>
+     </svg>
+     <div class="mg-dash-idle-speed-readout">
+      <strong data-idle-speed-value aria-live="off">–</strong>
+      <span>km/h</span>
+     </div>
+    </div>
+    <div class="mg-dash-idle-speed-scale"><span>0</span><span>GPS-Geschwindigkeit</span><span>220</span></div>
+   </section>
   </section>
   ${html(true)}
  </div>`;
@@ -85,12 +107,96 @@ function refreshQuick(container){
  if(rail.dataset)rail.dataset.signature=signature;
  rail.scrollLeft=previousScroll;
 }
+// The idle speedometer uses one short-lived GPS watch only while the Navi
+// dashboard is visible without a route. The guided trip continues to use
+// the existing navigation provider's raw speed; no parallel trip model.
+let idleWatch=null, idleSpeed=null, idleFixAt=0, idlePrevious=null;
+let idleStatus='GPS wird gesucht', idleBlocked=false;
+const idleSpeedLimit=220, idleStaleMs=8000;
+function stopIdleGps(){
+ if(idleWatch!==null&&typeof navigator!=='undefined'){
+  try{navigator.geolocation?.clearWatch?.(idleWatch)}catch{}
+ }
+ idleWatch=null;idleSpeed=null;idleFixAt=0;idlePrevious=null;
+ idleStatus='GPS wird gesucht';idleBlocked=false;
+}
+function idleFix(position){
+ const now=Date.now(),c=position?.coords||{},stamp=position?.timestamp;
+ if(!Number.isFinite(stamp)||stamp>now+1000||now-stamp>10000||
+    !Number.isFinite(c.latitude)||!Number.isFinite(c.longitude)||
+    !Number.isFinite(c.accuracy)||c.accuracy<0||c.accuracy>50){
+  idleSpeed=null;idleFixAt=0;idlePrevious=null;idleStatus='GPS ungenau';
+  const node=typeof document==='undefined'?null:document.getElementById?.('mg-nav-dashboard-split');
+  if(node)paintIdleSpeed(node);
+  return;
+ }
+ let kmh=null;
+ if(Number.isFinite(c.speed)&&c.speed>=0&&c.speed<=112){
+  kmh=c.speed*3.6;
+ }else if(idlePrevious&&stamp>idlePrevious.timestamp){
+  // Fallback for GPS providers that do not return coords.speed.
+  // Do not turn short-term location jitter into a false vehicle speed.
+  const seconds=(stamp-idlePrevious.timestamp)/1000;
+  const a=idlePrevious.lat*Math.PI/180,b=c.latitude*Math.PI/180;
+  const dLat=b-a,dLng=(c.longitude-idlePrevious.lng)*Math.PI/180;
+  const h=Math.sin(dLat/2)**2+Math.cos(a)*Math.cos(b)*Math.sin(dLng/2)**2;
+  const meters=6371000*2*Math.asin(Math.min(1,Math.sqrt(h)));
+  const threshold=Math.max(8,Math.min(45,2*Math.max(c.accuracy,idlePrevious.accuracy)));
+  if(seconds>=1.5&&seconds<=20){
+   if(meters>threshold)kmh=Math.min(400,meters/seconds*3.6);
+   else if(seconds>=3&&c.accuracy<=15&&idlePrevious.accuracy<=15)kmh=0;
+  }
+ }
+ idlePrevious={lat:c.latitude,lng:c.longitude,accuracy:c.accuracy,timestamp:stamp};
+ idleSpeed=kmh;idleFixAt=now;
+ idleStatus=Number.isFinite(kmh)?'GPS aktiv':'GPS · warte auf Tempo';
+ const node=typeof document==='undefined'?null:document.getElementById?.('mg-nav-dashboard-split');
+ if(node)paintIdleSpeed(node);
+}
+function startIdleGps(){
+ if(idleWatch!==null||idleBlocked||typeof navigator==='undefined')return;
+ if(typeof document!=='undefined'&&document.hidden)return;
+ const geo=navigator.geolocation;
+ if(!geo?.watchPosition){idleStatus='GPS nicht verfügbar';idleBlocked=true;return}
+ idleStatus='GPS wird gesucht';
+ try{
+  idleWatch=geo.watchPosition(idleFix,e=>{
+   if(idleWatch!==null){try{geo.clearWatch(idleWatch)}catch{}}
+   idleWatch=null;idleSpeed=null;idleFixAt=0;idlePrevious=null;idleBlocked=true;
+   idleStatus=e?.code===1?'Standortfreigabe fehlt':e?.code===2?'GPS nicht verfügbar':'GPS-Signal fehlt';
+   const node=typeof document==='undefined'?null:document.getElementById?.('mg-nav-dashboard-split');
+   if(node)paintIdleSpeed(node);
+  },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
+ }catch{
+  idleWatch=null;idleBlocked=true;idleStatus='GPS nicht verfügbar';
+ }
+}
+function paintIdleSpeed(container){
+ const numeral=container.querySelector('[data-idle-speed-value]');
+ const bar=container.querySelector('[data-idle-speed-arc]');
+ const status=container.querySelector('[data-idle-gps-status]');
+ const fresh=idleFixAt>0&&Date.now()-idleFixAt<=idleStaleMs;
+ const speed=fresh&&Number.isFinite(idleSpeed)?Math.max(0,idleSpeed):null;
+ const value=rounded(speed);
+ if(numeral&&numeral.textContent!==value)numeral.textContent=value;
+ if(bar?.style)bar.style.strokeDashoffset=String(100-Math.min(100,(speed??0)/idleSpeedLimit*100));
+ const label=!fresh&&idleFixAt>0?'GPS-Signal veraltet':idleStatus;
+ if(status&&status.textContent!==label)status.textContent=label;
+}
+if(typeof document!=='undefined'&&document.addEventListener){
+ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopIdleGps()});
+}
+
 function paint(container,data){
  if(!container?.querySelector)return;
  const info=data||{},format=root.MeviNavRouteDetails;
  const panel=container.querySelector('.mg-dash-panel');
  if(panel?.dataset)panel.dataset.routeActive=info.routeActive===true?'true':'false';
- if(info.routeActive!==true)refreshQuick(container);
+ if(info.routeActive!==true){
+  refreshQuick(container);
+  startIdleGps();
+  paintIdleSpeed(container);
+ }else stopIdleGps();
  // Web guidance and the Android SDK both supply raw metrics.
  // avgKmh remains an input for compatibility with older callers only.
  const rawAverage=Number.isFinite(info.drivenMeters)&&Number.isFinite(info.elapsedMs)?
@@ -111,5 +217,5 @@ function paint(container,data){
   if(element&&element.textContent!==value)element.textContent=value;
  }
 }
-root.MeviNavDashboard={html,panel,paint,refreshQuick};
+root.MeviNavDashboard={html,panel,paint,refreshQuick,stopIdleGps};
 })(window);
