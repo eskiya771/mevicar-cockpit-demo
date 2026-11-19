@@ -191,7 +191,6 @@ function searchRows(){
 }
 function manageActions(){
  return '<div class="mg-parity-manage-actions" role="group" aria-label="Ziele verwalten">'+
-  '<button type="button" onclick="MeviWebNavParity.add()">'+ico('plus')+' Hinzufügen</button>'+
   '<button type="button" onclick="MeviWebNavParity.exportBook()">Exportieren</button>'+
   (provider.importPicker?'<button type="button" onclick="MeviWebNavParity.nativeImport()">Importieren</button>':
    '<button type="button" onclick="document.getElementById(\'mg-parity-import\').click()">Importieren</button>'+
@@ -293,10 +292,12 @@ function fitVisualViewport(){
 window.visualViewport?.addEventListener?.('resize',fitVisualViewport);
 window.visualViewport?.addEventListener?.('scroll',fitVisualViewport);
 function searchHTML(){
+ const slotName=pendingSlot==='work'?'Arbeit':pendingSlot==='home'?'Zuhause':'';
+ const purpose=slotName?'<label for="searchInput"><strong>'+slotName+'</strong></label>':'';
  return '<div class="mg-parity-shade'+(keyboardVisible?' mg-parity-keyboard-open':'')+
   ((s.query||'').trim()?' mg-parity-querying':'')+'" role="dialog" aria-modal="true" aria-label="Zielsuche und Adressbuch"><div class="mg-parity-layout">'+
   '<div class="mg-parity-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.close()" aria-label="Zurück">'+ico('back')+'</button>'+
-  '<div class="mg-parity-field">'+ico('search')+'<input id="searchInput" type="text" placeholder="Adresse, Ort, Favorit oder POI" aria-label="Adresse, Ort oder POI" inputmode="'+(touchKeyboard?'none':'search')+'" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="200" onfocus="MeviWebNavParity.focusSearch()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
+  '<div class="mg-parity-field">'+ico(pendingSlot||'search')+purpose+'<input id="searchInput" type="text" placeholder="'+(slotName?'Adresse festlegen':'Adresse, Ort, Favorit oder POI')+'" aria-label="'+(slotName?'Adresse für '+slotName+' festlegen':'Adresse, Ort oder POI')+'" inputmode="'+(touchKeyboard?'none':'search')+'" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="200" onfocus="MeviWebNavParity.focusSearch()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
   '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
   '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
   tabs()+manageActions()+
@@ -673,6 +674,7 @@ async function routePlace(){
 }
 
 function submitSearch(){
+ if(pendingSlot){hideSearchKeyboard();return}
  keyboardVisible=false;
  const q=String(s.query||'').trim();
  if(q.length<2)return;
