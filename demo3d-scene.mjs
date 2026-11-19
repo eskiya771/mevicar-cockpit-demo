@@ -1,4 +1,5 @@
 import * as THREE from './vendor/three-0.170.0/three.module.min.js';
+import { createExtraScenes } from './demo3d-extra.mjs';
 
 // One renderer, one visible scene. All geometry is procedural and stays offline.
 export function createDemo(host, state, onChange, onFailure) {
@@ -210,6 +211,10 @@ export function createDemo(host, state, onChange, onFailure) {
     };
   }
 
+  const extraScenes = createExtraScenes({ THREE, geo, mat, basic, mesh, halo, stars, surface,
+    getGroup: () => group, setView: (d, p = 0, y = 0) => { distance = d; pitch = p; yaw = y; } });
+  const scenes = [laserValley, blackHole, hyperspace, solarStorm, ...extraScenes];
+
   function select(effect) {
     if (disposed) return;
     clearScene();
@@ -217,7 +222,7 @@ export function createDemo(host, state, onChange, onFailure) {
     autoTime = yaw = pitch = 0;
     group = new THREE.Group();
     world.add(group);
-    tick = [laserValley, blackHole, hyperspace, solarStorm][effect]();
+    tick = scenes[effect]();
     onChange();
     render();
   }
@@ -241,7 +246,7 @@ export function createDemo(host, state, onChange, onFailure) {
     frame=0;if(disposed||document.hidden||state.paused)return;
     const raw=last?now-last:16;last=now;const delta=Math.min(raw/1000,.05);
     state.time+=delta*state.speed;
-    if(state.auto){autoTime+=delta;if(autoTime>=20)select((state.effect+1)%4);}
+    if(state.auto){autoTime+=delta;if(autoTime>=20)select((state.effect+1)%scenes.length);}
     if(state.quality==='auto'&&!low){slow=raw>35?slow+1:Math.max(0,slow-1);if(slow>70){low=true;resize();}}
     render(); frame=requestAnimationFrame(loop);
   }
