@@ -65,8 +65,19 @@ function row(d,kind,i,editable){
  editControls+removeControl+'</div>';
 }
 function rows(kind){
- const d=data(), items=kind==='recent'?d.recent:kind==='favorites'?d.favorites:d.slots[kind]?[d.slots[kind]]:[];
- return items.length?items.map((item,i)=>row(item,kind,i,true)).join(''):'<div class="mg-parity-empty">'+(kind==='recent'?'Noch keine Ziele gefahren.':'Noch keine Ziele gespeichert.')+'</div>';
+ const d=data();
+ if(kind==='recent'){
+  // Saved favourites and quick destinations have precedence over history.
+  // Keep the original history index for choosing and deleting a visible row.
+  const saved=[d.slots.home,d.slots.work,...d.favorites].filter(Boolean);
+  const visible=d.recent.map((item,index)=>({item,index}))
+   .filter(({item})=>!saved.some(entry=>sameSearchDestination(entry,item)));
+  return visible.length?visible.map(({item,index})=>row(item,'recent',index,true)).join(''):
+   '<div class="mg-parity-empty">Keine weiteren Ziele im Verlauf.</div>';
+ }
+ const items=kind==='favorites'?d.favorites:d.slots[kind]?[d.slots[kind]]:[];
+ return items.length?items.map((item,i)=>row(item,kind,i,true)).join(''):
+  '<div class="mg-parity-empty">Noch keine Ziele gespeichert.</div>';
 }
 const categories=[['home','Zuhause','home'],['work','Arbeit','work'],['fuel','Tanken','Tankstelle'],['charge','Laden','Ladestation'],['parking','Parken','Parkplatz'],['food','Essen','Restaurant'],['cafe','Café','Café'],['cart','Einkaufen','Supermarkt'],['rest','Rastplatz','Rastplatz WC'],['wrench','Werkstatt','Autowerkstatt']];
 function chips(){return '<div class="mg-parity-chips" aria-label="Schnellziele und POI-Kategorien">'+categories.map(([icon,label,q],i)=>
