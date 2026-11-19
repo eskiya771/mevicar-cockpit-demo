@@ -606,3 +606,17 @@ html[data-theme="liquidglass"] .sp-web-action{background:#d9fff42d;border-color:
  .sp-shell .sp-now .sp-meta{align-self:center}
  .sp-shell .sp-now .sp-transport{gap:4px}
 }
+
+/* iPhone Safari: keep the real, user-initiated audio unlock action visible.
+   Narrow landscape layouts hide other tool labels; not this critical control. */
+.sp-shell .sp-now .sp-tools .sp-ios-audio{
+ min-height:44px;min-width:44px;padding:7px 11px;
+ border-color:#37d99b;color:#dbffed;background:#125340;
+ font-size:clamp(11px,1.9vh,15px);font-weight:800;
+}
+.sp-shell .sp-now .sp-tools .sp-ios-audio span{
+ display:inline!important;white-space:nowrap;
+}
+.sp-shell .sp-now .sp-tools .sp-ios-audio:focus-visible{
+ outline:2px solid #7df6cb;outline-offset:2px;
+}

@@ -3350,6 +3350,20 @@ html[data-theme="liquidglass"] .sp-web-action{background:#d9fff42d;border-color:
  .sp-shell .sp-now .sp-meta{align-self:center}
  .sp-shell .sp-now .sp-transport{gap:4px}
 }
+
+/* iPhone Safari: keep the real, user-initiated audio unlock action visible.
+   Narrow landscape layouts hide other tool labels; not this critical control. */
+.sp-shell .sp-now .sp-tools .sp-ios-audio{
+ min-height:44px;min-width:44px;padding:7px 11px;
+ border-color:#37d99b;color:#dbffed;background:#125340;
+ font-size:clamp(11px,1.9vh,15px);font-weight:800;
+}
+.sp-shell .sp-now .sp-tools .sp-ios-audio span{
+ display:inline!important;white-space:nowrap;
+}
+.sp-shell .sp-now .sp-tools .sp-ios-audio:focus-visible{
+ outline:2px solid #7df6cb;outline-offset:2px;
+}
 </style><style id="mevicar-lightshow-styles">/* MeviCar Next · Lichtshow – live MeviDarts canvas, independent from idle screensaver. */
 .lightshow-host.full,.lightshow-host.side{padding:0!important;overflow:hidden!important;gap:0!important;background:#040817!important;min-height:0;min-width:0;display:flex;flex-direction:column}
 .lightshow-host.side{width:clamp(250px,41%,610px)}
@@ -5912,7 +5926,7 @@ APP_VECTORS.spectrum='<path class="main" d="M15 88h90 M22 74V55 M36 74V37 M51 74
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='spectrum'&&s.mode==='full')html='<div class="full spectrum-host">'+appBody()+'</div>';else if(s.app==='demo3d'&&s.mode==='full')html='<div class="full d3-host">'+appBody()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='spectrum'?'spectrum-host':s.app==='demo3d'?'d3-host':s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='spectrum'||s.app==='demo3d'||s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty'||s.app==='navdashboard')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();window.MeviDemo3D?.unmount();if(s.app!=='spectrum')window.MeviSpectrum?.stop();$('screen').innerHTML=html;if(s.app==='spectrum')window.MeviSpectrum?.mount();window.MeviDemo3D?.mount();paintDashboardHead();if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.7", "build": 1350, "commit": "84573db843767161af42af106fc9f6161d19c632"};
+const CURRENT_BUILD={"version": "0.6.7", "build": 1351, "commit": "de622ddc2fc36aafa50ebe52996d08d96eb7c645"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -12950,6 +12964,11 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
   // Both the Web PWA and hybrid APK attempt the SAME Web Playback SDK media engine.
   const NATIVE_REDIRECT = 'mevicarnext://spotify-callback';
   const nativeOAuthBridge = () => !!window.MeviNativeBridge?.postMessage;
+  // Safari/iOS requires an actual tap to unlock the Web Playback SDK audio.
+  // The user agent is read only to tailor playback UX; no platform duplicates.
+  const iosWebAudio = !nativeOAuthBridge() &&
+    (/iPhone|iPad|iPod/.test(String(navigator.userAgent || '')) ||
+     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
   const API = 'https://api.spotify.com/v1';
   const ACCOUNTS = 'https://accounts.spotify.com';
@@ -13224,6 +13243,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
     webTransferBusy: false,
     webStatus: 'Aus',
     webError: '',
+    iosAudioTapCount: 0,
     pollBlockedUntil: 0
   };
   if (!Array.isArray(st.history)) st.history = [];
@@ -13854,6 +13874,12 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
   // audio format Spotify streams. Nothing is worked around when it is not.
   let widevineProbe = 'nicht geprüft';
   async function probeWidevine() {
+    if (iosWebAudio) {
+      // iOS Safari does not use Widevine. Its absence is not an SDK failure.
+      widevineProbe = 'iOS Safari · Widevine nicht erforderlich';
+      logOAuth('Wiedergabe: Safari-Audio · DRM wird vom Browser verwaltet');
+      return widevineProbe;
+    }
     try {
       if (typeof navigator.requestMediaKeySystemAccess !== 'function') {
         widevineProbe = 'EME-Schnittstelle fehlt';
@@ -13974,6 +14000,51 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
       webPlayerStatus('Bereit',errorText(error));
     }
     finally { st.webTransferBusy = false; }
+  }
+  // Must be called directly by the click handler, BEFORE any await. On iOS
+  // the Spotify Connect API may report "playing" even when WebKit blocks the
+  // local audio element. A second user gesture can unlock the SDK audio.
+  function activateIOSAudio() {
+    if (!iosWebAudio) return startWebPlayer();
+    const player = st.webPlayer;
+    if (!player || !st.webDeviceId) {
+      // First connect a local SDK device; the next deliberate tap can unlock
+      // playback after the asynchronous SDK ready event.
+      return startWebPlayer();
+    }
+    let activated, resumed;
+    try {
+      st.iosAudioTapCount++;
+      activated = player.activateElement();
+      // Call resume in the SAME click task, not after token/API awaits.
+      // The SDK is responsible for the audio element; no fake HTML audio.
+      resumed = player.resume();
+      logPlayback('iOS: Audio per Fingertipp aktiviert · SDK resume angefordert');
+      st.webError = '';
+      setNotice('iPhone: Audio-Freigabe angefordert. Falls weiter stumm: Lautstärke prüfen.', 6500);
+    } catch (error) {
+      logPlayback('iOS: Aktivierung fehlgeschlagen · ' + (error?.name || 'Fehler'));
+      webPlayerStatus('Bereit','iPhone hat die Audiowiedergabe blockiert. „Ton aktivieren“ erneut drücken.');
+      return;
+    }
+    // Report async SDK rejections without suggesting that audio was verified.
+    Promise.allSettled([activated,resumed].filter(Boolean)).then(outcomes => {
+      const failure = outcomes.find(x=>x.status==='rejected');
+      if (failure) {
+        logPlayback('iOS: Audioaktivierung vom SDK abgelehnt');
+        webPlayerStatus('Bereit','iPhone blockiert Spotify-Ton weiterhin. „Ton aktivieren“ erneut drücken.');
+      } else {
+        // API state alone cannot confirm audible output on a physical iPhone.
+        logPlayback('iOS: Audioaktivierung ans SDK übergeben');
+        poll(true).catch(()=>{});
+      }
+    });
+  }
+  function iosAudioButtonMarkup(){
+    return iosWebAudio&&st.webPlayer&&st.webDeviceId?
+      '<button type="button" class="sp-tool sp-ios-audio" onclick="meviSpotifyActivateAudio()"'+
+      ' aria-label="iPhone Spotify Ton aktivieren" title="Spotify-Ton auf diesem iPhone freigeben">'+
+      icon('volume')+'<span>Ton aktivieren</span></button>':'';
   }
   function webPlayerMarkup() {
     if (!st.token) return '';
@@ -14116,11 +14187,12 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
       '<button type="button" id="sp-repeat" class="' + (repeat !== 'off' ? 'is-on' : '') + '" aria-label="' + repeatTitle + '" aria-pressed="' + (repeat !== 'off') + '" title="' + repeatTitle + '" onclick="meviSpotifyRepeat()" ' + disabled('toggling_repeat_context') + '>' + icon('repeat') + (repeatGlyph ? '<span class="sp-repeat-one">' + repeatGlyph + '</span>' : '') + '</button>' +
       '</div>' +
       '<div class="sp-tools">' +
+      iosAudioButtonMarkup() +
       (episode ? '<button type="button" class="sp-tool" title="15 Sekunden zurück" onclick="meviSpotifySeekBy(-15000)">' + icon('clock') + '<span>−15 s</span></button>' : '') +
       (episode ? '<button type="button" class="sp-tool" title="15 Sekunden vor" onclick="meviSpotifySeekBy(15000)">' + icon('clock') + '<span>+15 s</span></button>' : '') +
       '<button type="button" class="sp-tool' + (st.liked === true ? ' is-on' : '') + '" aria-pressed="' + (st.liked === true) + '" title="' + (st.liked === true ? 'Aus der Spotify-Bibliothek entfernen' : 'Zur Spotify-Bibliothek hinzufügen') + '" onclick="meviSpotifyLike()" ' + (uri ? '' : 'disabled') + '>' + icon('heart') + '<span>Gefällt mir</span></button>' +
       '<button type="button" class="sp-tool' + (st.queueOpen ? ' is-on' : '') + '" aria-pressed="' + !!st.queueOpen + '" title="Warteschlange" onclick="meviSpotifyToggleQueue()">' + icon('queue') + '<span>Warteschlange</span></button>' +
-      (Number.isFinite(player.device?.volume_percent) && player.device?.supports_volume !== false
+      (!iosWebAudio && Number.isFinite(player.device?.volume_percent) && player.device?.supports_volume !== false
         ? '<label class="sp-main-volume" title="Spotify-Lautstärke">' + icon('volume') +
           '<input type="range" min="0" max="100" step="1" value="' + clamp(player.device.volume_percent, 0, 100) +
           '" oninput="this.nextElementSibling.textContent=this.value+\' %\'" onchange="meviSpotifyVolume(this.value)" aria-label="Spotify-Lautstärke">' +
@@ -14141,6 +14213,8 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
       '<strong>'+title+'</strong><p>'+hint+'</p>' +
       (!ready && !connecting ? '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + 'MeviCar Player starten</button>'+
       (nativeOAuthBridge() ? '<button type="button" onclick="meviSpotifyOpenBrowser()">Im Browser öffnen</button>' : '') + '</div>' : '') +
+      iosAudioButtonMarkup()+
+      (iosWebAudio&&!ready?'<p class="sp-fine">iPhone: Player starten, danach „Ton aktivieren“ antippen.</p>':'')+
       (st.webError?'<p role="alert">'+esc(st.webError)+'</p>':'')+'</div>';
   }
   function queueMarkup() {
@@ -14892,8 +14966,12 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
     if (!shell || !st.token) { unmount(); return; }
     const firstOpen = !st.mounted;
     st.mounted = true;
-    // Automatically connect when opening Spotify, not on each rerender.
-    if (firstOpen && !st.webDeviceId) startWebPlayer().catch(() => {});
+    // iOS: preload only. Starting and transferring on mount has no trusted
+    // touch gesture and can create a silently playing Safari SDK device.
+    if (firstOpen && !st.webDeviceId) {
+      if (iosWebAudio) loadWebPlaybackSDK().catch(()=>{});
+      else startWebPlayer().catch(() => {});
+    }
     if (!pollTimer) pollTimer = setInterval(() => poll(false), 3000);
     if (!tickTimer) tickTimer = setInterval(() => tickProgress(), 500);
     poll(false);
@@ -14927,7 +15005,8 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
       liked: st.liked,
       results: st.results ? Object.fromEntries(Object.entries(st.results).map(([key, value]) => [key, value.length])) : null,
       mounted: st.mounted,
-      webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy, widevine: widevineProbe },
+      webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy, widevine: widevineProbe,
+        ios: iosWebAudio, audioTapCount: st.iosAudioTapCount },
       oauth: { pending: !!pendingAuth(), exchanging: !!oauthInFlight, diagnostic: oauthDiagnostic, nativeStage: nativeOAuthStage },
       oauthLog: oauthLog.map(entry => ({ at: entry.at, text: entry.text })),
       polling: !!pollTimer,
@@ -14942,6 +15021,7 @@ window.MeviRoadAssist={onRoute,onGuidanceStart,onGuidanceStop,onPosition,onHACha
     meviSpotifyNativeStage: acceptNativeStage,
     meviSpotifyPullCallback: pullSpotifyCallbackNow,
     meviSpotifyWebPlayer: startWebPlayer,
+    meviSpotifyActivateAudio: activateIOSAudio,
     meviSpotifyMount: mount,
     meviSpotifyUnmount: unmount,
     meviSpotifyConnect: showDialog => connect(showDialog === true),

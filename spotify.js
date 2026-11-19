@@ -9,6 +9,11 @@
   // Both the Web PWA and hybrid APK attempt the SAME Web Playback SDK media engine.
   const NATIVE_REDIRECT = 'mevicarnext://spotify-callback';
   const nativeOAuthBridge = () => !!window.MeviNativeBridge?.postMessage;
+  // Safari/iOS requires an actual tap to unlock the Web Playback SDK audio.
+  // The user agent is read only to tailor playback UX; no platform duplicates.
+  const iosWebAudio = !nativeOAuthBridge() &&
+    (/iPhone|iPad|iPod/.test(String(navigator.userAgent || '')) ||
+     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
 
   const API = 'https://api.spotify.com/v1';
   const ACCOUNTS = 'https://accounts.spotify.com';
@@ -283,6 +288,7 @@
     webTransferBusy: false,
     webStatus: 'Aus',
     webError: '',
+    iosAudioTapCount: 0,
     pollBlockedUntil: 0
   };
   if (!Array.isArray(st.history)) st.history = [];
@@ -913,6 +919,12 @@
   // audio format Spotify streams. Nothing is worked around when it is not.
   let widevineProbe = 'nicht geprüft';
   async function probeWidevine() {
+    if (iosWebAudio) {
+      // iOS Safari does not use Widevine. Its absence is not an SDK failure.
+      widevineProbe = 'iOS Safari · Widevine nicht erforderlich';
+      logOAuth('Wiedergabe: Safari-Audio · DRM wird vom Browser verwaltet');
+      return widevineProbe;
+    }
     try {
       if (typeof navigator.requestMediaKeySystemAccess !== 'function') {
         widevineProbe = 'EME-Schnittstelle fehlt';
@@ -1033,6 +1045,51 @@
       webPlayerStatus('Bereit',errorText(error));
     }
     finally { st.webTransferBusy = false; }
+  }
+  // Must be called directly by the click handler, BEFORE any await. On iOS
+  // the Spotify Connect API may report "playing" even when WebKit blocks the
+  // local audio element. A second user gesture can unlock the SDK audio.
+  function activateIOSAudio() {
+    if (!iosWebAudio) return startWebPlayer();
+    const player = st.webPlayer;
+    if (!player || !st.webDeviceId) {
+      // First connect a local SDK device; the next deliberate tap can unlock
+      // playback after the asynchronous SDK ready event.
+      return startWebPlayer();
+    }
+    let activated, resumed;
+    try {
+      st.iosAudioTapCount++;
+      activated = player.activateElement();
+      // Call resume in the SAME click task, not after token/API awaits.
+      // The SDK is responsible for the audio element; no fake HTML audio.
+      resumed = player.resume();
+      logPlayback('iOS: Audio per Fingertipp aktiviert · SDK resume angefordert');
+      st.webError = '';
+      setNotice('iPhone: Audio-Freigabe angefordert. Falls weiter stumm: Lautstärke prüfen.', 6500);
+    } catch (error) {
+      logPlayback('iOS: Aktivierung fehlgeschlagen · ' + (error?.name || 'Fehler'));
+      webPlayerStatus('Bereit','iPhone hat die Audiowiedergabe blockiert. „Ton aktivieren“ erneut drücken.');
+      return;
+    }
+    // Report async SDK rejections without suggesting that audio was verified.
+    Promise.allSettled([activated,resumed].filter(Boolean)).then(outcomes => {
+      const failure = outcomes.find(x=>x.status==='rejected');
+      if (failure) {
+        logPlayback('iOS: Audioaktivierung vom SDK abgelehnt');
+        webPlayerStatus('Bereit','iPhone blockiert Spotify-Ton weiterhin. „Ton aktivieren“ erneut drücken.');
+      } else {
+        // API state alone cannot confirm audible output on a physical iPhone.
+        logPlayback('iOS: Audioaktivierung ans SDK übergeben');
+        poll(true).catch(()=>{});
+      }
+    });
+  }
+  function iosAudioButtonMarkup(){
+    return iosWebAudio&&st.webPlayer&&st.webDeviceId?
+      '<button type="button" class="sp-tool sp-ios-audio" onclick="meviSpotifyActivateAudio()"'+
+      ' aria-label="iPhone Spotify Ton aktivieren" title="Spotify-Ton auf diesem iPhone freigeben">'+
+      icon('volume')+'<span>Ton aktivieren</span></button>':'';
   }
   function webPlayerMarkup() {
     if (!st.token) return '';
@@ -1175,11 +1232,12 @@
       '<button type="button" id="sp-repeat" class="' + (repeat !== 'off' ? 'is-on' : '') + '" aria-label="' + repeatTitle + '" aria-pressed="' + (repeat !== 'off') + '" title="' + repeatTitle + '" onclick="meviSpotifyRepeat()" ' + disabled('toggling_repeat_context') + '>' + icon('repeat') + (repeatGlyph ? '<span class="sp-repeat-one">' + repeatGlyph + '</span>' : '') + '</button>' +
       '</div>' +
       '<div class="sp-tools">' +
+      iosAudioButtonMarkup() +
       (episode ? '<button type="button" class="sp-tool" title="15 Sekunden zurück" onclick="meviSpotifySeekBy(-15000)">' + icon('clock') + '<span>−15 s</span></button>' : '') +
       (episode ? '<button type="button" class="sp-tool" title="15 Sekunden vor" onclick="meviSpotifySeekBy(15000)">' + icon('clock') + '<span>+15 s</span></button>' : '') +
       '<button type="button" class="sp-tool' + (st.liked === true ? ' is-on' : '') + '" aria-pressed="' + (st.liked === true) + '" title="' + (st.liked === true ? 'Aus der Spotify-Bibliothek entfernen' : 'Zur Spotify-Bibliothek hinzufügen') + '" onclick="meviSpotifyLike()" ' + (uri ? '' : 'disabled') + '>' + icon('heart') + '<span>Gefällt mir</span></button>' +
       '<button type="button" class="sp-tool' + (st.queueOpen ? ' is-on' : '') + '" aria-pressed="' + !!st.queueOpen + '" title="Warteschlange" onclick="meviSpotifyToggleQueue()">' + icon('queue') + '<span>Warteschlange</span></button>' +
-      (Number.isFinite(player.device?.volume_percent) && player.device?.supports_volume !== false
+      (!iosWebAudio && Number.isFinite(player.device?.volume_percent) && player.device?.supports_volume !== false
         ? '<label class="sp-main-volume" title="Spotify-Lautstärke">' + icon('volume') +
           '<input type="range" min="0" max="100" step="1" value="' + clamp(player.device.volume_percent, 0, 100) +
           '" oninput="this.nextElementSibling.textContent=this.value+\' %\'" onchange="meviSpotifyVolume(this.value)" aria-label="Spotify-Lautstärke">' +
@@ -1200,6 +1258,8 @@
       '<strong>'+title+'</strong><p>'+hint+'</p>' +
       (!ready && !connecting ? '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + 'MeviCar Player starten</button>'+
       (nativeOAuthBridge() ? '<button type="button" onclick="meviSpotifyOpenBrowser()">Im Browser öffnen</button>' : '') + '</div>' : '') +
+      iosAudioButtonMarkup()+
+      (iosWebAudio&&!ready?'<p class="sp-fine">iPhone: Player starten, danach „Ton aktivieren“ antippen.</p>':'')+
       (st.webError?'<p role="alert">'+esc(st.webError)+'</p>':'')+'</div>';
   }
   function queueMarkup() {
@@ -1951,8 +2011,12 @@
     if (!shell || !st.token) { unmount(); return; }
     const firstOpen = !st.mounted;
     st.mounted = true;
-    // Automatically connect when opening Spotify, not on each rerender.
-    if (firstOpen && !st.webDeviceId) startWebPlayer().catch(() => {});
+    // iOS: preload only. Starting and transferring on mount has no trusted
+    // touch gesture and can create a silently playing Safari SDK device.
+    if (firstOpen && !st.webDeviceId) {
+      if (iosWebAudio) loadWebPlaybackSDK().catch(()=>{});
+      else startWebPlayer().catch(() => {});
+    }
     if (!pollTimer) pollTimer = setInterval(() => poll(false), 3000);
     if (!tickTimer) tickTimer = setInterval(() => tickProgress(), 500);
     poll(false);
@@ -1986,7 +2050,8 @@
       liked: st.liked,
       results: st.results ? Object.fromEntries(Object.entries(st.results).map(([key, value]) => [key, value.length])) : null,
       mounted: st.mounted,
-      webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy, widevine: widevineProbe },
+      webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy, widevine: widevineProbe,
+        ios: iosWebAudio, audioTapCount: st.iosAudioTapCount },
       oauth: { pending: !!pendingAuth(), exchanging: !!oauthInFlight, diagnostic: oauthDiagnostic, nativeStage: nativeOAuthStage },
       oauthLog: oauthLog.map(entry => ({ at: entry.at, text: entry.text })),
       polling: !!pollTimer,
@@ -2001,6 +2066,7 @@
     meviSpotifyNativeStage: acceptNativeStage,
     meviSpotifyPullCallback: pullSpotifyCallbackNow,
     meviSpotifyWebPlayer: startWebPlayer,
+    meviSpotifyActivateAudio: activateIOSAudio,
     meviSpotifyMount: mount,
     meviSpotifyUnmount: unmount,
     meviSpotifyConnect: showDialog => connect(showDialog === true),
