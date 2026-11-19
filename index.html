@@ -1602,6 +1602,22 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .ha-dashboard-toggle{min-height:27px;font-size:10px;padding:4px 6px}
  .ha-dashboard-readonly{min-height:27px}
 }
+
+.ha-pin{margin:auto;display:grid;grid-template-columns:minmax(6em,10em) auto;gap:.6rem;padding:.7rem;align-items:center}
+.ha-pin label,.ha-pin output{grid-column:1/-1}
+.ha-pin label{font-size:1.3rem;font-weight:700}
+.ha-pin input,.ha-pin button,.ha-sections button,.ha-family-hero button{font:inherit;color:inherit;background:#223950;border:1px solid #688297;border-radius:.75rem;padding:.55em .9em}
+.ha-pin input{min-width:0;text-align:center;letter-spacing:.35em}
+.ha-family-hero{padding:clamp(12px,2vw,30px);border-radius:18px;background:linear-gradient(115deg,#103543,#18675e 65%,#79592d);color:white}
+.ha-family-hero h3{font-size:clamp(1.6rem,3.6vw,3.2rem);margin:.1em 0}
+.ha-family-hero button{float:right;font-size:.8rem}
+.ha-sections{display:flex;gap:.45rem}
+.ha-sections button[aria-pressed=true]{background:#a1e9d8;color:#103b37}
+.ha-person{display:flex;align-items:center;gap:.8rem;border:1px solid #486379;border-radius:14px;padding:.8rem;background:#1a3447;color:#fff}
+.ha-person i{display:grid;place-items:center;width:2.6em;height:2.6em;border-radius:50%;background:#325956;font-style:normal;font-weight:700}
+.ha-person small{display:block;color:#cedee9}
+.ha-person b{margin-left:auto;width:.65em;height:.65em;border-radius:50%;background:#93a2ad}
+.ha-person b.at-home{background:#60e1aa}
 </style><style id="mevicar-calendar-styles">/* MeviCar Next Calendar — adaptive native landscape cockpit.
    Scroll only inside calendar content; fixed car dock remains untouched. */
 .full.calendar-host,.side.calendar-host{display:flex!important;flex-direction:column;
@@ -5930,7 +5946,7 @@ APP_VECTORS.spectrum='<path class="main" d="M15 88h90 M22 74V55 M36 74V37 M51 74
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='spectrum'&&s.mode==='full')html='<div class="full spectrum-host">'+appBody()+'</div>';else if(s.app==='demo3d'&&s.mode==='full')html='<div class="full d3-host">'+appBody()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='spectrum'?'spectrum-host':s.app==='demo3d'?'d3-host':s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='spectrum'||s.app==='demo3d'||s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty'||s.app==='navdashboard')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();window.MeviDemo3D?.unmount();if(s.app!=='spectrum')window.MeviSpectrum?.stop();$('screen').innerHTML=html;if(s.app==='spectrum')window.MeviSpectrum?.mount();window.MeviDemo3D?.mount();paintDashboardHead();if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version":"0.6.8","build":1356,"commit":"abc66b1e01950db82f8710ba2ffb6ea9299ae24b"};
+const CURRENT_BUILD={"version":"0.6.8","build":1357,"commit":"e93e256b16d5731a977b3380b01234543b1a2ce1"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -9265,7 +9281,17 @@ window.render?.();
  const DEFAULT_ORIGIN='https://ha.mtankurt.synology.me';
  const DEFAULT_PATH='/dashboard-familie/0';
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c]));
- const viewNames={dashboard:'Dashboard',devices:'Geräte',settings:'Verbindung'};
+ const viewNames={dashboard:'Dashboard',devices:'Geräte'};
+ const sections={family:'Familie',climate:'Klima',lights:'Licht'};
+ let unlocked=false, section='family';
+ function unlock(pin){
+  if(pin!=='0815')return false;
+  unlocked=true;repaint();return true;
+ }
+ function selectSection(id){
+  if(!unlocked||!Object.hasOwn(sections,id))return;
+  section=id;repaint();
+ }
  const supported=new Set(['light','switch']);
  const clickable=new Set(['light','switch']);
  const state={tab:'dashboard',origin:DEFAULT_ORIGIN,path:DEFAULT_PATH,token:'',connected:false,
@@ -9371,7 +9397,7 @@ window.render?.();
  function isValidEntityId(id){return /^[a-z_]+\.[a-z0-9_]+$/i.test(String(id||''))}
  function isAvailable(entity){return !['unavailable','unknown','none'].includes(String(entity?.state||''))}
  function favoriteEntity(id){
-  if(!isValidEntityId(id))return;
+  if(!unlocked||!isValidEntityId(id))return;
   const set=new Set(state.favorites);
   if(set.has(id))set.delete(id);
   else if(set.size<32)set.add(id);
@@ -9404,59 +9430,31 @@ window.render?.();
     '<span class="ha-dashboard-readonly">'+(!isAvailable(entity)?'Nicht verfügbar':'Statusanzeige')+'</span>')+
    '</article>';
  }
- function featureEntities(){
-  // Default dashboard: present high-value real states, never invented values.
-  const preferred=['person','weather','climate','light','switch','sensor','binary_sensor'];
-  const sensors=/(temperatur|temperature|humidity|feuchte|power|leistung|energy|battery|batterie|co2|luft|raum)/i;
-  return state.states.filter(e=>isValidEntityId(e.entity_id)&&isAvailable(e)).map(e=>{
-   const domain=e.entity_id.split('.')[0];
-   let order=preferred.indexOf(domain);
-   if(order<0)order=40;
-   if(domain==='light'||domain==='switch')order+=e.state==='on'?-2:0;
-   if(domain==='sensor'&&!sensors.test(e.entity_id+' '+label(e)))order=35;
-   return{e,order};
-  }).sort((a,b)=>a.order-b.order||label(a.e).localeCompare(label(b.e),'de'))
-   .slice(0,12).map(x=>x.e);
+ function personCard(entity){
+  const name=label(entity);
+  const status={home:'Zuhause',not_home:'Unterwegs',unknown:'Unbekannt',unavailable:'Nicht verfügbar'}[entity.state]||entity.state;
+  return `<article class="ha-person"><i aria-hidden="true">${esc(Array.from(name)[0])}</i><div><strong>${esc(name)}</strong><small>${esc(status)}</small></div><b class="${entity.state==='home'?'at-home':''}" aria-hidden="true"></b></article>`;
  }
  function dashboardHTML(){
-  if(!state.connected)return '<div class="ha-dashboard-view">'+
-   '<div class="ha-dashboard-unconnected"><div class="ha-dashboard-icon">⌂</div>'+
-   '<h3>Dein Smart Home in MeviCar Next</h3>'+
-   '<p>Die Home-Assistant-Weboberfläche lässt sich in der PWA nicht direkt einbetten. '+
-   'Verbinde die API, um echte Geräte und Sensoren hier im Cockpit zu sehen.</p>'+
-   '<div class="ha-dashboard-calltoaction">'+
-   '<button type="button" onclick="MeviHA.tab(\'settings\')">API-Verbindung einrichten</button>'+
-   '<button type="button" onclick="MeviHA.openDashboard()">Original-Dashboard im Browser ↗</button>'+
-   '</div></div></div>';
-  const valid=state.states.filter(e=>isValidEntityId(e.entity_id));
-  const controllable=valid.filter(e=>clickable.has(e.entity_id.split('.')[0]));
-  const on=controllable.filter(e=>e.state==='on').length;
-  const unavailable=state.states.filter(e=>!isAvailable(e)).length;
-  const favorites=state.favorites.map(id=>state.states.find(e=>e.entity_id===id)).filter(Boolean);
-  const suggested=featureEntities().filter(e=>!state.favorites.includes(e.entity_id));
-  const fmtDate=state.lastUpdate?new Intl.DateTimeFormat('de-DE',{hour:'2-digit',minute:'2-digit'}).format(new Date(state.lastUpdate)):'–';
-  const favored=favorites.length?favorites.map(dashboardItem).join(''):
-   '<p class="ha-dashboard-helper">Noch keine Favoriten. Mit ☆ bei einer Kachel kannst du Geräte dauerhaft zu deinem Dashboard hinzufügen.</p>';
-  return '<div class="ha-dashboard-native">'+
-   '<div class="ha-dashboard-overview">'+
-   '<div class="ha-dashboard-intro"><div><small>MEVICAR HOME</small>'+
-   '<h3>Mein Zuhause</h3><p>Live-Daten über die Home-Assistant-API · Stand '+esc(fmtDate)+'</p></div>'+
-   '<button type="button" onclick="MeviHA.openDashboard()">Original-Dashboard ↗</button></div>'+
-   '<div class="ha-dashboard-stats">'+
-   '<div><strong>'+state.states.length+'</strong><span>Entitäten</span></div>'+
-   '<div><strong>'+on+'</strong><span>Geräte eingeschaltet</span></div>'+
-   '<div><strong>'+controllable.length+'</strong><span>Schaltbare Geräte</span></div>'+
-   '<div><strong>'+unavailable+'</strong><span>Nicht verfügbar</span></div>'+
-   '</div></div>'+
-   '<section class="ha-dashboard-section"><div class="ha-dashboard-section-title">'+
-   '<h4>Meine Favoriten</h4><button type="button" onclick="MeviHA.tab(\'devices\')">Alle Geräte anzeigen</button></div>'+
-   (favorites.length?'<div class="ha-dashboard-grid">'+favored+'</div>':favored)+
-   '</section>'+
-   (suggested.length?'<section class="ha-dashboard-section"><div class="ha-dashboard-section-title">'+
-   '<h4>Geräte und Sensoren</h4><span>Echte Home-Assistant-Entitäten</span></div>'+
-   '<div class="ha-dashboard-grid">'+suggested.map(dashboardItem).join('')+'</div></section>':'')+
-   '<div class="ha-dashboard-disclaimer">Das ist eine eigene MeviCar-Ansicht mit echten HA-Daten. '+
-   'Das ursprüngliche Lovelace-Familien-Dashboard bleibt über „Original-Dashboard“ erreichbar.</div></div>';
+  if(!state.connected)return loginPrompt('Dashboard');
+  const entities=state.states.filter(e=>isValidEntityId(e.entity_id)).sort(byName);
+  const people=entities.filter(e=>e.entity_id.startsWith('person.'));
+  const lights=entities.filter(e=>e.entity_id.startsWith('light.'));
+  const climate=entities.filter(e=>e.entity_id.startsWith('climate.')||
+   (e.entity_id.startsWith('sensor.')&&(['temperature','humidity'].includes(e.attributes?.device_class)||
+   ['°C','°F'].includes(e.attributes?.unit_of_measurement))));
+  const favorites=entities.filter(e=>state.favorites.includes(e.entity_id));
+  const grid=(items,render,empty)=>items.length?`<div class="ha-dashboard-grid">${items.map(render).join('')}</div>`:`<p>${empty}</p>`;
+  const tabs=Object.entries(sections).map(([id,title])=>
+   `<button type="button" aria-pressed="${section===id}" onclick="MeviHA.selectSection('${id}')">${title}</button>`).join('');
+  let content;
+  if(section==='family'){
+   content=grid(people,personCard,'Keine Personen in Home Assistant gefunden.');
+   if(favorites.length)content+='<h4>Meine Favoriten</h4>'+grid(favorites,dashboardItem,'');
+  }else if(section==='climate')content=grid(climate,dashboardItem,'Keine Klimageräte oder Raumsensoren gefunden.');
+  else content=grid(lights,dashboardItem,'Keine Leuchten gefunden.');
+  const count=people.filter(e=>e.state==='home').length;
+  return `<div class="ha-dashboard-native"><header class="ha-family-hero"><small>Mein Zuhause</small><h3>${people.length?count+' zuhause':'Anwesenheit offen'}</h3><span>${lights.filter(e=>e.state==='on').length} von ${lights.length} Leuchten an</span><button type="button" onclick="MeviHA.openDashboard()">Original-Dashboard ↗</button></header><nav class="ha-sections" aria-label="Dashboardbereiche">${tabs}</nav><section class="ha-dashboard-section"><h4>${sections[section]}</h4>${content}</section></div>`;
  }
  function deviceRow(entity){
   const domain=entity.entity_id.split('.')[0];
@@ -9485,31 +9483,18 @@ window.render?.();
     '<div id="ha-entity-list" class="ha-entity-list">'+(getEntities().map(deviceRow).join('')||'<div class="ha-empty">Keine passenden Entitäten gefunden.</div>')+'</div></div>';
  }
  function loginPrompt(topic){
-  return '<div class="ha-login-prompt"><span class="ha-large-icon">⌂</span>'+
-    '<h3>'+esc(topic)+'</h3><p>Dieser Bereich benötigt einen Home-Assistant-Long-Lived-Access-Token. '+
-    'Die Familien-Dashboard-Anmeldung ist davon unabhängig.</p>'+
-    '<button type="button" onclick="MeviHA.tab(\'settings\')">API-Verbindung einrichten</button></div>';
+  return `<div class="ha-login-prompt"><h3>${esc(topic)}</h3><p>Verbinde Home Assistant unter Einstellungen → Zugänge &amp; Schlüssel.</p></div>`;
  }
- function settingsHTML(){
-  return '<div class="ha-settings"><div class="ha-settings-content"><h3>Home Assistant</h3>'+
-   '<p>Adresse und API-Token werden zentral in Settings → Zugänge &amp; Schlüssel verwaltet.</p>'+
-   '<button type="button" class="ha-save-config" onclick="meviOpenCredentialSettings()">Zugänge in Settings öffnen</button>'+
-   '<div class="ha-feedback" role="status">'+esc(state.error||state.message)+'</div>'+
-   '</div></div>';
- }
-  function viewHTML(){
-  switch(state.tab){
-   case 'devices':return devicesHTML();
-   case 'settings':return settingsHTML();
-   default:return dashboardHTML();
-  }
+ function viewHTML(){
+  if(!unlocked)return `<form class="ha-pin" onsubmit="event.preventDefault();if(!MeviHA.unlock(this.pin.value)){this.pin.value='';this.querySelector('output').textContent='PIN falsch. Erneut versuchen.';this.pin.focus()}"><label for="ha-pin">${viewNames[state.tab]} entsperren</label><input id="ha-pin" name="pin" type="password" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" aria-label="Vierstellige PIN" required><button>Entsperren</button><output aria-live="polite"></output></form>`;
+  return state.tab==='devices'?devicesHTML():dashboardHTML();
  }
  function html(compact=false){
   state.compact=!!compact;
   return '<section class="ha-shell'+(compact?' is-compact':'')+'" aria-label="Home Assistant">'+
    '<header class="ha-header"><div class="ha-title"><small>MEVICAR NEXT · HOME ASSISTANT</small><b>HOME ASSISTANT</b></div>'+
    '<div class="ha-head-actions"><button type="button" onclick="MeviHA.reload()" title="Neu laden" aria-label="Home Assistant aktualisieren">↻</button>'+
-   '<button type="button" onclick="MeviHA.openDashboard()" title="Im Browser öffnen" aria-label="Home Assistant im Browser öffnen">↗</button></div></header>'+
+   '</div></header>'+
    '<nav class="ha-tabs" aria-label="Home Assistant Seiten">'+Object.keys(viewNames).map(tabButton).join('')+'</nav>'+
    '<div class="ha-status-row" id="ha-status-row">'+statusHTML()+'</div>'+
    '<main class="ha-main" id="ha-view">'+viewHTML()+'</main></section>';
@@ -9528,12 +9513,14 @@ window.render?.();
   }
  }
  function tab(id){
-  if(!viewNames[id])return;
+  if(!Object.hasOwn(viewNames,id))return;
+  unlocked=false;section='family';
   state.tab=id;repaint();
   if(id==='devices'&&state.connected&&(!state.states.length||Date.now()-state.lastUpdate>15000))
    refresh().catch(()=>{});
  }
  function openDashboard(){
+  if(!unlocked)return;
   const url=dashboardUrl();
   const w=window.open(url,'_blank','noopener,noreferrer');
   if(!w&&typeof location!=='undefined'&&typeof location.assign==='function'){
@@ -9566,6 +9553,7 @@ window.render?.();
  }
  async function connect(){try{return await connectWithToken((get('ha-token')?.value||state.token))}catch{return false}}
   function disconnect(options={}){
+  unlocked=false;
   state.token='';state.connected=false;state.states=[];state.radar=[];state.query='';
   state.busyIds.clear();state.requestId++;
   state.error='';state.message=options.quiet?'':'API-Token aus dieser Sitzung entfernt.';
@@ -9579,7 +9567,7 @@ window.render?.();
    const data=await request('/api/states');
    if(generation!==state.requestId)return;
    derive(data);state.connected=true;state.error='';window.MeviRoadAssist?.onHAChange?.();
-   if(state.mounted&&['dashboard','devices'].includes(state.tab))repaint();
+   if(state.mounted&&['dashboard','devices'].includes(state.tab)&&unlocked)repaint();
    else repaint(false);
   }catch(e){
    if(generation===state.requestId){state.error=errorText(e);state.connected=false;window.MeviRoadAssist?.onHAChange?.();repaint(false)}
@@ -9587,7 +9575,7 @@ window.render?.();
   }finally{if(generation===state.requestId)state.refreshing=false}
  }
  async function toggle(entityId){
-  if(!state.connected||!state.token)return;
+  if(!unlocked||!state.connected||!state.token)return;
   const entity=state.states.find(x=>x.entity_id===entityId);
   const domain=String(entityId).split('.')[0];
   if(!entity||!supported.has(domain)||!/^([a-z_]+)\.[a-z0-9_]+$/i.test(entityId))return;
@@ -9616,6 +9604,7 @@ window.render?.();
   if(state.token&&state.connected&&Date.now()-state.lastUpdate>15000)refresh().catch(()=>{});
  }
  function unmount(){
+  if(!document.querySelector('.ha-shell')){unlocked=false;section='family';state.tab='dashboard'}
   state.mounted=false;
   if(refreshTimer!==null){clearInterval(refreshTimer);refreshTimer=null}
  }
@@ -9687,7 +9676,7 @@ window.render?.();
   if(path.startsWith('/api/services/')&&options.method!=='POST')throw new Error('POST für HA-Service erforderlich.');
   return request(path,{method:options.method||'GET',body:options.body});
  }
- window.MeviHA={html,mount,unmount,tab,openDashboard,reload,saveConfig,configureEndpoint,connect,connectWithToken,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,stockHistory,requestService,favoriteEntity,toggleFromDashboard,
+ window.MeviHA={html,mount,unmount,unlock,selectSection,tab,openDashboard,reload,saveConfig,configureEndpoint,connect,connectWithToken,disconnect,refresh,toggle,search,filter,cameraSnapshot,stockSnapshot,stockHistory,requestService,favoriteEntity,toggleFromDashboard,
   debug:()=>({tab:state.tab,connected:state.connected,count:state.states.length,cameras:state.radar.length,
    origin:state.origin,dashboard:dashboardUrl(),tokenPresent:!!state.token,tokenStored:false}),
   // Helpers for node-only contract tests; no token or credentials exposed.

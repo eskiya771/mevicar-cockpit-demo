@@ -212,3 +212,19 @@
  .ha-dashboard-toggle{min-height:27px;font-size:10px;padding:4px 6px}
  .ha-dashboard-readonly{min-height:27px}
 }
+
+.ha-pin{margin:auto;display:grid;grid-template-columns:minmax(6em,10em) auto;gap:.6rem;padding:.7rem;align-items:center}
+.ha-pin label,.ha-pin output{grid-column:1/-1}
+.ha-pin label{font-size:1.3rem;font-weight:700}
+.ha-pin input,.ha-pin button,.ha-sections button,.ha-family-hero button{font:inherit;color:inherit;background:#223950;border:1px solid #688297;border-radius:.75rem;padding:.55em .9em}
+.ha-pin input{min-width:0;text-align:center;letter-spacing:.35em}
+.ha-family-hero{padding:clamp(12px,2vw,30px);border-radius:18px;background:linear-gradient(115deg,#103543,#18675e 65%,#79592d);color:white}
+.ha-family-hero h3{font-size:clamp(1.6rem,3.6vw,3.2rem);margin:.1em 0}
+.ha-family-hero button{float:right;font-size:.8rem}
+.ha-sections{display:flex;gap:.45rem}
+.ha-sections button[aria-pressed=true]{background:#a1e9d8;color:#103b37}
+.ha-person{display:flex;align-items:center;gap:.8rem;border:1px solid #486379;border-radius:14px;padding:.8rem;background:#1a3447;color:#fff}
+.ha-person i{display:grid;place-items:center;width:2.6em;height:2.6em;border-radius:50%;background:#325956;font-style:normal;font-weight:700}
+.ha-person small{display:block;color:#cedee9}
+.ha-person b{margin-left:auto;width:.65em;height:.65em;border-radius:50%;background:#93a2ad}
+.ha-person b.at-home{background:#60e1aa}
