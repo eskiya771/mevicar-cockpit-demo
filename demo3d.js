@@ -7,7 +7,7 @@
   let active = null;
   function html() {
     return `<section class="d3-root" aria-label="3D Demo"><div class="d3-stage"></div>
-      <header class="d3-heading"><div><span class="d3-eyebrow">MEVICAR · 3D EXPERIENCE</span><h2>Neon Universe</h2></div><div class="d3-heading-actions"><span class="d3-badge">LIVE 3D</span><button type="button" class="d3-layout-btn" data-action="layout" title="Vollbild öffnen" aria-label="Vollbild öffnen"><span aria-hidden="true">⛶</span><span class="d3-layout-label">Vollbild</span></button></div></header>
+      <header class="d3-heading"><div><span class="d3-eyebrow">MEVICAR · 3D EXPERIENCE</span><h2>Neon Universe</h2></div><div class="d3-heading-actions"><span class="d3-badge">LIVE 3D</span><button type="button" class="d3-layout-btn" data-action="immersive" title="Vollbild öffnen" aria-label="Vollbild öffnen"><span aria-hidden="true">⛶</span><span class="d3-layout-label">Vollbild</span></button></div></header>
       <div class="d3-caption"><span class="d3-index">01 / 04</span><strong class="d3-name">Laser Valley</strong><span class="d3-hint">Ziehen verändert die Perspektive</span></div>
       <div class="d3-message" role="status">3D-Szene wird geladen …</div>
       <div class="d3-panel"><div class="d3-effects" role="group" aria-label="3D Effekt">${effects.map((name, i) => `<button type="button" data-effect="${i}" aria-pressed="false"><span>0${i + 1}</span>${name}</button>`).join('')}</div>
@@ -17,14 +17,13 @@
   function paint(session) {
     if (active !== session) return;
     const root = session.root;
-    const split = root.parentElement?.classList?.contains('side') === true;
-    const layoutButton = root.querySelector('[data-action="layout"]');
-    const layoutLabel = split ? 'Vollbild öffnen' : 'In Split-Screen wechseln';
+    const layoutButton = root.querySelector('[data-action="immersive"]');
+    const layoutLabel = session.immersive ? 'Vollbild beenden' : '3D-Animation im Vollbild anzeigen';
     layoutButton.title = layoutLabel;
     layoutButton.setAttribute('aria-label', layoutLabel);
-    layoutButton.innerHTML = split
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H4v5M15 4h5v5M20 15v5h-5M4 15v5h5"/></svg><span class="d3-layout-label">Vollbild</span>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg><span class="d3-layout-label">Split</span>';
+    layoutButton.innerHTML = session.immersive
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg><span class="d3-layout-label">Schließen</span>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4H4v5M15 4h5v5M20 15v5h-5M4 15v5h5"/></svg><span class="d3-layout-label">Vollbild</span>';
     root.querySelectorAll('[data-effect]').forEach((button, i) => button.setAttribute('aria-pressed', String(i === state.effect)));
     root.querySelector('.d3-name').textContent = effects[state.effect];
     root.querySelector('.d3-index').textContent = `0${state.effect + 1} / 04`;
@@ -35,16 +34,36 @@
     root.querySelector('[data-control="quality"]').value = state.quality;
     root.querySelector('.d3-badge').textContent = session.failed ? '3D INAKTIV' : state.paused ? 'PAUSIERT' : state.auto ? 'AUTO · 20 S' : 'LIVE 3D';
   }
+  // Move the existing canvas into the document overlay instead of remounting
+  // WebGL. This also fills iPhone PWAs, where element.requestFullscreen is unavailable.
+  function setImmersive(session, enabled) {
+    if (active !== session || session.immersive === enabled) return;
+    if (enabled) {
+      if (!session.host?.isConnected) return;
+      session.immersive = true;
+      session.root.classList.add('d3-immersive');
+      document.body.appendChild(session.root);
+    } else {
+      session.immersive = false;
+      session.root.classList.remove('d3-immersive');
+      if (session.host?.isConnected) session.host.appendChild(session.root);
+      else session.root.remove();
+    }
+    paint(session);
+    session.renderer?.resize();
+  }
   function unmount() {
     if (!active) return;
-    const old = active; active = null;
+    const old = active;
+    if (old.immersive) setImmersive(old, false);
+    active = null;
     old.events.abort(); old.renderer?.dispose();
   }
   async function mount() {
     unmount();
     const root = document.querySelector('.d3-root');
     if (!root) return;
-    const session = active = { root, events: new AbortController(), renderer: null };
+    const session = active = { root, host: root.parentElement, immersive: false, events: new AbortController(), renderer: null };
     const signal = session.events.signal;
     paint(session);
     root.addEventListener('click', event => {
@@ -56,8 +75,11 @@
       } else if (button.dataset.action === 'pause') state.paused = !state.paused;
       else if (button.dataset.action === 'auto') { state.auto = !state.auto; session.renderer?.resetAuto(); }
       else if (button.dataset.action === 'retry') { mount(); return; }
-      else if (button.dataset.action === 'layout') { window.openApp?.('demo3d'); return; }
+      else if (button.dataset.action === 'immersive') { setImmersive(session, !session.immersive); return; }
       paint(session); session.renderer?.refresh();
+    }, { signal });
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Escape' && session.immersive) setImmersive(session, false);
     }, { signal });
     root.addEventListener('change', event => {
       if (event.target.dataset.control === 'speed') state.speed = Number(event.target.value);

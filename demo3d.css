@@ -28,3 +28,10 @@
 @media(max-height:460px){.d3-heading{padding:12px 16px}.d3-heading h2{font-size:23px}.d3-caption{bottom:137px}.d3-panel{bottom:8px;padding:7px;gap:5px}.d3-hint{display:none}}
 @container (max-width:600px){@media(max-height:460px){.d3-caption{bottom:174px}.d3-heading h2{font-size:19px}.d3-eyebrow{font-size:8px}.d3-badge{display:none}}}
 @container (max-width:600px){.d3-message{inset:72px 14px auto;padding:10px;font-size:12px;line-height:1.4}.d3-message button{margin:8px auto 0}}
+
+/* True animation-only viewport, including iOS PWA without the Fullscreen API.
+   Portalling the scene to body prevents clipping by the cockpit or side pane. */
+.d3-root.d3-immersive{position:fixed!important;inset:0!important;z-index:2147483000;width:100vw!important;height:100vh!important;height:100dvh!important;max-width:none!important;max-height:none!important;margin:0!important;border:0!important;border-radius:0!important}
+.d3-root.d3-immersive .d3-heading{top:0;left:0;right:0;justify-content:flex-end;align-items:center;gap:0;padding:calc(env(safe-area-inset-top, 0px) + 12px) calc(env(safe-area-inset-right, 0px) + 12px) 12px calc(env(safe-area-inset-left, 0px) + 12px);background:none}
+.d3-root.d3-immersive .d3-heading>div:first-child,.d3-root.d3-immersive .d3-badge,.d3-root.d3-immersive .d3-caption,.d3-root.d3-immersive .d3-panel{display:none!important}
+.d3-root.d3-immersive .d3-heading .d3-layout-btn{background:#101322b8;border-color:#8ffff080;min-width:44px;min-height:44px}
