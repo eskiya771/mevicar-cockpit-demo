@@ -423,19 +423,13 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 }
 
 
-/* Guidance actions live directly on the map, not in the trip menu. */
+/* Match the Google Maps +/- controls: anchor directly at the visible map edge.
+   On iPhone landscape env(safe-area-inset-right) can be large even when the
+   notch is on the opposite side. The map/dock already handles the cutout.
+   In split view the map itself is only 66vw wide: do NOT subtract the side
+   panel width a second time, or buttons drift into the middle of the map. */
 .mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{
- position:absolute;z-index:8;top:50%;right:max(12px,env(safe-area-inset-right,0px));
+ position:absolute;z-index:8;top:50%;
+ right:clamp(8px,1.2vw,16px);
  transform:translateY(-50%);pointer-events:auto;
-}
-@media(orientation:landscape) and (max-height:480px){
- .mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{
-  right:max(7px,env(safe-area-inset-right,0px));
- }
-}
-/* iPhone landscape: the fixed map continues behind the split app. */
-@media(orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
- .screen:has(> .side) .mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{
-  right:calc(40vw + 8px);
- }
 }
