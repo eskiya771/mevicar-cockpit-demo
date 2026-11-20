@@ -404,3 +404,20 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 .mg-arrival-content p{font-size:clamp(13px,2.5vh,21px);margin:0;overflow-wrap:anywhere;color:var(--route-muted)}
 .mg-arrival-actions{display:flex;flex-direction:column;gap:clamp(6px,1.5vh,12px)}
 .mg-navigation .mg-arrival-pane button{min-height:44px;font-weight:750;font-size:clamp(12px,2.5vh,19px)}
+
+
+/* Minimal Web map surface (iOS PWA/browser).
+   Scope these styles to the Maps JavaScript container only; the native
+   Google Navigation SDK in the S20 APK does not use this DOM.
+   This deliberately hides Google attribution and therefore is NOT compliant
+   with Google Maps Platform's current attribution requirements. */
+.mg-navigation #mg-map .gm-style-cc,
+.mg-navigation #mg-map .gmnoprint.gm-style-cc,
+.mg-navigation #mg-map .gm-style a[href*="google.com/maps"],
+.mg-navigation #mg-map .gm-style a[href*="maps.google.com"],
+.mg-navigation #mg-map .gm-style a[title*="Google Maps"],
+.mg-navigation #mg-map .gm-style a[aria-label*="Google Maps"],
+.mg-navigation #mg-map .gm-style img[alt="Google"],
+.mg-navigation #mg-map .gm-style img[alt="Google Maps"]{
+ display:none!important;
+}

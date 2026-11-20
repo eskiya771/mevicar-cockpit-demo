@@ -400,7 +400,7 @@ async function mount(nextState){
    if(!document.contains(kept||el))return;
    if(!kept&&mapElement!==el){
      mapElement=el;
-     map=new google.maps.Map(el,{center:current||FALLBACK_CENTER,zoom:12,disableDefaultUI:true,zoomControl:true,clickableIcons:false,gestureHandling:'greedy',backgroundColor:'#152536'});
+     map=new google.maps.Map(el,{center:current||FALLBACK_CENTER,zoom:12,disableDefaultUI:true,zoomControl:true,keyboardShortcuts:false,clickableIcons:false,gestureHandling:'greedy',backgroundColor:'#152536'});
      map.addListener('click',event=>{
        if(!choosingOrigin||!event.latLng)return;
        chooseOriginPoint(event.latLng.toJSON());
