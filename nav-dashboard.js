@@ -42,6 +42,7 @@ function panel(){
   </header>
   <div class="mg-dash-actions" role="group" aria-label="Navigation bedienen">
    <button type="button" class="mg-dash-action" data-dash-action="search" onclick="openDashboardSearch()">${icon(icons.search)}<span>Ziel suchen</span></button>
+   <button type="button" class="mg-dash-action mg-dash-end-route" data-dash-action="end" onclick="endNavigationFromDashboard()" aria-label="Navigation beenden">Navigation beenden</button>
   </div>
   <section class="mg-dash-quick" aria-label="Gespeicherte Orte" data-dash-quick>
    <div class="mg-dash-quick-heading">
@@ -137,10 +138,7 @@ function idleFix(position){
   // Fallback for GPS providers that do not return coords.speed.
   // Do not turn short-term location jitter into a false vehicle speed.
   const seconds=(stamp-idlePrevious.timestamp)/1000;
-  const a=idlePrevious.lat*Math.PI/180,b=c.latitude*Math.PI/180;
-  const dLat=b-a,dLng=(c.longitude-idlePrevious.lng)*Math.PI/180;
-  const h=Math.sin(dLat/2)**2+Math.cos(a)*Math.cos(b)*Math.sin(dLng/2)**2;
-  const meters=6371000*2*Math.asin(Math.min(1,Math.sqrt(h)));
+  const meters=root.MeviNavigationShared.distanceMeters(idlePrevious,{lat:c.latitude,lng:c.longitude});
   const threshold=Math.max(8,Math.min(45,2*Math.max(c.accuracy,idlePrevious.accuracy)));
   if(seconds>=1.5&&seconds<=20){
    if(meters>threshold)kmh=Math.min(400,meters/seconds*3.6);

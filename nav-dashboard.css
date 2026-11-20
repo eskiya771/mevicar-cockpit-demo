@@ -340,3 +340,15 @@ html[data-theme="liquidglass"] .mg-dash-speed{background:linear-gradient(155deg,
 @media(prefers-reduced-motion:reduce){
  .mg-dash-idle-speed-fill{transition:none}
 }
+
+/* Navigation state swaps the single large dashboard action in place.
+   No second trip action or duplicate renderer is introduced. */
+.mg-dash-panel[data-route-active="false"] [data-dash-action="end"],
+.mg-dash-panel[data-route-active="true"] [data-dash-action="search"]{display:none!important}
+.side.mg-nav-dashboard-side .mg-dash-actions [data-dash-action="end"]{
+ width:100%;border:1px solid #b86b7a;background:#743545;color:#ffebf1;
+ font-weight:790;
+}
+.side.mg-nav-dashboard-side .mg-dash-actions [data-dash-action="end"]:disabled{
+ opacity:.65;cursor:wait;
+}
