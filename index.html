@@ -1394,6 +1394,86 @@ html[data-theme="liquidglass"] .mg-parity-shade{
  .mg-parity-keyboard-open .mg-parity-shade{padding:4px}
  .mg-parity-keyboard-open .mg-parity-section-title{padding:2px 5px}
 }
+</style><style id="mevicar-gemini-voice-styles">/* Gemini one-shot voice navigation. Shares theme colors with the only Navi search. */
+.mg-gemini-backdrop{
+ --gemini-bg:#0a1721;--gemini-card:#152837;--gemini-border:#448899;
+ --gemini-ink:#edf9ff;--gemini-sub:#b8d1dd;--gemini-accent:#79e8f8;
+ position:fixed;inset:0;z-index:2147481000;
+ background:rgba(3,6,14,.86);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+ color:var(--gemini-ink);font-family:Roboto,"Segoe UI",system-ui,sans-serif;
+ display:flex;align-items:center;justify-content:center;
+ padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+ max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+ box-sizing:border-box;
+}
+html[data-theme="cyberpunk"] .mg-gemini-backdrop{
+ --gemini-bg:#150920;--gemini-card:#261331;--gemini-border:#b03a9c;
+ --gemini-ink:#ffe8fb;--gemini-sub:#e7a6d8;--gemini-accent:#64eaff;
+}
+html[data-theme="liquidglass"] .mg-gemini-backdrop{
+ --gemini-bg:#132335;--gemini-card:#1b3350;--gemini-border:#7fa9c9;
+ --gemini-ink:#f4f8ff;--gemini-sub:#d5e6f4;--gemini-accent:#b3edff;
+}
+.mg-gemini-dialog{
+ box-sizing:border-box;width:min(670px,100%);max-height:100%;min-height:0;
+ display:flex;flex-direction:column;gap:clamp(8px,1.5vh,15px);overflow:auto;
+ padding:clamp(14px,2.5vw,28px);
+ background:var(--gemini-bg);border:1px solid var(--gemini-border);
+ border-radius:22px;box-shadow:0 22px 65px #000a;
+ font-size:clamp(14px,1.5vw,19px);
+}
+.mg-gemini-dialog header{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.mg-gemini-dialog header>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mg-gemini-dialog header strong{font-size:clamp(19px,2.4vw,29px)}
+.mg-gemini-dialog header small{font-size:clamp(11px,1.15vw,14px);color:var(--gemini-accent)}
+.mg-gemini-dialog .mg-gemini-help{margin:0;line-height:1.4;color:var(--gemini-sub)}
+.mg-gemini-dialog label{font-weight:700}
+.mg-gemini-inputrow{display:flex;align-items:stretch;gap:9px;min-height:80px;min-width:0}
+.mg-gemini-dialog textarea{
+ box-sizing:border-box;flex:1;min-width:0;min-height:80px;resize:vertical;
+ background:var(--gemini-card);border:1px solid var(--gemini-border);
+ color:var(--gemini-ink);border-radius:12px;padding:12px 14px;
+ font:inherit;line-height:1.35;outline:0;
+}
+.mg-gemini-dialog textarea:focus-visible{outline:2px solid var(--gemini-accent);outline-offset:1px}
+.mg-gemini-dialog button{
+ min-width:52px;min-height:48px;border:1px solid var(--gemini-border);
+ background:var(--gemini-card);color:var(--gemini-ink);
+ border-radius:12px;padding:10px 18px;cursor:pointer;font:inherit;font-weight:700;
+ touch-action:manipulation;
+}
+.mg-gemini-dialog button:focus-visible{outline:2px solid var(--gemini-accent);outline-offset:1px}
+.mg-gemini-dialog button:disabled{opacity:.5;cursor:wait}
+.mg-gemini-dialog .mg-gemini-close{font-size:29px;line-height:1;padding:5px 12px}
+.mg-gemini-dialog .mg-gemini-mic{font-size:29px;flex:0 0 60px;padding:5px}
+.mg-gemini-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mg-gemini-dialog #mg-gemini-send{border-color:var(--gemini-accent)}
+.mg-gemini-dialog #mg-gemini-accept{background:var(--gemini-accent);color:#0b2434;border-color:var(--gemini-accent)}
+.mg-gemini-dialog [hidden]{display:none!important}
+.mg-gemini-status{min-height:25px;color:var(--gemini-accent);line-height:1.3}
+.mg-gemini-answer{
+ margin:0;min-height:0;padding:clamp(10px,1.5vw,15px);
+ border-radius:12px;background:var(--gemini-card);
+ color:var(--gemini-ink);line-height:1.4;overflow-wrap:anywhere;
+}
+.mg-gemini-answer:empty{display:none}
+.mg-gemini-dialog .mg-gemini-privacy{color:var(--gemini-sub);line-height:1.4}
+.mg-navigation .mg-gemini-launch{
+ flex:0 0 auto;display:flex;gap:6px;align-items:center;justify-content:center;
+ min-width:clamp(46px,5vw,62px);min-height:46px;padding:4px 8px;
+ background:var(--nav-search-surface);color:var(--nav-search-accent);
+ border:1px solid var(--nav-search-stroke);border-radius:14px;
+ font-size:clamp(22px,2.8vh,29px);cursor:pointer;
+}
+.mg-navigation .mg-gemini-launch:focus-visible{outline:2px solid var(--nav-search-accent);outline-offset:2px}
+@media(orientation:landscape) and (max-height:470px){
+ .mg-gemini-dialog{gap:6px;padding:10px 16px;border-radius:15px}
+ .mg-gemini-dialog header strong{font-size:18px}
+ .mg-gemini-dialog .mg-gemini-help{font-size:12px}
+ .mg-gemini-inputrow,.mg-gemini-dialog textarea{min-height:48px}
+ .mg-gemini-dialog button{min-height:43px}
+ .mg-gemini-dialog .mg-gemini-privacy{font-size:11px}
+}
 </style><style id="mevicar-homeassistant-styles">/* Home Assistant Next: native dashboard, device list and PIN gate.
    Colours come from the custom properties on .ha-shell; themes only override those.
    The token lives in session memory only (never localStorage or GitHub). */
@@ -5920,7 +6000,7 @@ APP_VECTORS.spectrum='<path class="main" d="M15 88h90 M22 74V55 M36 74V37 M51 74
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='spectrum'&&s.mode==='full')html='<div class="full spectrum-host">'+appBody()+'</div>';else if(s.app==='demo3d'&&s.mode==='full')html='<div class="full d3-host">'+appBody()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='spectrum'?'spectrum-host':s.app==='demo3d'?'d3-host':s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='spectrum'||s.app==='demo3d'||s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty'||s.app==='navdashboard')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();window.MeviDemo3D?.unmount();if(s.app!=='spectrum')window.MeviSpectrum?.stop();$('screen').innerHTML=html;if(s.app==='spectrum')window.MeviSpectrum?.mount();window.MeviDemo3D?.mount();paintDashboardHead();if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version":"0.6.7","build":1375,"commit":"7b7fb628bbbe0c9e4209f03bc242cb6f2c3d77f3"};
+const CURRENT_BUILD={"version": "0.6.7", "build": 1436, "commit": "c201bfab46ab28237ef64fee0ca3e30ac75aef33"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -5979,7 +6059,7 @@ navigator.serviceWorker.addEventListener('controllerchange',()=>{
 });
 navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('PWA service worker:',err))}})}window.addEventListener('load',()=>checkForUpdateImpl(true));
 </script><script id="mevicar-versioned-credentials-script">/* Central configuration UI. Never embed entered secrets into HTML or logs.
-   Browser API keys / OAuth client identifiers retain their legacy local keys for compatibility.
+   Gemini uses a password-encrypted browser vault or Android Keystore; no proxy.
    HA token is persisted only in the standalone Web browser, scoped to the HA origin.
    Android keeps its existing native Keystore flow. The MeviTV PIN uses Android
    Keystore when supported by the APK, otherwise localStorage. */
@@ -6126,6 +6206,20 @@ function html(){
  const groups=[
  group('navigation','Google Navigation',android?(nativeStatus?.mapsKey?'Gespeichert':'Status prüfen'):status(saved(MAPS_KEY)),
  android?row('android-maps','Android-API-Key','Android-SDK-Schlüssel eingeben',nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen','Für Karte, Adresssuche und Routenführung. In Google Cloud: Paket de.mevicar.next und SHA-1 der signierten APK freigeben.',{secret:true}):row('maps','Browser-API-Key','Neuen Browser-API-Key eingeben',status(saved(MAPS_KEY)),'In Google Cloud den HTTP-Referrer auf deine MeviCar-Website einschränken.',{secret:true})),
+ group('gemini','Google Gemini',android?
+   (nativeStatus?.geminiKey?'Im Android Keystore':'APK-Update nötig / noch nicht gespeichert'):
+   (global.MeviGeminiKey?.stored?.()?(global.MeviGeminiKey?.isUnlocked?.()?'Entsperrt':'Verschlüsselt gespeichert'):'Nicht eingerichtet'),
+ row('gemini-key','Gemini API-Key','API-Key aus Google AI Studio einfügen',
+  android?(nativeStatus?.geminiKey?'Sicher im Android Keystore':'Nicht eingerichtet'):
+   (global.MeviGeminiKey?.stored?.()?'AES-GCM verschlüsselt gespeichert':'Nicht eingerichtet'),
+  android?'Der Schlüssel bleibt im Android Keystore. Es wird eine APK mit Gemini-Unterstützung benötigt.':
+   'Lokal mit AES-GCM und deinem Speicherpasswort verschlüsselt. Nach einem Neustart erneut entsperren. Direkte Browseranfragen können den Schlüssel im Netzwerk-/Entwicklerprotokoll offenlegen.',
+  {secret:true})+
+ (android?'':'<div class="mevi-cred-row"><label for="mevi-cred-gemini-pass">Speicherpasswort (mindestens 12 Zeichen)</label>'+
+  '<div class="mevi-cred-form"><input id="mevi-cred-gemini-pass" type="password" autocomplete="off" spellcheck="false" placeholder="Eigenes Passwort zum Verschlüsseln / Entsperren">'+
+  '<button type="button" onclick="MeviCredentials.unlockGemini()">Schlüssel entsperren</button>'+
+  '<button type="button" onclick="MeviCredentials.lockGemini()">Sperren</button></div>'+
+  '<small>Passwort nicht vergessen: Ohne Passwort ist der gespeicherte Browser-Key nicht wiederherstellbar.</small></div>')),
  group('spotify','Spotify',status(saved(SPOTIFY_KEY)),row('spotify','Client-ID','Neue Spotify Client-ID eingeben',status(saved(SPOTIFY_KEY)),'Die Anmeldung erfolgt in der Spotify-App von MeviCar. Kein Client Secret oder Spotify-Passwort erforderlich.')),
  group('ha','Home Assistant',ha.connected?'Verbunden':haSaved?'Gespeichert · offline':'Nicht verbunden',
  '<div class="mevi-cred-row"><label for="mevi-cred-ha-origin">Server-Adresse</label><div class="mevi-cred-form"><input id="mevi-cred-ha-origin" type="url" spellcheck="false" value="'+escapeHTML(ha.origin||'')+'" placeholder="https://homeassistant.example"></div><label for="mevi-cred-ha-path">Dashboard-Pfad</label><div class="mevi-cred-form"><input id="mevi-cred-ha-path" type="text" spellcheck="false" value="'+escapeHTML(ha.dashboard?.replace(ha.origin||'','')||'/')+'"><button type="button" onclick="MeviCredentials.save(\'ha-origin\')">Adresse speichern</button></div></div>'+
@@ -6147,6 +6241,12 @@ async function save(id){
     if(nativeAvailable())throw new Error('Der Browser-Key ist in der APK nicht verfügbar. Bitte den Android-Navigation-Key verwenden.');
     if(!/^[A-Za-z0-9_-]{20,}$/.test(v))throw new Error('Google Maps Browser-Key ist ungültig.');
     localStorage.setItem(MAPS_KEY,v);break;
+   case 'gemini-key':
+    if(!global.MeviGeminiKey)throw new Error('Gemini-Schlüsselspeicher ist nicht verfügbar.');
+    await global.MeviGeminiKey.save(v,value('gemini-pass'));
+    if(android)nativeStatus={...nativeStatus,geminiKey:true};
+    clearInput('gemini-pass');
+    break;
    case 'spotify':
     if(!/^[A-Za-z0-9]{8,64}$/.test(v))throw new Error('Spotify Client-ID ist ungültig.');
     global.meviSpotifySaveClient?.(v);break;
@@ -6211,6 +6311,10 @@ async function clear(id){
    case 'maps':
     if(nativeAvailable())throw new Error('In der APK ist nur der Android-Navigation-Key verfügbar.');
     localStorage.removeItem(MAPS_KEY);break;
+   case 'gemini-key':
+    await global.MeviGeminiKey?.remove?.();
+    if(nativeAvailable())nativeStatus={...nativeStatus,geminiKey:false};
+    break;
    case 'spotify':global.meviSpotifyResetClient?.(true);break;
    case 'calendar':global.MeviCalendar?.setClientId?.('');break;
    case 'road':global.MeviRoadAssist?.setConfigId?.('');break;
@@ -6232,6 +6336,17 @@ async function clear(id){
   if(id==='maps'){global.location.reload();return}
   global.render?.();
  }catch(e){report(e.message||'Entfernen fehlgeschlagen.')}
+}
+async function unlockGemini(){
+ try{
+  if(nativeAvailable())throw Error('Android entsperrt den Keystore automatisch.');
+  await global.MeviGeminiKey?.unlock?.(value('gemini-pass'));
+  clearInput('gemini-pass');report('Gemini-Key entsperrt.');global.render?.();
+ }catch(e){report(e.message||'Schlüssel konnte nicht entsperrt werden.')}
+}
+function lockGemini(){
+ global.MeviGeminiKey?.lock?.();clearInput('gemini-pass');
+ report('Gemini-Key für diese Sitzung gesperrt.');global.render?.();
 }
 async function refreshNativeStatus(){
  try{const d=await nativeCall('settings.status');nativeStatus=d.configured||{};report('Android-Speicherstatus aktualisiert.');global.render?.()}
@@ -6401,7 +6516,7 @@ async function importBackup(){
  }catch(_){report(_?.message||'Backup konnte nicht importiert werden.')}
 }
 
-global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibility,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
+global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibility,save,clear,exportBackup,importBackup,unlockGemini,lockGemini,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
 
@@ -8827,7 +8942,8 @@ function searchHTML(){
   ((s.query||'').trim()?' mg-parity-querying':'')+'" role="dialog" aria-modal="true" aria-label="Zielsuche und Adressbuch"><div class="mg-parity-layout">'+
   '<div class="mg-parity-top"><button type="button" class="mg-parity-back" onclick="MeviWebNavParity.close()" aria-label="Zurück">'+ico('back')+'</button>'+
   '<div class="mg-parity-field">'+ico(pendingSlot||'search')+purpose+'<input id="searchInput" type="text" placeholder="'+(slotName?'Adresse festlegen':'Adresse, Ort, Favorit oder POI')+'" aria-label="'+(slotName?'Adresse für '+slotName+' festlegen':'Adresse, Ort oder POI')+'" inputmode="'+(touchKeyboard?'none':'search')+'" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" maxlength="200" onfocus="MeviWebNavParity.focusSearch()" onkeydown="if(event.key===\'Enter\'){event.preventDefault();MeviWebNavParity.submitSearch()}event.stopPropagation()" oninput="MeviWebNavParity.input(this.value)" value="'+safe(s.query)+'">'+
-  '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div></div>'+
+  '<button type="button" class="mg-parity-clear" '+(s.query?'':'hidden ')+'onclick="MeviWebNavParity.clear()" aria-label="Suche löschen">×</button></div>'+
+  '<button type="button" class="mg-gemini-launch" onclick="MeviGeminiVoice.open()" aria-label="Gemini Sprach-Zielsuche öffnen" title="Gemini Sprachsuche">✦</button></div>'+
   '<div id="mg-parity-controls" '+(s.query?'hidden':'')+'>'+chips()+'</div>'+
   '<div class="mg-parity-toolbar" role="group" aria-label="Ziele und Verwaltung">'+tabs()+manageActions()+'</div>'+
   (stopError?'<p class="mg-poi-warning" role="alert">'+safe(stopError)+'</p>':'')+
@@ -9276,6 +9392,417 @@ window.searchOverlay=overlayHTML;
 window.MeviWebNavParity={overlayHTML,quickDestinations,quickSelect,quickIcon:ico,focusSearch,hideSearchKeyboard,blankResultsTapped,resultsScrolled,typeKey,selectedDestinationHTML:()=>s.nav==='preview'?placeHTML():'',open,openMapPlace,close,input,clear,tab:setTab,choose,slot,poi,poiAlongRoute,openStopSearch,addStopResult,addStopPlace,retryPoi,poiSort,poiOpenNow,backToSearch,showPlace,retryPlace,backFromPlace,savePlace,routeResult,routePlace,submitSearch,book,bookBack,add,remove,edit,editField,editIcon,editSlot,cancelEdit,saveEdit,removeEdited,move,clearHistory,exportBook,importBook,nativeImport,filter:filterBook,resultsHTML:()=>view==='results'?poiRows():view==='search'?searchRows():''};
 window.render?.();
 })();
+</script><script id="mevicar-gemini-key-script">/* Personal Gemini API key, never bundled or sent to a MeviCar server.
+   Android: existing trusted first-party NativeBridge/Keystore only.
+   Web/PWA: locally AES-GCM encrypted at rest with a user passphrase.
+   A browser-origin key remains potentially exposed to scripts/devtools and
+   during direct API calls. This is a BYOK personal-use preview, not a
+   production-secure client-side key management system. */
+(function(root){
+'use strict';
+const VAULT='mevicar-next-gemini-encrypted-key-v1';
+const ITERATIONS=310000;
+let unlocked=null,nativeConfigured=null;
+let nativeCounter=0;
+const pending=new Map();
+const native=()=>!!root.MeviNativeBridge?.postMessage;
+function validKey(value){
+ const s=String(value||'').trim();
+ if(!/^[A-Za-z0-9._-]{20,256}$/.test(s))throw Error('Ungültiges Gemini-API-Key-Format.');
+ return s;
+}
+function validPassword(value){
+ const s=String(value||'');
+ if(s.length<12||s.length>256)throw Error('Speicherpasswort: mindestens 12, maximal 256 Zeichen.');
+ return s;
+}
+function cryptoApi(){
+ const c=root.crypto;
+ if(!c?.subtle||!c.getRandomValues||!root.TextEncoder||!root.TextDecoder)
+  throw Error('Verschlüsselte Speicherung erfordert HTTPS und Web Crypto.');
+ return c;
+}
+function encode(data){
+ let text='';for(const b of data)text+=String.fromCharCode(b);
+ return root.btoa(text);
+}
+function decode(text){
+ if(typeof text!=='string'||text.length>2048)throw Error('Ungültiger gespeicherter Schlüssel.');
+ return Uint8Array.from(root.atob(text),c=>c.charCodeAt(0));
+}
+async function derive(pass,salt){
+ const c=cryptoApi();
+ const secret=await c.subtle.importKey('raw',new root.TextEncoder().encode(validPassword(pass)),
+  'PBKDF2',false,['deriveKey']);
+ return c.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITERATIONS,hash:'SHA-256'},secret,
+  {name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+function nativeRequest(action,name,value){
+ if(!native())return Promise.reject(Error('Kein Android-Keystore verfügbar. Bitte APK aktualisieren.'));
+ return new Promise((resolve,reject)=>{
+  const id='gemini-secret-'+(++nativeCounter);
+  const timeout=setTimeout(()=>{pending.delete(id);reject(Error('Keine Antwort der Android-App.'))},action==='gemini.navigation'?35000:8000);
+  pending.set(id,{resolve,reject,timeout});
+  try{root.MeviNativeBridge.postMessage(JSON.stringify({id,action,name,value}))}
+  catch{clearTimeout(timeout);pending.delete(id);reject(Error('Android-Schnittstelle nicht erreichbar.'))}
+ });
+}
+function receive(event){
+ let msg;try{msg=JSON.parse(event.data)}catch{return}
+ const item=pending.get(msg.id);if(!item)return;
+ pending.delete(msg.id);clearTimeout(item.timeout);
+ if(msg.ok)item.resolve(msg);
+ else item.reject(Error(msg.error||'Android-Aufruf fehlgeschlagen.'));
+}
+if(native()){
+ const previous=root.MeviNativeBridge.onmessage;
+ root.MeviNativeBridge.onmessage=event=>{
+  if(typeof previous==='function'){try{previous(event)}catch{}}
+  receive(event);
+ };
+}
+async function save(value,password){
+ const key=validKey(value);
+ if(native()){
+  await nativeRequest('settings.set','geminiKey',key);
+  nativeConfigured=true;unlocked=null;
+  return 'android-keystore';
+ }
+ const pass=validPassword(password),c=cryptoApi();
+ const salt=c.getRandomValues(new Uint8Array(16));
+ const iv=c.getRandomValues(new Uint8Array(12));
+ const cipher=await c.subtle.encrypt({name:'AES-GCM',iv},await derive(pass,salt),
+   new root.TextEncoder().encode(key));
+ const payload=JSON.stringify({v:1,salt:encode(salt),iv:encode(iv),
+  data:encode(new Uint8Array(cipher))});
+ root.localStorage.setItem(VAULT,payload);
+ if(root.localStorage.getItem(VAULT)!==payload)throw Error('Schlüssel konnte nicht gespeichert werden.');
+ unlocked=key;
+ return 'browser-encrypted';
+}
+function stored(){
+ if(native())return nativeConfigured===true;
+ try{return !!root.localStorage.getItem(VAULT)}catch{return false}
+}
+function isUnlocked(){return native()?nativeConfigured===true:!!unlocked}
+async function refresh(){
+ if(!native())return stored();
+ const info=await nativeRequest('settings.status','',null);
+ nativeConfigured=info?.configured?.geminiKey===true;
+ return nativeConfigured;
+}
+async function unlock(password){
+ if(native())return true;
+ const raw=root.localStorage.getItem(VAULT);
+ if(!raw)throw Error('Noch kein Gemini-Schlüssel gespeichert.');
+ const pass=validPassword(password),c=cryptoApi();
+ try{
+  const v=JSON.parse(raw);
+  if(v.v!==1)throw Error('version');
+  const salt=decode(v.salt),iv=decode(v.iv),data=decode(v.data);
+  if(salt.length!==16||iv.length!==12||data.length<17||data.length>1024)throw Error('format');
+  const plain=await c.subtle.decrypt({name:'AES-GCM',iv},await derive(pass,salt),data);
+  unlocked=validKey(new root.TextDecoder().decode(plain));
+  return true;
+ }catch{unlocked=null;throw Error('Falsches Speicherpasswort oder beschädigter Schlüssel.')}
+}
+function lock(){unlocked=null}
+async function remove(){
+ if(native()){
+  await nativeRequest('settings.clear','geminiKey');
+  nativeConfigured=false;
+ }else root.localStorage.removeItem(VAULT);
+ unlocked=null;
+}
+const SYSTEM=[
+ 'Du bist ein deutschsprachiger Navi-Sprachassistent von MeviCar Next.',
+ 'Ermittle nur Ziel, Zwischenstopp, POI oder eine kurze Klärungsfrage.',
+ 'Gib JSON mit intent, query, poiType, reply zurück.',
+ 'intent: destination, stop, poi, clarify. Bei clarify ist query leer.',
+ 'poiType ist leer oder fuel, charge, parking, food, cafe, cart, rest, wrench.',
+ 'Erfinde nie echte Adressen, Ortskoordinaten, Fahrzeiten oder Routen.',
+ 'MeviCar zeigt echte Google-Places-Treffer erst nach Bestätigung.',
+ 'Bei hasRoute=false darf kein stop-Intent erzeugt werden.'
+].join('\n');
+const model='gemini-3.8-flash';
+async function requestNative(text,context){
+ const response=await nativeRequest('gemini.navigation','',JSON.stringify({
+  text:String(text||'').slice(0,400),
+  hasRoute:!!context.hasRoute,
+  clarification:context.clarification||null
+ }));
+ return response.result;
+}
+async function generate(text,context={},signal){
+ const phrase=String(text||'').trim().slice(0,400);
+ if(!phrase)throw Error('Bitte einen Sprachwunsch eingeben.');
+ if(native())return requestNative(phrase,context);
+ if(!unlocked)throw Error(stored()?
+  'Gemini-Key ist gesperrt. Bitte unter Settings → Zugänge entsperren.':
+  'Bitte den Gemini-Key unter Settings → Zugänge speichern.');
+ const payload={
+  systemInstruction:{parts:[{text:SYSTEM}]},
+  contents:[{role:'user',parts:[{text:JSON.stringify({
+   text:phrase,hasRoute:!!context.hasRoute,
+   clarification:context.clarification||null
+  })}]}],
+  generationConfig:{responseMimeType:'application/json',temperature:0.2,
+   responseSchema:{type:'OBJECT',properties:{
+    intent:{type:'STRING',enum:['destination','stop','poi','clarify']},
+    query:{type:'STRING'},
+    poiType:{type:'STRING',enum:['','fuel','charge','parking','food','cafe','cart','rest','wrench']},
+    reply:{type:'STRING'}
+   },required:['intent','query','poiType','reply']}}
+ };
+ // This is a personal BYOK preview. The key is not stored in plaintext on
+ // disk, but it appears in the browser request header while in use.
+ let response;
+ try{
+  response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent',{
+   method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':unlocked},
+   credentials:'omit',cache:'no-store',signal,body:JSON.stringify(payload)
+  });
+ }catch(e){
+  if(e?.name==='AbortError')throw e;
+  throw Error('Direkter Gemini-Aufruf im Browser fehlgeschlagen (Netzwerk oder CORS).');
+ }
+ if(!response.ok){
+  const code=response.status;
+  if(code===401||code===403)throw Error('Gemini-API-Key nicht berechtigt (HTTP '+code+').');
+  if(code===429)throw Error('Gemini-Anfragelimit erreicht.');
+  if(code===404)throw Error('Gemini-Modell für deinen API-Key nicht verfügbar.');
+  throw Error('Gemini antwortet nicht (HTTP '+code+').');
+ }
+ const result=await response.json();
+ const textResponse=result?.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+ if(!textResponse||textResponse.length>10000)throw Error('Gemini lieferte keine gültige JSON-Antwort.');
+ try{return JSON.parse(textResponse)}
+ catch{throw Error('Gemini-Antwort ist kein gültiges JSON.')}
+}
+root.MeviGeminiKey={save,unlock,lock,remove,stored,isUnlocked,refresh,generate,native};
+})(window);
+</script><script id="mevicar-gemini-voice-script">/* MeviCar Next – one-shot voice intent entry for the shared Navi search.
+   The user's own key is kept in Android Keystore or an encrypted local Web vault.
+   With a saved key the app calls Gemini directly, no Synology or proxy. */
+(function(root){
+'use strict';
+let overlay=null,recognizer=null,pending=null,abort=null,serial=0,busy=false,hearing=false;
+let injectedProvider=null,transcript='',lastReply='',lastSource='demo',clarification=null;
+const safeText=v=>String(v||'').trim().slice(0,200);
+const keySource=()=>root.MeviGeminiKey;
+const configured=()=>!!keySource()?.stored?.();
+const ready=()=>configured()&&!!keySource()?.isUnlocked?.();
+function dialog(){
+ const el=document.createElement('div');
+ el.className='mg-gemini-backdrop';
+ el.id='mg-gemini-voice';
+ el.innerHTML='<section class="mg-gemini-dialog" role="dialog" aria-modal="true" aria-label="Gemini Sprach-Zielsuche">'+
+  '<header><div><strong>Gemini · Navi-Assistent</strong><small id="mg-gemini-mode"></small></div>'+
+  '<button type="button" class="mg-gemini-close" aria-label="Schließen" onclick="MeviGeminiVoice.close()">×</button></header>'+
+  '<p class="mg-gemini-help">Sag zum Beispiel: „Navigiere zum Bahnhof Erlangen“ oder „Suche eine Tankstelle auf meiner Route“.</p>'+
+  '<label for="mg-gemini-input">Dein Wunsch</label>'+
+  '<div class="mg-gemini-inputrow"><textarea id="mg-gemini-input" maxlength="400" rows="2" spellcheck="false" placeholder="Ziel, Zwischenstopp oder POI frei beschreiben"></textarea>'+
+  '<button type="button" class="mg-gemini-mic" id="mg-gemini-mic" onclick="MeviGeminiVoice.listen()" aria-label="Spracheingabe starten">🎙</button></div>'+
+  '<div class="mg-gemini-controls"><button type="button" id="mg-gemini-send" onclick="MeviGeminiVoice.send()">Verstehen</button>'+
+  '<button type="button" id="mg-gemini-accept" hidden onclick="MeviGeminiVoice.accept()">In Navi suchen</button></div>'+
+  '<div class="mg-gemini-status" id="mg-gemini-status" role="status" aria-live="polite">Bereit. Mikrofon oder Tastatur verwenden.</div>'+
+  '<p class="mg-gemini-answer" id="mg-gemini-answer"></p>'+
+  '<small class="mg-gemini-privacy">Kein dauerndes Zuhören. Die Navigation startet nicht ohne deine Auswahl.</small>'+
+  '</section>';
+ el.addEventListener('click',e=>{if(e.target===el)close()});
+ return el;
+}
+function part(id){return overlay?.querySelector('#'+id)||null}
+function status(value){const e=part('mg-gemini-status');if(e)e.textContent=String(value||'')}
+function answer(value){const e=part('mg-gemini-answer');if(e)e.textContent=String(value||'')}
+function updateButton(){
+ const button=part('mg-gemini-send');if(button)button.disabled=busy||hearing;
+ const mic=part('mg-gemini-mic');if(mic){mic.disabled=busy;mic.textContent=hearing?'■':'🎙';mic.setAttribute('aria-label',hearing?'Spracheingabe beenden':'Spracheingabe starten')}
+ const accept=part('mg-gemini-accept');if(accept)accept.hidden=!pending||busy;
+ const mode=part('mg-gemini-mode');if(mode)mode.textContent=ready()?'Gemini bereit · direkter Gerätezugriff':
+  configured()?'Gemini-Key gespeichert · noch gesperrt':'Lokaler Testmodus · Gemini-Key fehlt';
+}
+function open(){
+ if(overlay)return true;
+ root.MeviWebNavParity?.hideSearchKeyboard?.();
+ overlay=dialog();document.body.appendChild(overlay);
+ pending=null;transcript='';lastReply='';clarification=null;hearing=false;busy=false;
+ updateButton();part('mg-gemini-input')?.focus?.({preventScroll:true});
+ if(keySource()?.native?.()){
+  void keySource().refresh().then(()=>{
+   if(overlay)updateButton();
+  }).catch(()=>{
+   if(overlay)status('Android Gemini-Key-Status konnte nicht geprüft werden. APK eventuell veraltet.');
+  });
+ }
+ return true;
+}
+function stopRecognition(){
+ if(!recognizer)return;
+ const last=recognizer;recognizer=null;hearing=false;
+ try{last.abort()}catch{}
+ updateButton();
+}
+function close(){
+ serial++;abort?.abort?.();abort=null;stopRecognition();
+ root.speechSynthesis?.cancel?.();
+ overlay?.remove();overlay=null;pending=null;clarification=null;busy=false;
+}
+function speak(value){
+ if(!root.speechSynthesis||!root.SpeechSynthesisUtterance)return;
+ try{
+  root.speechSynthesis.cancel();
+  const speech=new root.SpeechSynthesisUtterance(String(value).slice(0,230));
+  speech.lang='de-DE';speech.rate=1.04;speech.volume=1;
+  root.speechSynthesis.speak(speech);
+ }catch{}
+}
+function listen(){
+ if(!overlay||busy)return false;
+ if(hearing){stopRecognition();status('Aufnahme beendet.');return true}
+ const Speech=root.SpeechRecognition||root.webkitSpeechRecognition;
+ if(!Speech){status('Spracherkennung ist hier nicht verfügbar. Bitte den Wunsch eintippen.');return false}
+ try{
+  root.speechSynthesis?.cancel?.();
+  const recognition=new Speech();
+  recognizer=recognition;recognition.lang='de-DE';recognition.continuous=false;
+  recognition.interimResults=false;recognition.maxAlternatives=1;
+  recognition.onresult=e=>{
+   if(recognizer!==recognition||!overlay)return;
+   const words=safeText(e.results?.[0]?.[0]?.transcript);
+   if(!words)return;
+   const field=part('mg-gemini-input');if(field)field.value=words;
+   stopRecognition();void send();
+  };
+  recognition.onerror=e=>{
+   if(recognizer!==recognition)return;
+   recognizer=null;hearing=false;updateButton();
+   status(e.error==='not-allowed'?'Mikrofonberechtigung fehlt.':'Spracheingabe fehlgeschlagen. Bitte erneut versuchen.');
+  };
+  recognition.onend=()=>{
+   if(recognizer!==recognition)return;
+   recognizer=null;hearing=false;updateButton();
+   status('Keine Sprache erkannt. Du kannst den Text eingeben.');
+  };
+  hearing=true;status('Ich höre zu …');updateButton();recognition.start();return true;
+ }catch{
+  recognizer=null;hearing=false;updateButton();
+  status('Mikrofon konnte nicht gestartet werden.');return false;
+ }
+}
+function localInterpret(utterance,context={}){
+ const text=safeText(utterance),low=text.toLocaleLowerCase('de-DE');
+ if(!text)return {intent:'clarify',reply:'Was soll ich für dich suchen?',query:''};
+ // A clarification is still one short tap-to-talk conversation. The answer
+ // may be a bare place name or a yes/no reply rather than a full command.
+ const follow=context.clarification;
+ if(follow&&/^(ja|okay|ok|bitte|gerne)[.!]?$/i.test(text)){
+  const prior=localInterpret(follow.original,{hasRoute:false});
+  if(prior.intent==='clarify'&&/tankstelle|tanken/i.test(follow.original))
+   return {intent:'poi',poiType:'fuel',query:'Tankstelle',reply:'Ich suche Tankstellen in deiner Nähe. Soll ich die Treffer öffnen?'};
+  if(prior.poiType)return {...prior,intent:'poi'};
+ }
+ if(follow&&!/^(nein|abbrechen|stopp)$/i.test(text)&&
+    /wohin|welche adresse|welchen ort/i.test(follow.reply)&&
+    !/^(fahre|fahr|navigiere|suche|füge|setze)\b/i.test(text)&&text.length<=75)
+  return {intent:'destination',query:text,reply:'Du möchtest nach „'+text+'“. Soll ich dort suchen?'};
+ const poi=[
+  ['fuel',/\b(tankstelle|tanken|sprit)\b/i,'Tankstelle'],
+  ['charge',/\b(ladesäule|laden|ladestation)\b/i,'Ladestation'],
+  ['parking',/\b(parkplatz|parken|parkhaus)\b/i,'Parkplatz'],
+  ['food',/\b(restaurant|essen|imbiss)\b/i,'Restaurant'],
+  ['cafe',/\b(café|cafe|kaffee)\b/i,'Café'],
+  ['cart',/\b(supermarkt|einkaufen)\b/i,'Supermarkt'],
+  ['rest',/\b(rastplatz|raststätte)\b/i,'Rastplatz'],
+  ['wrench',/\b(werkstatt)\b/i,'Werkstatt']
+ ].find(([,re])=>re.test(low));
+ if(poi){
+  if(/\b(auf (der|meiner) route|auf dem weg|unterwegs|als zwischenstopp)\b/.test(low)&&!context.hasRoute)
+   return {intent:'clarify',reply:'Du hast noch keine aktive Route. Soll ich in deiner Nähe suchen?',query:''};
+  return {intent:context.hasRoute&&/\b(route|unterwegs|zwischenstopp|auf dem weg)\b/.test(low)?'stop':'poi',
+   poiType:poi[0],query:poi[2],reply:'Ich kann nach '+poi[2]+' suchen. Soll ich dir die Treffer zeigen?'};
+ }
+ let target=text.replace(/^(?:bitte\s+)?(?:fahre|fahr|navigiere|bring(?:e)? mich|route|suche)\s+(?:mich\s+)?(?:mal\s+)?(?:nach|zu|zum|zur|in|den|die|das)\s+/i,'').trim();
+ target=target.replace(/^(?:füge|setze)\s+(?:einen\s+)?(?:zwischenstopp|stopp)\s+(?:in|bei|nach|zu)\s+/i,'').trim();
+ if(/^ich (?:möchte|will|würde gerne)\s+(?:nach|zu|zum|zur|in)\s+/i.test(target))
+  target=target.replace(/^ich (?:möchte|will|würde gerne)\s+(?:nach|zu|zum|zur|in)\s+/i,'').trim();
+ if(/^hause$/i.test(target))target='Zuhause';
+ target=target.replace(/\s*(?:bitte|danke)[.!?]*$/i,'').trim();
+ if(target===text||target.length<2)
+  return {intent:'clarify',reply:'Wohin möchtest du fahren? Sag zum Beispiel „Navigiere nach Bamberg“.',query:''};
+ const isStop=/\b(zwischenstopp|stopp hinzufügen)\b/i.test(text);
+ if(isStop&&!context.hasRoute)
+  return {intent:'clarify',reply:'Für einen Zwischenstopp benötigst du zuerst eine geplante Route.',query:''};
+ return {intent:isStop?'stop':'destination',query:target,
+  reply:'Ich habe „'+target+'“ verstanden. Soll ich in MeviCar danach suchen?'};
+}
+function validate(raw,context){
+ if(!raw||typeof raw!=='object')throw Error('Ungültige Antwort vom Gemini-Dienst.');
+ const intent=String(raw.intent||'');
+ if(!['destination','stop','poi','clarify'].includes(intent))throw Error('Gemini-Antwort enthält kein unterstütztes Ziel.');
+ const query=safeText(raw.query);
+ const poiType=['fuel','charge','parking','food','cafe','cart','rest','wrench'].includes(raw.poiType)?raw.poiType:'';
+ const reply=safeText(raw.reply)||'Ich habe deine Anfrage verstanden.';
+ if(['destination','stop','poi'].includes(intent)&&!query)throw Error('Ein Ziel für die Suche fehlt.');
+ if(intent==='stop'&&!context.hasRoute)
+  return {intent:'clarify',query:'',reply:'Für einen Zwischenstopp benötigst du zuerst eine geplante Route.'};
+ return {intent,query,poiType,reply};
+}
+async function requestGemini(text,context){
+ if(injectedProvider)return validate(await injectedProvider(text,context),context);
+ const vault=keySource();
+ if(!vault?.stored?.())return validate(localInterpret(text,context),context);
+ if(!vault.isUnlocked())throw Error('Gemini-Key ist gesperrt. Bitte unter Settings → Zugänge entsperren.');
+ const controller=new AbortController();abort=controller;
+ const timeout=setTimeout(()=>controller.abort(),35000);
+ try{return validate(await vault.generate(text,context,controller.signal),context)}
+ finally{clearTimeout(timeout);if(abort===controller)abort=null}
+}
+async function send(){
+ if(!overlay||busy)return;
+ const text=safeText(part('mg-gemini-input')?.value);
+ if(!text){status('Bitte ein Ziel oder eine Frage eingeben.');return}
+ stopRecognition();const current=++serial;busy=true;pending=null;transcript=text;
+ answer('');status(configured()?'Gemini verarbeitet deine Anfrage …':'Lokaler Testmodus verarbeitet deine Anfrage …');
+ updateButton();
+ const hasRoute=!!root.MeviGoogleNav?.hasPlannedRoute?.()||!!root.MeviGoogleNav?.guidanceDashboardData?.()?.routeActive;
+ const previousClarification=clarification;
+ try{
+  const result=await requestGemini(text,{hasRoute,clarification:previousClarification});
+  if(!overlay||serial!==current)return;
+  pending=result.intent==='clarify'?null:result;lastReply=result.reply;
+  clarification=result.intent==='clarify'?{original:text,reply:result.reply}:null;
+  lastSource=injectedProvider?'adapter':configured()?'gemini':'demo';
+  answer(result.reply);
+  status(result.intent==='clarify'?'Bitte präzisieren.':lastSource==='demo'?'Testmodus · keine Gemini-Antwort':
+   lastSource==='adapter'?'Testanbieter · bitte Ziel bestätigen.':'Bitte Ziel bestätigen.');
+  speak(result.reply);
+ }catch(e){
+  if(!overlay||serial!==current)return;
+  status(e.name==='AbortError'?'Gemini antwortet nicht. Bitte erneut versuchen.':safeText(e.message)||'Gemini nicht erreichbar.');
+ }finally{if(overlay&&serial===current){busy=false;updateButton()}}
+}
+function accept(){
+ if(!overlay||!pending||busy)return false;
+ const item=pending,api=root.MeviWebNavParity;
+ if(!api){status('Die gemeinsame Navi-Suche ist noch nicht geladen.');return false}
+ const hasRoute=!!root.MeviGoogleNav?.hasPlannedRoute?.()||!!root.MeviGoogleNav?.guidanceDashboardData?.()?.routeActive;
+ if(item.intent==='stop'&&!hasRoute){status('Bitte zuerst eine Route planen.');return false}
+ close();
+ if(item.intent==='stop')api.openStopSearch();
+ else api.open();
+ if(item.poiType&&typeof api.poi==='function')api.poi(item.poiType,item.query);
+ else {
+  api.input(item.query);
+  const field=document.getElementById('searchInput');
+  if(field)field.value=item.query;
+ }
+ return true;
+}
+function setProvider(fn){injectedProvider=typeof fn==='function'?fn:null}
+root.MeviGeminiVoice={open,close,listen,send,accept,configured,ready,
+ setProvider,localInterpret,validate};
+})(window);
 </script><script id="mevicar-homeassistant-script">/* MeviCar Next – Home Assistant. Mirrors Classic's FamilyPanel and separate
    Road Assist API access without copying secrets or weakening HA security. */
 (function(){

@@ -1,5 +1,5 @@
 /* Central configuration UI. Never embed entered secrets into HTML or logs.
-   Browser API keys / OAuth client identifiers retain their legacy local keys for compatibility.
+   Gemini uses a password-encrypted browser vault or Android Keystore; no proxy.
    HA token is persisted only in the standalone Web browser, scoped to the HA origin.
    Android keeps its existing native Keystore flow. The MeviTV PIN uses Android
    Keystore when supported by the APK, otherwise localStorage. */
@@ -146,6 +146,20 @@ function html(){
  const groups=[
  group('navigation','Google Navigation',android?(nativeStatus?.mapsKey?'Gespeichert':'Status prüfen'):status(saved(MAPS_KEY)),
  android?row('android-maps','Android-API-Key','Android-SDK-Schlüssel eingeben',nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen','Für Karte, Adresssuche und Routenführung. In Google Cloud: Paket de.mevicar.next und SHA-1 der signierten APK freigeben.',{secret:true}):row('maps','Browser-API-Key','Neuen Browser-API-Key eingeben',status(saved(MAPS_KEY)),'In Google Cloud den HTTP-Referrer auf deine MeviCar-Website einschränken.',{secret:true})),
+ group('gemini','Google Gemini',android?
+   (nativeStatus?.geminiKey?'Im Android Keystore':'APK-Update nötig / noch nicht gespeichert'):
+   (global.MeviGeminiKey?.stored?.()?(global.MeviGeminiKey?.isUnlocked?.()?'Entsperrt':'Verschlüsselt gespeichert'):'Nicht eingerichtet'),
+ row('gemini-key','Gemini API-Key','API-Key aus Google AI Studio einfügen',
+  android?(nativeStatus?.geminiKey?'Sicher im Android Keystore':'Nicht eingerichtet'):
+   (global.MeviGeminiKey?.stored?.()?'AES-GCM verschlüsselt gespeichert':'Nicht eingerichtet'),
+  android?'Der Schlüssel bleibt im Android Keystore. Es wird eine APK mit Gemini-Unterstützung benötigt.':
+   'Lokal mit AES-GCM und deinem Speicherpasswort verschlüsselt. Nach einem Neustart erneut entsperren. Direkte Browseranfragen können den Schlüssel im Netzwerk-/Entwicklerprotokoll offenlegen.',
+  {secret:true})+
+ (android?'':'<div class="mevi-cred-row"><label for="mevi-cred-gemini-pass">Speicherpasswort (mindestens 12 Zeichen)</label>'+
+  '<div class="mevi-cred-form"><input id="mevi-cred-gemini-pass" type="password" autocomplete="off" spellcheck="false" placeholder="Eigenes Passwort zum Verschlüsseln / Entsperren">'+
+  '<button type="button" onclick="MeviCredentials.unlockGemini()">Schlüssel entsperren</button>'+
+  '<button type="button" onclick="MeviCredentials.lockGemini()">Sperren</button></div>'+
+  '<small>Passwort nicht vergessen: Ohne Passwort ist der gespeicherte Browser-Key nicht wiederherstellbar.</small></div>')),
  group('spotify','Spotify',status(saved(SPOTIFY_KEY)),row('spotify','Client-ID','Neue Spotify Client-ID eingeben',status(saved(SPOTIFY_KEY)),'Die Anmeldung erfolgt in der Spotify-App von MeviCar. Kein Client Secret oder Spotify-Passwort erforderlich.')),
  group('ha','Home Assistant',ha.connected?'Verbunden':haSaved?'Gespeichert · offline':'Nicht verbunden',
  '<div class="mevi-cred-row"><label for="mevi-cred-ha-origin">Server-Adresse</label><div class="mevi-cred-form"><input id="mevi-cred-ha-origin" type="url" spellcheck="false" value="'+escapeHTML(ha.origin||'')+'" placeholder="https://homeassistant.example"></div><label for="mevi-cred-ha-path">Dashboard-Pfad</label><div class="mevi-cred-form"><input id="mevi-cred-ha-path" type="text" spellcheck="false" value="'+escapeHTML(ha.dashboard?.replace(ha.origin||'','')||'/')+'"><button type="button" onclick="MeviCredentials.save(\'ha-origin\')">Adresse speichern</button></div></div>'+
@@ -167,6 +181,12 @@ async function save(id){
     if(nativeAvailable())throw new Error('Der Browser-Key ist in der APK nicht verfügbar. Bitte den Android-Navigation-Key verwenden.');
     if(!/^[A-Za-z0-9_-]{20,}$/.test(v))throw new Error('Google Maps Browser-Key ist ungültig.');
     localStorage.setItem(MAPS_KEY,v);break;
+   case 'gemini-key':
+    if(!global.MeviGeminiKey)throw new Error('Gemini-Schlüsselspeicher ist nicht verfügbar.');
+    await global.MeviGeminiKey.save(v,value('gemini-pass'));
+    if(android)nativeStatus={...nativeStatus,geminiKey:true};
+    clearInput('gemini-pass');
+    break;
    case 'spotify':
     if(!/^[A-Za-z0-9]{8,64}$/.test(v))throw new Error('Spotify Client-ID ist ungültig.');
     global.meviSpotifySaveClient?.(v);break;
@@ -231,6 +251,10 @@ async function clear(id){
    case 'maps':
     if(nativeAvailable())throw new Error('In der APK ist nur der Android-Navigation-Key verfügbar.');
     localStorage.removeItem(MAPS_KEY);break;
+   case 'gemini-key':
+    await global.MeviGeminiKey?.remove?.();
+    if(nativeAvailable())nativeStatus={...nativeStatus,geminiKey:false};
+    break;
    case 'spotify':global.meviSpotifyResetClient?.(true);break;
    case 'calendar':global.MeviCalendar?.setClientId?.('');break;
    case 'road':global.MeviRoadAssist?.setConfigId?.('');break;
@@ -252,6 +276,17 @@ async function clear(id){
   if(id==='maps'){global.location.reload();return}
   global.render?.();
  }catch(e){report(e.message||'Entfernen fehlgeschlagen.')}
+}
+async function unlockGemini(){
+ try{
+  if(nativeAvailable())throw Error('Android entsperrt den Keystore automatisch.');
+  await global.MeviGeminiKey?.unlock?.(value('gemini-pass'));
+  clearInput('gemini-pass');report('Gemini-Key entsperrt.');global.render?.();
+ }catch(e){report(e.message||'Schlüssel konnte nicht entsperrt werden.')}
+}
+function lockGemini(){
+ global.MeviGeminiKey?.lock?.();clearInput('gemini-pass');
+ report('Gemini-Key für diese Sitzung gesperrt.');global.render?.();
 }
 async function refreshNativeStatus(){
  try{const d=await nativeCall('settings.status');nativeStatus=d.configured||{};report('Android-Speicherstatus aktualisiert.');global.render?.()}
@@ -421,7 +456,7 @@ async function importBackup(){
  }catch(_){report(_?.message||'Backup konnte nicht importiert werden.')}
 }
 
-global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibility,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
+global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibility,save,clear,exportBackup,importBackup,unlockGemini,lockGemini,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
 
