@@ -6000,7 +6000,7 @@ APP_VECTORS.spectrum='<path class="main" d="M15 88h90 M22 74V55 M36 74V37 M51 74
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='spectrum'&&s.mode==='full')html='<div class="full spectrum-host">'+appBody()+'</div>';else if(s.app==='demo3d'&&s.mode==='full')html='<div class="full d3-host">'+appBody()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='spectrum'?'spectrum-host':s.app==='demo3d'?'d3-host':s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='spectrum'||s.app==='demo3d'||s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty'||s.app==='navdashboard')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();window.MeviDemo3D?.unmount();if(s.app!=='spectrum')window.MeviSpectrum?.stop();$('screen').innerHTML=html;if(s.app==='spectrum')window.MeviSpectrum?.mount();window.MeviDemo3D?.mount();paintDashboardHead();if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version": "0.6.7", "build": 1436, "commit": "c201bfab46ab28237ef64fee0ca3e30ac75aef33"};
+const CURRENT_BUILD={"version": "0.6.7", "build": 1441, "commit": "1e0dd8a853bbb9d888cc5a45e57769077fdb34d0"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -6059,7 +6059,7 @@ navigator.serviceWorker.addEventListener('controllerchange',()=>{
 });
 navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('PWA service worker:',err))}})}window.addEventListener('load',()=>checkForUpdateImpl(true));
 </script><script id="mevicar-versioned-credentials-script">/* Central configuration UI. Never embed entered secrets into HTML or logs.
-   Gemini uses a password-encrypted browser vault or Android Keystore; no proxy.
+   Gemini uses a device-bound browser store or Android Keystore; no proxy.
    HA token is persisted only in the standalone Web browser, scoped to the HA origin.
    Android keeps its existing native Keystore flow. The MeviTV PIN uses Android
    Keystore when supported by the APK, otherwise localStorage. */
@@ -6199,6 +6199,7 @@ function backupHTML(){
  '<div id="mevi-credentials-feedback" role="status" aria-live="polite">'+escapeHTML(feedback)+'</div>';
 }
 function html(){
+ loadNativeStatus();
  const ha=global.MeviHA?.debug?.()||{};
  const cal=json(CAL_KEY),road=json(ROAD_KEY),android=nativeAvailable();
  const haSaved=!android&&!!webHaRecord();
@@ -6207,19 +6208,14 @@ function html(){
  group('navigation','Google Navigation',android?(nativeStatus?.mapsKey?'Gespeichert':'Status prüfen'):status(saved(MAPS_KEY)),
  android?row('android-maps','Android-API-Key','Android-SDK-Schlüssel eingeben',nativeStatus?.mapsKey?'Verschlüsselt auf dem Gerät gespeichert':'Status auf dem Gerät prüfen','Für Karte, Adresssuche und Routenführung. In Google Cloud: Paket de.mevicar.next und SHA-1 der signierten APK freigeben.',{secret:true}):row('maps','Browser-API-Key','Neuen Browser-API-Key eingeben',status(saved(MAPS_KEY)),'In Google Cloud den HTTP-Referrer auf deine MeviCar-Website einschränken.',{secret:true})),
  group('gemini','Google Gemini',android?
-   (nativeStatus?.geminiKey?'Im Android Keystore':'APK-Update nötig / noch nicht gespeichert'):
-   (global.MeviGeminiKey?.stored?.()?(global.MeviGeminiKey?.isUnlocked?.()?'Entsperrt':'Verschlüsselt gespeichert'):'Nicht eingerichtet'),
+   (nativeStatus?.geminiKey?'Im Android Keystore':nativeStatus?'Nicht eingerichtet':'Status wird geprüft …'):
+   (global.MeviGeminiKey?.stored?.()?'Gespeichert':'Nicht eingerichtet'),
  row('gemini-key','Gemini API-Key','API-Key aus Google AI Studio einfügen',
-  android?(nativeStatus?.geminiKey?'Sicher im Android Keystore':'Nicht eingerichtet'):
-   (global.MeviGeminiKey?.stored?.()?'AES-GCM verschlüsselt gespeichert':'Nicht eingerichtet'),
-  android?'Der Schlüssel bleibt im Android Keystore. Es wird eine APK mit Gemini-Unterstützung benötigt.':
-   'Lokal mit AES-GCM und deinem Speicherpasswort verschlüsselt. Nach einem Neustart erneut entsperren. Direkte Browseranfragen können den Schlüssel im Netzwerk-/Entwicklerprotokoll offenlegen.',
-  {secret:true})+
- (android?'':'<div class="mevi-cred-row"><label for="mevi-cred-gemini-pass">Speicherpasswort (mindestens 12 Zeichen)</label>'+
-  '<div class="mevi-cred-form"><input id="mevi-cred-gemini-pass" type="password" autocomplete="off" spellcheck="false" placeholder="Eigenes Passwort zum Verschlüsseln / Entsperren">'+
-  '<button type="button" onclick="MeviCredentials.unlockGemini()">Schlüssel entsperren</button>'+
-  '<button type="button" onclick="MeviCredentials.lockGemini()">Sperren</button></div>'+
-  '<small>Passwort nicht vergessen: Ohne Passwort ist der gespeicherte Browser-Key nicht wiederherstellbar.</small></div>')),
+  android?(nativeStatus?.geminiKey?'Sicher im Android Keystore · bleibt nach Updates erhalten':nativeStatus?'Nicht eingerichtet':'Status wird geprüft …'):
+   (global.MeviGeminiKey?.stored?.()?'Auf diesem Gerät gespeichert · kein Passwort nötig':'Nicht eingerichtet'),
+  android?'Einmal eingeben: Der Schlüssel bleibt im Android Keystore und übersteht Neustarts und App-Updates.':
+   'Einmal eingeben: Der Schlüssel wird gerätegebunden in diesem Browser verschlüsselt und nach einem Neustart automatisch verwendet. Browserspeicher ist schwächer geschützt als der Android Keystore; direkte Anfragen können den Schlüssel im Netzwerk-/Entwicklerprotokoll zeigen.',
+  {secret:true})),
  group('spotify','Spotify',status(saved(SPOTIFY_KEY)),row('spotify','Client-ID','Neue Spotify Client-ID eingeben',status(saved(SPOTIFY_KEY)),'Die Anmeldung erfolgt in der Spotify-App von MeviCar. Kein Client Secret oder Spotify-Passwort erforderlich.')),
  group('ha','Home Assistant',ha.connected?'Verbunden':haSaved?'Gespeichert · offline':'Nicht verbunden',
  '<div class="mevi-cred-row"><label for="mevi-cred-ha-origin">Server-Adresse</label><div class="mevi-cred-form"><input id="mevi-cred-ha-origin" type="url" spellcheck="false" value="'+escapeHTML(ha.origin||'')+'" placeholder="https://homeassistant.example"></div><label for="mevi-cred-ha-path">Dashboard-Pfad</label><div class="mevi-cred-form"><input id="mevi-cred-ha-path" type="text" spellcheck="false" value="'+escapeHTML(ha.dashboard?.replace(ha.origin||'','')||'/')+'"><button type="button" onclick="MeviCredentials.save(\'ha-origin\')">Adresse speichern</button></div></div>'+
@@ -6243,9 +6239,8 @@ async function save(id){
     localStorage.setItem(MAPS_KEY,v);break;
    case 'gemini-key':
     if(!global.MeviGeminiKey)throw new Error('Gemini-Schlüsselspeicher ist nicht verfügbar.');
-    await global.MeviGeminiKey.save(v,value('gemini-pass'));
-    if(android)nativeStatus={...nativeStatus,geminiKey:true};
-    clearInput('gemini-pass');
+    await global.MeviGeminiKey.save(v);
+    if(nativeAvailable())nativeStatus={...nativeStatus,geminiKey:true};
     break;
    case 'spotify':
     if(!/^[A-Za-z0-9]{8,64}$/.test(v))throw new Error('Spotify Client-ID ist ungültig.');
@@ -6337,20 +6332,16 @@ async function clear(id){
   global.render?.();
  }catch(e){report(e.message||'Entfernen fehlgeschlagen.')}
 }
-async function unlockGemini(){
- try{
-  if(nativeAvailable())throw Error('Android entsperrt den Keystore automatisch.');
-  await global.MeviGeminiKey?.unlock?.(value('gemini-pass'));
-  clearInput('gemini-pass');report('Gemini-Key entsperrt.');global.render?.();
- }catch(e){report(e.message||'Schlüssel konnte nicht entsperrt werden.')}
+async function refreshNativeStatus(silent){
+ try{const d=await nativeCall('settings.status');nativeStatus=d.configured||{};if(silent!==true)report('Android-Speicherstatus aktualisiert.');global.render?.()}
+ catch(e){if(silent!==true)report(e.message)}
 }
-function lockGemini(){
- global.MeviGeminiKey?.lock?.();clearInput('gemini-pass');
- report('Gemini-Key für diese Sitzung gesperrt.');global.render?.();
-}
-async function refreshNativeStatus(){
- try{const d=await nativeCall('settings.status');nativeStatus=d.configured||{};report('Android-Speicherstatus aktualisiert.');global.render?.()}
- catch(e){report(e.message)}
+/* Keys saved in the Android Keystore survive updates: show that without a manual status check. */
+let nativeStatusRequested=false;
+function loadNativeStatus(){
+ if(nativeStatus||nativeStatusRequested||!nativeAvailable())return;
+ nativeStatusRequested=true;
+ void refreshNativeStatus(true).finally(()=>{nativeStatusRequested=false});
 }
 
 /* Portable backup v1. Only the explicit allowlist is exported, never all of localStorage.
@@ -6516,7 +6507,7 @@ async function importBackup(){
  }catch(_){report(_?.message||'Backup konnte nicht importiert werden.')}
 }
 
-global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibility,save,clear,exportBackup,importBackup,unlockGemini,lockGemini,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
+global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibility,save,clear,exportBackup,importBackup,tvPin:()=>tvPin,tvPinReady,refreshNativeStatus,nativeAvailable,onNativeMessage};
 
 })(typeof window==='undefined'?globalThis:window);
 
@@ -9394,15 +9385,16 @@ window.render?.();
 })();
 </script><script id="mevicar-gemini-key-script">/* Personal Gemini API key, never bundled or sent to a MeviCar server.
    Android: existing trusted first-party NativeBridge/Keystore only.
-   Web/PWA: locally AES-GCM encrypted at rest with a user passphrase.
-   A browser-origin key remains potentially exposed to scripts/devtools and
-   during direct API calls. This is a BYOK personal-use preview, not a
-   production-secure client-side key management system. */
+   Web/PWA: AES-GCM encrypted at rest with a non-extractable device key that
+   the browser keeps in IndexedDB. No password, usable again after a restart.
+   This is weaker than the Android Keystore: scripts of this origin and the
+   developer tools can use the key, and it appears in direct API requests. */
 (function(root){
 'use strict';
-const VAULT='mevicar-next-gemini-encrypted-key-v1';
-const ITERATIONS=310000;
-let unlocked=null,nativeConfigured=null;
+const VAULT='mevicar-next-gemini-device-key-v2';
+const LEGACY_VAULT='mevicar-next-gemini-encrypted-key-v1';
+const DB='mevicar-next-device-keys',STORE='keys',KEY_ID='gemini-v1';
+let unlocked=null,nativeConfigured=null,loading=null;
 let nativeCounter=0;
 const pending=new Map();
 const native=()=>!!root.MeviNativeBridge?.postMessage;
@@ -9411,15 +9403,10 @@ function validKey(value){
  if(!/^[A-Za-z0-9._-]{20,256}$/.test(s))throw Error('Ungültiges Gemini-API-Key-Format.');
  return s;
 }
-function validPassword(value){
- const s=String(value||'');
- if(s.length<12||s.length>256)throw Error('Speicherpasswort: mindestens 12, maximal 256 Zeichen.');
- return s;
-}
 function cryptoApi(){
  const c=root.crypto;
- if(!c?.subtle||!c.getRandomValues||!root.TextEncoder||!root.TextDecoder)
-  throw Error('Verschlüsselte Speicherung erfordert HTTPS und Web Crypto.');
+ if(!c?.subtle||!c.getRandomValues||!root.TextEncoder||!root.TextDecoder||!root.indexedDB)
+  throw Error('Verschlüsselte Speicherung erfordert HTTPS, Web Crypto und IndexedDB.');
  return c;
 }
 function encode(data){
@@ -9430,18 +9417,27 @@ function decode(text){
  if(typeof text!=='string'||text.length>2048)throw Error('Ungültiger gespeicherter Schlüssel.');
  return Uint8Array.from(root.atob(text),c=>c.charCodeAt(0));
 }
-async function derive(pass,salt){
- const c=cryptoApi();
- const secret=await c.subtle.importKey('raw',new root.TextEncoder().encode(validPassword(pass)),
-  'PBKDF2',false,['deriveKey']);
- return c.subtle.deriveKey({name:'PBKDF2',salt,iterations:ITERATIONS,hash:'SHA-256'},secret,
-  {name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+function deviceStore(mode,work){
+ return new Promise((resolve,reject)=>{
+  const fail=()=>reject(Error('Gerätespeicher des Browsers ist nicht verfügbar.'));
+  let open;try{open=root.indexedDB.open(DB,1)}catch{return fail()}
+  open.onupgradeneeded=()=>open.result.createObjectStore(STORE);
+  open.onerror=fail;
+  open.onsuccess=()=>{
+   const db=open.result;
+   try{
+    const tx=db.transaction(STORE,mode),request=work(tx.objectStore(STORE));
+    tx.oncomplete=()=>{db.close();resolve(request.result)};
+    tx.onerror=tx.onabort=()=>{db.close();fail()};
+   }catch{db.close();fail()}
+  };
+ });
 }
 function nativeRequest(action,name,value){
  if(!native())return Promise.reject(Error('Kein Android-Keystore verfügbar. Bitte APK aktualisieren.'));
  return new Promise((resolve,reject)=>{
   const id='gemini-secret-'+(++nativeCounter);
-  const timeout=setTimeout(()=>{pending.delete(id);reject(Error('Keine Antwort der Android-App.'))},action==='gemini.navigation'?35000:8000);
+  const timeout=setTimeout(()=>{pending.delete(id);reject(Error('Keine Antwort der Android-App.'))},action==='voice.listen'?90000:action==='gemini.navigation'?35000:8000);
   pending.set(id,{resolve,reject,timeout});
   try{root.MeviNativeBridge.postMessage(JSON.stringify({id,action,name,value}))}
   catch{clearTimeout(timeout);pending.delete(id);reject(Error('Android-Schnittstelle nicht erreichbar.'))}
@@ -9461,57 +9457,63 @@ if(native()){
   receive(event);
  };
 }
-async function save(value,password){
+async function save(value){
  const key=validKey(value);
  if(native()){
   await nativeRequest('settings.set','geminiKey',key);
   nativeConfigured=true;unlocked=null;
   return 'android-keystore';
  }
- const pass=validPassword(password),c=cryptoApi();
- const salt=c.getRandomValues(new Uint8Array(16));
+ const c=cryptoApi();
+ const deviceKey=await c.subtle.generateKey({name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+ await deviceStore('readwrite',store=>store.put(deviceKey,KEY_ID));
  const iv=c.getRandomValues(new Uint8Array(12));
- const cipher=await c.subtle.encrypt({name:'AES-GCM',iv},await derive(pass,salt),
-   new root.TextEncoder().encode(key));
- const payload=JSON.stringify({v:1,salt:encode(salt),iv:encode(iv),
-  data:encode(new Uint8Array(cipher))});
+ const cipher=await c.subtle.encrypt({name:'AES-GCM',iv},deviceKey,new root.TextEncoder().encode(key));
+ const payload=JSON.stringify({v:2,iv:encode(iv),data:encode(new Uint8Array(cipher))});
  root.localStorage.setItem(VAULT,payload);
  if(root.localStorage.getItem(VAULT)!==payload)throw Error('Schlüssel konnte nicht gespeichert werden.');
+ root.localStorage.removeItem(LEGACY_VAULT);
  unlocked=key;
- return 'browser-encrypted';
+ return 'browser-device';
 }
 function stored(){
  if(native())return nativeConfigured===true;
  try{return !!root.localStorage.getItem(VAULT)}catch{return false}
 }
 function isUnlocked(){return native()?nativeConfigured===true:!!unlocked}
+/* Browser: decrypt the saved key once per start, without any user input. */
+function load(){
+ if(unlocked||!stored())return Promise.resolve(!!unlocked);
+ if(!loading)loading=(async()=>{
+  try{
+   const c=cryptoApi(),v=JSON.parse(root.localStorage.getItem(VAULT));
+   if(v.v!==2)throw Error('version');
+   const iv=decode(v.iv),data=decode(v.data);
+   if(iv.length!==12||data.length<17||data.length>1024)throw Error('format');
+   const deviceKey=await deviceStore('readonly',store=>store.get(KEY_ID));
+   if(!deviceKey)throw Error('device key');
+   const plain=await c.subtle.decrypt({name:'AES-GCM',iv},deviceKey,data);
+   unlocked=validKey(new root.TextDecoder().decode(plain));
+  }catch{unlocked=null}
+  finally{loading=null}
+  return !!unlocked;
+ })();
+ return loading;
+}
 async function refresh(){
- if(!native())return stored();
+ if(!native()){await load();return stored()}
  const info=await nativeRequest('settings.status','',null);
  nativeConfigured=info?.configured?.geminiKey===true;
  return nativeConfigured;
 }
-async function unlock(password){
- if(native())return true;
- const raw=root.localStorage.getItem(VAULT);
- if(!raw)throw Error('Noch kein Gemini-Schlüssel gespeichert.');
- const pass=validPassword(password),c=cryptoApi();
- try{
-  const v=JSON.parse(raw);
-  if(v.v!==1)throw Error('version');
-  const salt=decode(v.salt),iv=decode(v.iv),data=decode(v.data);
-  if(salt.length!==16||iv.length!==12||data.length<17||data.length>1024)throw Error('format');
-  const plain=await c.subtle.decrypt({name:'AES-GCM',iv},await derive(pass,salt),data);
-  unlocked=validKey(new root.TextDecoder().decode(plain));
-  return true;
- }catch{unlocked=null;throw Error('Falsches Speicherpasswort oder beschädigter Schlüssel.')}
-}
-function lock(){unlocked=null}
 async function remove(){
  if(native()){
   await nativeRequest('settings.clear','geminiKey');
   nativeConfigured=false;
- }else root.localStorage.removeItem(VAULT);
+ }else{
+  root.localStorage.removeItem(VAULT);root.localStorage.removeItem(LEGACY_VAULT);
+  try{await deviceStore('readwrite',store=>store.delete(KEY_ID))}catch{}
+ }
  unlocked=null;
 }
 const SYSTEM=[
@@ -9533,12 +9535,17 @@ async function requestNative(text,context){
  }));
  return response.result;
 }
+/* Android WebView has no working Web Speech API: the APK dictates natively. */
+async function dictate(){
+ const response=await nativeRequest('voice.listen','',null);
+ return String(response.transcript||'').trim().slice(0,400);
+}
 async function generate(text,context={},signal){
  const phrase=String(text||'').trim().slice(0,400);
  if(!phrase)throw Error('Bitte einen Sprachwunsch eingeben.');
  if(native())return requestNative(phrase,context);
- if(!unlocked)throw Error(stored()?
-  'Gemini-Key ist gesperrt. Bitte unter Settings → Zugänge entsperren.':
+ if(!unlocked&&!await load())throw Error(stored()?
+  'Der gespeicherte Gemini-Key ist in diesem Browser nicht mehr lesbar. Bitte unter Settings → Zugänge neu speichern.':
   'Bitte den Gemini-Key unter Settings → Zugänge speichern.');
  const payload={
   systemInstruction:{parts:[{text:SYSTEM}]},
@@ -9568,9 +9575,14 @@ async function generate(text,context={},signal){
  }
  if(!response.ok){
   const code=response.status;
-  if(code===401||code===403)throw Error('Gemini-API-Key nicht berechtigt (HTTP '+code+').');
-  if(code===429)throw Error('Gemini-Anfragelimit erreicht.');
-  if(code===404)throw Error('Gemini-Modell für deinen API-Key nicht verfügbar.');
+  // Google decides whether a key is valid; only its answer counts.
+  let detail='';try{detail=JSON.stringify((await response.json())?.error||'').slice(0,2000)}catch{}
+  if(/API_KEY_INVALID|API key not valid|API key expired/i.test(detail)||code===401)
+   throw Error('Google lehnt den Gemini-API-Key als ungültig ab. Bitte den Schlüssel prüfen.');
+  if(code===403)throw Error('Gemini-API-Key hat keine Berechtigung für die Gemini API (HTTP 403).');
+  if(code===429)throw Error('Gemini-Kontingent aufgebraucht oder Anfragelimit erreicht.');
+  if(code===404)throw Error('Gemini-Modell '+model+' ist für deinen API-Key nicht verfügbar.');
+  if(code===400)throw Error('Gemini hat die Anfrage abgelehnt (HTTP 400).');
   throw Error('Gemini antwortet nicht (HTTP '+code+').');
  }
  const result=await response.json();
@@ -9579,10 +9591,11 @@ async function generate(text,context={},signal){
  try{return JSON.parse(textResponse)}
  catch{throw Error('Gemini-Antwort ist kein gültiges JSON.')}
 }
-root.MeviGeminiKey={save,unlock,lock,remove,stored,isUnlocked,refresh,generate,native};
+root.MeviGeminiKey={save,remove,stored,isUnlocked,refresh,generate,dictate,native};
+if(!native())void load();
 })(window);
 </script><script id="mevicar-gemini-voice-script">/* MeviCar Next – one-shot voice intent entry for the shared Navi search.
-   The user's own key is kept in Android Keystore or an encrypted local Web vault.
+   The user's own key is kept in Android Keystore or a device-bound Web store.
    With a saved key the app calls Gemini directly, no Synology or proxy. */
 (function(root){
 'use strict';
@@ -9620,7 +9633,7 @@ function updateButton(){
  const mic=part('mg-gemini-mic');if(mic){mic.disabled=busy;mic.textContent=hearing?'■':'🎙';mic.setAttribute('aria-label',hearing?'Spracheingabe beenden':'Spracheingabe starten')}
  const accept=part('mg-gemini-accept');if(accept)accept.hidden=!pending||busy;
  const mode=part('mg-gemini-mode');if(mode)mode.textContent=ready()?'Gemini bereit · direkter Gerätezugriff':
-  configured()?'Gemini-Key gespeichert · noch gesperrt':'Lokaler Testmodus · Gemini-Key fehlt';
+  configured()?'Gemini-Key gespeichert · wird geladen':'Lokaler Testmodus · Gemini-Key fehlt';
 }
 function open(){
  if(overlay)return true;
@@ -9628,11 +9641,12 @@ function open(){
  overlay=dialog();document.body.appendChild(overlay);
  pending=null;transcript='';lastReply='';clarification=null;hearing=false;busy=false;
  updateButton();part('mg-gemini-input')?.focus?.({preventScroll:true});
- if(keySource()?.native?.()){
+ if(keySource()?.refresh){
+  const android=!!keySource().native?.();
   void keySource().refresh().then(()=>{
    if(overlay)updateButton();
   }).catch(()=>{
-   if(overlay)status('Android Gemini-Key-Status konnte nicht geprüft werden. APK eventuell veraltet.');
+   if(overlay&&android)status('Android Gemini-Key-Status konnte nicht geprüft werden. APK eventuell veraltet.');
   });
  }
  return true;
@@ -9659,6 +9673,29 @@ function speak(value){
 }
 function listen(){
  if(!overlay||busy)return false;
+ if(keySource()?.native?.()){
+  // Android WebView: the system recogniser dictates, the Web gets the text.
+  if(hearing)return true;
+  if(!keySource().dictate){status('Spracheingabe braucht eine neuere APK. Bitte den Wunsch eintippen.');return false}
+  const current=serial;
+  root.speechSynthesis?.cancel?.();
+  hearing=true;status('Ich höre zu … bitte jetzt sprechen.');updateButton();
+  void keySource().dictate().then(words=>{
+   if(!overlay||current!==serial)return;
+   hearing=false;updateButton();
+   words=safeText(words);
+   if(!words){status('Keine Sprache erkannt. Du kannst den Text eingeben.');return}
+   const field=part('mg-gemini-input');if(field)field.value=words;
+   void send();
+  }).catch(error=>{
+   if(!overlay||current!==serial)return;
+   hearing=false;updateButton();
+   status(/Unbekannte Funktion/.test(error?.message||'')?
+    'Spracheingabe braucht eine neuere APK. Bitte den Wunsch eintippen.':
+    safeText(error?.message)||'Spracheingabe fehlgeschlagen. Bitte erneut versuchen.');
+  });
+  return true;
+ }
  if(hearing){stopRecognition();status('Aufnahme beendet.');return true}
  const Speech=root.SpeechRecognition||root.webkitSpeechRecognition;
  if(!Speech){status('Spracherkennung ist hier nicht verfügbar. Bitte den Wunsch eintippen.');return false}
@@ -9677,7 +9714,12 @@ function listen(){
   recognition.onerror=e=>{
    if(recognizer!==recognition)return;
    recognizer=null;hearing=false;updateButton();
-   status(e.error==='not-allowed'?'Mikrofonberechtigung fehlt.':'Spracheingabe fehlgeschlagen. Bitte erneut versuchen.');
+   status({'not-allowed':'Mikrofonberechtigung fehlt.',
+    'service-not-allowed':'Der Browser erlaubt hier keine Spracherkennung. Bitte den Wunsch eintippen.',
+    'network':'Spracherkennung nicht erreichbar (Netzwerk). Bitte den Wunsch eintippen.',
+    'audio-capture':'Kein Mikrofon gefunden.',
+    'no-speech':'Keine Sprache erkannt. Du kannst den Text eingeben.',
+    'aborted':'Aufnahme beendet.'}[e.error]||'Spracheingabe fehlgeschlagen. Bitte erneut versuchen.');
   };
   recognition.onend=()=>{
    if(recognizer!==recognition)return;
@@ -9752,7 +9794,8 @@ async function requestGemini(text,context){
  if(injectedProvider)return validate(await injectedProvider(text,context),context);
  const vault=keySource();
  if(!vault?.stored?.())return validate(localInterpret(text,context),context);
- if(!vault.isUnlocked())throw Error('Gemini-Key ist gesperrt. Bitte unter Settings → Zugänge entsperren.');
+ if(!vault.isUnlocked())await vault.refresh?.();
+ if(!vault.isUnlocked())throw Error('Der gespeicherte Gemini-Key ist nicht lesbar. Bitte unter Settings → Zugänge neu speichern.');
  const controller=new AbortController();abort=controller;
  const timeout=setTimeout(()=>controller.abort(),35000);
  try{return validate(await vault.generate(text,context,controller.signal),context)}

@@ -1,5 +1,5 @@
 /* MeviCar Next – one-shot voice intent entry for the shared Navi search.
-   The user's own key is kept in Android Keystore or an encrypted local Web vault.
+   The user's own key is kept in Android Keystore or a device-bound Web store.
    With a saved key the app calls Gemini directly, no Synology or proxy. */
 (function(root){
 'use strict';
@@ -37,7 +37,7 @@ function updateButton(){
  const mic=part('mg-gemini-mic');if(mic){mic.disabled=busy;mic.textContent=hearing?'■':'🎙';mic.setAttribute('aria-label',hearing?'Spracheingabe beenden':'Spracheingabe starten')}
  const accept=part('mg-gemini-accept');if(accept)accept.hidden=!pending||busy;
  const mode=part('mg-gemini-mode');if(mode)mode.textContent=ready()?'Gemini bereit · direkter Gerätezugriff':
-  configured()?'Gemini-Key gespeichert · noch gesperrt':'Lokaler Testmodus · Gemini-Key fehlt';
+  configured()?'Gemini-Key gespeichert · wird geladen':'Lokaler Testmodus · Gemini-Key fehlt';
 }
 function open(){
  if(overlay)return true;
@@ -45,11 +45,12 @@ function open(){
  overlay=dialog();document.body.appendChild(overlay);
  pending=null;transcript='';lastReply='';clarification=null;hearing=false;busy=false;
  updateButton();part('mg-gemini-input')?.focus?.({preventScroll:true});
- if(keySource()?.native?.()){
+ if(keySource()?.refresh){
+  const android=!!keySource().native?.();
   void keySource().refresh().then(()=>{
    if(overlay)updateButton();
   }).catch(()=>{
-   if(overlay)status('Android Gemini-Key-Status konnte nicht geprüft werden. APK eventuell veraltet.');
+   if(overlay&&android)status('Android Gemini-Key-Status konnte nicht geprüft werden. APK eventuell veraltet.');
   });
  }
  return true;
@@ -76,6 +77,29 @@ function speak(value){
 }
 function listen(){
  if(!overlay||busy)return false;
+ if(keySource()?.native?.()){
+  // Android WebView: the system recogniser dictates, the Web gets the text.
+  if(hearing)return true;
+  if(!keySource().dictate){status('Spracheingabe braucht eine neuere APK. Bitte den Wunsch eintippen.');return false}
+  const current=serial;
+  root.speechSynthesis?.cancel?.();
+  hearing=true;status('Ich höre zu … bitte jetzt sprechen.');updateButton();
+  void keySource().dictate().then(words=>{
+   if(!overlay||current!==serial)return;
+   hearing=false;updateButton();
+   words=safeText(words);
+   if(!words){status('Keine Sprache erkannt. Du kannst den Text eingeben.');return}
+   const field=part('mg-gemini-input');if(field)field.value=words;
+   void send();
+  }).catch(error=>{
+   if(!overlay||current!==serial)return;
+   hearing=false;updateButton();
+   status(/Unbekannte Funktion/.test(error?.message||'')?
+    'Spracheingabe braucht eine neuere APK. Bitte den Wunsch eintippen.':
+    safeText(error?.message)||'Spracheingabe fehlgeschlagen. Bitte erneut versuchen.');
+  });
+  return true;
+ }
  if(hearing){stopRecognition();status('Aufnahme beendet.');return true}
  const Speech=root.SpeechRecognition||root.webkitSpeechRecognition;
  if(!Speech){status('Spracherkennung ist hier nicht verfügbar. Bitte den Wunsch eintippen.');return false}
@@ -94,7 +118,12 @@ function listen(){
   recognition.onerror=e=>{
    if(recognizer!==recognition)return;
    recognizer=null;hearing=false;updateButton();
-   status(e.error==='not-allowed'?'Mikrofonberechtigung fehlt.':'Spracheingabe fehlgeschlagen. Bitte erneut versuchen.');
+   status({'not-allowed':'Mikrofonberechtigung fehlt.',
+    'service-not-allowed':'Der Browser erlaubt hier keine Spracherkennung. Bitte den Wunsch eintippen.',
+    'network':'Spracherkennung nicht erreichbar (Netzwerk). Bitte den Wunsch eintippen.',
+    'audio-capture':'Kein Mikrofon gefunden.',
+    'no-speech':'Keine Sprache erkannt. Du kannst den Text eingeben.',
+    'aborted':'Aufnahme beendet.'}[e.error]||'Spracheingabe fehlgeschlagen. Bitte erneut versuchen.');
   };
   recognition.onend=()=>{
    if(recognizer!==recognition)return;
@@ -169,7 +198,8 @@ async function requestGemini(text,context){
  if(injectedProvider)return validate(await injectedProvider(text,context),context);
  const vault=keySource();
  if(!vault?.stored?.())return validate(localInterpret(text,context),context);
- if(!vault.isUnlocked())throw Error('Gemini-Key ist gesperrt. Bitte unter Settings → Zugänge entsperren.');
+ if(!vault.isUnlocked())await vault.refresh?.();
+ if(!vault.isUnlocked())throw Error('Der gespeicherte Gemini-Key ist nicht lesbar. Bitte unter Settings → Zugänge neu speichern.');
  const controller=new AbortController();abort=controller;
  const timeout=setTimeout(()=>controller.abort(),35000);
  try{return validate(await vault.generate(text,context,controller.signal),context)}
