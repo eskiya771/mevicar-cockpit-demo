@@ -352,3 +352,52 @@ html[data-theme="liquidglass"] .mg-dash-speed{background:linear-gradient(155deg,
 .side.mg-nav-dashboard-side .mg-dash-actions [data-dash-action="end"]:disabled{
  opacity:.65;cursor:wait;
 }
+
+
+/* Route-active details share the same right split; the metrics swap out instead
+   of compressing into a tiny fixed-height card. Header/end button stay visible. */
+.mg-dash-panel[data-route-active="false"] [data-dash-action="details"]{display:none!important}
+.mg-dash-panel[data-route-active="true"] .mg-dash-actions{
+ grid-template-columns:minmax(0,1fr) minmax(86px,26%);
+}
+.side.mg-nav-dashboard-side .mg-dash-details-toggle{
+ border-color:var(--dash-accent);color:var(--dash-accent);
+}
+.mg-dash-panel[data-details-open="true"] .mg-dash-details-toggle{
+ background:var(--dash-accent);color:#10212f;
+}
+.mg-dash-panel[data-details-open="true"]>.mg-nav-dashboard.mg-dashboard-compact{display:none}
+.mg-dash-route-details{
+ display:none;flex:1 1 0;flex-direction:column;min-width:0;min-height:0;
+ border:1px solid var(--dash-border);border-radius:12px;
+ background:var(--dash-bg);overflow:hidden;padding:clamp(6px,1vh,12px);
+}
+.mg-dash-panel[data-route-active="true"][data-details-open="true"] .mg-dash-route-details{
+ display:flex;
+}
+.mg-dash-route-details-heading{
+ flex:0 0 auto;padding:3px 6px 8px;color:var(--dash-accent);
+ font-size:clamp(14px,2.4vh,21px);font-weight:800;
+}
+.mg-dash-route-detail-scroll{
+ flex:1 1 0;min-height:0;min-width:0;overflow-x:hidden;overflow-y:auto;
+ overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;
+ scrollbar-width:thin;scrollbar-color:var(--dash-border) transparent;
+ padding:0 5px 5px 2px;
+}
+.mg-dash-route-detail-scroll:focus-visible{outline:2px solid var(--dash-accent)}
+.mg-dash-route-detail-scroll .mg-guidance-detail-row{
+ grid-template-columns:minmax(90px,41%) minmax(0,1fr);
+ font-size:clamp(12px,1.9vh,16px);gap:8px;
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-row dt{color:var(--dash-sub)}
+.mg-dash-route-detail-scroll .mg-guidance-detail-row dd{color:var(--dash-ink)}
+.mg-dash-detail-pending{padding:10px;color:var(--dash-sub)}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-panel[data-route-active="true"] .mg-dash-actions{
+  grid-template-columns:minmax(0,1fr) minmax(82px,25%);
+ }
+ .side.mg-nav-dashboard-side .mg-dash-details-toggle{font-size:12px;padding:2px 6px}
+ .mg-dash-route-details-heading{font-size:14px;padding-bottom:5px}
+ .mg-dash-route-detail-scroll .mg-guidance-detail-row{padding:7px 3px;font-size:12px}
+}

@@ -239,10 +239,11 @@ async function nativeArrivalAction(action){
  }catch(e){status('Ankunft: '+(e.message||e));return false}
  finally{arrivalActionBusy=false}
 }
-/* One shared guidance menu: Android returns SDK data, not a parallel UI. */
-let nativeGuidancePane='',nativeGuidanceState={muted:false,roadEnabled:false,roadVoice:false,detailData:null,details:[]};
-let nativeGuidanceFetch=null,nativeGuidanceSerial=0;
-function nativeGuidanceMode(){return nativeMode()?nativeGuidancePane:''}
+/* One detail data adapter: native SDK supplies only values and commands.
+   The scrollable detail view lives solely in the right dashboard. */
+let nativeGuidanceState={muted:false,roadEnabled:false,roadVoice:false,detailData:null,details:[]};
+let nativeGuidanceFetch=null,nativeGuidanceReadAt=0;
+function nativeGuidanceMode(){return ''}
 function nativeGuidanceMuted(){return nativeGuidanceState.muted===true}
 function nativeGuidanceRoadEnabled(){return nativeGuidanceState.roadEnabled===true}
 function nativeGuidanceRoadVoice(){return nativeGuidanceState.roadVoice===true}
@@ -250,73 +251,55 @@ function nativeGuidanceDetailsHTML(){
  const model=window.MeviNavRouteDetails;
  const raw=nativeGuidanceState.detailData;
  if(raw&&model)return guidanceRowsHTML(model.rows(raw));
- // Compatibility with earlier APKs whose bridge still returned preformatted rows.
  const rows=Array.isArray(nativeGuidanceState.details)?nativeGuidanceState.details:[];
  return rows.length?guidanceRowsHTML(rows.filter(r=>r&&typeof r.label==='string'&&typeof r.value==='string').map(r=>[r.label,r.value])):
   '<p class="mg-search-message">Routendetails werden geladen …</p>';
 }
-function paintNativeGuidanceMenu(){
- if(!nativeGuidancePane)return;
- const details=document.querySelector('.mg-native-guidance-pane .mg-guidance-details-content');
- if(details&&nativeGuidancePane==='details')details.innerHTML=nativeGuidanceDetailsHTML();
- const road=document.querySelector('.mg-native-guidance-pane #mg-road-voice-toggle');
- if(road){road.textContent='Blitzer-Stimme: '+(nativeGuidanceRoadVoice()?'an':'aus');road.setAttribute('aria-pressed',String(nativeGuidanceRoadVoice()))}
-}
-async function refreshNativeGuidanceMenu(){
- if(!nativeMode()||!nativeGuidancePane)return false;
+function refreshNativeGuidanceMenu(){
+ if(!nativeMode()||!window.MeviNavDashboard?.detailsOpen?.())return Promise.resolve(false);
  if(nativeGuidanceFetch)return nativeGuidanceFetch;
- const serial=++nativeGuidanceSerial;
+ const now=Date.now();
+ if(now-nativeGuidanceReadAt<850)return Promise.resolve(true);
+ nativeGuidanceReadAt=now;
  nativeGuidanceFetch=nativeRequest('navigation.guidance.read').then(reply=>{
-  if(serial!==nativeGuidanceSerial||!nativeGuidancePane)return false;
-  if(reply.guiding===false){closeNativeGuidanceMenu();return false}
-  const roadVisibilityChanged=nativeGuidanceState.roadEnabled!==(reply.roadEnabled===true);
+  if(reply.guiding===false)return false;
   nativeGuidanceState={muted:reply.muted===true,roadEnabled:reply.roadEnabled===true,
    roadVoice:reply.roadVoice===true,detailData:reply.detailData&&typeof reply.detailData==='object'?reply.detailData:null,
    details:Array.isArray(reply.details)?reply.details:[]};
-  if(roadVisibilityChanged)window.meviGoogleRerender?.();
-  else paintNativeGuidanceMenu();
+  const dashboard=document.getElementById('mg-nav-dashboard-split');
+  if(dashboard&&window.MeviNavDashboard?.detailsOpen?.())window.MeviNavDashboard.paintDetails(dashboard);
   return true;
  }).catch(e=>{status('Routendetails: '+(e.message||e));return false})
  .finally(()=>{nativeGuidanceFetch=null});
  return nativeGuidanceFetch;
 }
-function toggleNativeGuidanceMenu(){
- if(!nativeMode())return false;
- if(nativeGuidancePane){closeNativeGuidanceMenu();return false}
- nativeGuidancePane='actions';window.meviNativeGuidanceFocusMap?.();window.meviGoogleRerender?.();
- void refreshNativeGuidanceMenu();return true;
-}
-function closeNativeGuidanceMenu(){
- if(!nativeGuidancePane)return false;
- nativeGuidancePane='';nativeGuidanceSerial++;window.meviGoogleRerender?.();return true;
-}
+/* Old APKs still invoke this callback from their trip strip. Redirect instead
+   of reintroducing the left-hand menu after a Web-only update. */
+function toggleNativeGuidanceMenu(){window.showGuidanceDashboard?.();return true}
+function closeNativeGuidanceMenu(){return false}
 function nativeGuidanceShowDetails(){
- if(!nativeGuidancePane)return;
- nativeGuidancePane='details';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
+ window.showGuidanceDashboard?.();window.MeviNavDashboard?.toggleDetails?.(true);
 }
-function nativeGuidanceBack(){
- if(!nativeGuidancePane)return;
- nativeGuidancePane='actions';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
-}
+function nativeGuidanceBack(){window.MeviNavDashboard?.toggleDetails?.(false)}
 async function nativeGuidanceAction(action){
  if(!nativeMode())return false;
  try{
   if(action==='stopSearch'){
-   closeNativeGuidanceMenu();
    if(!window.MeviAndroidSharedNav?.openSharedStopSearch)throw new Error('Gemeinsame Stopp-Suche fehlt.');
    await window.MeviAndroidSharedNav.openSharedStopSearch();return true;
   }
-  if(action==='end'){closeNativeGuidanceMenu();await nativeRequest('navigation.stop');return true}
-  if(action==='overview'){closeNativeGuidanceMenu();await nativeRequest('navigation.guidance.overview');return true}
+  if(action==='end'){await nativeRequest('navigation.stop');return true}
+  if(action==='overview'){await nativeRequest('navigation.guidance.overview');return true}
   const wire={voice:'navigation.guidance.voice',roadVoice:'navigation.guidance.roadVoice'}[action];
   if(!wire)return false;
-  nativeGuidanceSerial++;
   const reply=await nativeRequest(wire);
   nativeGuidanceState={muted:reply.muted===true,roadEnabled:reply.roadEnabled===true,
    roadVoice:reply.roadVoice===true,detailData:reply.detailData&&typeof reply.detailData==='object'?reply.detailData:null,
    details:Array.isArray(reply.details)?reply.details:[]};
-  paintNativeGuidanceMenu();return true;
- }catch(e){status('Navigationsmenü: '+(e.message||e));return false}
+  const dash=document.getElementById('mg-nav-dashboard-split');
+  if(dash&&window.MeviNavDashboard?.detailsOpen?.())window.MeviNavDashboard.paintDetails(dash);
+  return true;
+ }catch(e){status('Navigation: '+(e.message||e));return false}
 }
 async function openNativeSearch(){
  try{
@@ -1091,10 +1074,10 @@ function paintGuidance(){
  const dash=document.getElementById('mg-nav-dashboard-split');
  if(dash)window.MeviNavDashboard?.paint?.(dash,guidanceDashboardData());
  // Shared HTML renderer also runs in the native SDK's offline trip WebView.
- window.MeviNavTrip?.paint(document.querySelector('.mg-guidance-trip'),trip,'toggleGuidanceMenu()');
+ window.MeviNavTrip?.paint(document.querySelector('.mg-guidance-trip'),trip,'showGuidanceDashboard()');
  window.MeviNavTrip?.paintControls(document.querySelector('.mg-web-guidance > .mevi-nav-controls'),{muted:voiceMuted});
- const details=document.querySelector('#mg-guidance-menu-details:not([hidden]) .mg-guidance-details-content');
- if(details)details.innerHTML=guidanceDetailsHTML();
+ const dashboard=document.getElementById('mg-nav-dashboard-split');
+ if(dashboard&&window.MeviNavDashboard?.detailsOpen?.())window.MeviNavDashboard.paintDetails(dashboard);
 }
 function showOverview(){
  if(!map||!routeData?.path?.length)return;

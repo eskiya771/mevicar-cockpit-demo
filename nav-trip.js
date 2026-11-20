@@ -18,12 +18,12 @@
    summary:label(trip.summary,130)||'Reststrecke wird ermittelt',
    nextStop:typeof trip.nextStop==='string'?label(trip.nextStop,120):'',muted:trip.muted===true};
  }
- function html(input,action='toggleGuidanceMenu()'){
+ function html(input,action='showGuidanceDashboard()'){
   const t=normalize(input);
   const onclick=action==='window.MeviNavTripAndroid.openMenu()'?
-   'window.MeviNavTripAndroid.openMenu()':'toggleGuidanceMenu()';
+   'window.MeviNavTripAndroid.openMenu()':'showGuidanceDashboard()';
   return '<div class="mevi-trip" role="group" aria-label="Aktive Navigation">'+
-   '<button type="button" class="mg-guidance-trip-main" onclick="'+onclick+'" aria-label="Fahrtwerte, Navigationsmenü öffnen">'+
+   '<button type="button" class="mg-guidance-trip-main" onclick="'+onclick+'" aria-label="Fahrtwerte, Navi-Dashboard öffnen">'+
    '<strong id="mg-trip-arrival">'+escape(t.arrival)+'</strong>'+
    '<span id="mg-trip-summary">'+escape(t.summary)+'</span>'+
    '<span id="mg-trip-next-stop"'+(t.nextStop?'':' hidden')+'>'+escape(t.nextStop)+'</span>'+

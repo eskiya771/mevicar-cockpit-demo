@@ -6,6 +6,7 @@
 'use strict';
 const placeholder='–';
 const rounded=value=>Number.isFinite(value)&&value>=0?String(Math.round(value)):placeholder;
+let detailsExpanded=false;
 /* Formatting and average speed come exclusively from nav-route-details.js. */
 function html(compact=false){
  return `<section class="mg-nav-dashboard${compact?' mg-dashboard-compact':''}" role="group" aria-label="Fahrtdashboard">
@@ -31,7 +32,7 @@ const icons={
    checkForUpdate, openDashboardSearch, showGuidanceMap.
    Clock, build and update texts are filled by their existing owners via the ids. */
 function panel(){
- return `<div class="mg-dash-panel" data-route-active="false">
+ return `<div class="mg-dash-panel" data-route-active="false" data-details-open="false">
   <header class="mg-dash-head">
    <time id="statusClock" class="mg-dash-clock" aria-label="Aktuelle Uhrzeit">--:--</time>
    <div class="mg-dash-build"><span id="buildVersion" aria-label="Geladene Version">Build ${placeholder}</span><span id="updateMessage" aria-live="polite"></span></div>
@@ -43,6 +44,7 @@ function panel(){
   <div class="mg-dash-actions" role="group" aria-label="Navigation bedienen">
    <button type="button" class="mg-dash-action" data-dash-action="search" onclick="openDashboardSearch()">${icon(icons.search)}<span>Ziel suchen</span></button>
    <button type="button" class="mg-dash-action mg-dash-end-route" data-dash-action="end" onclick="endNavigationFromDashboard()" aria-label="Navigation beenden">Navigation beenden</button>
+   <button type="button" class="mg-dash-action mg-dash-details-toggle" data-dash-action="details" onclick="MeviNavDashboard.toggleDetails()" aria-controls="mg-dash-route-detail-scroll" aria-expanded="false"><span>Details</span></button>
   </div>
   <section class="mg-dash-quick" aria-label="Gespeicherte Orte" data-dash-quick>
    <div class="mg-dash-quick-heading">
@@ -74,6 +76,12 @@ function panel(){
    </section>
   </section>
   ${html(true)}
+  <section class="mg-dash-route-details" aria-label="Routendetails">
+   <div class="mg-dash-route-details-heading">Routendetails</div>
+   <div id="mg-dash-route-detail-scroll" class="mg-dash-route-detail-scroll" role="region" aria-label="Routendetails, scrollbar" tabindex="0">
+    <p class="mg-dash-detail-pending">Routendetails werden geladen …</p>
+   </div>
+  </section>
  </div>`;
 }
 // Read from the single search provider; do not re-render the full cockpit or
@@ -185,11 +193,57 @@ if(typeof document!=='undefined'&&document.addEventListener){
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopIdleGps()});
 }
 
+/* Keep the normal dashboard and a long, scrollable details list in the same
+   right-hand split. Reuse MeviGoogleNav's existing detail HTML formatter. */
+function detailsOpen(){return detailsExpanded}
+function paintDetails(container){
+ if(!detailsExpanded||!container?.querySelector)return;
+ const panel=container.querySelector('.mg-dash-panel');
+ if(panel?.dataset?.routeActive!=='true')return;
+ const content=container.querySelector('.mg-dash-route-detail-scroll');
+ if(!content)return;
+ const nav=root.MeviGoogleNav;
+ if(nav?.isNativeMode?.())nav.refreshNativeGuidanceMenu?.();
+ const html=nav?.isNativeMode?.()?nav.nativeGuidanceDetailsHTML?.():nav?.guidanceDetailsHTML?.();
+ if(typeof html==='string'&&html&&content.innerHTML!==html){
+  const top=content.scrollTop;
+  content.innerHTML=html;
+  content.scrollTop=top;
+ }
+}
+function toggleDetails(force){
+ const panel=typeof document==='undefined'?null:document.getElementById?.('mg-nav-dashboard-split');
+ if(!panel?.querySelector('.mg-dash-panel')||panel.querySelector('.mg-dash-panel').dataset.routeActive!=='true')return false;
+ detailsExpanded=typeof force==='boolean'?force:!detailsExpanded;
+ const shell=panel.querySelector('.mg-dash-panel');
+ shell.dataset.detailsOpen=String(detailsExpanded);
+ const button=panel.querySelector('[data-dash-action="details"]');
+ if(button){
+  button.setAttribute('aria-expanded',String(detailsExpanded));
+  button.setAttribute('aria-pressed',String(detailsExpanded));
+  const caption=button.querySelector('span');
+  if(caption)caption.textContent=detailsExpanded?'Dashboard':'Details';
+ }
+ if(detailsExpanded)paintDetails(panel);
+ return detailsExpanded;
+}
 function paint(container,data){
  if(!container?.querySelector)return;
  const info=data||{},format=root.MeviNavRouteDetails;
  const panel=container.querySelector('.mg-dash-panel');
- if(panel?.dataset)panel.dataset.routeActive=info.routeActive===true?'true':'false';
+ if(panel?.dataset){
+  panel.dataset.routeActive=info.routeActive===true?'true':'false';
+  if(info.routeActive!==true)detailsExpanded=false;
+  panel.dataset.detailsOpen=String(detailsExpanded&&info.routeActive===true);
+ }
+ const toggle=container.querySelector('[data-dash-action="details"]');
+ if(toggle){
+  const expanded=detailsExpanded&&info.routeActive===true;
+  toggle.setAttribute('aria-expanded',String(expanded));
+  toggle.setAttribute('aria-pressed',String(expanded));
+  const caption=toggle.querySelector('span');
+  if(caption&&caption.textContent!==(expanded?'Dashboard':'Details'))caption.textContent=expanded?'Dashboard':'Details';
+ }
  if(info.routeActive!==true){
   refreshQuick(container);
   startIdleGps();
@@ -214,6 +268,7 @@ function paint(container,data){
   const element=container.querySelector('[data-dash="'+key+'"]');
   if(element&&element.textContent!==value)element.textContent=value;
  }
+ if(info.routeActive===true&&detailsExpanded)paintDetails(container);
 }
-root.MeviNavDashboard={html,panel,paint,refreshQuick,stopIdleGps};
+root.MeviNavDashboard={html,panel,paint,refreshQuick,stopIdleGps,toggleDetails,detailsOpen,paintDetails};
 })(window);

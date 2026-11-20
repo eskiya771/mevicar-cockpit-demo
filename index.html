@@ -901,34 +901,9 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
  pointer-events:auto;
 }
-.mg-navigation .mg-guidance-menu{
- position:absolute;z-index:9;top:max(7px,env(safe-area-inset-top,0px));
- bottom:calc(70px + env(safe-area-inset-bottom,0px));
- left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
- /* JS measures the bottom guidance trip pill when this dialog opens.
-    Keep this as fallback; max-width protects the visible map from overflow. */
- width:min(405px,43%);max-width:calc(100% - 130px);
- padding:8px;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
- background:var(--guidance-panel);border:1px solid var(--guidance-border);
- border-radius:14px;box-shadow:0 11px 30px #0008;pointer-events:auto;
-}
-.mg-guidance-menu[hidden],.mg-guidance-menu [hidden]{display:none!important}
-.mg-guidance-menu-heading{
- display:flex;align-items:center;gap:9px;min-height:44px;
- margin-bottom:5px;font-size:18px;
-}
-.mg-navigation .mg-guidance-menu button{
- display:block;width:100%;min-height:44px;margin:4px 0;
- padding:8px 13px;text-align:left;font:inherit;font-weight:650;
- background:#1b394c;color:var(--guidance-text);
- border:1px solid #5e91a18c;border-radius:10px;cursor:pointer;
-}
-.mg-navigation .mg-guidance-menu-heading button{width:46px;flex:0 0 46px;text-align:center}
-.mg-navigation .mg-guidance-menu .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
-.mg-guidance-details-content{font-size:13px;line-height:1.4}
 .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
  bottom:calc(70px + env(safe-area-inset-bottom,0px));
- /* Do not clip Road Assist warnings; they have priority over the map. */
+ /* Road Assist warnings remain above the card and map. */
 }
 .mg-navigation.mg-web-driving .mg-my-location{
  bottom:auto;top:calc(8px + env(safe-area-inset-top,0px));
@@ -941,22 +916,13 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-web-guidance #mg-next-turn{font-size:13px;-webkit-line-clamp:2}
  .mg-navigation.mg-web-driving .mg-guidance-trip{height:50px}
  .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
- .mg-navigation .mg-guidance-menu{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
 }
 @media(orientation:portrait){
  .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
  .mg-navigation.mg-web-driving .mg-guidance-trip{left:max(8px,env(safe-area-inset-left,0px))}
- .mg-navigation .mg-guidance-menu{left:8px;width:calc(100% - 16px);max-width:none}
 }
 
-/* Route detail rows mirror NavRouteDetails.rows labels and order. One Web
-   guidance panel, not a competing turn-list dialog. */
-.mg-navigation .mg-guidance-menu{
- background:var(--guidance-panel);backdrop-filter:none!important;
- -webkit-backdrop-filter:none!important;isolation:isolate;
-}
-.mg-navigation .mg-guidance-menu-details,
-.mg-guidance-details-content{min-height:0}
+/* Shared route detail rows now render only inside the right dashboard. */
 .mg-guidance-detail-list{display:flex;flex-direction:column;margin:0;padding:0}
 .mg-guidance-detail-row{
  display:grid;grid-template-columns:minmax(94px,38%) minmax(0,1fr);
@@ -984,7 +950,7 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 /* The iPhone's fixed map extends behind the left dock while a right split
    is open. Its overlay coordinates therefore start at the viewport edge, not
    the visible map edge. Always retain the dock + notch offset for all three
-   navigation surfaces, including the bottom trip/menu entry. */
+   navigation surfaces, including the bottom trip entry. */
 .screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-web-guidance{
  --mg-split-nav-left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
  --mg-split-nav-right:max(8px,env(safe-area-inset-right,0px));
@@ -997,11 +963,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  left:var(--mg-split-nav-left);
  max-width:calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right));
 }
-.screen:has(> .mg-nav-dashboard-side) .mg-navigation .mg-guidance-menu{
- left:var(--mg-split-nav-left);
- width:min(405px,calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right)));
- max-width:calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right));
-}
 /* In compact iPhone landscape, the map is position:fixed at 100vw. Its
    apparent width is NOT the space beside the 40%-wide dashboard. Also limit
    the guidance panels before they can extend under the right split. */
@@ -1012,33 +973,7 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-guidance-trip{
   max-width:calc(60vw - var(--mg-split-nav-left) - 8px);
  }
- .screen:has(> .mg-nav-dashboard-side) .mg-navigation .mg-guidance-menu{
-  width:min(405px,calc(60vw - var(--mg-split-nav-left) - 8px));
-  max-width:calc(60vw - var(--mg-split-nav-left) - 8px);
- }
 }
-/* Native Google map stays to the right; both variants reuse guidanceMenuBodyHTML. */
-.mg-native-guidance-menu .mg-native-setup{display:none!important}
-.mg-native-guidance-pane{
- --guidance-panel:var(--route-pane-bg);--guidance-text:var(--route-ink);
- --guidance-muted:var(--route-muted);--guidance-accent:var(--route-accent);
- overflow:hidden;box-shadow:8px 0 20px #07111c77;
-}
-.mg-native-guidance-pane #mg-guidance-menu-actions,
-.mg-native-guidance-pane #mg-guidance-menu-details{
- flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;
-}
-.mg-native-guidance-pane [hidden]{display:none!important}
-.mg-navigation .mg-native-guidance-pane button{
- display:block;width:100%;min-height:44px;margin:4px 0;padding:8px 13px;text-align:left;
- font:inherit;font-weight:650;background:#1b394c;color:var(--guidance-text);
- border:1px solid #5e91a18c;border-radius:10px;
-}
-.mg-navigation .mg-native-guidance-pane .mg-guidance-menu-heading button{
- width:46px;flex:0 0 46px;text-align:center;
-}
-.mg-navigation .mg-native-guidance-pane .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
-
 /* Shared arrival card outside the native map touch area. */
 .mg-native-arrival .mg-native-setup{display:none!important}
 .mg-arrival-pane{justify-content:center}
@@ -5817,7 +5752,7 @@ document.addEventListener('touchend',onSplitTwoFingerEnd,{passive:true});
 document.addEventListener('touchcancel',()=>{twoFingerStart=null},{passive:true});
 /* The shared Android/Web navigation module owns the sole search UI. */
 function openSearch(){return window.MeviWebNavParity?.open()}
-window.meviGoogleDestination=(name,address,options={})=>{s.destination=name;s.query=name;if(options.skipPreview)return;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviNativeGuidanceFocusMap=()=>{if(window.MeviGoogleNav?.isNativeMode?.()){s.app='nav';s.mode='map';s.keyboard=false}};window.meviGoogleRerender=()=>render();window.meviNativeArrivalFocusMap=()=>{s.app='nav';s.mode='map';s.nav='ready';s.keyboard=false;render()};window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};async function startRoute(){const n=window.MeviGoogleNav;if(!n)return false;const ready=await n.calculateRoute();if(!ready)return false;if(ready==='native')return true;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render();return true}
+window.meviGoogleDestination=(name,address,options={})=>{s.destination=name;s.query=name;if(options.skipPreview)return;s.nav='preview';s.keyboard=false;s.mode='map';render()};window.meviGoogleRerender=()=>render();window.meviNativeArrivalFocusMap=()=>{s.app='nav';s.mode='map';s.nav='ready';s.keyboard=false;render()};window.meviGoogleNavigationFinished=()=>{s.nav='ready';s.route=true;s.app='nav';render()};async function startRoute(){const n=window.MeviGoogleNav;if(!n)return false;const ready=await n.calculateRoute();if(!ready)return false;if(ready==='native')return true;s.route=true;s.nav='ready';s.mode='map';s.app='nav';render();return true}
 async function beginNavigation(){const n=window.MeviGoogleNav;if(!n)return;const started=await n.startGuidance();if(!started)return;if(started==='native'){s.nav='ready';s.mode='map';s.app='nav';return} s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function beginNavigationDemo(){const n=window.MeviGoogleNav;if(!n?.startDemo())return;s.route=true;s.nav='driving';s.mode='map';s.app='nav';render();n.paintGuidance()}
 function returnToRoute(){window.MeviGoogleNav?.stopGuidance({keepRoute:true});s.nav='ready';s.route=true;s.app='nav';s.mode='map';render()}
@@ -5876,70 +5811,16 @@ function readyRouteOverlay(ctx){
 /* One Web guidance surface for full-map and split-mode driving. In the APK,
    the native NavigationView and NavTripBar are authoritative; this HTML only
    renders Google Maps JavaScript guidance, with matching actions and flow. */
-/* Keep the upper guidance menu exactly as wide as the rendered bottom trip bar.
-   The trip bar uses content width, so a second hard-coded pixel width would drift
-   with longer ETA, distance or voice labels. Preserve portrait layout rules. */
-function syncGuidanceMenuWidth(){
- const sheet=$('mg-guidance-menu');
- if(!sheet)return;
- if(window.matchMedia?.('(orientation: portrait)')?.matches){
-  sheet.style?.removeProperty?.('width');
-  return;
- }
- const trip=sheet.parentElement?.querySelector?.('.mg-guidance-trip');
- const width=trip?.getBoundingClientRect?.().width;
- if(Number.isFinite(width)&&width>0&&sheet.style)sheet.style.width=width+'px';
-}
-window.addEventListener?.('resize',syncGuidanceMenuWidth);
-function toggleGuidanceMenu(force){
- const sheet=$('mg-guidance-menu');
- if(!sheet)return;
- const opening=typeof force==='boolean'?force:sheet.hidden;
- sheet.hidden=!opening;
- if(opening){
-  const actions=$('mg-guidance-menu-actions'),details=$('mg-guidance-menu-details');
-  if(actions)actions.hidden=false;
-  if(details)details.hidden=true;
-  syncGuidanceMenuWidth();
-  window.requestAnimationFrame?.(syncGuidanceMenuWidth);
- }
-}
-function showGuidanceDetails(){
- const actions=$('mg-guidance-menu-actions'),details=$('mg-guidance-menu-details');
- if(!actions||!details)return;
- actions.hidden=true;details.hidden=false;
-}
+/* The trip strip now opens the right dashboard. No left navigation dialog. */
 function showGuidanceDashboard(){
- // Use the same right-hand split host as Radio, Tacho and other apps.
- toggleGuidanceMenu(false);
  s.app='navdashboard';s.mode='split';s.keyboard=false;
  render();
  const panel=$('mg-nav-dashboard-split');
  if(panel)window.MeviNavDashboard?.paint(panel,window.MeviGoogleNav?.guidanceDashboardData?.());
 }
 function showGuidanceMap(){
- // The dashboard's Vollbild button and a second Navi-dock tap restore the full map.
- toggleGuidanceMenu(false);
  s.app='nav';s.mode='map';s.keyboard=false;
  render();
-}
-function guidanceMenuBodyHTML(native=false){
- const n=window.MeviGoogleNav;
- const details=native&&n?.nativeGuidanceMode?.()==='details';
- const close=native?'MeviGoogleNav.closeNativeGuidanceMenu()':'toggleGuidanceMenu(false)';
- const back=native?'MeviGoogleNav.nativeGuidanceBack()':'toggleGuidanceMenu(true)';
- const openDetails=native?'MeviGoogleNav.nativeGuidanceShowDetails()':'showGuidanceDetails()';
- const road=native&&n?.nativeGuidanceRoadEnabled?.()?
-  `<button type="button" id="mg-road-voice-toggle" onclick="MeviGoogleNav.nativeGuidanceAction('roadVoice')">Blitzer-Stimme: ${n?.nativeGuidanceRoadVoice?.()?'an':'aus'}</button>`:'';
- return `<div id="mg-guidance-menu-actions" ${details?'hidden':''}>
-    <div class="mg-guidance-menu-heading"><button type="button" onclick="${close}" aria-label="Zurück zur Karte">←</button><strong>Navigation</strong></div>
-    <button type="button" onclick="${openDetails}">Routendetails</button>
-    ${road}
-   </div>
-   <div id="mg-guidance-menu-details" ${details?'':'hidden'}>
-    <div class="mg-guidance-menu-heading"><button type="button" onclick="${back}" aria-label="Zurück zum Navigationsmenü">←</button><strong>Routendetails</strong></div>
-    <div class="mg-guidance-details-content">${native?n?.nativeGuidanceDetailsHTML?.()||'':n?.guidanceDetailsHTML?.()||''}</div>
-   </div>`;
 }
 /* One arrival renderer for the native SDK and the browser cockpit. */
 function arrivalPanelHTML(arrival){
@@ -5967,11 +5848,9 @@ function activeGuidanceOverlay(compact=false){
   </section>
   ${compact?'':`
   <div class="mg-guidance-trip" role="group" aria-label="Aktive Navigation">
-   ${window.MeviNavTrip?.html(trip,'toggleGuidanceMenu()')||''}
+   ${window.MeviNavTrip?.html(trip,'showGuidanceDashboard()')||''}
   </div>
-  <aside id="mg-guidance-menu" class="mg-guidance-menu" aria-label="Navigationsmenü" hidden>
-   ${guidanceMenuBodyHTML(false)}
-  </aside>`}
+`}
  </div>`;
 }
 function mapHTML(){
@@ -5981,9 +5860,6 @@ function mapHTML(){
   const arrival=n?.currentNativeArrival?.();
   if(arrival&&s.app==='nav'&&s.mode==='map')
    return `<div class="map mg-navigation mg-route-preview-layout mg-native-arrival">${n.mapBackdrop()}${arrivalPanelHTML(arrival)}</div>`;
-  const nativeMenuMode=n?.nativeGuidanceMode?.();
-  if(nativeMenuMode&&s.app==='nav'&&s.mode==='map')
-   return `<div class="map mg-navigation mg-route-preview-layout mg-native-guidance-menu">${n.mapBackdrop()}<aside class="mg-route-preview-pane mg-native-guidance-pane" aria-label="Navigationsmenü">${guidanceMenuBodyHTML(true)}</aside></div>`;
   // Shared search UI: drawn by the Web layer while the native map is hidden.
   if(window.MeviAndroidSharedNav?.isOptedIn?.()&&s.app==='nav'&&s.nav==='search')
    return `<div class="map mg-navigation mg-native-shared-search ${s.keyboard?'searchmode':''}"><div id="mg-map" class="mg-map mg-native-map" aria-hidden="true"></div>${searchOverlay()}</div>`;
@@ -6044,7 +5920,7 @@ APP_VECTORS.spectrum='<path class="main" d="M15 88h90 M22 74V55 M36 74V37 M51 74
 function dockIconId(id){if(id==='slot')return s.extra||'apps';if(id==='audio')return {'radio':'audio-radio','spotify':'audio-spotify','media':'audio-media'}[s.audio]||'audio-radio';return id}
 function toolIcon(id,label){return '<span class="toolbar-icon" aria-hidden="true">'+appVector(id)+'</span><span class="tool-label">'+esc(label)+'</span>'}
 function render(){document.documentElement.dataset.theme=s.theme;const dockTabs=[...fixed,['slot',s.extra?info(s.extra)[1]:'Zusatz',s.extra?info(s.extra)[2]:'＋'],['apps','Apps','▦']];$('dock').innerHTML=dockTabs.map(([id,name])=>{const glyph=dockIconId(id),selected=(s.app==='navdashboard'?'nav':extras.some(x=>x[0]===s.app)?'slot':s.app)===id,label=id==='audio'?audioSourceName():name;return `<button type="button" class="${selected?'active':''}" data-app="${glyph}" style="--dock-accent:${DOCK_COLORS[glyph]||'#8beaff'}" onclick="openApp('${id}')" aria-label="${esc(label)} öffnen" aria-pressed="${selected}"><span class="ico">${appVector(glyph)}</span><span class="dock-label">${esc(label)}</span></button>`}).join('');$('dock').className='dock '+s.dock;$('cockpit').className='cockpit '+(s.dock==='bottom'?'bottom':'');if(s.dock==='bottom')$('cockpit').appendChild($('dock'));else $('body').insertBefore($('dock'),$('body').firstChild);$('leftBtn').classList.toggle('active',s.dock==='left');$('bottomBtn').classList.toggle('active',s.dock==='bottom');let html;if(s.app==='apps'&&s.mode==='full')html='<div class="full app-home-surface">'+appLauncherHTML()+'</div>';else if(s.app==='spectrum'&&s.mode==='full')html='<div class="full spectrum-host">'+appBody()+'</div>';else if(s.app==='demo3d'&&s.mode==='full')html='<div class="full d3-host">'+appBody()+'</div>';else if(s.app==='lightshow'&&s.mode==='full')html='<div class="full lightshow-host">'+appBody()+'</div>';else if(s.app==='ha'&&s.mode==='full')html='<div class="full ha-host">'+appBody()+'</div>';else if(s.app==='roadassist'&&s.mode==='full')html='<div class="full roadassist-host">'+appBody()+'</div>';else if(s.app==='weather'&&s.mode==='full')html='<div class="full weather-host">'+appBody()+'</div>';else if(s.app==='calendar'&&s.mode==='full')html='<div class="full calendar-host">'+appBody()+'</div>';else if(s.app==='whatsapp'&&s.mode==='full')html='<div class="full whatsapp-host">'+appBody()+'</div>';else if(s.app==='youtube'&&s.mode==='full')html='<div class="full youtube-host">'+appBody()+'</div>';else if(s.app==='stocks'&&s.mode==='full')html='<div class="full stocks-host">'+appBody()+'</div>';else if(s.app==='guilty'&&s.mode==='full')html='<div class="full wis-host">'+appBody()+'</div>';else if(s.app==='audio'&&s.mode==='full')html='<div class="full mm-host">'+appBody()+'</div>';else if(s.app==='tachonext'&&s.mode==='full')html='<div class="full tacho-next-host">'+appBody()+'</div>';else if(s.app==='speed'&&s.mode==='full')html='<div class="full tacho-host">'+appBody()+'</div>';else if(s.app!=='nav'&&s.mode==='full')html=`<div class="full"><div class="row"><h3>${displayAppName(s.app).toUpperCase()}</h3></div>${appBody()}</div>`;else html=mapHTML()+(s.mode==='split'?`<aside class="side ${s.app==='navdashboard'?'mg-nav-dashboard-side':''} ${s.app==='apps'?'app-home-side':''} ${s.app==='spectrum'?'spectrum-host':s.app==='demo3d'?'d3-host':s.app==='lightshow'?'lightshow-host':s.app==='speed'?'tacho-host':s.app==='tachonext'?'tacho-next-host':(s.app==='audio'?'mm-host':s.app==='ha'?'ha-host':s.app==='roadassist'?'roadassist-host':s.app==='weather'?'weather-host':s.app==='calendar'?'calendar-host':s.app==='whatsapp'?'whatsapp-host':s.app==='youtube'?'youtube-host':s.app==='stocks'?'stocks-host':s.app==='guilty'?'wis-host':'')}">${(s.app==='spectrum'||s.app==='demo3d'||s.app==='lightshow'||s.app==='speed'||s.app==='audio'||s.app==='tachonext'||s.app==='ha'||s.app==='roadassist'||s.app==='weather'||s.app==='calendar'||s.app==='whatsapp'||s.app==='youtube'||s.app==='stocks'||s.app==='guilty'||s.app==='navdashboard')?'':'<div class="row"><h3>'+displayAppName(s.app).toUpperCase()+'</h3></div>'}${s.app==='apps'?appLauncherHTML():s.app==='nav'?`<div class="center"><h2>Navigation läuft</h2><div>${esc(s.destination)}</div>${btn('Zusatz-App öffnen',`openApp('apps')`)}${btn('Route beenden','stopRoute()')}</div>`:appBody()}</aside>`:'');if(typeof window.MeviStocks?.unmount==='function')window.MeviStocks.unmount();if(typeof window.MeviYouTube?.unmount==='function')window.MeviYouTube.unmount();if(typeof window.MeviWhatsApp?.unmount==='function')window.MeviWhatsApp.unmount();if(typeof window.MeviCalendar?.unmount==='function')window.MeviCalendar.unmount();if(typeof window.MeviHA?.unmount==='function')window.MeviHA.unmount();if(typeof window.MeviRoadAssist?.unmount==='function')window.MeviRoadAssist.unmount();if(typeof window.meviSpotifyUnmount==='function')window.meviSpotifyUnmount();if(typeof window.meviLightshowUnmount==='function')window.meviLightshowUnmount();if(typeof window.meviSpeedUnmount==='function')window.meviSpeedUnmount();if(typeof window.meviTachoNextUnmount==='function')window.meviTachoNextUnmount();if(typeof window.meviTVUnmount==='function')window.meviTVUnmount();if(typeof window.meviTetrisUnmount==='function')window.meviTetrisUnmount();if(typeof window.meviSudokuUnmount==='function')window.meviSudokuUnmount();if(typeof window.meviWhosGuiltyUnmount==='function')window.meviWhosGuiltyUnmount();window.MeviDemo3D?.unmount();if(s.app!=='spectrum')window.MeviSpectrum?.stop();$('screen').innerHTML=html;if(s.app==='spectrum')window.MeviSpectrum?.mount();window.MeviDemo3D?.mount();paintDashboardHead();if(typeof window.MeviStocks?.mount==='function')window.MeviStocks.mount();if(typeof window.MeviYouTube?.mount==='function')window.MeviYouTube.mount();if(typeof window.MeviWhatsApp?.mount==='function')window.MeviWhatsApp.mount();if(typeof window.MeviCalendar?.mount==='function')window.MeviCalendar.mount();if(typeof window.MeviHA?.mount==='function')window.MeviHA.mount();if(typeof window.MeviRoadAssist?.mount==='function')window.MeviRoadAssist.mount();if(typeof window.meviSpotifyMount==='function')window.meviSpotifyMount();if(typeof window.meviLightshowMount==='function')window.meviLightshowMount();if(typeof window.meviSpeedMount==='function')window.meviSpeedMount();if(typeof window.meviTachoNextMount==='function')window.meviTachoNextMount();if(typeof window.meviTVMount==='function')window.meviTVMount();if(typeof window.meviTetrisMount==='function')window.meviTetrisMount();if(typeof window.meviSudokuMount==='function')window.meviSudokuMount();if(typeof window.meviWhosGuiltyMount==='function')window.meviWhosGuiltyMount();gpsRefresh();window.MeviGoogleNav?.mount(s.nav);$('statusline').textContent=`${s.route?'Route berechnet – GPS-Begleitung':'Keine Route'} · ${s.nav==='search'?'Adresseingabe':s.nav==='preview'?'Routenvorschau':s.nav==='driving'?'Google Maps Route':'Kartenübersicht'} · ${window.MeviGoogleNav?.hasKey()?'Google Maps Web':'Google Maps Einrichtung erforderlich'}`}
-const CURRENT_BUILD={"version":"0.6.7","build":1374,"commit":"8785cd4220a348bed78ed8727268e4b5621136e6"};
+const CURRENT_BUILD={"version":"0.6.7","build":1375,"commit":"7b7fb628bbbe0c9e4209f03bc242cb6f2c3d77f3"};
 let NATIVE_BUILD=null;
 function versionTitle(){
   const web='Web-App v'+CURRENT_BUILD.version+' · Pages-Build '+CURRENT_BUILD.build+' · '+String(CURRENT_BUILD.commit||'').slice(0,12);
@@ -6549,12 +6425,12 @@ global.MeviCredentials={html,backupHTML,setBackupMode,toggleGroup,toggleVisibili
    summary:label(trip.summary,130)||'Reststrecke wird ermittelt',
    nextStop:typeof trip.nextStop==='string'?label(trip.nextStop,120):'',muted:trip.muted===true};
  }
- function html(input,action='toggleGuidanceMenu()'){
+ function html(input,action='showGuidanceDashboard()'){
   const t=normalize(input);
   const onclick=action==='window.MeviNavTripAndroid.openMenu()'?
-   'window.MeviNavTripAndroid.openMenu()':'toggleGuidanceMenu()';
+   'window.MeviNavTripAndroid.openMenu()':'showGuidanceDashboard()';
   return '<div class="mevi-trip" role="group" aria-label="Aktive Navigation">'+
-   '<button type="button" class="mg-guidance-trip-main" onclick="'+onclick+'" aria-label="Fahrtwerte, Navigationsmenü öffnen">'+
+   '<button type="button" class="mg-guidance-trip-main" onclick="'+onclick+'" aria-label="Fahrtwerte, Navi-Dashboard öffnen">'+
    '<strong id="mg-trip-arrival">'+escape(t.arrival)+'</strong>'+
    '<span id="mg-trip-summary">'+escape(t.summary)+'</span>'+
    '<span id="mg-trip-next-stop"'+(t.nextStop?'':' hidden')+'>'+escape(t.nextStop)+'</span>'+
@@ -7140,10 +7016,11 @@ async function nativeArrivalAction(action){
  }catch(e){status('Ankunft: '+(e.message||e));return false}
  finally{arrivalActionBusy=false}
 }
-/* One shared guidance menu: Android returns SDK data, not a parallel UI. */
-let nativeGuidancePane='',nativeGuidanceState={muted:false,roadEnabled:false,roadVoice:false,detailData:null,details:[]};
-let nativeGuidanceFetch=null,nativeGuidanceSerial=0;
-function nativeGuidanceMode(){return nativeMode()?nativeGuidancePane:''}
+/* One detail data adapter: native SDK supplies only values and commands.
+   The scrollable detail view lives solely in the right dashboard. */
+let nativeGuidanceState={muted:false,roadEnabled:false,roadVoice:false,detailData:null,details:[]};
+let nativeGuidanceFetch=null,nativeGuidanceReadAt=0;
+function nativeGuidanceMode(){return ''}
 function nativeGuidanceMuted(){return nativeGuidanceState.muted===true}
 function nativeGuidanceRoadEnabled(){return nativeGuidanceState.roadEnabled===true}
 function nativeGuidanceRoadVoice(){return nativeGuidanceState.roadVoice===true}
@@ -7151,73 +7028,55 @@ function nativeGuidanceDetailsHTML(){
  const model=window.MeviNavRouteDetails;
  const raw=nativeGuidanceState.detailData;
  if(raw&&model)return guidanceRowsHTML(model.rows(raw));
- // Compatibility with earlier APKs whose bridge still returned preformatted rows.
  const rows=Array.isArray(nativeGuidanceState.details)?nativeGuidanceState.details:[];
  return rows.length?guidanceRowsHTML(rows.filter(r=>r&&typeof r.label==='string'&&typeof r.value==='string').map(r=>[r.label,r.value])):
   '<p class="mg-search-message">Routendetails werden geladen …</p>';
 }
-function paintNativeGuidanceMenu(){
- if(!nativeGuidancePane)return;
- const details=document.querySelector('.mg-native-guidance-pane .mg-guidance-details-content');
- if(details&&nativeGuidancePane==='details')details.innerHTML=nativeGuidanceDetailsHTML();
- const road=document.querySelector('.mg-native-guidance-pane #mg-road-voice-toggle');
- if(road){road.textContent='Blitzer-Stimme: '+(nativeGuidanceRoadVoice()?'an':'aus');road.setAttribute('aria-pressed',String(nativeGuidanceRoadVoice()))}
-}
-async function refreshNativeGuidanceMenu(){
- if(!nativeMode()||!nativeGuidancePane)return false;
+function refreshNativeGuidanceMenu(){
+ if(!nativeMode()||!window.MeviNavDashboard?.detailsOpen?.())return Promise.resolve(false);
  if(nativeGuidanceFetch)return nativeGuidanceFetch;
- const serial=++nativeGuidanceSerial;
+ const now=Date.now();
+ if(now-nativeGuidanceReadAt<850)return Promise.resolve(true);
+ nativeGuidanceReadAt=now;
  nativeGuidanceFetch=nativeRequest('navigation.guidance.read').then(reply=>{
-  if(serial!==nativeGuidanceSerial||!nativeGuidancePane)return false;
-  if(reply.guiding===false){closeNativeGuidanceMenu();return false}
-  const roadVisibilityChanged=nativeGuidanceState.roadEnabled!==(reply.roadEnabled===true);
+  if(reply.guiding===false)return false;
   nativeGuidanceState={muted:reply.muted===true,roadEnabled:reply.roadEnabled===true,
    roadVoice:reply.roadVoice===true,detailData:reply.detailData&&typeof reply.detailData==='object'?reply.detailData:null,
    details:Array.isArray(reply.details)?reply.details:[]};
-  if(roadVisibilityChanged)window.meviGoogleRerender?.();
-  else paintNativeGuidanceMenu();
+  const dashboard=document.getElementById('mg-nav-dashboard-split');
+  if(dashboard&&window.MeviNavDashboard?.detailsOpen?.())window.MeviNavDashboard.paintDetails(dashboard);
   return true;
  }).catch(e=>{status('Routendetails: '+(e.message||e));return false})
  .finally(()=>{nativeGuidanceFetch=null});
  return nativeGuidanceFetch;
 }
-function toggleNativeGuidanceMenu(){
- if(!nativeMode())return false;
- if(nativeGuidancePane){closeNativeGuidanceMenu();return false}
- nativeGuidancePane='actions';window.meviNativeGuidanceFocusMap?.();window.meviGoogleRerender?.();
- void refreshNativeGuidanceMenu();return true;
-}
-function closeNativeGuidanceMenu(){
- if(!nativeGuidancePane)return false;
- nativeGuidancePane='';nativeGuidanceSerial++;window.meviGoogleRerender?.();return true;
-}
+/* Old APKs still invoke this callback from their trip strip. Redirect instead
+   of reintroducing the left-hand menu after a Web-only update. */
+function toggleNativeGuidanceMenu(){window.showGuidanceDashboard?.();return true}
+function closeNativeGuidanceMenu(){return false}
 function nativeGuidanceShowDetails(){
- if(!nativeGuidancePane)return;
- nativeGuidancePane='details';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
+ window.showGuidanceDashboard?.();window.MeviNavDashboard?.toggleDetails?.(true);
 }
-function nativeGuidanceBack(){
- if(!nativeGuidancePane)return;
- nativeGuidancePane='actions';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
-}
+function nativeGuidanceBack(){window.MeviNavDashboard?.toggleDetails?.(false)}
 async function nativeGuidanceAction(action){
  if(!nativeMode())return false;
  try{
   if(action==='stopSearch'){
-   closeNativeGuidanceMenu();
    if(!window.MeviAndroidSharedNav?.openSharedStopSearch)throw new Error('Gemeinsame Stopp-Suche fehlt.');
    await window.MeviAndroidSharedNav.openSharedStopSearch();return true;
   }
-  if(action==='end'){closeNativeGuidanceMenu();await nativeRequest('navigation.stop');return true}
-  if(action==='overview'){closeNativeGuidanceMenu();await nativeRequest('navigation.guidance.overview');return true}
+  if(action==='end'){await nativeRequest('navigation.stop');return true}
+  if(action==='overview'){await nativeRequest('navigation.guidance.overview');return true}
   const wire={voice:'navigation.guidance.voice',roadVoice:'navigation.guidance.roadVoice'}[action];
   if(!wire)return false;
-  nativeGuidanceSerial++;
   const reply=await nativeRequest(wire);
   nativeGuidanceState={muted:reply.muted===true,roadEnabled:reply.roadEnabled===true,
    roadVoice:reply.roadVoice===true,detailData:reply.detailData&&typeof reply.detailData==='object'?reply.detailData:null,
    details:Array.isArray(reply.details)?reply.details:[]};
-  paintNativeGuidanceMenu();return true;
- }catch(e){status('Navigationsmenü: '+(e.message||e));return false}
+  const dash=document.getElementById('mg-nav-dashboard-split');
+  if(dash&&window.MeviNavDashboard?.detailsOpen?.())window.MeviNavDashboard.paintDetails(dash);
+  return true;
+ }catch(e){status('Navigation: '+(e.message||e));return false}
 }
 async function openNativeSearch(){
  try{
@@ -7992,10 +7851,10 @@ function paintGuidance(){
  const dash=document.getElementById('mg-nav-dashboard-split');
  if(dash)window.MeviNavDashboard?.paint?.(dash,guidanceDashboardData());
  // Shared HTML renderer also runs in the native SDK's offline trip WebView.
- window.MeviNavTrip?.paint(document.querySelector('.mg-guidance-trip'),trip,'toggleGuidanceMenu()');
+ window.MeviNavTrip?.paint(document.querySelector('.mg-guidance-trip'),trip,'showGuidanceDashboard()');
  window.MeviNavTrip?.paintControls(document.querySelector('.mg-web-guidance > .mevi-nav-controls'),{muted:voiceMuted});
- const details=document.querySelector('#mg-guidance-menu-details:not([hidden]) .mg-guidance-details-content');
- if(details)details.innerHTML=guidanceDetailsHTML();
+ const dashboard=document.getElementById('mg-nav-dashboard-split');
+ if(dashboard&&window.MeviNavDashboard?.detailsOpen?.())window.MeviNavDashboard.paintDetails(dashboard);
 }
 function showOverview(){
  if(!map||!routeData?.path?.length)return;

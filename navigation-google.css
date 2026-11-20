@@ -258,34 +258,9 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
  pointer-events:auto;
 }
-.mg-navigation .mg-guidance-menu{
- position:absolute;z-index:9;top:max(7px,env(safe-area-inset-top,0px));
- bottom:calc(70px + env(safe-area-inset-bottom,0px));
- left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
- /* JS measures the bottom guidance trip pill when this dialog opens.
-    Keep this as fallback; max-width protects the visible map from overflow. */
- width:min(405px,43%);max-width:calc(100% - 130px);
- padding:8px;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
- background:var(--guidance-panel);border:1px solid var(--guidance-border);
- border-radius:14px;box-shadow:0 11px 30px #0008;pointer-events:auto;
-}
-.mg-guidance-menu[hidden],.mg-guidance-menu [hidden]{display:none!important}
-.mg-guidance-menu-heading{
- display:flex;align-items:center;gap:9px;min-height:44px;
- margin-bottom:5px;font-size:18px;
-}
-.mg-navigation .mg-guidance-menu button{
- display:block;width:100%;min-height:44px;margin:4px 0;
- padding:8px 13px;text-align:left;font:inherit;font-weight:650;
- background:#1b394c;color:var(--guidance-text);
- border:1px solid #5e91a18c;border-radius:10px;cursor:pointer;
-}
-.mg-navigation .mg-guidance-menu-heading button{width:46px;flex:0 0 46px;text-align:center}
-.mg-navigation .mg-guidance-menu .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
-.mg-guidance-details-content{font-size:13px;line-height:1.4}
 .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
  bottom:calc(70px + env(safe-area-inset-bottom,0px));
- /* Do not clip Road Assist warnings; they have priority over the map. */
+ /* Road Assist warnings remain above the card and map. */
 }
 .mg-navigation.mg-web-driving .mg-my-location{
  bottom:auto;top:calc(8px + env(safe-area-inset-top,0px));
@@ -298,22 +273,13 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .mg-web-guidance #mg-next-turn{font-size:13px;-webkit-line-clamp:2}
  .mg-navigation.mg-web-driving .mg-guidance-trip{height:50px}
  .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
- .mg-navigation .mg-guidance-menu{bottom:calc(62px + env(safe-area-inset-bottom,0px))}
 }
 @media(orientation:portrait){
  .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
  .mg-navigation.mg-web-driving .mg-guidance-trip{left:max(8px,env(safe-area-inset-left,0px))}
- .mg-navigation .mg-guidance-menu{left:8px;width:calc(100% - 16px);max-width:none}
 }
 
-/* Route detail rows mirror NavRouteDetails.rows labels and order. One Web
-   guidance panel, not a competing turn-list dialog. */
-.mg-navigation .mg-guidance-menu{
- background:var(--guidance-panel);backdrop-filter:none!important;
- -webkit-backdrop-filter:none!important;isolation:isolate;
-}
-.mg-navigation .mg-guidance-menu-details,
-.mg-guidance-details-content{min-height:0}
+/* Shared route detail rows now render only inside the right dashboard. */
 .mg-guidance-detail-list{display:flex;flex-direction:column;margin:0;padding:0}
 .mg-guidance-detail-row{
  display:grid;grid-template-columns:minmax(94px,38%) minmax(0,1fr);
@@ -341,7 +307,7 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 /* The iPhone's fixed map extends behind the left dock while a right split
    is open. Its overlay coordinates therefore start at the viewport edge, not
    the visible map edge. Always retain the dock + notch offset for all three
-   navigation surfaces, including the bottom trip/menu entry. */
+   navigation surfaces, including the bottom trip entry. */
 .screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-web-guidance{
  --mg-split-nav-left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
  --mg-split-nav-right:max(8px,env(safe-area-inset-right,0px));
@@ -354,11 +320,6 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  left:var(--mg-split-nav-left);
  max-width:calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right));
 }
-.screen:has(> .mg-nav-dashboard-side) .mg-navigation .mg-guidance-menu{
- left:var(--mg-split-nav-left);
- width:min(405px,calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right)));
- max-width:calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right));
-}
 /* In compact iPhone landscape, the map is position:fixed at 100vw. Its
    apparent width is NOT the space beside the 40%-wide dashboard. Also limit
    the guidance panels before they can extend under the right split. */
@@ -369,33 +330,7 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
  .screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-guidance-trip{
   max-width:calc(60vw - var(--mg-split-nav-left) - 8px);
  }
- .screen:has(> .mg-nav-dashboard-side) .mg-navigation .mg-guidance-menu{
-  width:min(405px,calc(60vw - var(--mg-split-nav-left) - 8px));
-  max-width:calc(60vw - var(--mg-split-nav-left) - 8px);
- }
 }
-/* Native Google map stays to the right; both variants reuse guidanceMenuBodyHTML. */
-.mg-native-guidance-menu .mg-native-setup{display:none!important}
-.mg-native-guidance-pane{
- --guidance-panel:var(--route-pane-bg);--guidance-text:var(--route-ink);
- --guidance-muted:var(--route-muted);--guidance-accent:var(--route-accent);
- overflow:hidden;box-shadow:8px 0 20px #07111c77;
-}
-.mg-native-guidance-pane #mg-guidance-menu-actions,
-.mg-native-guidance-pane #mg-guidance-menu-details{
- flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;
-}
-.mg-native-guidance-pane [hidden]{display:none!important}
-.mg-navigation .mg-native-guidance-pane button{
- display:block;width:100%;min-height:44px;margin:4px 0;padding:8px 13px;text-align:left;
- font:inherit;font-weight:650;background:#1b394c;color:var(--guidance-text);
- border:1px solid #5e91a18c;border-radius:10px;
-}
-.mg-navigation .mg-native-guidance-pane .mg-guidance-menu-heading button{
- width:46px;flex:0 0 46px;text-align:center;
-}
-.mg-navigation .mg-native-guidance-pane .mg-guidance-menu-stop{background:#743545;color:#ffebf1}
-
 /* Shared arrival card outside the native map touch area. */
 .mg-native-arrival .mg-native-setup{display:none!important}
 .mg-arrival-pane{justify-content:center}
