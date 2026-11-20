@@ -421,3 +421,21 @@ html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
 .mg-navigation #mg-map .gm-style img[alt="Google Maps"]{
  display:none!important;
 }
+
+
+/* Guidance actions live directly on the map, not in the trip menu. */
+.mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{
+ position:absolute;z-index:8;top:50%;right:max(12px,env(safe-area-inset-right,0px));
+ transform:translateY(-50%);pointer-events:auto;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{
+  right:max(7px,env(safe-area-inset-right,0px));
+ }
+}
+/* iPhone landscape: the fixed map continues behind the split app. */
+@media(orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .screen:has(> .side) .mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{
+  right:calc(40vw + 8px);
+ }
+}

@@ -53,5 +53,43 @@
     el.setProperty(name,value);
   }
  }
- root.MeviNavTrip=Object.freeze({html,paint,normalize,setTheme});
+
+ const controlIcons={
+  search:'<circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/>',
+  volume:'<path d="M11 5 6.5 9H3v6h3.5L11 19V5Z"/><path d="M15 9a5 5 0 0 1 0 6M18 6a9 9 0 0 1 0 12"/>',
+  muted:'<path d="M11 5 6.5 9H3v6h3.5L11 19V5Z"/><path d="m15 9 6 6m0-6-6 6"/>',
+  overview:'<path d="M4 20V4h6l4 6h6"/><path d="m16 6 4 4-4 4"/><path d="M4 16h6l4-4"/>'
+ };
+ const ctrlSvg=path=>'<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>';
+ /** One button renderer for Maps JavaScript and Android NavigationView. */
+ function controlsHTML(input={}){
+  const muted=input?.muted===true;
+  return '<div class="mevi-nav-controls" role="group" aria-label="Navigationssteuerung">'+
+   '<button type="button" data-nav-control="search" onclick="MeviNavTrip.controlAction(\'search\')" aria-label="Stopp suchen" title="Stopp suchen">'+ctrlSvg(controlIcons.search)+'</button>'+
+   '<button type="button" data-nav-control="voice" onclick="MeviNavTrip.controlAction(\'voice\')" aria-label="'+(muted?'Ton einschalten':'Ton ausschalten')+'" title="'+(muted?'Ton einschalten':'Ton ausschalten')+'" aria-pressed="'+muted+'"><span class="mevi-nav-volume-on">'+ctrlSvg(controlIcons.volume)+'</span><span class="mevi-nav-volume-off">'+ctrlSvg(controlIcons.muted)+'</span></button>'+
+   '<button type="button" data-nav-control="overview" onclick="MeviNavTrip.controlAction(\'overview\')" aria-label="Routenübersicht" title="Routenübersicht">'+ctrlSvg(controlIcons.overview)+'</button>'+
+   '</div>';
+ }
+ function paintControls(host,input={}){
+  if(!host)return false;
+  const group=host.classList?.contains('mevi-nav-controls')?host:host.querySelector?.('.mevi-nav-controls');
+  if(!group){host.innerHTML=controlsHTML(input);return true}
+  const voice=group.querySelector?.('[data-nav-control="voice"]');
+  if(voice){
+   const muted=input?.muted===true,label=muted?'Ton einschalten':'Ton ausschalten';
+   voice.setAttribute('aria-pressed',String(muted));
+   voice.setAttribute('aria-label',label);
+   voice.setAttribute('title',label);
+  }
+  return true;
+ }
+ function controlAction(action){
+  if(!['search','voice','overview'].includes(action))return false;
+  if(root.MeviNavControlsAndroid?.trigger){root.MeviNavControlsAndroid.trigger(action);return true}
+  if(action==='search')root.MeviWebNavParity?.openStopSearch?.();
+  if(action==='voice')root.MeviGoogleNav?.toggleVoice?.();
+  if(action==='overview')root.MeviGoogleNav?.showOverview?.();
+  return true;
+ }
+ root.MeviNavTrip=Object.freeze({html,paint,normalize,setTheme,controlsHTML,paintControls,controlAction});
 })(window);

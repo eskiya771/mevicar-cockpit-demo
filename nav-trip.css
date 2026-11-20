@@ -38,18 +38,46 @@ html[data-theme="liquidglass"]{
 .mevi-trip .mg-guidance-trip-main [hidden]{display:none!important}
 .mevi-trip-standalone{
  width:100%;height:100%;margin:0;padding:0;overflow:hidden;
- background:var(--trip-panel,#102332);color:var(--trip-ink,#edf9ff);
+ background:transparent;color:var(--trip-ink,#edf9ff);
 }
 html:has(body.mevi-trip-standalone){width:100%;height:100%;margin:0;padding:0;overflow:hidden}
 .mevi-trip-standalone #mevi-trip-host{width:100%;height:100%}
-.mevi-trip-standalone .mevi-trip{background:var(--trip-panel);padding:0 6px}
-.mevi-trip-standalone .mevi-trip .mg-guidance-trip-main{min-height:100%;border-radius:0}
+.mevi-trip-standalone .mevi-trip .mg-guidance-trip-main{
+ box-sizing:border-box;flex:none;width:max-content;max-width:100%;
+ min-height:100%;padding:5px 10px;background:var(--trip-panel);
+}
 @media(orientation:landscape) and (max-height:480px){
  .mevi-trip .mg-guidance-trip-main{gap:8px}
  .mevi-trip .mg-guidance-trip-main strong{font-size:12px}
  .mevi-trip .mg-guidance-trip-main span{font-size:11px}
 }
 
-/* The Android host is 56dp tall; CSS vh there is tiny, so pin legible type. */
+/* The Android control has its own short viewport. Keep the text legible. */
 .mevi-trip-standalone .mevi-trip .mg-guidance-trip-main strong{font-size:17px}
 .mevi-trip-standalone .mevi-trip .mg-guidance-trip-main span{font-size:14px}
+
+
+/* Identical Google-style map actions in the browser and Android WebView. */
+.mevi-nav-controls{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:7px;pointer-events:auto;isolation:isolate;
+}
+.mevi-nav-controls button{
+ -webkit-appearance:none;appearance:none;display:grid;place-items:center;
+ box-sizing:border-box;width:48px;height:48px;min-width:44px;min-height:44px;
+ padding:9px;margin:0;border:1px solid var(--trip-border);
+ border-radius:50%;background:var(--trip-panel);color:var(--trip-ink);
+ box-shadow:0 4px 15px #0008;cursor:pointer;touch-action:manipulation;
+}
+.mevi-nav-controls button:focus-visible{outline:2px solid var(--trip-accent);outline-offset:2px}
+.mevi-nav-controls button:active{filter:brightness(1.2)}
+.mevi-nav-controls svg{display:block;width:100%;height:100%}
+.mevi-nav-controls [data-nav-control="voice"] .mevi-nav-volume-off{display:none}
+.mevi-nav-controls [data-nav-control="voice"][aria-pressed="true"] .mevi-nav-volume-on{display:none}
+.mevi-nav-controls [data-nav-control="voice"][aria-pressed="true"] .mevi-nav-volume-off{display:block}
+.mevi-nav-controls-standalone #mevi-trip-host{height:100%;width:100%}
+.mevi-nav-controls-standalone .mevi-nav-controls{height:100%;width:100%}
+@media(orientation:landscape) and (max-height:480px){
+ .mevi-nav-controls{gap:5px}
+ .mevi-nav-controls button{width:44px;height:44px;padding:8px}
+}

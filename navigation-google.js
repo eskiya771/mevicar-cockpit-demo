@@ -259,8 +259,6 @@ function paintNativeGuidanceMenu(){
  if(!nativeGuidancePane)return;
  const details=document.querySelector('.mg-native-guidance-pane .mg-guidance-details-content');
  if(details&&nativeGuidancePane==='details')details.innerHTML=nativeGuidanceDetailsHTML();
- const voice=document.querySelector('.mg-native-guidance-pane #mg-voice-toggle');
- if(voice){voice.textContent='Ton: '+(nativeGuidanceMuted()?'aus':'an');voice.setAttribute('aria-pressed',String(!nativeGuidanceMuted()))}
  const road=document.querySelector('.mg-native-guidance-pane #mg-road-voice-toggle');
  if(road){road.textContent='Blitzer-Stimme: '+(nativeGuidanceRoadVoice()?'an':'aus');road.setAttribute('aria-pressed',String(nativeGuidanceRoadVoice()))}
 }
@@ -301,7 +299,7 @@ function nativeGuidanceBack(){
  nativeGuidancePane='actions';window.meviGoogleRerender?.();void refreshNativeGuidanceMenu();
 }
 async function nativeGuidanceAction(action){
- if(!nativeMode()||!nativeGuidancePane)return false;
+ if(!nativeMode())return false;
  try{
   if(action==='stopSearch'){
    closeNativeGuidanceMenu();
@@ -1086,7 +1084,6 @@ function paintGuidance(){
  const next=document.getElementById('mg-next-turn');
  const distance=document.getElementById('mg-next-distance');
  const arrow=document.getElementById('mg-next-arrow');
- const voice=document.getElementById('mg-voice-toggle');
  if(next)next.textContent=step?.instructions||'Der Route folgen';
  if(arrow)arrow.textContent=guidanceSymbol(step);
  if(distance)distance.textContent=metersLabel(step?.end&&current?distanceBetween(current,step.end):step?.distanceMeters);
@@ -1095,7 +1092,7 @@ function paintGuidance(){
  if(dash)window.MeviNavDashboard?.paint?.(dash,guidanceDashboardData());
  // Shared HTML renderer also runs in the native SDK's offline trip WebView.
  window.MeviNavTrip?.paint(document.querySelector('.mg-guidance-trip'),trip,'toggleGuidanceMenu()');
- if(voice){voice.textContent=voiceMuted?'Ton: aus':'Ton: an';voice.setAttribute('aria-pressed',String(!voiceMuted))}
+ window.MeviNavTrip?.paintControls(document.querySelector('.mg-web-guidance > .mevi-nav-controls'),{muted:voiceMuted});
  const details=document.querySelector('#mg-guidance-menu-details:not([hidden]) .mg-guidance-details-content');
  if(details)details.innerHTML=guidanceDetailsHTML();
 }
