@@ -1,0 +1,348 @@
+.tv-root{display:flex;gap:12px;flex:1;width:100%;height:100%;min-width:0;min-height:0;color:#eaf8ff;container-type:inline-size}
+.tv-root button,.tv-root select,.tv-root input,.tv-web{min-height:44px;border:1px solid #75d8ff44;border-radius:10px;background:#183649;color:inherit;padding:7px 10px;font-size:14px;min-width:0}
+.tv-root button{touch-action:manipulation}.tv-root button:focus-visible,.tv-root input:focus-visible{outline:2px solid #67e9ff}
+.tv-library{width:32%;min-width:190px;display:flex;flex-direction:column;gap:8px;min-height:0}
+.tv-root header{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:44px;flex:none}.tv-library header strong{font-size:22px}.tv-library header span{font-size:10px;letter-spacing:.15em;color:#5fe7a7}
+.tv-search{width:100%}.tv-filters{display:flex;gap:6px}.tv-filters select{flex:1}.tv-filters button{min-width:44px}.tv-list{overflow:auto;min-height:0;flex:1;overscroll-behavior:contain;touch-action:pan-y}
+.tv-row{display:flex;gap:4px;margin-bottom:5px}.tv-row>button:first-child{flex:1;display:flex;align-items:center;gap:10px;text-align:left;min-height:58px}.tv-row>button:last-child{width:44px;flex:none}.tv-row.selected>button{border-color:#6deaff;background:#1a5970}.tv-row small{display:block;color:#a1c5d6;font-size:11px;margin-top:3px}.tv-logo{display:grid;place-items:center;width:40px;height:36px;flex:none;border-radius:8px;background:#e6f8ff;color:#10344b;font-weight:900}
+.tv-player{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0;min-height:0}.tv-title{font-size:clamp(15px,2vw,24px)}.tv-stage{position:relative;flex:1;min-height:0;background:#050a10;border-radius:12px;overflow:hidden;display:flex}.tv-stage video{width:100%;height:100%;min-height:0;object-fit:contain}.tv-empty{position:absolute;inset:20%;display:grid;place-items:center;text-align:center;pointer-events:none;color:#91b5c6}.tv-empty[hidden]{display:none}
+.tv-status{font-size:12px;min-height:18px;line-height:1.3;color:#b9d4df}.tv-actions{display:flex;gap:5px;flex-wrap:wrap}.tv-actions button{font-size:12px}.tv-web{display:flex;align-items:center;text-decoration:none;font-size:12px}.tv-web[hidden]{display:none}
+.tv-player [data-act=list]{display:none}.tv-root [data-act="tv-player-back"]{display:none}.tv-dialog{background:#122b40;color:#ecf8ff;border:1px solid #75d8ff88;border-radius:16px;max-height:85dvh;width:min(90vw,540px);overflow:auto;padding:18px}.tv-dialog::backdrop{background:#0009}.tv-form{display:grid;gap:10px}.tv-form label{display:grid;gap:4px}.tv-form input{width:100%}.tv-import{display:grid;gap:8px;margin-top:15px}.tv-dialog p{font-size:12px}.tv-custom>div{display:flex;align-items:center;justify-content:space-between;margin:4px 0;gap:8px}
+.cockpit .full:has(>.tv-root),.cockpit .side:has(>.tv-root){overflow:hidden}.cockpit .full:has(>.tv-root)>.row,.cockpit .side:has(>.tv-root)>h3{display:none}
+[data-theme=cyberpunk] .tv-row.selected>button{border-color:#ff61d1;background:#46224e}[data-theme=liquidglass] .tv-root button{background:#bedfff24}
+@container(max-width:600px){.tv-library{width:100%;min-width:0}.tv-player{display:none}.tv-watching .tv-library{display:none}.tv-watching .tv-player{display:flex}.tv-player [data-act=list]{display:block}}
+/* Container queries cannot select their own container: split state also scopes via host. */
+.side .tv-root:not(.tv-watching) .tv-player{display:none}.side .tv-root:not(.tv-watching) .tv-library{width:100%;min-width:0}.side .tv-root.tv-watching .tv-library{display:none}.side .tv-root.tv-watching .tv-player{display:flex}.side .tv-root .tv-player [data-act=list]{display:block}
+@media(max-height:500px){.tv-root{gap:8px}.tv-library{gap:5px}.tv-player{gap:4px}.tv-actions button,.tv-web{padding:4px 7px}.tv-status{font-size:11px}}
+
+.tv-sources-dialog .tv-source-form{display:grid;gap:10px;margin:10px 0}.tv-sources-dialog .tv-source-form label{display:grid;gap:4px}.tv-sources-dialog .tv-source-form input{width:100%}.tv-source-list{display:grid;gap:7px;margin:12px 0}.tv-source-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:6px;border:1px solid #75d8ff30;border-radius:10px}.tv-source-row span{flex:1;min-width:120px;overflow-wrap:anywhere}.tv-source-row small{display:block;color:#9dbdcb}.tv-source-status{overflow-wrap:anywhere}
+
+.tv-xtream-dialog .tv-xtream-form{display:grid;gap:9px}.tv-xtream-form label{display:grid;gap:4px}.tv-xtream-form input{width:100%}.tv-xtream-status{font-size:12px;overflow-wrap:anywhere}.tv-xtream-catalog{display:flex;flex-direction:column;min-height:0;flex:1;gap:7px}.tv-xtream-catalog[hidden]{display:none}.tv-xtream-tabs{display:flex;gap:5px}.tv-xtream-tabs button{flex:1}.tv-xtream-tabs button[aria-pressed=true]{border-color:#62eddf;background:#155669}.tv-xtream-list{overflow-y:auto;min-height:0;flex:1;display:flex;flex-direction:column;gap:5px}.tv-xtream-item{width:100%;text-align:left;display:flex;flex-direction:column;gap:3px}.tv-xtream-item small{color:#a8d3de}.tv-library .tv-xtream-catalog .tv-xtream-search{width:100%}
+
+/* Explicit hidden styles must override the form's display:grid rule. */
+.tv-xtream-form label[hidden]{display:none!important}
+
+/* Full-screen MeviTV shares the existing shell: dock | catalogue | player.
+   The dock belongs to MeviCar; only the TV host receives safe-area spacing. */
+.cockpit .full:has(>.tv-root){
+ min-width:0;
+ padding:clamp(6px,1vw,16px);
+ margin-right:env(safe-area-inset-right,0px);
+ margin-top:env(safe-area-inset-top,0px);
+ margin-bottom:env(safe-area-inset-bottom,0px);
+}
+.cockpit .full>.tv-root{position:static;overflow:hidden}
+.cockpit .full>.tv-root>.tv-library{
+ display:flex;flex:0 0 clamp(230px,32%,420px);width:auto;min-width:0;overflow:hidden;
+}
+.cockpit .full>.tv-root>.tv-player{display:flex;flex:1 1 0;min-width:0}
+.cockpit .full>.tv-root .tv-player [data-act="list"]{display:none}
+.tv-player>header{flex:none;min-height:44px}
+.tv-title{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tv-root .tv-settings{flex:0 0 44px;width:44px;height:44px;font-size:22px;padding:4px}
+.tv-actions{flex:none;align-items:center;gap:6px}
+.tv-root .tv-actions button,.tv-root .tv-web{min-width:44px;min-height:44px;white-space:nowrap}
+.tv-stage video{position:absolute;inset:0;background:#050a10}
+.tv-status{flex:none;max-height:2.6em;overflow:auto;overflow-wrap:anywhere}
+.tv-empty{inset:12px;display:flex;align-items:center;justify-content:center;padding:12px}
+.tv-root button:focus-visible,.tv-root select:focus-visible,.tv-root input:focus-visible{outline:2px solid #67e9ff;outline-offset:-3px}
+.tv-list,.tv-xtream-list{overflow-x:hidden;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.tv-row>button:first-child>span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.tv-xtream-item{flex:0 0 auto;min-height:48px;justify-content:center}
+.tv-xtream-item strong,.tv-xtream-item small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.tv-xtream-item small:empty{display:none}
+.tv-root.tv-xtream-mode>.tv-library>header,
+.tv-root.tv-xtream-mode>.tv-library>.tv-search,
+.tv-root.tv-xtream-mode>.tv-library>.tv-filters,
+.tv-root.tv-xtream-mode>.tv-library>.tv-list,
+.tv-root.tv-xtream-mode .tv-public-action,
+.tv-root.tv-xtream-mode .tv-web{display:none!important}
+.tv-root.tv-xtream-mode .tv-xtream-catalog{display:flex;flex:1 1 auto;min-height:0;overflow:hidden}
+.tv-root.tv-xtream-mode .tv-xtream-catalog[hidden]{display:none}
+.tv-xtream-tabs{flex:none}
+.tv-root .tv-xtream-tabs button{min-width:44px;min-height:44px;padding:6px}
+.tv-root .tv-xtream-switch{flex:0 0 44px}
+.tv-root.tv-xtream-mode .tv-xtream-tools{display:flex;flex-direction:column;min-height:0;gap:7px;flex:none}
+.tv-root .tv-xtream-tools>*{width:100%;min-width:0;min-height:44px;flex:none}
+.tv-root.tv-xtream-mode .tv-xtream-list{flex:1 1 auto;min-height:0;overflow-y:auto}
+
+@media (orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .cockpit .full:has(>.tv-root){padding:4px}
+ .cockpit .full>.tv-root{gap:8px;width:100%;height:100%}
+ .cockpit .full>.tv-root>.tv-library{flex-basis:35%;min-width:220px;gap:5px}
+ .tv-root .tv-library>header{min-height:44px}
+ .tv-root .tv-library>header strong{font-size:18px}
+ .tv-root .tv-xtream-catalog,.tv-root.tv-xtream-mode .tv-xtream-tools{gap:5px}
+ .tv-root .tv-xtream-tabs{gap:4px}
+ .tv-root .tv-xtream-tabs button{font-size:12px}
+ .tv-root .tv-xtream-search,.tv-root .tv-search{font-size:16px}
+ .tv-root .tv-xtream-group{font-size:13px}
+ .tv-root .tv-xtream-list{gap:4px;padding-bottom:2px}
+ .tv-root .tv-xtream-item{min-height:48px;padding:6px 8px;font-size:13px}
+ .tv-root .tv-row{margin-bottom:4px}
+ .tv-root .tv-row>button:first-child{min-height:48px}
+ .tv-root .tv-row .tv-logo{width:30px;height:30px;font-size:11px}
+ .tv-root .tv-player{gap:5px}
+ .tv-root .tv-title{font-size:16px}
+ .tv-root .tv-actions{gap:4px}
+ .tv-root .tv-actions button,.tv-root .tv-web{padding:6px;font-size:12px}
+ .tv-root .tv-actions [data-act="fullscreen"] span{display:none}
+ .tv-root .tv-status{font-size:11px;min-height:15px}
+}
+
+/* Content tabs belong to the player column. The library keeps search + groups. */
+.tv-player .tv-xtream-tabs{display:none;min-width:0;flex:1;max-width:440px}
+.tv-xtream-mode .tv-player .tv-xtream-tabs{display:flex}
+.tv-player>header{justify-content:flex-end}
+.tv-root .tv-player .tv-xtream-tabs button{flex:1;min-width:44px}
+.tv-program{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;flex:none;align-items:center;min-width:0}
+.tv-program .tv-title{grid-column:1;grid-row:1;font-size:clamp(14px,1.3vw,20px)}
+.tv-epg-now{grid-column:1;grid-row:2;min-width:0;font-size:12px;color:#b9d4df;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tv-epg-now:empty{display:none}
+.tv-program [data-act="epg"]{grid-column:2;grid-row:1 / 3;min-width:44px;min-height:44px}
+.tv-root [data-act="epg"][hidden]{display:none}
+.tv-epg-dialog{width:min(90vw,680px)}
+.tv-epg-channel{color:#b9d4df;overflow-wrap:anywhere}
+.tv-epg-entry{border:1px solid #75d8ff44;border-radius:10px;margin:8px 0;padding:10px}
+.tv-epg-entry summary{cursor:pointer;min-height:44px}
+.tv-epg-entry small,.tv-epg-entry strong{display:block;overflow-wrap:anywhere}
+.tv-epg-entry small{color:#91d8eb;margin-bottom:4px}
+.tv-epg-entry p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.5}
+.tv-epg-actions{display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:#122b40;padding-top:8px}
+.tv-root .tv-epg-actions button{min-height:44px}
+@media (orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .tv-root .tv-program .tv-title{font-size:14px}
+ .tv-epg-now{font-size:11px}
+ .tv-root .tv-player .tv-xtream-tabs{gap:4px}
+ .tv-root .tv-player>header{gap:6px}
+}
+
+.tv-epg-diagnostics{margin:8px 0;color:#b9d4df}
+.tv-epg-diagnostics summary{min-height:44px;display:flex;align-items:center;cursor:pointer}
+.tv-epg-diagnostic-text{overflow-wrap:anywhere;line-height:1.5}
+
+/* Optional live diagnostics, kept below player status without covering the video or dock. */
+.tv-network{font-size:11px;line-height:1.4;color:#b4e7f4;overflow-wrap:anywhere;padding:4px 7px;background:#0b2638;border:1px solid #39738b;border-radius:7px;flex:none}
+.tv-network[hidden]{display:none!important}
+.tv-network-toggle[aria-expanded="true"]{outline:1px solid #75d8ff}
+@media (orientation:landscape) and (max-height:480px){.tv-network{font-size:10px;max-height:43px;overflow:auto}}
+
+
+/* MeviTV proxy update: compact, readable across desktop and landscape phones. */
+.tv-proxy-dialog{width:min(92vw,600px);max-height:calc(100dvh - 24px);padding:22px 24px;background:#10283c;border-color:#4f829c;box-shadow:0 18px 52px #0009}
+.tv-proxy-head{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-bottom:17px}
+.tv-proxy-head h3{font-size:20px;line-height:1.2;margin:0;color:#f1faff}
+.tv-proxy-status{font-size:13px;line-height:1.25;font-weight:750;white-space:nowrap;border-radius:999px;padding:7px 12px;background:#294054;color:#dfedf6}
+.tv-proxy-status[data-state=ok]{background:#163e36;color:#9ef3c5}
+.tv-proxy-status[data-state=update]{background:#494019;color:#ffe18c}
+.tv-proxy-status[data-state=error]{background:#522b32;color:#ffd0d4}
+.tv-proxy-status[data-state=busy]{background:#224b62;color:#b7ecff}
+.tv-proxy-versions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.tv-proxy-version{min-width:0;border:1px solid #47677d;background:#1a3549;border-radius:12px;padding:13px 15px;display:flex;flex-direction:column;gap:7px}
+.tv-proxy-label{font-size:13px;font-weight:600;letter-spacing:.015em;color:#afcbdc}
+.tv-proxy-version strong{font-size:clamp(16px,2.5vw,20px);font-weight:750;line-height:1.3;color:#f6fbff;overflow-wrap:anywhere}
+.tv-proxy-dialog .tv-proxy-details{font-size:15px;line-height:1.45;margin:16px 0 0;color:#e1f2ff}
+.tv-proxy-dialog .tv-proxy-note{font-size:12px;line-height:1.4;margin:7px 0 0;color:#a4bfce}
+.tv-proxy-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:20px}
+.tv-proxy-actions button{min-height:46px;border-radius:11px;font-size:14px;font-weight:650;padding:10px 15px;white-space:nowrap}
+.tv-proxy-actions [data-act=proxy-update]{background:#227b99;border-color:#53c7e9;color:#fff}
+.tv-proxy-actions [data-act=proxy-update]:disabled{opacity:.48;cursor:default}
+.tv-proxy-actions [data-act=proxy-close]{margin-left:auto}
+@media(max-width:490px),(max-height:440px){
+ .tv-proxy-dialog{padding:13px 16px}
+ .tv-proxy-head{margin-bottom:10px}
+ .tv-proxy-versions{gap:8px}
+ .tv-proxy-version{padding:10px}
+ .tv-proxy-actions{margin-top:12px;gap:7px}
+ .tv-proxy-actions button{min-height:42px;padding:8px 11px}
+}
+
+.tv-proxy-actions [data-act=proxy-rollback]{background:#273b4c;border-color:#6b8595;color:#d7e9f3}
+.tv-proxy-actions [data-act=proxy-rollback]:disabled{opacity:.43;cursor:default}
+
+/* Movi Player uses the existing MeviTV video stage only for MKV/AVI. */
+.tv-stage movi-player{display:block;width:100%;height:100%;min-width:0;min-height:0;flex:1;background:#050a10}
+.tv-stage video[hidden]{display:none!important}
+
+/* MKV-only diagnostics: compact, readable and deliberately below the video. */
+.tv-movi-diagnostics{flex:none;max-height:min(22dvh,140px);overflow:auto;padding:7px 10px;border:1px solid #44647c;border-radius:8px;background:#102638;color:#cde6f3;font-size:11px}
+.tv-movi-diagnostics[hidden]{display:none!important}
+.tv-movi-diagnostics summary{font-weight:700;font-size:12px;cursor:pointer;touch-action:manipulation}
+.tv-movi-log{font:11px/1.45 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:80px;overflow:auto;margin:5px 0}
+.tv-movi-diagnostics button{min-height:32px;padding:4px 9px;font-size:11px}
+@media(max-height:460px){.tv-movi-diagnostics{max-height:95px}.tv-movi-log{max-height:45px}}
+
+/* MeviTV landscape: reclaim safe-area width and maximize uninterrupted video. */
+.cockpit .full:has(>.tv-root){padding:2px 0 2px 4px;margin-right:env(safe-area-inset-right,0px);margin-top:env(safe-area-inset-top,0px);margin-bottom:env(safe-area-inset-bottom,0px)}
+.cockpit .full>.tv-root{gap:8px}
+.cockpit .full>.tv-root>.tv-library{flex:0 0 clamp(170px,25%,300px);width:auto;min-width:0}
+.tv-root.tv-xtream-mode .tv-xtream-tools{gap:4px}
+.tv-root .tv-xtream-tools>*{min-height:34px;height:34px;padding:4px 10px;font-size:clamp(12px,1.4vw,16px);border-radius:9px}
+.tv-root .tv-xtream-item{min-height:43px;padding:5px 9px}
+.tv-player>header{min-height:34px;gap:5px}
+.tv-root .tv-player .tv-xtream-tabs button,.tv-root .tv-settings{min-height:34px;height:34px;padding:3px 7px}
+.tv-root .tv-settings{flex-basis:44px;width:44px;font-size:20px}
+.tv-root .tv-player{gap:4px}
+.tv-root .tv-actions{display:none}
+.tv-root .tv-program{row-gap:2px}
+.tv-root .tv-program [data-act="epg"]{min-height:34px}
+.tv-root .tv-stage{flex:1 1 auto;min-height:0;border-radius:10px}
+.tv-root .tv-status{min-height:0;font-size:10px;line-height:1.15;max-height:1.2em;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.tv-preferences{display:grid;gap:9px;padding:10px 0;margin-bottom:10px;border-bottom:1px solid #75d8ff44}
+.tv-preferences label{display:flex;align-items:center;gap:9px;font-size:13px}
+.tv-preferences input[type=checkbox]{width:18px;height:18px;min-height:18px;accent-color:#66dddb}
+.tv-preference-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tv-preference-actions button{flex:1 1 180px}
+@media (orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .cockpit .full:has(>.tv-root){padding:2px 0 2px 3px}
+ .cockpit .full>.tv-root{gap:6px}
+ .cockpit .full>.tv-root>.tv-library{flex-basis:clamp(160px,24%,225px);min-width:0}
+ .tv-root .tv-xtream-tools>*{height:31px;min-height:31px;padding:3px 8px}
+ .tv-root .tv-xtream-item{min-height:38px;padding:4px 7px;font-size:12px}
+ .tv-root .tv-player .tv-xtream-tabs button,.tv-root .tv-settings{min-height:31px;height:31px;font-size:12px}
+ .tv-root .tv-player>header{min-height:31px;gap:3px}
+ .tv-root .tv-player{gap:3px}
+ .tv-root .tv-epg-now{font-size:10px}
+ .tv-root .tv-program .tv-title{font-size:13px}
+ .tv-root .tv-program [data-act="epg"]{min-height:32px;height:32px;padding:3px 6px}
+}
+
+/* IPTV live filtering: search, category, country and one persistent favorites toggle. */
+.tv-root .tv-live-filter-row{display:flex;gap:5px;align-items:stretch;min-width:0}
+.tv-root .tv-live-filter-row[hidden]{display:none!important}
+.tv-root .tv-live-country{flex:1 1 0;width:0;min-width:0}
+.tv-root .tv-live-favorites{flex:0 0 auto;padding:4px 9px;white-space:nowrap}
+.tv-root .tv-live-favorites[aria-pressed=true]{border-color:#63e8d0;color:#adfff0;background:#165661}
+.tv-root .tv-live-country:disabled{opacity:.55}
+.tv-root .tv-xtream-row{display:flex;align-items:stretch;gap:5px;min-width:0;flex:0 0 auto}
+.tv-root .tv-xtream-row>.tv-xtream-item{flex:1 1 0;width:0;min-width:0}
+.tv-root .tv-xtream-row>.tv-xtream-star{flex:0 0 40px;min-width:40px;padding:4px;font-size:23px}
+.tv-root .tv-xtream-star[aria-pressed=true]{color:#ffd77a;border-color:#f2c767}
+.tv-root .tv-live-filter-row>*{min-height:34px;height:34px;font-size:clamp(12px,1.4vw,16px)}
+@media (orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .tv-root .tv-live-filter-row>*{min-height:31px;height:31px;font-size:12px}
+ .tv-root .tv-live-favorites{padding:3px 6px}
+ .tv-root .tv-xtream-row>.tv-xtream-star{min-height:38px;font-size:19px}
+}
+
+/* IPTV identity: provider logos are lazy-loaded and never enlarge channel rows. */
+.tv-root .tv-xtream-row>.tv-xtream-item{
+ display:flex;flex-direction:row;align-items:center;justify-content:flex-start;
+ gap:clamp(7px,.7vw,12px);text-align:left;
+}
+.tv-channel-identity{
+ width:clamp(30px,3vw,40px);height:clamp(30px,3vw,40px);
+ flex:none;display:grid;place-items:center;
+ border-radius:8px;overflow:hidden;
+ background:#10293e;border:1px solid #54788b77;
+}
+.tv-channel-identity img{
+ width:100%;height:100%;object-fit:contain;
+ display:block;background:#163247;
+}
+.tv-channel-identity img[hidden],.tv-channel-fallback[hidden]{display:none!important}
+.tv-channel-fallback{
+ width:100%;height:100%;display:grid;place-items:center;
+ font-weight:750;font-size:clamp(10px,1vw,14px);
+ color:#b7e8f3;letter-spacing:.02em;
+}
+.tv-channel-text{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0}
+.tv-channel-text strong,.tv-channel-text small{
+ display:block;max-width:100%;overflow:hidden;
+ text-overflow:ellipsis;white-space:nowrap;
+}
+.tv-program{position:relative}
+.tv-playing-logo{
+ position:absolute;top:0;left:0;
+ width:clamp(30px,2.8vw,40px);height:clamp(30px,2.8vw,40px);
+ object-fit:contain;background:#10293e;
+ border:1px solid #54788b77;border-radius:7px;
+}
+.tv-playing-logo[hidden]{display:none!important}
+.tv-program:has(.tv-playing-logo:not([hidden])) .tv-title,
+.tv-program:has(.tv-playing-logo:not([hidden])) .tv-epg-now{
+ padding-left:clamp(38px,3.4vw,49px);
+}
+@media (orientation:landscape) and (max-height:480px){
+ .tv-channel-identity{width:29px;height:29px}
+ .tv-channel-fallback{font-size:10px}
+ .tv-playing-logo{width:29px;height:29px}
+ .tv-program:has(.tv-playing-logo:not([hidden])) .tv-title,
+ .tv-program:has(.tv-playing-logo:not([hidden])) .tv-epg-now{padding-left:35px}
+}
+
+/* Dedicated video fullscreen: header control remains visible on compact Samsung screens.
+   Fullscreen keeps the same stage/player; no new stream or player is created. */
+.tv-root .tv-fullscreen-toggle{flex:0 0 44px;width:44px;min-height:34px;height:34px;padding:2px;font-size:23px;line-height:1}
+.tv-root .tv-fullscreen-toggle:active{background:#126585}
+.tv-stage .tv-fullscreen-exit{display:none;position:absolute;z-index:30;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));min-width:44px;min-height:44px;padding:4px 10px;font-size:24px;line-height:1;border:1px solid #ffffff66;border-radius:12px;background:#071923d9;color:white;touch-action:manipulation}
+.tv-stage:fullscreen,.tv-stage:-webkit-full-screen{width:100vw!important;height:100dvh!important;max-width:none!important;max-height:none!important;min-height:0!important;border-radius:0!important;background:#000;overflow:hidden}
+.tv-stage:fullscreen .tv-fullscreen-exit,.tv-stage:-webkit-full-screen .tv-fullscreen-exit{display:block}
+.tv-stage:fullscreen video,.tv-stage:-webkit-full-screen video,.tv-stage:fullscreen movi-player,.tv-stage:-webkit-full-screen movi-player{width:100%!important;height:100%!important;object-fit:contain}
+
+
+/* Full-display MeviTV inside Android WebView without the blocked Fullscreen API.
+   Retain the video/movi element in place to avoid decoder reset or stream restart. */
+html.mevi-tv-theater,
+html.mevi-tv-theater body{overflow:hidden!important;width:100%!important;height:100%!important}
+html.mevi-tv-theater .shell{
+ position:fixed!important;inset:0!important;z-index:2147483000!important;
+ display:flex!important;flex-direction:column!important;
+ width:100vw!important;height:100dvh!important;max-width:none!important;
+ margin:0!important;padding:0!important;overflow:hidden!important;background:#000!important
+}
+html.mevi-tv-theater .cockpit,
+html.mevi-tv-theater .cockpit .body,
+html.mevi-tv-theater .cockpit .workspace,
+html.mevi-tv-theater .cockpit .screen,
+html.mevi-tv-theater .cockpit .full:has(>.tv-root),
+html.mevi-tv-theater .cockpit .side:has(>.tv-root),
+html.mevi-tv-theater .cockpit .tv-root,
+html.mevi-tv-theater .cockpit .tv-player{
+ display:flex!important;flex:1 1 auto!important;
+ min-width:0!important;min-height:0!important;width:100%!important;height:100%!important;
+ max-width:none!important;max-height:none!important;
+ margin:0!important;padding:0!important;gap:0!important;
+ border:0!important;border-radius:0!important;
+ box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+ background:#000!important;overflow:hidden!important
+}
+html.mevi-tv-theater .cockpit .body,
+html.mevi-tv-theater .cockpit .screen,
+html.mevi-tv-theater .cockpit .tv-root{flex-direction:row!important}
+html.mevi-tv-theater .cockpit .workspace,
+html.mevi-tv-theater .cockpit .full:has(>.tv-root),
+html.mevi-tv-theater .cockpit .side:has(>.tv-root),
+html.mevi-tv-theater .cockpit .tv-player{flex-direction:column!important}
+html.mevi-tv-theater .tv-root{container-type:normal!important}
+html.mevi-tv-theater :is(
+ .toolbar,.note,.cockpit .dock,.cockpit .status,.cockpit .screen>.map,
+ .tv-root>.tv-library,.tv-player>header,.tv-player>.tv-actions,
+ .tv-player>.tv-program,.tv-player>.tv-status,.tv-player>.tv-network,
+ .tv-player>.tv-movi-diagnostics
+){display:none!important}
+html.mevi-tv-theater .cockpit .tv-stage{
+ display:flex!important;position:relative!important;flex:1 1 auto!important;
+ inset:auto!important;min-width:0!important;min-height:0!important;
+ width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;
+ margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+ background:#000!important;overflow:hidden!important
+}
+html.mevi-tv-theater .tv-stage .tv-fullscreen-exit{
+ display:block!important;z-index:100!important;
+ top:max(10px,env(safe-area-inset-top,0px))!important;
+ right:max(10px,env(safe-area-inset-right,0px))!important;
+ width:48px!important;height:48px!important;min-height:48px!important
+}
+html.mevi-tv-theater .tv-stage video,
+html.mevi-tv-theater .tv-stage movi-player{
+ width:100%!important;height:100%!important;max-width:none!important;
+ object-fit:contain!important
+}
+
+/* Direct Android mode has its own provider vault, independent of Synology PIN. */
+.tv-native-direct .tv-xtream-form p,
+.tv-native-direct .tv-xtream-form label,
+.tv-native-direct [data-act="xtream-settings"],
+.tv-native-direct [data-act="proxy-status"] {display:none!important}
+.tv-engine {display:block;width:100%;min-height:44px;font:inherit;margin-top:8px}

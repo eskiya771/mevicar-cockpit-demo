@@ -1,0 +1,210 @@
+/* Gemini one-shot voice navigation. Shares theme colors with the only Navi search. */
+.mg-gemini-backdrop{
+ --gemini-bg:#0a1721;--gemini-card:#152837;--gemini-border:#448899;
+ --gemini-ink:#edf9ff;--gemini-sub:#b8d1dd;--gemini-accent:#79e8f8;
+ position:fixed;inset:0;z-index:2147481000;
+ background:rgba(3,6,14,.86);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);
+ color:var(--gemini-ink);font-family:Roboto,"Segoe UI",system-ui,sans-serif;
+ display:flex;align-items:center;justify-content:center;
+ padding:max(12px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right))
+ max(12px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+ box-sizing:border-box;
+}
+html[data-theme="cyberpunk"] .mg-gemini-backdrop{
+ --gemini-bg:#150920;--gemini-card:#261331;--gemini-border:#b03a9c;
+ --gemini-ink:#ffe8fb;--gemini-sub:#e7a6d8;--gemini-accent:#64eaff;
+}
+html[data-theme="liquidglass"] .mg-gemini-backdrop{
+ --gemini-bg:#132335;--gemini-card:#1b3350;--gemini-border:#7fa9c9;
+ --gemini-ink:#f4f8ff;--gemini-sub:#d5e6f4;--gemini-accent:#b3edff;
+}
+.mg-gemini-dialog{
+ box-sizing:border-box;width:min(670px,100%);max-height:100%;min-height:0;
+ display:flex;flex-direction:column;gap:clamp(8px,1.5vh,15px);overflow:auto;
+ padding:clamp(14px,2.5vw,28px);
+ background:var(--gemini-bg);border:1px solid var(--gemini-border);
+ border-radius:22px;box-shadow:0 22px 65px #000a;
+ font-size:clamp(14px,1.5vw,19px);
+}
+.mg-gemini-dialog header{display:flex;align-items:center;justify-content:space-between;gap:15px}
+.mg-gemini-dialog header>div{display:flex;flex-direction:column;gap:3px;min-width:0}
+.mg-gemini-dialog header strong{font-size:clamp(19px,2.4vw,29px)}
+.mg-gemini-dialog header small{font-size:clamp(11px,1.15vw,14px);color:var(--gemini-accent)}
+.mg-gemini-dialog .mg-gemini-help{margin:0;line-height:1.4;color:var(--gemini-sub)}
+.mg-gemini-dialog label{font-weight:700}
+.mg-gemini-inputrow{display:flex;align-items:stretch;gap:9px;min-height:80px;min-width:0}
+.mg-gemini-dialog textarea{
+ box-sizing:border-box;flex:1;min-width:0;min-height:80px;resize:vertical;
+ background:var(--gemini-card);border:1px solid var(--gemini-border);
+ color:var(--gemini-ink);border-radius:12px;padding:12px 14px;
+ font:inherit;line-height:1.35;outline:0;
+}
+.mg-gemini-dialog textarea:focus-visible{outline:2px solid var(--gemini-accent);outline-offset:1px}
+.mg-gemini-dialog button{
+ min-width:52px;min-height:48px;border:1px solid var(--gemini-border);
+ background:var(--gemini-card);color:var(--gemini-ink);
+ border-radius:12px;padding:10px 18px;cursor:pointer;font:inherit;font-weight:700;
+ touch-action:manipulation;
+}
+.mg-gemini-dialog button:focus-visible{outline:2px solid var(--gemini-accent);outline-offset:1px}
+.mg-gemini-dialog button:disabled{opacity:.5;cursor:wait}
+.mg-gemini-dialog .mg-gemini-close{font-size:29px;line-height:1;padding:5px 12px}
+.mg-gemini-dialog .mg-gemini-mic{font-size:29px;flex:0 0 60px;padding:5px}
+.mg-gemini-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.mg-gemini-dialog #mg-gemini-accept{background:var(--gemini-accent);color:#0b2434;border-color:var(--gemini-accent)}
+.mg-gemini-dialog [hidden]{display:none!important}
+.mg-gemini-status{min-height:25px;color:var(--gemini-accent);line-height:1.3}
+.mg-gemini-status-row{display:flex;align-items:center;gap:8px;min-width:0}
+.mg-gemini-status-row .mg-gemini-status{flex:1 1 0;min-width:0;overflow-wrap:anywhere}
+.mg-gemini-dialog .mg-gemini-error-replay{
+ flex:0 0 auto;min-height:44px;min-width:82px;padding:7px 9px;
+ color:var(--gemini-accent);font-size:clamp(11px,1.8vh,14px);
+}
+/* Let the message fill the available width while the replay button stays
+   beside it, rather than placing another full-width toolbar beneath it. */
+.mg-gemini-answer-row{
+ display:flex;align-items:stretch;gap:clamp(6px,1vw,12px);min-width:0;
+}
+.mg-gemini-answer{
+ flex:1 1 0;min-width:0;margin:0;min-height:0;padding:clamp(10px,1.5vw,15px);
+ border-radius:12px;background:var(--gemini-card);
+ color:var(--gemini-ink);line-height:1.4;overflow-wrap:anywhere;
+}
+.mg-gemini-dialog .mg-gemini-replay{
+ display:grid;place-items:center;flex:0 0 clamp(44px,5.5vw,56px);
+ min-width:44px;min-height:44px;padding:9px;
+ color:var(--gemini-accent);border-color:var(--gemini-border);
+}
+.mg-gemini-replay svg{display:block;width:100%;height:100%;max-width:30px;max-height:30px}
+/* On iOS standalone PWA, the browser speech engine may silently refuse TTS.
+   A local tap-generated beep and a concise status help distinguish it from
+   media-volume/Bluetooth routing problems without any additional API cost. */
+.mg-gemini-dialog .mg-gemini-tone-test{
+ flex:0 0 auto;align-self:stretch;min-width:72px;min-height:44px;
+ padding:7px 10px;font-size:clamp(11px,1.8vh,14px);
+ color:var(--gemini-accent);font-weight:650;
+}
+.mg-gemini-audio-status{
+ display:block;margin:-4px 0 0;
+ color:var(--gemini-accent);font-size:clamp(11px,1.8vh,14px);
+ line-height:1.25;overflow-wrap:anywhere;
+}
+@media(orientation:landscape) and (max-height:470px){
+ .mg-gemini-dialog .mg-gemini-tone-test{min-width:68px;padding:5px 7px}
+ .mg-gemini-dialog .mg-gemini-replay{flex-basis:44px}
+}
+
+.mg-gemini-dialog .mg-gemini-privacy{color:var(--gemini-sub);line-height:1.4}
+.mg-navigation .mg-gemini-launch{
+ flex:0 0 auto;display:flex;gap:6px;align-items:center;justify-content:center;
+ min-width:clamp(46px,5vw,62px);min-height:46px;padding:4px 8px;
+ background:var(--nav-search-surface);color:var(--nav-search-accent);
+ border:1px solid var(--nav-search-stroke);border-radius:14px;
+ font-size:clamp(22px,2.8vh,29px);cursor:pointer;
+}
+.mg-navigation .mg-gemini-launch:focus-visible{outline:2px solid var(--nav-search-accent);outline-offset:2px}
+@media(orientation:landscape) and (max-height:470px){
+ .mg-gemini-dialog{gap:6px;padding:10px 16px;border-radius:15px}
+ .mg-gemini-dialog header strong{font-size:18px}
+ .mg-gemini-dialog .mg-gemini-help{font-size:12px}
+ .mg-gemini-inputrow,.mg-gemini-dialog textarea{min-height:48px}
+ .mg-gemini-dialog button{min-height:43px}
+ .mg-gemini-dialog .mg-gemini-privacy{font-size:11px}
+}
+
+/* Compact persistent transcription preview. Only shown after Gemini returned
+   actual spoken words; the original edit field and assistant reply stay intact. */
+.mg-gemini-spoken{
+ display:flex;flex:0 0 auto;flex-wrap:wrap;align-items:baseline;gap:4px 8px;min-width:0;
+ min-height:38px;padding:7px 11px;border-left:3px solid var(--gemini-accent);
+ border-radius:5px;background:var(--gemini-card);line-height:1.28;
+ max-height:clamp(48px,11vh,65px);overflow-y:auto;overflow-wrap:anywhere;
+ font-size:clamp(12px,2.4vh,17px);
+}
+.mg-gemini-spoken>span{flex:0 0 auto;color:var(--gemini-accent);font-weight:700}
+.mg-gemini-spoken>strong{min-width:0;font-weight:650}
+
+
+/* Collapsible local trace, closed by default in the constrained iPhone landscape UI. */
+.mg-gemini-dialog .mg-gemini-diagnostics{flex:0 0 auto;color:var(--gemini-sub);font-size:12px}
+.mg-gemini-dialog .mg-gemini-diagnostics summary{cursor:pointer;padding:3px 0}
+.mg-gemini-dialog .mg-gemini-diagnostics pre{max-height:100px;overflow:auto;
+ margin:4px 0 0;padding:7px;border-radius:7px;background:var(--gemini-card);
+ white-space:pre-wrap;overflow-wrap:anywhere;font:11px/1.35 ui-monospace,monospace}
+
+/* The ribbons live at the viewport edges, behind the scrollable dialog. */
+.mg-voice-frame {
+ position:absolute;
+ inset:0;
+ overflow:hidden;
+ pointer-events:none;
+ --voice-energy:0;
+ --voice-spectrum:linear-gradient(90deg,#67f9ff,#177bff 19%,#7758ff 36%,#fa65dc 55%,#ffb977 69%,#ad62ff 84%,#67f9ff);
+ /* A tapered ribbon with a bright crest and a softer second fold.
+    Both ends share the same height and slope so the repeat is seamless. */
+ --voice-ribbon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 60' preserveAspectRatio='none'%3E%3Cpath fill='white' opacity='.35' d='M0 0H600V24C500 24 500 46 426 46S292 7 240 7S90 24 0 24Z'/%3E%3Cpath fill='white' d='M0 0H600V13C516 13 493 32 429 32S301 5 246 5S104 13 0 13Z'/%3E%3Cpath fill='none' stroke='white' stroke-width='1.6' d='M0 24C90 24 188 7 240 7S352 46 426 46S500 24 600 24'/%3E%3C/svg%3E");
+}
+.mg-voice-frame[hidden] { display:none; }
+.mg-voice-frame:not([hidden]) + .mg-gemini-dialog { position:relative; }
+.mg-voice-frame::before {
+ content:"";
+ position:absolute;
+ inset:0;
+ box-shadow:inset 0 0 0 2px #b4cbff, inset 0 0 18px #795aff;
+ background:
+  radial-gradient(ellipse 84% 13% at 22% 0%,#199dffcf,transparent),
+  radial-gradient(ellipse 62% 12% at 84% 0%,#fa55a8ae,transparent),
+  radial-gradient(ellipse 74% 15% at 28% 100%,#b653ffdc,transparent),
+  radial-gradient(ellipse 64% 14% at 83% 100%,#32e1ffbe,transparent),
+  linear-gradient(90deg,#48c9ffc4,transparent clamp(14px,4vmin,44px),transparent calc(100% - clamp(14px,4vmin,44px)),#d773ffc9);
+ animation:mg-voice-breathe 1.8s ease-in-out infinite alternate;
+}
+.mg-voice-wave {
+ position:absolute;
+ inset:0 0 auto;
+ height:clamp(26px,7.5vmin,80px);
+ transform-origin:center top;
+ transform:scaleY(calc(.83 + var(--voice-energy) * .85));
+ transition:transform 140ms ease-out;
+}
+.mg-voice-wave:last-child {
+ top:100%;
+ transform:rotate(180deg) scaleY(calc(.94 + var(--voice-energy) * .95));
+}
+.mg-voice-wave::before, .mg-voice-wave::after {
+ content:"";
+ position:absolute;
+ inset:0 auto 0 0;
+ width:200%;
+ background-image:var(--voice-spectrum);
+ background-size:50% 100%;
+ -webkit-mask:var(--voice-ribbon) 0 0 / 50% 100% repeat-x;
+ mask:var(--voice-ribbon) 0 0 / 50% 100% repeat-x;
+ transform-origin:center top;
+ animation:mg-voice-flow 5.6s linear infinite;
+}
+.mg-voice-wave::after {
+ height:70%;
+ opacity:.68;
+ mix-blend-mode:screen;
+ animation:mg-voice-flow 3.9s linear -1.3s infinite reverse;
+}
+.mg-voice-wave:last-child::before { animation-delay:-2.2s; }
+.mg-voice-wave:last-child::after { animation-delay:-.35s; }
+.mg-voice-frame:not([hidden]) + .mg-gemini-dialog .mg-gemini-mic {
+ color:white;
+ border-color:#a9f6ff;
+ background:linear-gradient(150deg,#136585,#494198 70%,#743e95);
+ box-shadow:0 0 0 2px #6ee9ff54,0 0 16px #6c91ff65;
+}
+@keyframes mg-voice-flow {
+ 0% { transform:translateX(0) scaleY(.66); }
+ 50% { transform:translateX(-25%) scaleY(1.18); }
+ 100% { transform:translateX(-50%) scaleY(.66); }
+}
+@keyframes mg-voice-breathe { from { opacity:.64; } to { opacity:1; } }
+@media (prefers-reduced-motion:reduce) {
+ .mg-voice-frame::before, .mg-voice-wave::before, .mg-voice-wave::after { animation:none; }
+ .mg-voice-wave, .mg-voice-wave:last-child { transition:none; transform:none; }
+ .mg-voice-wave:last-child { transform:rotate(180deg); }
+}

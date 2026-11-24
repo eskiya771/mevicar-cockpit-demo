@@ -1,0 +1,334 @@
+/* Shared destination search and address book. */
+.mg-navigation .mg-parity-shade{
+ position:fixed;inset:0;z-index:2147480000;font-family:Roboto,"Segoe UI",system-ui,sans-serif;
+ box-shadow:none;border:0;border-radius:0;overflow:hidden;
+ padding:max(6px,env(safe-area-inset-top)) max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))
+}
+.mg-navigation .mg-parity-shade{
+ --nav-search-background:#0a1721;
+ --nav-search-surface:#152837;
+ --nav-search-stroke:#448899;
+ --nav-search-ink:#edf9ff;
+ --nav-search-dim:#b8d1dd;
+ --nav-search-accent:#8beaff;
+ background:var(--nav-search-background);
+ color:var(--nav-search-ink);
+ -webkit-text-size-adjust:100%;text-size-adjust:100%;
+}
+html[data-theme="cyberpunk"] .mg-parity-shade{
+ --nav-search-background:#0b0815;
+ --nav-search-surface:#1c1030;
+ --nav-search-stroke:#b03a9c;
+ --nav-search-ink:#ffe8fb;
+ --nav-search-dim:#e7a6d8;
+ --nav-search-accent:#64eaff;
+}
+html[data-theme="liquidglass"] .mg-parity-shade{
+ --nav-search-background:#102033;
+ --nav-search-surface:#1b3350;
+ --nav-search-stroke:#7fa9c9;
+ --nav-search-ink:#f4f8ff;
+ --nav-search-dim:#d5e6f4;
+ --nav-search-accent:#b3edff;
+}
+.mg-parity-layout{height:100%;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,10px);margin-left:clamp(90px,7.6vw,118px)}
+.mg-parity-top{display:flex;gap:clamp(6px,0.65vw,11px);align-items:center;min-width:0;flex:0 0 auto;height:clamp(48px,11.5vh,80px)}
+.mg-navigation .mg-parity-back,.mg-navigation .mg-parity-field{
+ height:100%;border:0;border-radius:clamp(12px,2vh,22px);background:var(--nav-search-surface);color:var(--nav-search-ink)
+}
+.mg-navigation .mg-parity-back{flex:0 0 clamp(48px,5.3vw,82px);padding:10px;display:grid;place-items:center;border:1px solid var(--nav-search-stroke)}
+.mg-parity-back svg{width:clamp(25px,3vw,36px);height:clamp(25px,3vw,36px)}
+.mg-parity-field{flex:1;min-width:0;display:flex;align-items:center;padding:0 clamp(9px,1.4vw,20px);gap:10px}
+.mg-parity-field>svg{width:20px;height:20px;opacity:.7}
+.mg-parity-field input{min-width:0;width:100%;border:0;background:transparent;outline:0;color:var(--nav-search-ink);font-size:clamp(16px,1.45vw,23px);font-weight:400;padding:0;height:100%;appearance:none;-webkit-appearance:none}
+.mg-parity-field input::placeholder,#mg-parity-filter::placeholder{color:var(--nav-search-dim);opacity:1}
+.mg-parity-field input::-webkit-search-cancel-button{display:none}
+.mg-parity-clear{border:0;background:transparent;font-size:28px;padding:0 12px;color:var(--nav-search-ink)}
+#mg-parity-controls{flex:0 0 auto;min-height:0}
+#mg-parity-controls[hidden]{display:none}
+.mg-parity-chips{display:flex;align-items:center;gap:clamp(4px,.7vw,10px);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;min-width:0;touch-action:pan-x;padding:0 0 clamp(3px,1.4vh,10px)}
+.mg-parity-chips::-webkit-scrollbar{display:none}
+.mg-navigation .mg-parity-chips button{display:inline-flex;flex:0 0 auto;align-items:center;gap:clamp(5px,.8vw,11px);height:clamp(43px,11.5vh,81px);border-radius:clamp(12px,1.6vh,21px);border:0;background:var(--nav-search-surface);color:var(--nav-search-ink);padding:0 clamp(10px,1.65vw,27px);font-size:clamp(13px,2.45vh,24px);white-space:nowrap}
+.mg-parity-chips svg{width:clamp(18px,2.4vh,28px);height:clamp(18px,2.4vh,28px);flex:0 0 auto}
+.mg-parity-tabs{display:flex;align-items:center;gap:clamp(5px,.7vw,10px)}
+.mg-navigation .mg-parity-tabs button{border:0;border-radius:clamp(12px,2.6vh,21px);padding:0 clamp(13px,1.7vw,26px);height:clamp(44px,11.7vh,81px);font-size:clamp(14px,2.5vh,23px);background:var(--nav-search-surface);color:var(--nav-search-ink)}
+.mg-navigation .mg-parity-tabs button.selected{background:var(--nav-search-accent);color:#09252e}
+.mg-parity-results{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;touch-action:pan-y;display:flex;flex-direction:column;gap:clamp(3px,.7vh,6px)}
+.mg-parity-slot-rows{display:contents}
+.mg-parity-row{display:flex;min-width:0;flex:0 0 auto;align-items:stretch;border-radius:clamp(12px,2vh,21px);background:var(--nav-search-surface);overflow:hidden;min-height:clamp(52px,13.7vh,94px)}
+.mg-navigation .mg-parity-entry{border:0;background:transparent;border-radius:0;min-height:0;min-width:0;width:100%;padding:clamp(7px,1.25vh,16px) clamp(10px,1.7vw,26px);display:flex;align-items:center;gap:clamp(8px,1.25vw,22px);text-align:left;color:var(--nav-search-ink)}
+.mg-parity-symbol{display:grid;place-items:center;color:var(--nav-search-dim);flex:0 0 clamp(22px,2.2vw,34px)}
+.mg-parity-symbol svg{width:clamp(21px,3.2vh,35px);height:clamp(21px,3.2vh,35px)}
+.mg-parity-description{min-width:0;flex:1;display:flex;flex-direction:column;gap:clamp(1px,.45vh,4px)}
+.mg-parity-description strong{font-weight:650;font-size:clamp(18px,1.5vw,23px);line-height:1.18;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mg-parity-description small{font-size:clamp(15px,1.2vw,19px);line-height:1.2;color:var(--nav-search-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mg-parity-distance{flex:0 0 auto;font-size:clamp(14px,1.1vw,18px);line-height:1.2;color:var(--nav-search-dim);white-space:nowrap}
+.mg-parity-empty{padding:clamp(13px,3vh,30px);font-size:clamp(13px,2.2vh,20px);color:var(--nav-search-dim)}
+.mg-navigation .mg-parity-empty-slot{border:0;background:var(--nav-search-surface);border-radius:12px;padding:12px 17px;text-align:left;font-size:clamp(13px,2.4vh,20px);min-height:44px}
+/* Selecting an unset Home/Work slot must be unmistakable on all three themes.
+   Highlight the fixed row and search field, including when the keyboard hides rows. */
+.mg-navigation .mg-parity-empty-slot.is-assigning{
+ background:var(--nav-search-accent);color:#082733;
+ outline:2px solid var(--nav-search-accent);outline-offset:-2px;
+ font-weight:800;box-shadow:inset 0 0 0 2px #08273333;
+}
+.mg-navigation .mg-parity-field.is-assigning{
+ box-shadow:inset 0 0 0 2px var(--nav-search-accent);
+}
+.mg-parity-field.is-assigning>svg{opacity:1;color:var(--nav-search-accent)}
+/* Tabs left, address-book management aligned right in the SAME toolbar row. */
+.mg-parity-toolbar{
+ display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;
+ gap:clamp(6px,1vw,18px);min-width:0;width:100%;
+}
+.mg-parity-tabs{min-width:0;overflow-x:auto;scrollbar-width:none;flex:0 0 auto}
+.mg-parity-tabs::-webkit-scrollbar{display:none}
+.mg-navigation .mg-parity-tabs button{flex:0 0 auto;white-space:nowrap}
+.mg-navigation .mg-parity-tabs .mg-parity-manage-toggle[aria-pressed="true"]{
+ border:1px solid var(--nav-search-accent);color:var(--nav-search-accent)
+}
+.mg-parity-manage-actions{
+ display:flex;align-items:center;justify-content:flex-end;
+ gap:clamp(4px,.7vw,10px);overflow-x:auto;
+ flex:0 1 auto;min-width:0;margin-left:auto;scrollbar-width:none
+}
+.mg-parity-manage-actions::-webkit-scrollbar{display:none}
+.mg-navigation .mg-parity-manage-actions button{
+ display:inline-flex;align-items:center;gap:5px;flex:0 0 auto;
+ min-height:44px;padding:5px clamp(9px,1.1vw,16px);
+ border-radius:12px;border:1px solid var(--nav-search-stroke);
+ background:var(--nav-search-surface);color:var(--nav-search-ink);
+ font-size:clamp(12px,2.2vh,18px);white-space:nowrap
+}
+.mg-parity-manage-actions svg{width:18px;height:18px}
+/* Only narrow portrait windows need a second line. Landscape keeps
+   the tab selection at left and the three actions at the right edge. */
+@media(max-width:720px){
+ .mg-parity-toolbar{flex-wrap:wrap}
+ .mg-parity-manage-actions{flex:1 1 100%;justify-content:flex-end;margin-left:0}
+}
+.mg-parity-section-title{flex:0 0 auto;font-size:clamp(13px,1.1vw,17px);font-weight:650;
+ color:var(--nav-search-dim);padding:clamp(4px,.6vh,8px) 5px}
+.mg-navigation .mg-parity-inline{flex:0 0 clamp(44px,5vw,56px);min-width:44px;min-height:44px;padding:5px;background:transparent;border:0;border-radius:0;color:var(--nav-search-dim)}
+.mg-parity-inline svg{width:19px;height:19px}
+.mg-parity-empty-slot{display:flex;align-items:center;gap:8px}
+.mg-parity-empty-slot svg{width:20px;height:20px}
+@media(max-width:850px), (max-height:440px){
+ .mg-navigation .mg-parity-shade{padding: max(4px,env(safe-area-inset-top)) max(5px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left))}
+ .mg-parity-field>svg{display:none}
+ .mg-parity-top{height:clamp(42px,10.5vh,56px)}
+ .mg-parity-row{min-height:clamp(47px,12.3vh,68px)}
+}
+/* Match the native Android address-entry flow: the map stays edge-to-edge,
+   but opening the shared search/address book/POI/editor dialogs temporarily
+   hides the app dock. This makes the full safe-area width available for controls.
+   Closing the dialog restores the dock automatically (no separate JS state). */
+.cockpit:has(.mg-parity-shade) .dock{display:none!important}
+.cockpit:has(.mg-parity-shade) .body{gap:0!important}
+.cockpit:has(.mg-parity-shade) .mg-parity-layout{margin-left:0!important}
+
+@media(orientation:portrait){
+ .mg-parity-layout{margin-left:0}
+ .mg-parity-top{height:clamp(46px,9vh,72px)}
+ .mg-parity-chips button{max-width:none}
+}
+
+/* Android-style edit sheet: shared search UI, keyboard-safe, no extra scroll in cockpit. */
+.mg-parity-editor .mg-parity-top>strong{font-size:clamp(17px,3.3vh,29px)}
+.mg-parity-edit-scroll{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain;
+ display:flex;flex-direction:column;gap:clamp(8px,1.5vh,14px);padding:clamp(6px,1.1vw,14px)}
+.mg-parity-edit-scroll label{display:flex;flex-direction:column;gap:4px;
+ font-size:clamp(13px,2vh,18px);font-weight:600;color:#dfb8d8}
+.mg-navigation .mg-parity-edit-scroll input{background:#211332;color:#f9e6f3;border:1px solid #755275;
+ border-radius:12px;min-height:clamp(45px,10vh,58px);padding:0 13px;width:100%;font-size:clamp(14px,2.5vh,21px)}
+.mg-parity-edit-address{font-size:clamp(12px,2.1vh,17px);color:#c7a9c9;margin:0}
+.mg-parity-edit-scroll h3{font-size:clamp(12px,2vh,17px);margin:0;color:#dfb8d8}
+.mg-parity-edit-icons,.mg-parity-edit-roles{display:flex;align-items:center;gap:8px;overflow-x:auto;
+ overscroll-behavior-x:contain;scrollbar-width:thin;padding-bottom:6px}
+.mg-navigation .mg-parity-edit-icons button{flex:0 0 clamp(42px,9.5vh,58px);height:clamp(42px,9.5vh,58px);
+ border-radius:12px;background:#211332;color:#e9d3e9;border:2px solid transparent;display:grid;place-items:center}
+.mg-parity-edit-icons svg{height:clamp(19px,4.2vh,27px);width:clamp(19px,4.2vh,27px)}
+.mg-navigation .mg-parity-edit-roles button{flex:0 0 auto;border-radius:12px;border:2px solid transparent;
+ min-height:clamp(42px,9.5vh,58px);padding:0 18px;background:#211332;color:#f6e7f6;
+ font-size:clamp(13px,2.3vh,19px)}
+.mg-navigation .mg-parity-edit-roles button.selected,
+.mg-navigation .mg-parity-edit-icons button.selected{border-color:#55e5f6;background:#32204d}
+.mg-parity-edit-error{color:#ffbcb8;margin:0;min-height:1em;font-size:clamp(12px,2vh,17px)}
+.mg-parity-edit-actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px;flex:0 0 auto}
+.mg-navigation .mg-parity-edit-actions button{border:0;background:#211332;color:#f8e9f8;
+ border-radius:12px;padding:10px 17px;min-height:clamp(44px,9vh,58px);font-size:clamp(14px,2.4vh,20px)}
+.mg-navigation .mg-parity-edit-actions .mg-parity-edit-save{background:#55e5f6;color:#09252e}
+.mg-navigation .mg-parity-inline[disabled]{opacity:.3;pointer-events:none}
+@media(max-width:850px),(max-height:440px){
+ .mg-navigation .mg-parity-inline{flex-basis:44px;padding:3px}
+ .mg-navigation .mg-parity-row .mg-parity-entry{padding:5px 7px;gap:5px}
+ .mg-parity-edit-scroll{gap:5px;padding:4px}
+ .mg-parity-edit-actions{gap:5px}
+ .mg-navigation .mg-parity-edit-actions button{padding:6px 12px}
+}
+
+/* POI results and details, adapted to the five landscape profiles.
+   List actions stay visible while results scroll independently. */
+.mg-poi-title{flex:1;min-width:0;font-size:clamp(17px,3.4vh,29px);font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mg-poi-google{flex:0 0 auto;color:#bfa9d1;font-size:clamp(11px,1.9vh,15px);white-space:nowrap}
+.mg-poi-chips{display:flex;align-items:center;gap:clamp(4px,1vw,12px);overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;flex:0 0 auto}
+.mg-poi-chips::-webkit-scrollbar{display:none}
+.mg-navigation .mg-poi-chips button,.mg-navigation .mg-poi-retry{min-height:clamp(43px,10vh,57px);padding:5px clamp(10px,1.5vw,22px);background:#211332;color:#f4e3f3;border:2px solid transparent;border-radius:12px;font-size:clamp(13px,2.3vh,19px);white-space:nowrap}
+.mg-navigation .mg-poi-chips button.selected{background:#23405a;color:#b7f7ff;border-color:#55e5f6}
+.mg-poi-results{padding:0 1px 4px}
+.mg-poi-hit{display:flex;align-items:stretch;flex:0 0 auto;gap:0;min-height:clamp(54px,13vh,83px);background:#201332;border-radius:12px;overflow:hidden}
+.mg-navigation .mg-poi-hit-main{display:flex;flex:1;min-width:0;align-items:center;text-align:left;background:transparent;border:0;padding:6px clamp(9px,1.2vw,18px);gap:clamp(7px,1.1vw,14px);color:#f8e5f4;border-radius:0}
+.mg-poi-number{display:grid;place-items:center;flex:0 0 clamp(26px,5vh,34px);height:clamp(26px,5vh,34px);border-radius:50%;background:#55e5f6;color:#122b38;font-size:clamp(13px,2.2vh,17px);font-weight:750}
+.mg-poi-desc{min-width:0;flex:1;display:flex;flex-direction:column;gap:3px;overflow:hidden}
+.mg-poi-desc strong{font-size:clamp(14px,2.65vh,22px);white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.mg-poi-desc small{font-size:clamp(12px,2.1vh,17px);color:#cba9c8;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.mg-navigation .mg-poi-route{flex:0 0 clamp(46px,9.8vh,60px);background:transparent;color:#55e5f6;border:0;border-left:1px solid #56335c;display:grid;place-items:center;border-radius:0}
+.mg-poi-route svg{height:clamp(22px,4.6vh,31px);width:clamp(22px,4.6vh,31px)}
+.mg-poi-detail-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:clamp(8px,1.4vw,20px);display:flex;flex-direction:column;gap:clamp(7px,1.5vh,14px)}
+.mg-poi-detail-body h2{font-size:clamp(21px,4.3vh,35px);line-height:1.2;overflow-wrap:anywhere;margin:0}
+.mg-poi-detail-body p{font-size:clamp(14px,2.7vh,21px);line-height:1.32;margin:0;overflow-wrap:anywhere}
+.mg-poi-detail-body p svg{height:1.15em;width:1.15em;vertical-align:middle}
+.mg-poi-detail-body a{color:#a5f8ff}
+.mg-poi-muted{color:#c9adcf}
+.mg-poi-opening{color:#a9eeca}
+.mg-poi-warning{color:#fac7bc}
+.mg-navigation .mg-poi-warning button{border:1px solid #9d6377;border-radius:10px;padding:6px 12px;background:#2e2034;color:#ffe9ee}
+.mg-poi-hours summary{font-weight:650;color:#d3eaff;cursor:pointer;min-height:32px}
+.mg-poi-hours>div{font-size:clamp(12px,2.1vh,17px);padding:3px 0}
+.mg-poi-detail-actions{flex:0 0 auto;display:flex;gap:clamp(6px,1vw,14px)}
+.mg-navigation .mg-poi-detail-actions button{flex:1;min-width:0;min-height:clamp(46px,10vh,64px);background:#281b3b;color:#f8e4f5;border:1px solid #70567c;border-radius:13px;font-size:clamp(15px,2.7vh,22px);font-weight:650;padding:6px 12px}
+.mg-navigation .mg-poi-detail-actions button.mg-poi-action-route{background:#55e5f6;color:#112a36;border-color:#55e5f6}
+@media(max-width:850px),(max-height:440px){
+ .mg-poi-detail-body{padding:5px 7px;gap:5px}
+ .mg-poi-detail-body h2{font-size:clamp(18px,4vh,24px)}
+ .mg-poi-chips{gap:5px}
+ .mg-navigation .mg-poi-chips button{padding:4px 9px}
+ .mg-poi-google{font-size:11px}
+}
+
+/* Route-stop search shares the POI sheet; touchscreen controls remain reachable. */
+.mg-poi-hint{flex:0 0 auto;font-size:clamp(11px,1.9vh,15px);color:#a4ccdc;padding:1px 8px}
+.mg-poi-chips button[aria-pressed="true"]{white-space:nowrap}
+.mg-navigation .mg-poi-detail-actions .mg-poi-action-stop{background:#2e4960;color:#ceffff;border-color:#4a9cb2;flex:1.2}
+.mg-navigation .mg-poi-detail-actions{flex-wrap:wrap}
+.mg-navigation .mg-poi-detail-actions button{min-width:105px}
+.mg-navigation .mg-poi-warning[role="alert"]{font-size:clamp(12px,2.1vh,18px);padding:3px 8px}
+.mg-waypoint-list{display:flex;flex-direction:column;gap:4px;max-height:clamp(70px,20vh,160px);overflow-y:auto;padding:4px 1px}
+.mg-waypoint-list>strong{font-size:clamp(12px,2vh,16px)}
+.mg-waypoint-row{display:flex;align-items:center;gap:8px;font-size:clamp(12px,2.2vh,17px);color:#e7ebf6}
+.mg-waypoint-row span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mg-waypoint-row button{flex:0 0 clamp(30px,6vh,40px);height:clamp(30px,6vh,40px);border-radius:8px;background:#45243d;color:#fff;border:1px solid #81506e}
+@media(max-width:850px),(max-height:440px){
+ .mg-navigation .mg-poi-detail-actions button{padding:5px 8px;min-height:38px;min-width:95px}
+ .mg-waypoint-list{max-height:60px}
+}
+
+/* Shared selected destination is drawn from the same Place sheet as POIs.
+   Show it next to the map as Android does, rather than the old Web preview. */
+.mg-navigation .mg-parity-shade.mg-parity-selected{
+ position:absolute;inset:0 auto 0 0;z-index:8;
+ width:min(46%,720px);max-width:calc(100% - 12px);
+ border-radius:0 16px 16px 0;padding:clamp(6px,1.1vh,12px);
+}
+.mg-navigation .mg-parity-selected .mg-parity-layout{margin-left:0!important}
+.mg-parity-selected .mg-poi-detail-actions{flex-wrap:nowrap}
+.mg-navigation .mg-parity-selected .mg-poi-detail-actions button{min-width:0;flex:1}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-navigation .mg-parity-shade.mg-parity-selected{
+  left:max(4px,env(safe-area-inset-left,0px));
+  top:max(4px,env(safe-area-inset-top,0px));
+  bottom:max(4px,env(safe-area-inset-bottom,0px));
+  width:min(46vw,640px);border-radius:16px;
+ }
+ .mg-parity-selected .mg-poi-detail-body{padding:6px 9px;gap:5px}
+ .mg-parity-selected .mg-poi-detail-body h2{font-size:clamp(18px,4.5vh,26px)}
+ .mg-parity-selected .mg-parity-top{height:46px}
+ .mg-parity-selected .mg-poi-detail-actions button{min-height:48px!important}
+}
+@media(orientation:portrait){
+ .mg-navigation .mg-parity-shade.mg-parity-selected{
+  left:0;top:0;bottom:0;width:100%;max-width:100%;border-radius:0;
+ }
+}
+
+/* iPhone landscape: keep address suggestions readable above a compact keyboard.
+   No native iOS prediction row, no form-navigation accessory toolbar. */
+.mg-parity-touch-keyboard[hidden]{display:none!important}
+.mg-navigation .mg-parity-touch-keyboard{
+ flex:0 0 auto;display:flex;flex-direction:column;gap:clamp(4px,.9vh,7px);
+ width:100%;min-width:0;padding:clamp(5px,1vh,9px);
+ border-radius:clamp(13px,2.5vh,22px);
+ background:color-mix(in srgb,var(--nav-search-surface) 73%,#101014);
+ border:1px solid var(--nav-search-stroke);
+ touch-action:manipulation;user-select:none;-webkit-user-select:none;
+}
+.mg-parity-touch-keyboard .mg-touch-key-row{
+ display:flex;gap:clamp(3px,.5vw,7px);min-width:0;
+ height:clamp(36px,9vh,52px);flex:0 0 auto;
+}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key{
+ flex:1 1 0;min-width:0;height:100%;
+ display:flex;align-items:center;justify-content:center;
+ padding:0 2px;border:0;border-radius:clamp(7px,1.4vh,11px);
+ background:color-mix(in srgb,var(--nav-search-ink) 20%,var(--nav-search-surface));
+ color:var(--nav-search-ink);box-shadow:0 1px 1px #0006;
+ font-family:system-ui,sans-serif;font-weight:500;
+ font-size:clamp(16px,4.9vh,28px);line-height:1;
+ -webkit-tap-highlight-color:transparent;
+}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key:active{
+ background:var(--nav-search-accent);color:#12212c;
+}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-shift,
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-backspace,
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-numbers,
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-abc{
+ flex:1.35 1 0;background:color-mix(in srgb,var(--nav-search-dim) 22%,var(--nav-search-background));
+}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-space{flex:5 1 0;font-size:clamp(13px,2.3vh,17px)}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-done{flex:1.35 1 0;font-size:clamp(12px,2.4vh,17px)}
+.mg-navigation .mg-parity-touch-keyboard .mg-touch-key-search{
+ flex:1.8 1 0;font-size:clamp(13px,2.7vh,18px);
+ font-weight:700;background:var(--nav-search-accent);color:#0b2331;
+}
+/* The result and search typography above deliberately use viewport WIDTH rather
+   than HEIGHT. iOS can change usable height as the keyboard and results open;
+   font sizes must not jump when switching idle / typing / results modes. */
+/* The user is typing: POI chips, tabs and management must not steal the
+   precious vertical space needed to read and tap the live result list. */
+.mg-parity-shade.mg-parity-keyboard-open #mg-parity-controls,
+.mg-parity-shade.mg-parity-keyboard-open .mg-parity-toolbar,
+.mg-parity-shade.mg-parity-querying .mg-parity-toolbar{
+ display:none!important;
+}
+.mg-parity-keyboard-open .mg-parity-layout{gap:clamp(3px,.7vh,6px)}
+.mg-parity-keyboard-open .mg-parity-results{flex:1 1 0;min-height:60px}
+.mg-parity-keyboard-open .mg-parity-row{min-height:clamp(47px,12vh,75px)}
+@media(orientation:landscape) and (max-height:520px){
+ .mg-parity-keyboard-open .mg-parity-top{height:clamp(42px,10.5vh,52px)}
+ .mg-parity-keyboard-open .mg-parity-shade{padding:4px}
+ .mg-parity-keyboard-open .mg-parity-section-title{padding:2px 5px}
+}
+
+/* The shared iPhone search is a full-screen sheet, not a top toolbar.
+   Avoid stale visualViewport heights and hide the map/zoom buttons underneath.
+   The selected-place panel deliberately stays beside the map. */
+.mg-navigation .mg-parity-shade:not(.mg-parity-selected):has(.mg-parity-touch-keyboard){
+ position:fixed!important;
+ inset:0!important;
+ width:100vw!important;
+ height:100dvh!important;
+ max-height:none!important;
+}
+.mg-navigation:has(> .mg-parity-shade:not(.mg-parity-selected)) > :not(.mg-parity-shade){
+ visibility:hidden;
+ pointer-events:none;
+}
+
+
+/* Diagnostic breadcrumbs are local-only, never sent to the Synology server. */
+.mg-parity-shade .mg-nav-diagnostics{margin:4px 12px;color:var(--nav-search-dim);font-size:12px}
+.mg-parity-shade .mg-nav-diagnostics summary{cursor:pointer;padding:4px 0}
+.mg-parity-shade .mg-nav-diagnostics pre{white-space:pre-wrap;overflow-wrap:anywhere;
+ max-height:95px;overflow:auto;margin:0 0 6px;padding:7px;border-radius:7px;
+ background:var(--nav-search-surface);font:11px/1.35 ui-monospace,monospace}

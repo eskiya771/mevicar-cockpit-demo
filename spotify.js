@@ -1,0 +1,2210 @@
+/* MeviCar Next – Spotify Premium browser player.
+   Plays exclusively on this MeviCar device through the Spotify Web Playback SDK.
+   OAuth Authorization Code + PKCE only: no backend, no client secret, tokens stay local. */
+(function () {
+  'use strict';
+
+  // The Android bridge is used ONLY for external-browser OAuth and the optional browser fallback.
+  // There is no Spotify App Remote integration: playback never depends on the Spotify app.
+  // Both the Web PWA and hybrid APK attempt the SAME Web Playback SDK media engine.
+  const NATIVE_REDIRECT = 'mevicarnext://spotify-callback';
+  const nativeOAuthBridge = () => !!window.MeviNativeBridge?.postMessage;
+  // Safari/iOS requires an actual tap to unlock the Web Playback SDK audio.
+  // The user agent is read only to tailor playback UX; no platform duplicates.
+  const iosWebAudio = !nativeOAuthBridge() &&
+    (/iPhone|iPad|iPod/.test(String(navigator.userAgent || '')) ||
+     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
+  const API = 'https://api.spotify.com/v1';
+  const ACCOUNTS = 'https://accounts.spotify.com';
+  const SCOPES = [
+    'user-read-playback-state',
+    'user-modify-playback-state',
+    'user-read-currently-playing',
+    'user-library-read',
+    'user-library-modify',
+    'playlist-read-private',
+    'playlist-read-collaborative',
+    'user-read-recently-played',
+    'streaming'
+  ].join(' ');
+  const KEYS = {
+    client: 'mevicar-spotify-client-v1',
+    token: 'mevicar-spotify-token-v1',
+    history: 'mevicar-spotify-history-v1',
+    auth: 'mevicar-spotify-auth-v1',
+    diag: 'mevicar-spotify-auth-diag-v1'
+  };
+  const KINDS = new Set(['track', 'album', 'playlist', 'artist', 'show', 'episode']);
+  const BROWSE_DEFS = {
+    playlists: { label: 'Playlists', path: '/me/playlists?limit=50', pick: d => d?.items || [], map: mapPlaylist },
+    albums: { label: 'Alben', path: '/me/albums?limit=50', pick: d => d?.items || [], map: x => mapAlbum(x?.album) },
+    shows: { label: 'Podcasts', path: '/me/shows?limit=50', pick: d => d?.items || [], map: x => mapShow(x?.show) },
+    recent: { label: 'Zuletzt', path: '/me/player/recently-played?limit=20', pick: d => d?.items || [], map: x => mapTrack(x?.track) },
+    tracks: { label: 'Favoriten', path: '/me/tracks?limit=50', pick: d => d?.items || [], map: x => mapTrack(x?.track) }
+  };
+  const SEARCH_GROUPS = [
+    ['tracks', 'Titel', 'music'],
+    ['albums', 'Alben', 'disc'],
+    ['artists', 'Interpreten', 'mic'],
+    ['playlists', 'Playlists', 'list'],
+    ['shows', 'Podcasts', 'podcast'],
+    ['episodes', 'Podcast-Folgen', 'podcast']
+  ];
+  const ICONS = {
+    spotify: '<circle cx="12" cy="12" r="9.2"/><path d="M7.2 9.4c3.4-1.1 7.1-.7 9.7.9M7.8 12.5c2.8-.9 5.8-.5 8 .8M8.5 15.5c2.2-.7 4.5-.4 6.2.6"/>',
+    play: '<path d="m8 5 12 7-12 7Z" fill="currentColor" stroke="none"/>',
+    pause: '<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/>',
+    next: '<path d="m5 4 11 8-11 8Z" fill="currentColor" stroke="none"/><path d="M19 4v16" stroke-width="3"/>',
+    prev: '<path d="m19 4-11 8 11 8Z" fill="currentColor" stroke="none"/><path d="M5 4v16" stroke-width="3"/>',
+    shuffle: '<path d="M3 7h3c5 0 6 10 12 10h3M18 14l3 3-3 3M3 17h3c1 0 2-.5 3-2M14 9c1-1.5 2-2 4-2h3M18 4l3 3-3 3"/>',
+    repeat: '<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
+    heart: '<path d="M20.8 4.6a5.3 5.3 0 0 0-7.4 0L12 6l-1.4-1.4a5.3 5.3 0 0 0-7.4 7.4L12 21l8.8-9a5.3 5.3 0 0 0 0-7.4Z"/>',
+    star: '<path d="m12 3 2.8 5.7 6.3.9-4.5 4.4 1.1 6.3-5.7-3-5.7 3 1.1-6.3-4.5-4.4 6.3-.9Z"/>',
+    search: '<circle cx="10.8" cy="10.8" r="7.2"/><path d="m16 16 5.5 5.5"/>',
+    music: '<path d="M9 18V5l12-3v13"/><path d="M9 8l12-3"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/>',
+    disc: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/><path d="M12 2a10 10 0 0 1 10 10"/>',
+    folder: '<path d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>',
+    mic: '<rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M8 22h8"/>',
+    list: '<path d="M9 6h12M9 12h12M9 18h12M3 6h1M3 12h1M3 18h1"/>',
+    podcast: '<circle cx="12" cy="11" r="2.5"/><path d="M8.5 18.5a7 7 0 1 1 7 0M5 21a11 11 0 1 1 14 0"/>',
+    devices: '<rect x="2" y="5" width="15" height="11" rx="2"/><path d="M6 20h7M9.5 16v4M19 9h3v9h-3z"/>',
+    queue: '<path d="M4 6h11M4 12h11M4 18h7M18 12v8M15 17h6"/>',
+    refresh: '<path d="M20 11a8 8 0 1 0-1.5 5.5"/><path d="M20 4v7h-7"/>',
+    settings: '<circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1-2.9 2.9-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21h-4v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1-2.9-2.9.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3v-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1 2.9-2.9.1.1a1.6 1.6 0 0 0 1.8.3 1.6 1.6 0 0 0 1-1.5V3h4v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1 2.9 2.9-.1.1a1.6 1.6 0 0 0-.3 1.8 1.6 1.6 0 0 0 1.5 1h.1v4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>',
+    back: '<path d="m15 4-8 8 8 8M8 12h13"/>',
+    external: '<path d="M14 4h6v6M20 4l-8 8M19 14v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5"/>',
+    link: '<path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-2 2"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l2-2"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    volume: '<path d="M3 9v6h4l5 4V5L7 9ZM16 8c2 1 2 7 0 8M19 5c4 3 4 11 0 14"/>',
+    alert: '<path d="M12 3 2 21h20L12 3Z"/><path d="M12 9v5M12 17.5v.5"/>',
+    check: '<path d="m4 12 5 5L20 6"/>',
+    copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    close: '<path d="m5 5 14 14M19 5 5 19"/>'
+  };
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const safeArg = s => encodeURIComponent(String(s)).replace(/'/g, '%27');
+  const decodeArg = s => decodeURIComponent(s);
+  const icon = id => '<svg class="sp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[id] || ICONS.music) + '</svg>';
+  const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
+  const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+  function fmtMs(ms) {
+    const total = Number(ms);
+    if (!Number.isFinite(total) || total < 0) return '–:––';
+    const seconds = Math.floor(total / 1000);
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return (h ? h + ':' + String(m).padStart(2, '0') : String(m)) + ':' + String(s).padStart(2, '0');
+  }
+  function typeLabel(kind) {
+    return { track: 'Titel', album: 'Album', playlist: 'Playlist', artist: 'Interpret', show: 'Podcast', episode: 'Podcast-Folge', collection: 'Bibliothek' }[kind] || 'Spotify';
+  }
+  function imageUrl(images) {
+    const list = Array.isArray(images) ? images : [];
+    const hit = list.find(x => x && typeof x.url === 'string' && x.url.startsWith('https://'));
+    return hit ? hit.url : '';
+  }
+  function readJson(storage, key, otherwise) {
+    try {
+      const raw = storage.getItem(key);
+      if (!raw) return otherwise;
+      return JSON.parse(raw) ?? otherwise;
+    } catch { return otherwise; }
+  }
+  function writeJson(storage, key, value) {
+    try { storage.setItem(key, JSON.stringify(value)); } catch { /* storage can be blocked */ }
+  }
+  function readClientId() {
+    try { return String(localStorage.getItem(KEYS.client) || '').trim(); } catch { return ''; }
+  }
+  function validClientId(value) { return /^[A-Za-z0-9]{8,64}$/.test(value); }
+  function readToken() {
+    const token = readJson(localStorage, KEYS.token, null);
+    if (!token || typeof token.access_token !== 'string' || !token.access_token) return null;
+    return {
+      access_token: token.access_token,
+      refresh_token: typeof token.refresh_token === 'string' ? token.refresh_token : '',
+      expires_at: Number(token.expires_at) || 0,
+      scope: typeof token.scope === 'string' ? token.scope : '',
+      token_type: token.token_type || 'Bearer'
+    };
+  }
+  function saveToken(data) {
+    const previous = readToken();
+    const token = {
+      access_token: data.access_token,
+      refresh_token: data.refresh_token || previous?.refresh_token || '',
+      expires_at: Date.now() + (Number(data.expires_in) || 3600) * 1000,
+      scope: data.scope || previous?.scope || '',
+      token_type: data.token_type || 'Bearer'
+    };
+    writeJson(localStorage, KEYS.token, token);
+    st.token = token;
+    return token;
+  }
+  function clearToken() {
+    try { localStorage.removeItem(KEYS.token); } catch { /* ignore */ }
+    st.token = null;
+  }
+  function maskClient(value) {
+    const text = String(value || '');
+    if (!text) return '—';
+    if (text.length <= 10) return text.slice(0, 2) + '…' + text.slice(-2);
+    return text.slice(0, 4) + '…' + text.slice(-4);
+  }
+  function redirectUri() {
+    if (nativeOAuthBridge()) return NATIVE_REDIRECT;
+    let path = location.pathname || '/';
+    path = path.replace(/\/index\.html$/i, '/');
+    if (!path.endsWith('/')) path += '/';
+    return location.origin + path;
+  }
+  function parseLink(raw) {
+    const value = String(raw || '').trim();
+    const direct = /^spotify:(track|album|playlist|artist|show|episode):([A-Za-z0-9]{22})$/.exec(value);
+    if (direct) return { uri: value, kind: direct[1] };
+    let url;
+    try { url = new URL(value); } catch { return null; }
+    if (url.protocol !== 'https:' || url.username || url.password) return null;
+    const host = url.hostname.toLowerCase();
+    if (host !== 'open.spotify.com' && host !== 'play.spotify.com') return null;
+    const parts = url.pathname.split('/').filter(Boolean);
+    if (parts[0] === 'intl' || /^intl-[a-z-]+$/i.test(parts[0] || '')) parts.shift();
+    const [kind, id] = parts;
+    if (!KINDS.has(kind) || !/^[A-Za-z0-9]{22}$/.test(id || '')) return null;
+    return { uri: 'spotify:' + kind + ':' + id, kind };
+  }
+  function mapTrack(track) {
+    if (!track || (!track.uri && !track.id)) return null;
+    return {
+      kind: 'track', uri: track.uri || ('spotify:track:' + track.id), id: track.id || '',
+      title: track.name || 'Unbekannter Titel',
+      meta: (track.artists || []).map(a => a?.name).filter(Boolean).join(', ') || 'Unbekannter Interpret',
+      album: track.album?.name || '',
+      image: imageUrl(track.album?.images) || imageUrl(track.images),
+      duration: Number.isFinite(track.duration_ms) ? track.duration_ms : null
+    };
+  }
+  function mapEpisode(episode) {
+    if (!episode || (!episode.uri && !episode.id)) return null;
+    return {
+      kind: 'episode', uri: episode.uri || ('spotify:episode:' + episode.id), id: episode.id || '',
+      title: episode.name || 'Podcast-Folge',
+      meta: episode.show?.name || 'Podcast',
+      album: episode.show?.name || '',
+      image: imageUrl(episode.images) || imageUrl(episode.show?.images),
+      duration: Number.isFinite(episode.duration_ms) ? episode.duration_ms : null
+    };
+  }
+  function mapAlbum(album) {
+    if (!album || (!album.uri && !album.id)) return null;
+    return {
+      kind: 'album', uri: album.uri || ('spotify:album:' + album.id), id: album.id || '',
+      title: album.name || 'Album',
+      meta: (album.artists || []).map(a => a?.name).filter(Boolean).join(', ') || 'Album',
+      album: '', image: imageUrl(album.images),
+      duration: null
+    };
+  }
+  function mapArtist(artist) {
+    if (!artist || (!artist.uri && !artist.id)) return null;
+    return {
+      kind: 'artist', uri: artist.uri || ('spotify:artist:' + artist.id), id: artist.id || '',
+      title: artist.name || 'Interpret', meta: 'Interpret', album: '',
+      image: imageUrl(artist.images), duration: null
+    };
+  }
+  function mapPlaylist(playlist) {
+    if (!playlist || (!playlist.uri && !playlist.id)) return null;
+    const count = playlist.items?.total ?? playlist.tracks?.total;
+    return {
+      kind: 'playlist', uri: playlist.uri || ('spotify:playlist:' + playlist.id), id: playlist.id || '',
+      title: playlist.name || 'Playlist',
+      meta: (playlist.owner?.display_name || 'Spotify') + (Number.isFinite(count) ? ' · ' + count + ' Titel' : ''),
+      album: '', image: imageUrl(playlist.images), duration: null
+    };
+  }
+  function mapShow(show) {
+    if (!show || (!show.uri && !show.id)) return null;
+    return {
+      kind: 'show', uri: show.uri || ('spotify:show:' + show.id), id: show.id || '',
+      title: show.name || 'Podcast', meta: 'Podcast', album: '',
+      image: imageUrl(show.images), duration: null
+    };
+  }
+  function normalizeSearch(data) {
+    return {
+      tracks: (data?.tracks?.items || []).map(mapTrack).filter(Boolean),
+      albums: (data?.albums?.items || []).map(mapAlbum).filter(Boolean),
+      artists: (data?.artists?.items || []).map(mapArtist).filter(Boolean),
+      playlists: (data?.playlists?.items || []).map(mapPlaylist).filter(Boolean),
+      shows: (data?.shows?.items || []).map(mapShow).filter(Boolean),
+      episodes: (data?.episodes?.items || []).map(mapEpisode).filter(Boolean)
+    };
+  }
+
+  const st = {
+    clientId: readClientId(),
+    token: readToken(),
+    profile: null,
+    profileLoading: false,
+    player: null,
+    playerLoaded: false,
+    playerAt: 0,
+    progressBase: 0,
+    pendingPlay: null,
+    queue: null,
+    queueOpen: false,
+    queueLoading: false,
+    queueError: '',
+    liked: null,
+    likedUri: '',
+    tab: 'browse',
+    browse: 'playlists',
+    browseData: {},
+    browseLoading: false,
+    browseError: '',
+    query: '',
+    results: null,
+    searchLoading: false,
+    searchError: '',
+    voiceListening: false,
+    voiceError: '',
+    history: readJson(localStorage, KEYS.history, []),
+    accountOpen: false,
+    confirmReset: false,
+    authError: '',
+    authLoading: false,
+    error: '',
+    notice: '',
+    mounted: false,
+    webPlayer: null,
+    webDeviceId: '',
+    webConnectBusy: false,
+    webTransferBusy: false,
+    webStatus: 'Aus',
+    webError: '',
+    iosAudioTapCount: 0,
+    pollBlockedUntil: 0
+  };
+  if (!Array.isArray(st.history)) st.history = [];
+  if (st.token && !st.clientId) { clearToken(); }
+
+  let sdkLoading = null;
+  let pollTimer = null;
+  let tickTimer = null;
+  let pollBusy = false;
+  let refreshing = null;
+  let searchTimer = null;
+  let searchSerial = 0;
+  let voiceRecognition = null;
+  let voiceSerial = 0;
+  let noticeTimer = null;
+  let globalsBound = false;
+
+  function makeError(message, code, status) {
+    const error = new Error(message);
+    error.code = code || 'api';
+    error.status = status || 0;
+    return error;
+  }
+  function toNetworkError(cause) {
+    const error = makeError(cause?.name === 'AbortError' ? 'Zeitüberschreitung' : 'Netzwerkfehler', 'network');
+    return error;
+  }
+  function errorText(error) {
+    if (!error) return '';
+    if (error.status === 403 && /premium/i.test(error.message || '')) return 'Spotify Premium erforderlich: Wiedergabesteuerung ist nur mit Premium möglich.';
+    if (error.code === 'no-device') return 'Kein aktives Spotify-Gerät gefunden. Öffne Spotify auf iPhone, PC oder DeX und starte einen Titel.';
+    if (error.code === 'rate-limit') return 'Spotify drosselt die Anfragen. Bitte kurz warten.';
+    if (error.code === 'auth') return 'Spotify-Sitzung abgelaufen. Bitte erneut verbinden.';
+    if (error.code === 'network') return 'Spotify ist nicht erreichbar. Prüfe die Internetverbindung.';
+    if (error.code === 'forbidden') return 'Spotify hat diese Aktion eingeschränkt.';
+    return 'Spotify: ' + (error.message || 'Unbekannter Fehler');
+  }
+  function authErrorText(response) {
+    if (!response) return 'Spotify-Anmeldung fehlgeschlagen.';
+    if (response.error === 'invalid_grant') return 'Spotify-Anmeldung abgelaufen. Bitte erneut verbinden.';
+    return response.error_description || response.error || 'Spotify-Anmeldung fehlgeschlagen.';
+  }
+
+  function randomString(bytes) {
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+    const data = new Uint8Array(bytes);
+    window.crypto.getRandomValues(data);
+    let out = '';
+    for (const byte of data) out += alphabet[byte % alphabet.length];
+    return out;
+  }
+  function base64Url(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (const byte of bytes) binary += String.fromCharCode(byte);
+    return window.btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  async function codeChallenge(verifier) {
+    const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+    return base64Url(digest);
+  }
+  function cleanCallbackUrl(url) {
+    for (const key of ['code', 'state', 'error', 'error_description']) url.searchParams.delete(key);
+    const query = url.searchParams.toString();
+    try {
+      history.replaceState(null, '', url.pathname + (query ? '?' + query : '') + url.hash);
+    } catch { /* ignore */ }
+  }
+
+  // Android may recreate its WebView while Chrome handles Spotify OAuth.
+  // sessionStorage is then lost, so keep only the short-lived PKCE request in
+  // localStorage for the native callback; the client secret is never used.
+  function authStorage() { return nativeOAuthBridge() ? localStorage : sessionStorage; }
+  function pendingAuth() {
+    const native = nativeOAuthBridge() ? readJson(localStorage, KEYS.auth, null) : null;
+    return native || readJson(sessionStorage, KEYS.auth, null);
+  }
+  let nativeOAuthStage = '';
+  // Non-secret OAuth/playback event log. It survives WebView reloads so that a
+  // single device run shows the complete hand-over. Entries are fixed texts
+  // plus safe categories (HTTP status, error name) - never a code, state,
+  // verifier or token.
+  const OAUTH_LOG_LIMIT = 40;
+  const savedDiagnostic = readJson(localStorage, KEYS.diag, null);
+  let oauthDiagnostic = savedDiagnostic?.message || 'Noch keine Spotify-Anmeldung gestartet';
+  let oauthLog = Array.isArray(savedDiagnostic?.log)
+    ? savedDiagnostic.log.filter(entry => entry && typeof entry.text === 'string' && Number.isFinite(Number(entry.at)))
+      .slice(-OAUTH_LOG_LIMIT).map(entry => ({ at: Number(entry.at), text: entry.text.slice(0, 170) }))
+    : [];
+  function persistDiagnostic() {
+    writeJson(localStorage, KEYS.diag, { message: oauthDiagnostic, at: Date.now(), log: oauthLog });
+  }
+  function logTime(at) {
+    const d = new Date(at);
+    const two = value => String(value).padStart(2, '0');
+    return two(d.getHours()) + ':' + two(d.getMinutes()) + ':' + two(d.getSeconds());
+  }
+  function oauthLogMarkup() {
+    return oauthLog.slice(-14).map(entry => '<li>' + esc(logTime(entry.at) + ' ' + entry.text) + '</li>').join('');
+  }
+  function logOAuth(text) {
+    const entry = String(text || '').slice(0, 170);
+    if (!entry) return;
+    const last = oauthLog[oauthLog.length - 1];
+    if (last && last.text === entry) last.at = Date.now();
+    else oauthLog.push({ at: Date.now(), text: entry });
+    if (oauthLog.length > OAUTH_LOG_LIMIT) oauthLog = oauthLog.slice(-OAUTH_LOG_LIMIT);
+    persistDiagnostic();
+    const list = document.getElementById('sp-oauth-log');
+    if (list) list.innerHTML = oauthLogMarkup();
+  }
+  function setAuthDiagnostic(message) {
+    oauthDiagnostic = String(message || '').slice(0, 160);
+    logOAuth('Web: ' + oauthDiagnostic);
+    const label = document.getElementById('sp-oauth-diagnostic');
+    if (label) label.textContent = oauthDiagnostic;
+  }
+  function diagnosticsMarkup() {
+    return '<div class="sp-fine sp-diagnose" style="border:1px solid #456477;border-radius:10px;padding:10px;margin-top:10px;font-size:14px;line-height:1.55" role="status"><strong>Spotify-Diagnose</strong>' +
+      '<div>Web: <span id="sp-oauth-diagnostic">' + esc(oauthDiagnostic) + '</span></div>' +
+      (nativeOAuthBridge() ? '<div>APK: <span id="sp-native-diagnostic">' + esc(nativeOAuthStage || 'Status wird geladen') + '</span></div>' : '') +
+      '<ol id="sp-oauth-log" aria-label="Spotify-Ereignisprotokoll" style="margin:8px 0 0;padding-left:0;list-style:none;font-size:12px;line-height:1.45;max-height:170px;overflow:auto;word-break:break-word">' + oauthLogMarkup() + '</ol>' +
+      (nativeOAuthBridge() ? '<button type="button" class="sp-linkbtn" style="min-height:44px;margin-top:8px" onclick="meviSpotifyPullCallback()">Rückruf jetzt abholen</button>' : '') +
+      '</div>';
+  }
+  const NATIVE_CALLBACK_READY = /Spotify-Code von Android empfangen|Spotify hat einen Fehler zurückgegeben|Spotify-Rückruf liegt bereit/;
+  function acceptNativeStage(message) {
+    nativeOAuthStage = String(message || '').slice(0, 120);
+    logOAuth('APK: ' + nativeOAuthStage);
+    const label = document.getElementById('sp-native-diagnostic');
+    if (label) label.textContent = nativeOAuthStage;
+    // The stage is only a nudge without any secret. The one-time callback is
+    // always fetched over the trusted WebMessage bridge - even with an existing
+    // session, so that Android never keeps an obsolete code.
+    if (nativeOAuthBridge() && NATIVE_CALLBACK_READY.test(nativeOAuthStage)) {
+      Promise.resolve().then(() => pullSpotifyCallback());
+    }
+  }
+  function clearPendingAuth() {
+    for (const store of [sessionStorage, localStorage]) {
+      try { store.removeItem(KEYS.auth); } catch { /* storage unavailable */ }
+    }
+  }
+
+  // Prefer the normal Android deep link, but allow the resumed WebView to ask
+  // for a callback explicitly when evaluateJavascript was not delivered.
+  // Only the native main-frame bridge for our exact Pages origin can reply.
+  const oauthBridgeRequests = new Map();
+  let oauthBridgeSerial = 0;
+  let oauthPullTimer = null;
+  let oauthPullBusy = false;
+  function oauthNativeCall(action, fields = {}) {
+    if (!nativeOAuthBridge()) return Promise.reject(new Error('Keine Android-Bridge'));
+    return new Promise((resolve, reject) => {
+      const id = 'spotify-oauth-' + (++oauthBridgeSerial);
+      const timer = setTimeout(() => {
+        oauthBridgeRequests.delete(id);
+        reject(new Error('Android-Bridge Timeout'));
+      }, 5000);
+      oauthBridgeRequests.set(id, {resolve, reject, timer});
+      try { window.MeviNativeBridge.postMessage(JSON.stringify({id, action, ...fields})); }
+      catch (error) {
+        clearTimeout(timer);
+        oauthBridgeRequests.delete(id);
+        reject(error);
+      }
+    });
+  }
+  if (nativeOAuthBridge()) {
+    const previous = window.MeviNativeBridge.onmessage;
+    window.MeviNativeBridge.onmessage = event => {
+      if (typeof previous === 'function') {
+        try { previous(event); } catch { /* unrelated bridge handler */ }
+      }
+      let reply;
+      try { reply = JSON.parse(event.data); } catch { return; }
+      const pending = oauthBridgeRequests.get(reply?.id);
+      if (!pending) return;
+      clearTimeout(pending.timer);
+      oauthBridgeRequests.delete(reply.id);
+      if (reply.ok) pending.resolve(reply);
+      else pending.reject(new Error(String(reply.error || 'Android-Bridge fehlgeschlagen')));
+    };
+  }
+  async function pullSpotifyCallback(manual) {
+    // Android can mark the WebView document hidden during the Chrome-to-APK
+    // transition even while its JS/bridge is already usable. Do not suppress
+    // the pull solely because document.hidden is true. An existing session
+    // does not suppress it either: a leftover callback has to be released.
+    if (!nativeOAuthBridge() || oauthPullBusy) return false;
+    oauthPullBusy = true;
+    let result;
+    try {
+      result = await oauthNativeCall('spotify.callback.pull');
+    } catch (error) {
+      // Only show a safe error category, never a code, URI or verifier.
+      if (manual === true || (pendingAuth() && !st.token)) {
+        setAuthDiagnostic('Android-Rückkanal antwortet nicht (' +
+          String(error?.message || 'unbekannt').replace(/[^a-zA-ZäöüÄÖÜß0-9 -]/g,'').slice(0,45) + ')');
+      }
+      return false;
+    } finally { oauthPullBusy = false; }
+    if (typeof result.callback !== 'string') {
+      if (manual === true) setAuthDiagnostic('Android hält keinen Spotify-Rückruf bereit');
+      return false;
+    }
+    // Android intentionally accepts both mevicarnext://spotify-callback?...
+    // and mevicarnext://spotify-callback/?... . Validate the parsed URL
+    // instead of dropping the second form silently.
+    let callbackUrl;
+    try { callbackUrl = new URL(result.callback); } catch { /* invalid redirect */ }
+    if (callbackUrl?.protocol !== 'mevicarnext:' ||
+        callbackUrl?.host !== 'spotify-callback' ||
+        (callbackUrl.pathname !== '' && callbackUrl.pathname !== '/') ||
+        (!callbackUrl.searchParams.has('code') && !callbackUrl.searchParams.has('error'))) {
+      setAuthDiagnostic('Android-Rückruf hat ein unbekanntes Format');
+      return false;
+    }
+    logOAuth('Web: Spotify-Rückruf über Android-Bridge abgeholt');
+    return acceptNativeCallback(result.callback);
+  }
+  function pullSpotifyCallbackNow() {
+    setAuthDiagnostic('Rückruf wird manuell bei Android abgefragt');
+    return pullSpotifyCallback(true);
+  }
+  function startSpotifyCallbackPolling() {
+    if (!nativeOAuthBridge() || st.token) return;
+    if (oauthPullTimer) return;
+    const started = Date.now();
+    oauthPullTimer = setInterval(() => {
+      if (st.token || !pendingAuth() || Date.now() - started > 10 * 60 * 1000) {
+        clearInterval(oauthPullTimer);
+        oauthPullTimer = null;
+        return;
+      }
+      pullSpotifyCallback();
+    }, 1400);
+    pullSpotifyCallback();
+  }
+
+  async function connect(showDialog) {
+    st.authError = '';
+    setAuthDiagnostic('Anmeldung wird vorbereitet');
+    const clientId = readClientId();
+    if (!clientId) {
+      st.accountOpen = false;
+      st.authError = 'Bitte zuerst eine Spotify Client ID speichern.';
+      rerender();
+      return;
+    }
+    if (!window.crypto?.subtle) {
+      st.authError = 'Spotify-Anmeldung benötigt HTTPS und einen aktuellen Browser.';
+      rerender();
+      return;
+    }
+    try {
+      const verifier = randomString(64);
+      const state = randomString(24);
+      const redirect = redirectUri();
+      const challenge = await codeChallenge(verifier);
+      writeJson(authStorage(), KEYS.auth, { verifier, state, redirect, at: Date.now() });
+      setAuthDiagnostic('PKCE vorbereitet · Spotify-Freigabe wird geöffnet');
+      startSpotifyCallbackPolling();
+      const url = new URL(ACCOUNTS + '/authorize');
+      url.searchParams.set('response_type', 'code');
+      url.searchParams.set('client_id', clientId);
+      url.searchParams.set('scope', SCOPES);
+      url.searchParams.set('redirect_uri', redirect);
+      url.searchParams.set('state', state);
+      url.searchParams.set('code_challenge_method', 'S256');
+      url.searchParams.set('code_challenge', challenge);
+      if (showDialog === true) url.searchParams.set('show_dialog', 'true');
+      if (nativeOAuthBridge()) {
+        // Do not navigate the WebView away from the trusted MeviCar page.
+        // Android verifies the exact Spotify OAuth URL and opens Chrome.
+        window.MeviNativeBridge.postMessage(JSON.stringify({
+          id: 'spotify-authorize-' + (++oauthBridgeSerial),
+          action: 'spotify.authorize',
+          url: url.toString()
+        }));
+        setAuthDiagnostic('Spotify-Freigabe im externen Browser gestartet');
+      } else {
+        location.assign(url.toString());
+      }
+    } catch (error) {
+      setAuthDiagnostic('Spotify-Freigabe konnte nicht geöffnet werden');
+      st.authError = 'Spotify-Anmeldung konnte nicht gestartet werden: ' + (error.message || error);
+      rerender();
+    }
+  }
+
+  async function refreshToken() {
+    const current = readToken();
+    const clientId = readClientId();
+    if (!current?.refresh_token || !clientId) throw makeError('Keine gültige Spotify-Sitzung.', 'auth');
+    let response;
+    try {
+      response = await fetch(ACCOUNTS + '/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'refresh_token',
+          refresh_token: current.refresh_token,
+          client_id: clientId
+        })
+      });
+    } catch (error) { throw toNetworkError(error); }
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.access_token) {
+      // Only Spotify's explicit rejection of the refresh token or client ends
+      // the session. 5xx, 429 or an unreadable answer are transient: keep the
+      // refresh token so the next request can try again without a new login.
+      const rejected = (response.status === 400 || response.status === 401) &&
+        (data.error === 'invalid_grant' || data.error === 'invalid_client');
+      if (rejected) {
+        clearToken();
+        throw makeError(authErrorText(data), 'auth', response.status);
+      }
+      throw makeError('Spotify-Anmeldedienst vorübergehend nicht verfügbar', 'network', response.status);
+    }
+    saveToken({ ...data, refresh_token: data.refresh_token || current.refresh_token });
+    return st.token;
+  }
+
+  async function accessToken() {
+    if (!st.token) throw makeError('Nicht mit Spotify verbunden.', 'auth');
+    if (Date.now() < (st.token.expires_at || 0) - 60000) return st.token.access_token;
+    if (!refreshing) {
+      refreshing = refreshToken().finally(() => { refreshing = null; });
+    }
+    try { await refreshing; } catch (error) {
+      if (error.code === 'auth') clearToken();
+      throw error;
+    }
+    if (!st.token) throw makeError('Spotify-Sitzung abgelaufen.', 'auth');
+    return st.token.access_token;
+  }
+
+  async function apiFetch(path, token, options) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const headers = { Authorization: 'Bearer ' + token };
+    if (options.body !== undefined) headers['Content-Type'] = 'application/json';
+    try {
+      return await fetch(API + path, {
+        method: options.method || 'GET',
+        headers,
+        body: options.body,
+        signal: controller.signal,
+        cache: 'no-store'
+      });
+    } finally { clearTimeout(timeout); }
+  }
+
+  async function api(path, options = {}) {
+    let token = await accessToken();
+    let response;
+    try {
+      response = await apiFetch(path, token, options);
+    } catch (error) { throw toNetworkError(error); }
+    if (response.status === 401) {
+      st.token.expires_at = 0;
+      refreshing = null;
+      token = await accessToken();
+      try { response = await apiFetch(path, token, options); } catch (error) { throw toNetworkError(error); }
+    }
+    if (response.status === 204) return null;
+    const text = await response.text();
+    let data = null;
+    if (text) { try { data = JSON.parse(text); } catch { data = null; } }
+    if (response.ok) return data;
+    const message = data?.error?.message || data?.error_description || (typeof data?.error === 'string' ? data.error : '') || ('HTTP ' + response.status);
+    let code = 'api';
+    if (response.status === 401) code = 'auth';
+    else if (response.status === 403) code = /premium/i.test(message) ? 'premium' : 'forbidden';
+    else if (response.status === 404) code = /device/i.test(message) ? 'no-device' : 'not-found';
+    else if (response.status === 429) code = 'rate-limit';
+    const error = makeError(message, code, response.status);
+    if (code === 'rate-limit') {
+      const retry = Number(response.headers.get('Retry-After')) || 10;
+      error.retryAfter = retry;
+      st.pollBlockedUntil = Date.now() + retry * 1000;
+    }
+    if (code === 'auth') clearToken();
+    throw error;
+  }
+
+  // The authorization code is a one-time value and Android may hand the same
+  // callback over several times (pull, nudge, push by older APKs). Exactly one
+  // owner processes each callback; everybody else shares its result:
+  //   idle -> exchanging -> done  (definitive result, acknowledged once)
+  //                      -> retry (transport error only: Android keeps the
+  //                         code, the PKCE request stays, a later pull retries)
+  const OAUTH_WINDOW_MS = 10 * 60 * 1000;
+  const OAUTH_RETRY_DELAYS = [0, 3000, 8000, 15000];
+  const oauthSettled = new Set();
+  const oauthRetry = new Map();
+  let oauthInFlight = null;
+  async function acknowledgeNativeCallback(state) {
+    if (!nativeOAuthBridge()) return;
+    try {
+      const reply = await oauthNativeCall('spotify.callback.ack', { state });
+      logOAuth(reply?.acknowledged === false
+        ? 'Web: Android hielt diesen Rückruf nicht mehr'
+        : 'Web: Rückruf gegenüber Android bestätigt');
+    } catch {
+      // Android keeps the callback; the next pull meets a settled key and
+      // acknowledges again without a second token exchange.
+      logOAuth('Web: Bestätigung an Android nicht zugestellt · wird wiederholt');
+    }
+  }
+  function acceptNativeCallback(uri) {
+    let url;
+    try { url = new URL(uri); } catch { return Promise.resolve(false); }
+    if (url.protocol !== 'mevicarnext:' || url.host !== 'spotify-callback' || !nativeOAuthBridge()) {
+      return Promise.resolve(false);
+    }
+    const state = url.searchParams.get('state') || '';
+    const oauthError = url.searchParams.get('error') || '';
+    if (!url.searchParams.get('code') && !oauthError) return Promise.resolve(false);
+    const key = state || ('error:' + oauthError);
+    if (oauthInFlight && oauthInFlight.key === key) return oauthInFlight.promise;
+    if (oauthSettled.has(key)) return acknowledgeNativeCallback(state).then(() => true);
+    const saved = pendingAuth();
+    if ((saved && saved.state !== state) || (!saved && st.token)) {
+      // Never let an old Android callback touch a newer PKCE request or an
+      // existing session. Release it on the Android side and say so.
+      oauthSettled.add(key);
+      logOAuth('Web: Veralteter Android-Rückruf verworfen (gehört zu keiner offenen Anmeldung)');
+      return acknowledgeNativeCallback(state).then(() => true);
+    }
+    const retry = oauthRetry.get(key);
+    if (retry && Date.now() < retry.notBefore) return Promise.resolve(false);
+    const promise = (async () => {
+      let outcome;
+      try {
+        outcome = await processCallback(uri, { retryable: !retry || retry.count < OAUTH_RETRY_DELAYS.length });
+      } catch { outcome = 'done'; }
+      if (outcome === 'ignored') return false;
+      if (outcome === 'retry') {
+        const count = (retry?.count || 0) + 1;
+        oauthRetry.set(key, { count, notBefore: Date.now() + OAUTH_RETRY_DELAYS[Math.min(count - 1, OAUTH_RETRY_DELAYS.length - 1)] });
+        return false;
+      }
+      oauthRetry.delete(key);
+      oauthSettled.add(key);
+      await acknowledgeNativeCallback(state);
+      return true;
+    })();
+    oauthInFlight = { key, promise };
+    const release = () => { if (oauthInFlight && oauthInFlight.promise === promise) oauthInFlight = null; };
+    promise.then(release, release);
+    return promise;
+  }
+
+  // Plain web redirect (location.href carries ?code=...).
+  async function handleCallback(sourceUrl = location.href) {
+    return (await processCallback(sourceUrl, { retryable: false })) !== 'ignored';
+  }
+
+  // Returns 'ignored' (not an OAuth callback), 'done' (definitive result:
+  // connected or a defined error) or 'retry' (native hand-over only: the token
+  // endpoint gave no answer, so nothing has been consumed).
+  async function processCallback(sourceUrl, { retryable = false } = {}) {
+    const url = new URL(sourceUrl);
+    const nativeCallback=url.protocol==='mevicarnext:' && url.host==='spotify-callback';
+    if (sourceUrl !== location.href && !nativeCallback) return 'ignored';
+    if (nativeCallback && !nativeOAuthBridge()) return 'ignored';
+    const code = url.searchParams.get('code');
+    const state = url.searchParams.get('state');
+    const oauthError = url.searchParams.get('error');
+    const description = url.searchParams.get('error_description');
+    if (!code && !oauthError) return 'ignored';
+    setAuthDiagnostic(oauthError ? 'Spotify hat den Rückruf mit einem Fehler gesendet' : 'Spotify-Code in der Web-App angekommen');
+    const saved = pendingAuth();
+    if (!nativeCallback) {
+      // The browser URL is cleaned at once, so the code cannot be replayed.
+      cleanCallbackUrl(url);
+      clearPendingAuth();
+    }
+    if (oauthError) {
+      clearPendingAuth();
+      setAuthDiagnostic('Spotify-Freigabe fehlgeschlagen: ' + String(oauthError).replace(/[^a-z_]/gi, '').slice(0, 60));
+      st.authError = oauthError === 'access_denied' ? 'Spotify-Verbindung wurde abgebrochen.' : ('Spotify: ' + (description || oauthError));
+      returnToAudio();
+      return 'done';
+    }
+    if (!saved || !state || saved.state !== state || !saved.verifier ||
+        !Number.isFinite(Number(saved.at)) || Date.now() - Number(saved.at) > OAUTH_WINDOW_MS ||
+        Date.now() < Number(saved.at)) {
+      clearPendingAuth();
+      setAuthDiagnostic('PKCE-Sicherheitsprüfung fehlgeschlagen (Status/Verifizierer fehlt oder abgelaufen)');
+      st.authError = 'Spotify-Sicherheitsprüfung fehlgeschlagen. Bitte erneut verbinden.';
+      returnToAudio();
+      return 'done';
+    }
+    st.authLoading = true;
+    setAuthDiagnostic('PKCE gültig · Spotify-Token wird angefordert');
+    returnToAudio();
+    let outcome = 'done';
+    try {
+      let response;
+      const controller = new AbortController();
+      const guard = setTimeout(() => controller.abort(), 20000);
+      try {
+        response = await fetch(ACCOUNTS + '/api/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          signal: controller.signal,
+          body: new URLSearchParams({
+            grant_type: 'authorization_code',
+            code,
+            redirect_uri: saved.redirect || redirectUri(),
+            client_id: readClientId(),
+            code_verifier: saved.verifier
+          })
+        });
+      } catch (error) {
+        // No HTTP answer at all: Spotify has not judged the code.
+        const transport = new Error('Spotify-Anmeldeserver nicht erreichbar');
+        transport.name = error?.name === 'AbortError' ? 'Zeitüberschreitung' : 'Netzwerkfehler';
+        transport.transport = true;
+        throw transport;
+      } finally { clearTimeout(guard); }
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.access_token) {
+        setAuthDiagnostic('Token-Austausch fehlgeschlagen · HTTP ' + response.status + ' · ' + String(data.error || 'ohne Token').replace(/[^a-z_ ]/gi, '').slice(0, 45));
+        throw makeError(authErrorText(data), 'auth', response.status);
+      }
+      clearPendingAuth();
+      saveToken(data);
+      setAuthDiagnostic('Spotify-Token erfolgreich gespeichert');
+      st.authError = '';
+      st.accountOpen = false;
+      st.tab = 'now';
+      setNotice('Mit Spotify verbunden.');
+      rerender();
+      // Loading the library is not part of the hand-over: Android is told
+      // right away, profile and player state fill in afterwards.
+      Promise.allSettled([loadProfile(), poll(true)]).then(() => {
+        logOAuth('Web: Profil und Wiedergabestatus geladen');
+        rerender();
+      });
+    } catch (error) {
+      if (error?.transport && nativeCallback && retryable) {
+        outcome = 'retry';
+        setAuthDiagnostic('Token-Austausch nicht abgeschlossen: ' + error.name + ' · Code bleibt bei Android, neuer Versuch folgt');
+        st.authError = 'Spotify-Anmeldeserver nicht erreichbar. Neuer Versuch läuft automatisch.';
+      } else {
+        clearPendingAuth();
+        if (!oauthDiagnostic.startsWith('Token-Austausch fehlgeschlagen')) setAuthDiagnostic('Token-Austausch nicht abgeschlossen: ' + (error?.name || 'Netzwerkfehler'));
+        st.authError = 'Anmeldung fehlgeschlagen: ' + errorText(error);
+      }
+      rerender();
+    } finally {
+      st.authLoading = false;
+      rerender();
+    }
+    return outcome;
+  }
+  function returnToAudio() {
+    if (typeof window.selectAudioSource === 'function') window.selectAudioSource('spotify');
+    if (typeof window.openApp === 'function') window.openApp('audio');
+    rerender();
+  }
+
+  function rerender() {
+    if (typeof window.render === 'function') window.render();
+    else { paintNow(); paintBrowse(); paintSearch(); paintBanner(); }
+  }
+  function setNotice(text, ms = 4500) {
+    st.notice = String(text || '');
+    st.error = '';
+    paintBanner();
+    clearTimeout(noticeTimer);
+    if (st.notice) {
+      noticeTimer = setTimeout(() => {
+        if (st.notice === text) { st.notice = ''; paintBanner(); }
+      }, ms);
+    }
+  }
+  function handleApiError(error, fromPoll) {
+    st.error = errorText(error);
+    st.notice = '';
+    if (error.code === 'auth') {
+      clearToken();
+      st.player = null;
+      st.profile = null;
+      st.authError = errorText(error);
+      st.accountOpen = false;
+      rerender();
+      return;
+    }
+    if (error.code === 'no-device') {
+      st.player = null;
+      st.playerLoaded = true;
+    }
+    if (fromPoll) {
+      paintBanner();
+      if (error.code === 'no-device') paintNow();
+    } else rerender();
+  }
+
+  // Load Spotify's SDK when Spotify opens, or when the user selects a track.
+  function loadWebPlaybackSDK() {
+    if (window.Spotify?.Player) return Promise.resolve();
+    if (sdkLoading) return sdkLoading;
+    sdkLoading = new Promise((resolve, reject) => {
+      const previous = window.onSpotifyWebPlaybackSDKReady;
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        if (typeof previous === 'function') previous();
+        resolve();
+      };
+      const script = document.createElement('script');
+      script.src = 'https://sdk.scdn.co/spotify-player.js';
+      script.async = true;
+      script.onerror = () => reject(new Error('Spotify Web Playback SDK konnte nicht geladen werden.'));
+      document.head.appendChild(script);
+    }).catch(error => { sdkLoading = null; throw error; });
+    return sdkLoading;
+  }
+  function webPlayerStatus(text, error = '') {
+    st.webStatus = text;
+    st.webError = error;
+    if (st.mounted) rerender();
+  }
+  // Evidence only: asks the browser engine whether Widevine is usable for the
+  // audio format Spotify streams. Nothing is worked around when it is not.
+  let widevineProbe = 'nicht geprüft';
+  async function probeWidevine() {
+    if (iosWebAudio) {
+      // iOS Safari does not use Widevine. Its absence is not an SDK failure.
+      widevineProbe = 'iOS Safari · Widevine nicht erforderlich';
+      logOAuth('Wiedergabe: Safari-Audio · DRM wird vom Browser verwaltet');
+      return widevineProbe;
+    }
+    try {
+      if (typeof navigator.requestMediaKeySystemAccess !== 'function') {
+        widevineProbe = 'EME-Schnittstelle fehlt';
+      } else {
+        const access = await navigator.requestMediaKeySystemAccess('com.widevine.alpha', [{
+          initDataTypes: ['cenc'],
+          audioCapabilities: [{ contentType: 'audio/mp4; codecs="mp4a.40.2"' }]
+        }]);
+        await access.createMediaKeys();
+        widevineProbe = 'verfügbar';
+      }
+    } catch (error) {
+      widevineProbe = 'abgelehnt (' + String(error?.name || 'Fehler').replace(/[^a-zA-Z]/g, '').slice(0, 30) + ')';
+    }
+    logOAuth('Wiedergabe: Widevine-DRM ' + widevineProbe);
+    return widevineProbe;
+  }
+  function logPlayback(text) { logOAuth('Wiedergabe: ' + String(text || '').replace(/\s+/g, ' ').slice(0, 120)); }
+  async function startWebPlayer() {
+    probeWidevine();
+    // Spotify's Web SDK is not officially supported in Android WebView.
+    // Do not start Spotify App Remote or silently switch to playback in another app.
+    if (nativeOAuthBridge() && typeof navigator.requestMediaKeySystemAccess !== 'function') {
+      webPlayerStatus('Nicht unterstützt',
+        'Android WebView bietet hier kein DRM für Spotify. Über Chrome öffnen.');
+      return;
+    }
+    if (!st.token) { setNotice('Bitte zunächst mit Spotify verbinden.'); return; }
+    if (!(st.token.scope || '').split(' ').includes('streaming')) {
+      st.accountOpen = true;
+      st.authError = 'Für die Wiedergabe direkt in MeviCar bitte erneut mit Spotify verbinden und Streaming freigeben.';
+      rerender();
+      return;
+    }
+    if (window.isSecureContext === false) {
+      webPlayerStatus('Nicht verfügbar','Der MeviCar Player benötigt HTTPS.');
+      return;
+    }
+    if (st.webPlayer && st.webDeviceId) {
+      st.webPlayer.activateElement();
+      if (st.pendingPlay) await transferToWebPlayer();
+      else webPlayerStatus('Bereit');
+      return;
+    }
+    // Rendering the new status re-enters mount(): prevent a second connection.
+    if (st.webConnectBusy) {
+      st.webPlayer?.activateElement();
+      return;
+    }
+    st.webConnectBusy = true;
+    webPlayerStatus('Verbinde …');
+    try {
+      await loadWebPlaybackSDK();
+      if (!window.Spotify?.Player) throw new Error('Spotify SDK nicht verfügbar.');
+      if (!st.webPlayer) {
+        const player = new window.Spotify.Player({
+          name: 'MeviCar Next',
+          getOAuthToken: cb => accessToken().then(cb).catch(() => webPlayerStatus('Anmeldung erforderlich','Spotify erneut verbinden.')),
+          volume: 0.65,
+          enableMediaSession: true
+        });
+        st.webPlayer = player;
+        player.addListener('ready', ({ device_id }) => {
+          st.webDeviceId = device_id;
+          logPlayback('Spotify-SDK bereit · MeviCar als Gerät registriert');
+          webPlayerStatus('Bereit');
+          transferToWebPlayer().catch(() => {});
+        });
+        player.addListener('not_ready', ({ device_id }) => {
+          if (st.webDeviceId === device_id) st.webDeviceId = '';
+          logPlayback('Spotify-SDK meldet Gerät offline');
+          webPlayerStatus('Offline','Spotify-Player nicht erreichbar.');
+        });
+        for (const event of ['initialization_error','authentication_error','account_error','playback_error']) {
+          player.addListener(event, ({ message }) => logPlayback('SDK-Fehler ' + event + ' · ' + (message || '')));
+          player.addListener(event, ({ message }) => webPlayerStatus('Fehler',
+            (event === 'initialization_error' && nativeOAuthBridge()
+              ? 'Spotify-DRM im Android WebView nicht verfügbar. Über Chrome öffnen. '
+              : '') + (message || event)));
+        }
+        player.addListener('autoplay_failed', () => logPlayback('SDK meldet autoplay_failed (Nutzergeste nötig)'));
+        player.addListener('autoplay_failed', () => webPlayerStatus('Bereit','Wiedergabe mit Play-Taste aktivieren.'));
+        player.addListener('player_state_changed', () => { if (st.mounted) poll(true); });
+      }
+      st.webPlayer.activateElement();
+      logPlayback('SDK geladen · connect() wird aufgerufen');
+      if (!await st.webPlayer.connect()) throw new Error('Spotify konnte den MeviCar Player nicht verbinden.');
+      logPlayback('connect() erfolgreich · warte auf Geräteregistrierung');
+      if (!st.webDeviceId) webPlayerStatus('Registriere Gerät …');
+    } catch(error) {
+      logPlayback('Start fehlgeschlagen · ' + (error?.message || 'unbekannt'));
+      webPlayerStatus('Fehler',error.message || String(error));
+    } finally {
+      st.webConnectBusy = false;
+    }
+  }
+  async function transferToWebPlayer() {
+    if (!st.webDeviceId || st.webTransferBusy) return;
+    st.webTransferBusy = true;
+    try {
+      window.meviMediaStopForSource?.('spotify');
+      // iOS: activateElement must be invoked by a user click whenever possible.
+      st.webPlayer?.activateElement();
+      const id = st.webDeviceId;
+      const pending = pendingPlayback();
+      await api('/me/player',{method:'PUT',body:JSON.stringify({device_ids:[id],play:!!pending})});
+      if (pending) {
+        await api('/me/player/play?device_id=' + encodeURIComponent(id),
+          {method:'PUT',body:JSON.stringify(pending.body)});
+        st.pendingPlay = null;
+        setNotice('Wiedergabe: ' + pending.title);
+      }
+      logPlayback('Wiedergabe an MeviCar übertragen');
+      webPlayerStatus('Wiedergabe über MeviCar');
+      await poll(true);
+    } catch(error) {
+      logPlayback('Übertragung fehlgeschlagen · ' + errorText(error));
+      webPlayerStatus('Bereit',errorText(error));
+    }
+    finally { st.webTransferBusy = false; }
+  }
+  // Must be called directly by the click handler, BEFORE any await. On iOS
+  // the Spotify Connect API may report "playing" even when WebKit blocks the
+  // local audio element. A second user gesture can unlock the SDK audio.
+  function activateIOSAudio() {
+    if (!iosWebAudio) return startWebPlayer();
+    const player = st.webPlayer;
+    if (!player || !st.webDeviceId) {
+      // First connect a local SDK device; the next deliberate tap can unlock
+      // playback after the asynchronous SDK ready event.
+      return startWebPlayer();
+    }
+    let activated, resumed;
+    try {
+      st.iosAudioTapCount++;
+      activated = player.activateElement();
+      // Call resume in the SAME click task, not after token/API awaits.
+      // The SDK is responsible for the audio element; no fake HTML audio.
+      resumed = player.resume();
+      logPlayback('iOS: Audio per Fingertipp aktiviert · SDK resume angefordert');
+      st.webError = '';
+      setNotice('iPhone: Audio-Freigabe angefordert. Falls weiter stumm: Lautstärke prüfen.', 6500);
+    } catch (error) {
+      logPlayback('iOS: Aktivierung fehlgeschlagen · ' + (error?.name || 'Fehler'));
+      webPlayerStatus('Bereit','iPhone hat die Audiowiedergabe blockiert. „Ton aktivieren“ erneut drücken.');
+      return;
+    }
+    // Report async SDK rejections without suggesting that audio was verified.
+    Promise.allSettled([activated,resumed].filter(Boolean)).then(outcomes => {
+      const failure = outcomes.find(x=>x.status==='rejected');
+      if (failure) {
+        logPlayback('iOS: Audioaktivierung vom SDK abgelehnt');
+        webPlayerStatus('Bereit','iPhone blockiert Spotify-Ton weiterhin. „Ton aktivieren“ erneut drücken.');
+      } else {
+        // API state alone cannot confirm audible output on a physical iPhone.
+        logPlayback('iOS: Audioaktivierung ans SDK übergeben');
+        poll(true).catch(()=>{});
+      }
+    });
+  }
+  function iosAudioButtonMarkup(){
+    return iosWebAudio&&st.webPlayer&&st.webDeviceId?
+      '<button type="button" class="sp-tool sp-ios-audio" onclick="meviSpotifyActivateAudio()"'+
+      ' aria-label="iPhone Spotify Ton aktivieren" title="Spotify-Ton auf diesem iPhone freigeben">'+
+      icon('volume')+'<span>Ton aktivieren</span></button>':'';
+  }
+  function webPlayerMarkup() {
+    if (!st.token) return '';
+    const ready = !!st.webDeviceId;
+    const label = ready?'MeviCar Player aktiv':'MeviCar Player starten';
+    return '<div class="sp-web-player">' +
+      '<button type="button" class="sp-web-action'+(ready?' is-on':'')+
+      '" onclick="meviSpotifyWebPlayer()" aria-label="MeviCar Spotify Player aktivieren">'+icon('play')+
+      '<span>'+esc(label)+'</span></button>'+
+      '<span class="sp-web-status">'+esc(st.webStatus)+'</span>'+
+      (st.webError?'<span class="sp-web-error" role="status">'+esc(st.webError)+'</span>':'')+
+      (nativeOAuthBridge()&&st.webError?'<button type="button" class="sp-web-action" onclick="meviSpotifyOpenBrowser()">In Chrome öffnen</button>':'')+
+      '</div>';
+  }
+
+  // Share the exact source-switcher markup and CSS classes with Radio/MeviMedia.
+  function sourceMarkup() {
+    return [['radio','Radio','music'],['spotify','Spotify','disc'],['media','Medien','folder']]
+      .map(([id,label,glyph]) =>
+        '<button type="button" data-source="'+id+'" class="mm-mode-button '+(id==='spotify'?'active':'')+
+        '" aria-label="'+esc(label)+'" aria-pressed="'+(id==='spotify')+
+        '" onclick="selectAudioSource(\''+id+'\')">'+icon(glyph).replace('class="sp-icon"','class="mm-icon"')+esc(label)+'</button>'
+      ).join('');
+  }
+  function topMarkup() {
+    return '<div class="mm-top sp-unified-top">' +
+      '<div class="mm-identity"><span class="mm-eyebrow">MEVICAR NEXT</span><span class="mm-heading">SPOTIFY</span></div>' +
+      '<div class="mm-top-actions">' + sourceMarkup() + '</div></div>';
+  }
+  // Only errors belong in the inline player banner; playback confirmations
+  // are deliberately silent to avoid pushing the library/player up and down.
+  function bannerMarkup() {
+    const text = st.error;
+    return '<div class="sp-banner is-error" id="sp-banner" role="alert" ' + (text ? '' : 'hidden') + '>' + icon('alert') + '<span>' + esc(text) + '</span></div>';
+  }
+  function tabsMarkup() {
+    return '<div class="sp-tabs" role="tablist" aria-label="Spotify-Ansichten">' +
+      [['browse', 'Bibliothek', 'list'], ['search', 'Suche', 'search']].map(([id, label, glyph]) =>
+        '<button type="button" class="sp-tab' + (st.tab === id ? ' selected' : '') + '" role="tab" data-tab="' + id + '" aria-selected="' + (st.tab === id) + '" onclick="meviSpotifyTab(\'' + id + '\')">' + icon(glyph) + '<span>' + esc(label) + '</span></button>'
+      ).join('') + '</div>';
+  }
+  function onboardingMarkup() {
+    const redirect = redirectUri();
+    const hasClient = !!st.clientId;
+    return '<div class="sp-onboard">' +
+      '<div class="sp-onboard-head"><span class="sp-onboard-icon">' + icon('spotify') + '</span><div>' +
+      '<span class="sp-eyebrow">SPOTIFY PREMIUM // MEVICAR NEXT</span><h2>Spotify direkt im Cockpit hören</h2>' +
+      '<p>Spotify Premium läuft über den Web Playback SDK ohne zusätzliche Spotify-App. Auch in der Android-APK spielt die Musik direkt in MeviCar.</p></div></div>' +
+      (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
+      (st.notice ? '<div class="sp-alert is-ok">' + icon('check') + '<span>' + esc(st.notice) + '</span></div>' : '') +
+      '<div class="sp-setup">' +
+      '<div class="sp-step"><span class="sp-step-num">1</span><div><strong>Spotify Premium</strong><p>Mit deinem Premium-Konto spielt der MeviCar Player die Musik direkt über dieses Gerät ab.</p><button type="button" class="sp-linkbtn" onclick="meviSpotifyOpen()">Spotify-Anmeldung' + icon('external') + '</button></div></div>' +
+      '<div class="sp-step"><span class="sp-step-num">2</span><div><strong>Redirect-URI hinterlegen</strong><p>Die URI muss im Spotify Developer Dashboard exakt eingetragen sein.'+(nativeOAuthBridge()?' Für die Anmeldung in der APK zusätzlich mevicarnext://spotify-callback erlauben.':'')+'</p><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirect) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div><a class="sp-linkbtn" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Developer Dashboard' + icon('external') + '</a></div></div>' +
+      '<div class="sp-step"><span class="sp-step-num">3</span><div><strong>Client ID in Settings</strong><p>Spotify-Client-ID zentral unter Settings → Zugänge &amp; Schlüssel verwalten.</p><button type="button" class="sp-linkbtn" onclick="meviOpenCredentialSettings()">Settings öffnen</button></div></div>' +
+      '</div>' +
+      (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
+      '<div class="sp-onboard-actions"><button type="button" class="sp-primary" onclick="meviSpotifyConnect()" ' + (!hasClient || st.authLoading ? 'disabled' : '') + '>' + icon('spotify') + (st.authLoading ? 'Verbinde …' : 'Mit Spotify verbinden') + '</button>' +
+      (hasClient ? '<span class="sp-fine">Client ID: ' + esc(maskClient(st.clientId)) + '</span>' : '') + '</div>' +
+      diagnosticsMarkup() +
+      '<p class="sp-fine">Kein Passwort und kein Client Secret. Access- und Refresh-Token bleiben lokal in diesem Browser. Dev Mode: maximal 5 Nutzer, der App-Inhaber braucht Premium. Auf iPhone kann die Anmeldung aus einer installierten PWA heraus in Safari landen; dann die Verbindung in Safari herstellen.</p>' +
+      '</div>';
+  }
+  function accountMarkup() {
+    const profile = st.profile || {};
+    const name = profile.display_name || profile.id || 'Spotify-Konto';
+    return '<div class="sp-account">' +
+      '<div class="sp-account-head"><button type="button" class="sp-back" onclick="meviSpotifyAccount()">' + icon('back') + '<span>Zurück</span></button><span class="sp-eyebrow">SPOTIFY KONTO</span></div>' +
+      '<div class="sp-account-body">' +
+      '<div class="sp-account-profile"><span class="sp-account-avatar">' + icon('spotify') + '</span><div><strong id="sp-account-display">' + esc(name) + '</strong><small id="sp-account-id">' + esc(profile.id || 'Spotify Connect') + '</small></div></div>' +
+      '<div class="sp-account-row"><span>Client ID</span><code>' + esc(maskClient(st.clientId)) + '</code></div>' +
+      '<div class="sp-account-row"><span>Redirect-URI</span><div class="sp-copy"><input id="sp-redirect" type="text" readonly value="' + esc(redirectUri()) + '" onclick="this.select()" aria-label="Spotify Redirect-URI"><button type="button" onclick="meviSpotifyCopyRedirect()" aria-label="Redirect-URI kopieren" title="Kopieren">' + icon('copy') + '</button></div></div>' +
+      (st.authError ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>' + esc(st.authError) + '</span></div>' : '') +
+      (st.confirmReset ? '<div class="sp-alert" role="alert">' + icon('alert') + '<span>Client ID und Spotify-Token wirklich aus diesem Browser löschen?</span></div>' : '') +
+      '<div class="sp-account-actions">' +
+      (st.confirmReset
+        ? '<button type="button" class="sp-primary" onclick="meviSpotifyResetClient(true)">Ja, löschen</button><button type="button" onclick="meviSpotifyResetClient(false)">Abbrechen</button>'
+        : '<button type="button" class="sp-primary" onclick="meviSpotifyConnect(true)">Neu verbinden</button><button type="button" onclick="meviSpotifyDisconnect()">Spotify trennen</button><button type="button" onclick="meviOpenCredentialSettings()">Client ID in Settings</button>') +
+      '</div>' +
+      diagnosticsMarkup() +
+      '<p class="sp-fine">Die Verbindung nutzt OAuth PKCE ohne Backend. Access- und Refresh-Token liegen ausschließlich im lokalen Speicher dieses Browsers. Beim Trennen bleiben nur die Client ID und die Suchhistorie erhalten.</p>' +
+      '</div></div>';
+  }
+  function html(compact) {
+    const connected = !!st.token;
+    let content;
+    if (!connected) content = onboardingMarkup();
+    else if (st.accountOpen) content = accountMarkup();
+    else content = '<div class="sp-body">' +
+      '<div class="sp-library-column" aria-label="Spotify-Bibliothek">' +
+      '<div class="sp-library-tabs">' + tabsMarkup() + '</div>' +
+      '<section class="sp-pane sp-browse-pane" aria-label="Spotify durchsuchen"><div id="sp-browse-region">' + browseMarkup() + '</div></section>' +
+      '<section class="sp-pane sp-search-pane" aria-label="Spotify suchen"><div id="sp-search-region">' + searchMarkup() + '</div></section>' +
+      '</div>' +
+      '<section class="sp-pane sp-now-pane" aria-label="Aktuelle Wiedergabe"><div id="sp-now-region">' + nowMarkup() + '</div></section>' +
+      '</div>';
+    return '<section class="sp-shell' + (compact ? ' is-compact' : '') +
+      '" data-tab="' + st.tab + '" data-state="' + (connected ? (st.accountOpen ? 'account' : 'ready') : 'setup') +
+      '" aria-label="Spotify direkt in MeviCar">' +
+      topMarkup() + (connected && !st.accountOpen ? bannerMarkup() : '') + content + '</section>';
+  }
+
+  function nowMarkup() {
+    if (!st.webDeviceId) return noDeviceMarkup();
+    if (!st.playerLoaded && !st.player && !st.error) {
+      return '<div class="sp-empty"><span class="sp-spinner" aria-hidden="true"></span><strong>Wiedergabestatus wird geladen</strong><p>MeviCar Player wird abgefragt.</p><button type="button" onclick="meviSpotifyRefresh()">' + icon('refresh') + 'Aktualisieren</button></div>';
+    }
+    if (!st.player || st.player.device?.id !== st.webDeviceId) return noDeviceMarkup();
+    const player = st.player;
+    const item = player.item;
+    if (!item) return '<div class="sp-empty">' + icon('music') + '<strong>Bereit für Musik</strong><p>Wähle einen Titel, ein Album oder eine Playlist aus deiner Bibliothek.</p></div>';
+    const episode = item.type === 'episode';
+    const uri = item.uri || '';
+    const duration = Number(item.duration_ms) || 0;
+    const progress = clamp(Number(player.progress_ms) || 0, 0, duration || Number.MAX_SAFE_INTEGER);
+    const pct = duration ? Math.round(progress / duration * 1000) : 0;
+    const art = imageUrl(episode ? (item.images || item.show?.images) : item.album?.images);
+    const title = item.name || 'Spotify';
+    const artists = episode ? (item.show?.name || 'Podcast') : ((item.artists || []).map(a => a?.name).filter(Boolean).join(', ') || 'Unbekannter Interpret');
+    const album = episode ? (item.show?.name || '') : (item.album?.name || '');
+    const disallows = player.actions?.disallows || {};
+    const disabled = key => disallows[key] ? 'disabled' : '';
+    const repeat = player.repeat_state || 'off';
+    const repeatTitle = repeat === 'track' ? 'Titel wiederholen' : repeat === 'context' ? 'Kontext wiederholen' : 'Wiederholen aus';
+    const repeatGlyph = repeat === 'track' ? '1' : '';
+    const playing = !!player.is_playing;
+    return '<div class="sp-now">' +
+      '<span class="sp-art' + (art ? ' has-image' : '') + '" aria-hidden="true">' + (art ? '<img src="' + esc(art) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : icon(episode ? 'podcast' : 'music')) + '</span>' +
+      '<div class="sp-meta">' +
+      '<div class="sp-title" title="' + esc(title) + '">' + esc(title) + '</div>' +
+      '<div class="sp-artist">' + esc(artists) + '</div>' +
+      (album ? '<div class="sp-album">' + esc(album) + '</div>' : '') + '</div>' +
+      '<div class="sp-progress"><input class="sp-seek" id="sp-seek" type="range" min="0" max="1000" value="' + pct + '" style="--seek:' + (pct / 10) + '%" aria-label="Wiedergabeposition" oninput="meviSpotifySeekPreview(this.value)" onchange="meviSpotifySeek(this.value)" ' + disabled('seeking') + '>' +
+      '<div class="sp-times"><span id="sp-elapsed">' + fmtMs(progress) + '</span><span id="sp-duration">' + fmtMs(duration) + '</span></div></div>' +
+      '<div class="sp-transport">' +
+      '<button type="button" id="sp-shuffle" class="' + (player.shuffle_state ? 'is-on' : '') + '" aria-label="Shuffle" aria-pressed="' + !!player.shuffle_state + '" title="Zufällige Reihenfolge" onclick="meviSpotifyShuffle()" ' + disabled('toggling_shuffle') + '>' + icon('shuffle') + '</button>' +
+      '<button type="button" aria-label="Vorheriger Titel" title="Zurück" onclick="meviSpotifyPrev()" ' + disabled('skipping_prev') + '>' + icon('prev') + '</button>' +
+      '<button type="button" id="sp-play" class="sp-primary" aria-label="' + (playing ? 'Pause' : 'Abspielen') + '" title="' + (playing ? 'Pause' : 'Abspielen') + '" onclick="meviSpotifyToggle()" ' + disabled(playing ? 'pausing' : 'resuming') + '>' + icon(playing ? 'pause' : 'play') + '</button>' +
+      '<button type="button" aria-label="Nächster Titel" title="Weiter" onclick="meviSpotifyNext()" ' + disabled('skipping_next') + '>' + icon('next') + '</button>' +
+      '<button type="button" id="sp-repeat" class="' + (repeat !== 'off' ? 'is-on' : '') + '" aria-label="' + repeatTitle + '" aria-pressed="' + (repeat !== 'off') + '" title="' + repeatTitle + '" onclick="meviSpotifyRepeat()" ' + disabled('toggling_repeat_context') + '>' + icon('repeat') + (repeatGlyph ? '<span class="sp-repeat-one">' + repeatGlyph + '</span>' : '') + '</button>' +
+      '</div>' +
+      '<div class="sp-tools">' +
+      iosAudioButtonMarkup() +
+      (episode ? '<button type="button" class="sp-tool" title="15 Sekunden zurück" onclick="meviSpotifySeekBy(-15000)">' + icon('clock') + '<span>−15 s</span></button>' : '') +
+      (episode ? '<button type="button" class="sp-tool" title="15 Sekunden vor" onclick="meviSpotifySeekBy(15000)">' + icon('clock') + '<span>+15 s</span></button>' : '') +
+      '<button type="button" class="sp-tool' + (st.liked === true ? ' is-on' : '') + '" aria-pressed="' + (st.liked === true) + '" title="' + (st.liked === true ? 'Aus der Spotify-Bibliothek entfernen' : 'Zur Spotify-Bibliothek hinzufügen') + '" onclick="meviSpotifyLike()" ' + (uri ? '' : 'disabled') + '>' + icon('heart') + '<span>Gefällt mir</span></button>' +
+      '<button type="button" class="sp-tool' + (st.queueOpen ? ' is-on' : '') + '" aria-pressed="' + !!st.queueOpen + '" title="Warteschlange" onclick="meviSpotifyToggleQueue()">' + icon('queue') + '<span>Warteschlange</span></button>' +
+      (!iosWebAudio && Number.isFinite(player.device?.volume_percent) && player.device?.supports_volume !== false
+        ? '<label class="sp-main-volume" title="Spotify-Lautstärke">' + icon('volume') +
+          '<input type="range" min="0" max="100" step="1" value="' + clamp(player.device.volume_percent, 0, 100) +
+          '" oninput="this.nextElementSibling.textContent=this.value+\' %\'" onchange="meviSpotifyVolume(this.value)" aria-label="Spotify-Lautstärke">' +
+          '<span>' + Math.round(player.device.volume_percent) + ' %</span></label>'
+        : '') +
+      '</div>' +
+      (st.queueOpen ? '<div class="sp-drawers">' + queueMarkup() + '</div>' : '') +
+      '</div>';
+  }
+  function noDeviceMarkup() {
+    const ready = !!st.webDeviceId;
+    const connecting = !ready && (st.webConnectBusy || st.webStatus === 'Registriere Gerät …');
+    const title = ready ? 'Bereit für Musik' : connecting ? 'MeviCar Player wird gestartet …' : 'Spotify direkt in MeviCar';
+    const hint = ready ? 'Wähle einen Titel oder eine Playlist aus deiner Bibliothek.'
+      : connecting ? 'Der integrierte Spotify-Player wird automatisch verbunden.'
+      : 'Der automatische Player-Start war nicht möglich. Erneut versuchen.';
+    return '<div class="sp-empty">' + (connecting ? '<span class="sp-spinner" aria-hidden="true"></span>' : icon('spotify')) +
+      '<strong>'+title+'</strong><p>'+hint+'</p>' +
+      (!ready && !connecting ? '<div class="sp-empty-actions"><button type="button" onclick="meviSpotifyWebPlayer()">' + icon('play') + 'MeviCar Player starten</button>'+
+      (nativeOAuthBridge() ? '<button type="button" onclick="meviSpotifyOpenBrowser()">Im Browser öffnen</button>' : '') + '</div>' : '') +
+      iosAudioButtonMarkup()+
+      (iosWebAudio&&!ready?'<p class="sp-fine">iPhone: Player starten, danach „Ton aktivieren“ antippen.</p>':'')+
+      (st.webError?'<p role="alert">'+esc(st.webError)+'</p>':'')+'</div>';
+  }
+  function queueMarkup() {
+    const current = st.queue?.currently_playing;
+    const upcoming = Array.isArray(st.queue?.queue) ? st.queue.queue.slice(0, 12) : [];
+    const queueItem = item => item?.type === 'episode' ? mapEpisode(item) : mapTrack(item);
+    return '<div class="sp-drawer"><div class="sp-drawer-head"><strong>Warteschlange</strong><button type="button" class="sp-icon-button" aria-label="Warteschlange aktualisieren" title="Aktualisieren" onclick="meviSpotifyLoadQueue()">' + icon('refresh') + '</button></div>' +
+      (st.queueLoading && !st.queue ? '<p class="sp-drawer-note">Warteschlange wird geladen …</p>' : '') +
+      (st.queueError ? '<p class="sp-drawer-note is-error">' + esc(st.queueError) + '</p>' : '') +
+      (current ? '<div class="sp-queue-now">' + icon('play') + '<span><small>JETZT</small><strong>' + esc(queueItem(current)?.title || 'Unbekannt') + '</strong></span></div>' : '') +
+      (upcoming.length ? upcoming.map((raw, index) => {
+        const item = queueItem(raw);
+        if (!item) return '';
+        return '<div class="sp-queue-row"><span class="sp-queue-index">' + (index + 1) + '</span><span class="sp-queue-text"><strong>' + esc(item.title) + '</strong><small>' + esc(item.meta) + '</small></span><span class="sp-queue-time">' + (item.duration ? fmtMs(item.duration) : '') + '</span></div>';
+      }).join('') : (st.queueLoading ? '' : '<p class="sp-drawer-note">Die Warteschlange ist leer.</p>')) +
+      '</div>';
+  }
+
+  function browseMarkup() {
+    return '<div class="sp-browse"><div class="sp-pane-head"><div class="sp-chips" role="tablist" aria-label="Spotify-Bereiche">' +
+      Object.entries(BROWSE_DEFS).map(([id, def]) => {
+        const isFavorite = id === 'tracks';
+        return '<button type="button" role="tab" class="sp-chip' + (st.browse === id ? ' selected' : '') + '" data-browse="' + id + '"' + (isFavorite ? ' aria-label="Favoriten" title="Favoriten"' : '') + ' aria-selected="' + (st.browse === id) + '" onclick="meviSpotifyBrowse(\'' + id + '\')">' + (isFavorite ? icon('star') : esc(def.label)) + '</button>';
+      }).join('') +
+      '</div><button type="button" class="sp-icon-button" aria-label="Bereich aktualisieren" title="Aktualisieren" onclick="meviSpotifyReloadBrowse()">' + icon('refresh') + '</button></div>' +
+      '<div class="sp-scroll" id="sp-browse-list">' + browseListMarkup() + '</div></div>';
+  }
+  function browseListMarkup() {
+    const cache = st.browseData[st.browse];
+    if (st.browseLoading && !cache) return '<div class="sp-list-loading"><span class="sp-spinner"></span><span>Spotify-Bibliothek wird geladen …</span></div>';
+    if (st.browseError && !cache) return '<div class="sp-empty small">' + icon('alert') + '<strong>Nicht geladen</strong><p>' + esc(st.browseError) + '</p><button type="button" onclick="meviSpotifyReloadBrowse()">Erneut versuchen</button></div>';
+    const items = cache?.items || [];
+    if (!items.length) return '<div class="sp-empty small">' + icon('list') + '<strong>Noch nichts gespeichert</strong><p>In Spotify gespeicherte oder zuletzt gehörte Inhalte erscheinen hier.</p></div>';
+    return '<div class="sp-rows">' + items.map((item, index) => rowMarkup(item, 'browse', index)).join('') + '</div>' + (st.browseLoading ? '<div class="sp-list-loading small"><span class="sp-spinner"></span><span>Aktualisiere …</span></div>' : '');
+  }
+  function rowMarkup(item, group, index) {
+    return '<div class="sp-row"><button type="button" class="sp-row-main" onclick="meviSpotifyPlayStored(\'' + group + '\',' + index + ')" aria-label="' + esc(item.title + ' abspielen') + '">' +
+      '<span class="sp-row-art">' + (item.image ? '<img src="' + esc(item.image) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : icon(item.kind === 'episode' || item.kind === 'show' ? 'podcast' : item.kind === 'playlist' ? 'list' : item.kind === 'album' ? 'disc' : item.kind === 'artist' ? 'mic' : 'music')) + '</span>' +
+      '<span class="sp-row-text"><strong>' + esc(item.title) + '</strong><small>' + esc(item.meta) + '</small></span>' +
+      (item.duration ? '<span class="sp-row-time">' + fmtMs(item.duration) + '</span>' : '') +
+      '<span class="sp-row-play">' + icon('play') + '</span></button>' +
+      '</div>';
+  }
+  function searchMarkup() {
+    const voiceSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+    const voiceLabel = st.voiceListening ? 'Sprachsuche beenden' : (voiceSupported ? 'Sprachsuche starten' : 'Sprachsuche im Browser nicht verfügbar');
+    return '<div class="sp-search">' +
+      '<div class="sp-search-entry"><label class="sp-search-box">' + icon('search') + '<input id="sp-search-input" type="search" spellcheck="false" autocomplete="off" placeholder="Titel, Alben, Podcasts suchen …" aria-label="Spotify durchsuchen" value="' + esc(st.query) + '" oninput="meviSpotifySearchInput(this.value)" onkeydown="if(event.key===\'Enter\'){event.preventDefault();meviSpotifySearchNow(this.value)}"></label>' +
+      '<button type="button" class="sp-voice-button' + (st.voiceListening ? ' is-listening' : '') + '" aria-label="' + voiceLabel + '" title="' + voiceLabel + '" aria-pressed="' + st.voiceListening + '" onclick="meviSpotifyVoice()" ' + (voiceSupported ? '' : 'disabled') + '>' + icon('mic') + '</button></div>' +
+      '<p class="sp-voice-feedback" id="sp-voice-feedback" role="status" ' + (st.voiceListening || st.voiceError ? '' : 'hidden') + '>' + esc(st.voiceError || 'Ich höre zu …') + '</p>' +
+      '<div class="sp-history" id="sp-search-history">' + historyMarkup() + '</div>' +
+      '<div class="sp-linkrow"><label class="sp-linkbox">' + icon('link') + '<input id="sp-link" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="Spotify-Link oder spotify:track:…" aria-label="Spotify-Link einfügen" onkeydown="if(event.key===\'Enter\'){event.preventDefault();meviSpotifyPlayLink(false)}"></label><button type="button" class="sp-link-play" onclick="meviSpotifyPlayLink(false)" title="Link abspielen">' + icon('play') + '<span>Abspielen</span></button><button type="button" class="sp-link-queue" onclick="meviSpotifyPlayLink(true)" aria-label="Link zur Warteschlange" title="Zur Warteschlange">' + icon('plus') + '</button></div>' +
+      '<div class="sp-results" id="sp-search-results">' + resultsMarkup() + '</div></div>';
+  }
+  function historyMarkup() {
+    if (st.query.trim() || !st.history.length) return '';
+    return '<span class="sp-history-label">Zuletzt</span>' + st.history.map(query => '<button type="button" class="sp-history-chip" onclick="meviSpotifyUseHistory(\'' + safeArg(query) + '\')">' + esc(query) + '</button>').join('') +
+      '<button type="button" class="sp-history-clear" aria-label="Suchverlauf löschen" title="Suchverlauf löschen" onclick="meviSpotifyClearHistory()">' + icon('close') + '</button>';
+  }
+  function resultsMarkup() {
+    const query = st.query.trim();
+    if (!query) return '<div class="sp-search-hint">' + icon('search') + '<strong>Spotify durchsuchen</strong><p>Suche nach Titeln, Alben, Interpreten, Playlists oder Podcasts. Höchstens 10 Treffer je Bereich.</p></div>';
+    if (st.searchLoading && !st.results) return '<div class="sp-list-loading"><span class="sp-spinner"></span><span>Suche läuft …</span></div>';
+    if (st.searchError) return '<div class="sp-empty small">' + icon('alert') + '<strong>Suche fehlgeschlagen</strong><p>' + esc(st.searchError) + '</p><button type="button" onclick="meviSpotifySearchNow(document.getElementById(\'sp-search-input\').value)">Erneut versuchen</button></div>';
+    if (!st.results) return '<div class="sp-search-hint">' + icon('search') + '<strong>Bereit</strong><p>Tippe einen Suchbegriff ein.</p></div>';
+    let out = '';
+    for (const [key, label, glyph] of SEARCH_GROUPS) {
+      const items = st.results[key] || [];
+      if (!items.length) continue;
+      out += '<div class="sp-group-title">' + icon(glyph) + esc(label) + '<span>' + items.length + '</span></div>';
+      out += items.map((item, index) => rowMarkup(item, key, index)).join('');
+    }
+    return out || '<div class="sp-empty small">' + icon('search') + '<strong>Keine Treffer</strong><p>Versuche einen anderen Suchbegriff.</p></div>';
+  }
+
+  function paintBanner() {
+    const el = $('sp-banner');
+    if (!el) return;
+    const text = st.error;
+    el.hidden = !text;
+    el.className = 'sp-banner is-error';
+    const span = el.querySelector('span');
+    if (span) span.textContent = text;
+  }
+  function paintNow() { const el = $('sp-now-region'); if (el) el.innerHTML = nowMarkup(); }
+  function paintBrowse() { const el = $('sp-browse-region'); if (el) el.innerHTML = browseMarkup(); }
+  function paintSearch() {
+    const results = $('sp-search-results');
+    if (results) results.innerHTML = resultsMarkup();
+    const history = $('sp-search-history');
+    if (history) history.innerHTML = historyMarkup();
+  }
+  function paintTabs() {
+    document.querySelectorAll('.sp-tab').forEach(button => {
+      const selected = button.dataset.tab === st.tab;
+      button.classList.toggle('selected', selected);
+      button.setAttribute('aria-selected', String(selected));
+    });
+    const shell = document.querySelector('.sp-shell');
+    if (shell) shell.dataset.tab = st.tab;
+  }
+  function paintProfile() {
+    const name = st.profile?.display_name || st.profile?.id || 'Verbunden';
+    const top = $('sp-account-name'); if (top) top.textContent = name;
+    const display = $('sp-account-display'); if (display) display.textContent = name;
+    const id = $('sp-account-id'); if (id) id.textContent = st.profile?.id || 'Spotify Premium';
+  }
+
+  const browseSerial = {};
+
+  function setTab(tab) {
+    if (!['now', 'browse', 'search'].includes(tab)) return;
+    if (tab !== 'search' && st.voiceListening) stopVoice();
+    st.tab = tab;
+    const shell = document.querySelector('.sp-shell');
+    if (shell) shell.dataset.tab = tab;
+    paintTabs();
+    if (tab === 'browse') {
+      const cache = st.browseData[st.browse];
+      if (!cache) loadBrowse(false);
+    }
+    if (tab === 'search' && st.query.trim() && !st.results) runSearch(st.query, false);
+  }
+  function setBrowse(key) {
+    if (!BROWSE_DEFS[key]) return;
+    st.browse = key;
+    st.browseError = '';
+    paintBrowse();
+    const cache = st.browseData[key];
+    if (!cache || Date.now() - cache.at > 300000) loadBrowse(false);
+  }
+  async function loadBrowse(force) {
+    const key = st.browse;
+    const def = BROWSE_DEFS[key];
+    if (!def || !st.token) return;
+    const cache = st.browseData[key];
+    if (!force && cache && Date.now() - cache.at < 300000) return;
+    const serial = (browseSerial[key] = (browseSerial[key] || 0) + 1);
+    st.browseLoading = true;
+    st.browseError = '';
+    if (st.browse === key) paintBrowse();
+    try {
+      const data = await api(def.path);
+      const items = (def.pick(data) || []).map(def.map).filter(Boolean);
+      st.browseData[key] = { items, at: Date.now() };
+    } catch (error) {
+      if (browseSerial[key] === serial && st.browse === key) st.browseError = errorText(error);
+    } finally {
+      if (browseSerial[key] !== serial) return;
+      st.browseLoading = false;
+      if (st.browse === key) paintBrowse();
+    }
+  }
+  function refreshBrowse() { loadBrowse(true); }
+
+  function storedItem(group, index) {
+    if (group === 'browse') return st.browseData[st.browse]?.items?.[index] || null;
+    return st.results?.[group]?.[index] || null;
+  }
+  function playStored(group, index) {
+    const item = storedItem(group, index);
+    if (!item) return;
+    if (group !== 'browse' && st.query.trim()) addHistory(st.query.trim());
+    playItem(item);
+  }
+  // Browser speech recognition is optional and starts only after a direct tap.
+  // Safari or installed PWAs may not expose this API; manual search remains available.
+  function paintVoice() {
+    const button = document.querySelector('.sp-voice-button');
+    if (button) {
+      const label = st.voiceListening ? 'Sprachsuche beenden' : 'Sprachsuche starten';
+      button.classList.toggle('is-listening', st.voiceListening);
+      button.setAttribute('aria-pressed', String(st.voiceListening));
+      button.setAttribute('aria-label', label);
+      button.title = label;
+    }
+    const feedback = $('sp-voice-feedback');
+    if (feedback) {
+      feedback.hidden = !st.voiceListening && !st.voiceError;
+      feedback.textContent = st.voiceError || (st.voiceListening ? 'Ich höre zu …' : '');
+    }
+  }
+  function stopVoice(silent = true) {
+    voiceSerial++;
+    const recognition = voiceRecognition;
+    voiceRecognition = null;
+    st.voiceListening = false;
+    if (recognition) {
+      recognition.onresult = null;
+      recognition.onerror = null;
+      recognition.onend = null;
+      try { recognition.abort(); } catch { /* browser already stopped */ }
+    }
+    if (silent) st.voiceError = '';
+    paintVoice();
+  }
+  function voice() {
+    if (st.voiceListening) { stopVoice(); return; }
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      st.voiceError = 'Spracherkennung in diesem Browser nicht verfügbar. Bitte tippen.';
+      paintVoice();
+      return;
+    }
+    stopVoice();
+    const serial = ++voiceSerial;
+    let recognition;
+    try {
+      recognition = new Recognition();
+      recognition.lang = 'de-DE';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+      recognition.continuous = false;
+      voiceRecognition = recognition;
+      st.voiceError = '';
+      st.voiceListening = true;
+      recognition.onresult = event => {
+        if (serial !== voiceSerial) return;
+        const transcript = String(event.results?.[0]?.[0]?.transcript || '').trim();
+        if (!transcript) {
+          st.voiceError = 'Nichts verstanden. Bitte erneut versuchen.';
+          st.voiceListening = false;
+          paintVoice();
+          return;
+        }
+        stopVoice();
+        setTab('search');
+        searchNow(transcript); // existing Spotify search API and search history
+        paintVoice();
+      };
+      recognition.onerror = event => {
+        if (serial !== voiceSerial) return;
+        const messages = {
+          'not-allowed': 'Mikrofonzugriff verweigert. Bitte Berechtigung prüfen.',
+          'service-not-allowed': 'Spracherkennung ist auf diesem Gerät gesperrt.',
+          'no-speech': 'Keine Sprache erkannt. Bitte erneut versuchen.',
+          'audio-capture': 'Kein Mikrofon verfügbar.',
+          'network': 'Spracherkennung benötigt eine Netzwerkverbindung.',
+          'language-not-supported': 'Deutsche Spracherkennung nicht verfügbar.'
+        };
+        st.voiceError = messages[event.error] || 'Spracherkennung fehlgeschlagen. Bitte tippen.';
+        st.voiceListening = false;
+        voiceRecognition = null;
+        paintVoice();
+      };
+      recognition.onend = () => {
+        if (serial !== voiceSerial) return;
+        voiceRecognition = null;
+        if (st.voiceListening) st.voiceError = 'Keine Sprache erkannt. Bitte erneut versuchen.';
+        st.voiceListening = false;
+        paintVoice();
+      };
+      recognition.start();
+      paintVoice();
+    } catch {
+      voiceRecognition = null;
+      st.voiceListening = false;
+      st.voiceError = 'Spracherkennung konnte nicht gestartet werden.';
+      paintVoice();
+    }
+  }
+  function searchInput(value) {
+    st.query = String(value || '').slice(0, 120);
+    clearTimeout(searchTimer);
+    const query = st.query.trim();
+    st.results = null;
+    st.searchError = '';
+    if (!query) {
+      st.searchLoading = false;
+      paintSearch();
+      return;
+    }
+    st.searchLoading = true;
+    paintSearch();
+    searchTimer = setTimeout(() => runSearch(query, false), 420);
+  }
+  function searchNow(value) {
+    const query = String(value || '').trim().slice(0, 120);
+    st.query = query;
+    const input = $('sp-search-input');
+    if (input && input.value !== query) input.value = query;
+    clearTimeout(searchTimer);
+    if (!query) { st.results = null; st.searchLoading = false; paintSearch(); return; }
+    runSearch(query, true);
+  }
+  async function runSearch(query, remember) {
+    const text = String(query || '').trim();
+    if (!text || !st.token) return;
+    const serial = ++searchSerial;
+    st.searchLoading = true;
+    st.searchError = '';
+    if (!st.results) paintSearch();
+    try {
+      const params = new URLSearchParams({ q: text, type: 'track,album,artist,playlist,show,episode', limit: '10' });
+      const data = await api('/search?' + params.toString());
+      if (serial !== searchSerial || st.query.trim() !== text) return;
+      st.results = normalizeSearch(data);
+      if (remember) addHistory(text);
+    } catch (error) {
+      if (serial !== searchSerial) return;
+      st.searchError = errorText(error);
+    } finally {
+      if (serial === searchSerial) {
+        st.searchLoading = false;
+        paintSearch();
+      }
+    }
+  }
+  function addHistory(query) {
+    const text = String(query || '').trim().slice(0, 120);
+    if (!text) return;
+    st.history = [text, ...st.history.filter(item => item.toLocaleLowerCase('de') !== text.toLocaleLowerCase('de'))].slice(0, 8);
+    writeJson(localStorage, KEYS.history, st.history);
+    const history = $('sp-search-history');
+    if (history) history.innerHTML = historyMarkup();
+  }
+  function useHistory(encoded) {
+    const query = decodeArg(encoded);
+    st.query = query;
+    const input = $('sp-search-input');
+    if (input) input.value = query;
+    addHistory(query);
+    runSearch(query, false);
+  }
+  function clearHistory() {
+    st.history = [];
+    try { localStorage.removeItem(KEYS.history); } catch { /* ignore */ }
+    paintSearch();
+  }
+
+  async function playItem(item) {
+    if (!item?.uri) return;
+    // Selecting a track is a real user gesture: unlock browser audio before awaits.
+    st.webPlayer?.activateElement();
+    const body = item.kind === 'track' || item.kind === 'episode' ? { uris: [item.uri] } : { context_uri: item.uri };
+    if (!st.webDeviceId) {
+      st.pendingPlay = { body, title: item.title, at: Date.now() };
+      await startWebPlayer();
+      return;
+    }
+    try {
+      window.meviMediaStopForSource?.('spotify');
+      await api('/me/player/play?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT', body: JSON.stringify(body) });
+      st.pendingPlay = null;
+      st.error = '';
+      setNotice('Wiedergabe: ' + item.title);
+      st.playerLoaded = true;
+      await sleep(350);
+      await poll(true);
+      rerender();
+    } catch (error) { handleApiError(error); }
+  }
+  async function queueItem(item) {
+    if (!item?.uri) return;
+    if (!st.webDeviceId) {
+      setNotice('Zuerst den MeviCar Player starten.');
+      return;
+    }
+    if (item.kind !== 'track' && item.kind !== 'episode') {
+      st.error = 'Nur Titel und Podcast-Folgen lassen sich zur Warteschlange hinzufügen.';
+      paintBanner();
+      return;
+    }
+    try {
+      await api('/me/player/queue?' + new URLSearchParams({ uri: item.uri, device_id: st.webDeviceId }).toString(), { method: 'POST' });
+      setNotice('Zur Warteschlange: ' + item.title);
+      const link = $('sp-link'); if (link) link.value = '';
+      if (st.queueOpen) { await loadQueue(); paintNow(); }
+    } catch (error) { handleApiError(error); }
+  }
+  async function toggle() {
+    st.webPlayer?.activateElement();
+    const player = st.player;
+    if (!st.webDeviceId) { await startWebPlayer(); return; }
+    if (!player || player.device?.id !== st.webDeviceId) return;
+    const wasPlaying = !!player.is_playing;
+    try {
+      await api((wasPlaying ? '/me/player/pause' : '/me/player/play') + '?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
+      if (!wasPlaying) window.meviMediaStopForSource?.('spotify');
+      player.is_playing = !wasPlaying;
+      st.playerAt = Date.now();
+      st.progressBase = Number(player.progress_ms) || 0;
+      st.error = '';
+      paintBanner();
+      paintNow();
+      setTimeout(() => poll(true), 450);
+    } catch (error) { handleApiError(error); }
+  }
+  async function skip(direction) {
+    if (!st.webDeviceId || st.player?.device?.id !== st.webDeviceId ||
+        st.player?.actions?.disallows?.[direction==='next'?'skipping_next':'skipping_prev']) return;
+    try {
+      await api('/me/player/' + direction + '?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'POST' });
+      if (st.player) { st.player.progress_ms = 0; st.progressBase = 0; st.playerAt = Date.now(); }
+      st.error = '';
+      await sleep(300);
+      await poll(true);
+      paintNow();
+    } catch (error) { handleApiError(error); }
+  }
+  function seekPreview(value) {
+    const player = st.player;
+    const duration = Number(player?.item?.duration_ms) || 0;
+    if (!duration) return;
+    const ms = clamp(Number(value) || 0, 0, 1000) / 1000 * duration;
+    const elapsed = $('sp-elapsed');
+    if (elapsed) elapsed.textContent = fmtMs(ms);
+    const seek = $('sp-seek');
+    if (seek) seek.style.setProperty('--seek', (clamp(Number(value) || 0, 0, 1000) / 10) + '%');
+  }
+  async function seek(value) {
+    const player = st.player;
+    if (!st.webDeviceId || player?.device?.id !== st.webDeviceId) return;
+    const duration = Number(player?.item?.duration_ms) || 0;
+    if (!duration) return;
+    const ms = Math.round(clamp(Number(value) || 0, 0, 1000) / 1000 * duration);
+    try {
+      await api('/me/player/seek?position_ms=' + ms + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
+      player.progress_ms = ms;
+      st.progressBase = ms;
+      st.playerAt = Date.now();
+      st.error = '';
+      tickProgress(true);
+      setTimeout(() => poll(true), 450);
+    } catch (error) { handleApiError(error); }
+  }
+  async function seekBy(delta) {
+    const player = st.player;
+    if (!st.webDeviceId || player?.device?.id !== st.webDeviceId) return;
+    const duration = Number(player?.item?.duration_ms) || 0;
+    const base = Number(st.progressBase) || 0;
+    const ms = clamp(base + (Number(delta) || 0), 0, duration || Number.MAX_SAFE_INTEGER);
+    try {
+      await api('/me/player/seek?position_ms=' + Math.round(ms) + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
+      player.progress_ms = ms;
+      st.progressBase = ms;
+      st.playerAt = Date.now();
+      tickProgress(true);
+      setTimeout(() => poll(true), 450);
+    } catch (error) { handleApiError(error); }
+  }
+  async function shuffle() {
+    if (!st.webDeviceId || st.player?.device?.id !== st.webDeviceId) return;
+    try {
+      const next = !st.player.shuffle_state;
+      await api('/me/player/shuffle?state=' + String(next) + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
+      st.player.shuffle_state = next;
+      paintNow();
+    } catch (error) { handleApiError(error); }
+  }
+  async function repeat() {
+    if (!st.webDeviceId || st.player?.device?.id !== st.webDeviceId) return;
+    const sequence = { off: 'context', context: 'track', track: 'off' };
+    const next = sequence[st.player.repeat_state || 'off'] || 'off';
+    try {
+      await api('/me/player/repeat?state=' + next + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
+      st.player.repeat_state = next;
+      paintNow();
+    } catch (error) { handleApiError(error); }
+  }
+  async function libraryContains(uri) {
+    const data = await api('/me/library/contains?' + new URLSearchParams({ uris: uri }).toString());
+    return Array.isArray(data) && data[0] === true;
+  }
+  async function syncLiked(item) {
+    if (!item?.uri) return;
+    const uri = item.uri;
+    try {
+      const liked = await libraryContains(uri);
+      if (st.player?.item?.uri !== uri) return;
+      st.liked = liked;
+      st.likedUri = uri;
+      paintNow();
+    } catch { /* like state is optional, do not surface a poll error */ }
+  }
+  async function likeCurrent() {
+    const item = st.player?.item;
+    if (!item?.uri) return;
+    try {
+      let liked = st.likedUri === item.uri ? st.liked : null;
+      if (liked === null) liked = await libraryContains(item.uri);
+      await api('/me/library', { method: liked ? 'DELETE' : 'PUT', body: JSON.stringify({ uris: [item.uri] }) });
+      st.liked = !liked;
+      st.likedUri = item.uri;
+      setNotice(st.liked ? 'Zur Spotify-Bibliothek hinzugefügt.' : 'Aus der Spotify-Bibliothek entfernt.');
+      paintNow();
+    } catch (error) { handleApiError(error); }
+  }
+  async function loadQueue() {
+    if (!st.token) return;
+    st.queueLoading = true;
+    st.queueError = '';
+    paintNow();
+    try { st.queue = await api('/me/player/queue'); }
+    catch (error) { st.queueError = errorText(error); }
+    finally { st.queueLoading = false; paintNow(); }
+  }
+  function toggleQueue() {
+    st.queueOpen = !st.queueOpen;
+    if (st.queueOpen) loadQueue();
+    else paintNow();
+  }
+  function pendingPlayback() {
+    const pending = st.pendingPlay;
+    if (!pending) return null;
+    if (Date.now() - pending.at > 120000) { st.pendingPlay = null; return null; }
+    return pending;
+  }
+  async function setVolume(value) {
+    if (!st.webDeviceId) return;
+    const volume = Math.round(clamp(Number(value) || 0, 0, 100));
+    try {
+      await api('/me/player/volume?volume_percent=' + volume + '&device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' });
+      if (st.player?.device) st.player.device.volume_percent = volume;
+      setNotice('Spotify-Lautstärke ' + volume + ' %.');
+      paintNow();
+    } catch (error) { handleApiError(error); }
+  }
+  async function refresh() {
+    if (!st.token) return;
+    st.pollBlockedUntil = 0;
+    try {
+      await Promise.allSettled([poll(true), loadProfile(), st.accountOpen ? null : loadBrowse(true)]);
+      st.error = '';
+      setNotice('Spotify aktualisiert.', 1800);
+      rerender();
+    } catch (error) { handleApiError(error); }
+  }
+  async function loadProfile() {
+    if (!st.token || st.profileLoading) return;
+    st.profileLoading = true;
+    try {
+      const profile = await api('/me');
+      if (profile && typeof profile === 'object') {
+        st.profile = profile;
+        paintProfile();
+      }
+    } catch (error) {
+      if (error.code === 'auth') handleApiError(error);
+    } finally { st.profileLoading = false; }
+  }
+
+
+  // Read-only, token-free snapshot used by both navigation renderers.
+  // The Spotify SDK remains the only playback owner; no automatic transfer.
+  function navState(){
+    const player=st.player,item=player?.item;
+    if(!st.token || !st.webDeviceId || !item || player?.device?.id!==st.webDeviceId ||
+       Date.now()-st.playerAt>24000)return null;
+    const episode=item.type==='episode',disallows=player.actions?.disallows||{};
+    const duration=Number(item.duration_ms)||0;
+    const progress=Math.max(0,(Number(st.progressBase)||0)+
+      (player.is_playing?Math.max(0,Date.now()-st.playerAt):0));
+    return {available:true,title:String(item.name||'').slice(0,200),
+      artist:String(episode?(item.show?.name||'Podcast'):
+        ((item.artists||[]).map(a=>a?.name).filter(Boolean).join(', ')||'Spotify')).slice(0,160),
+      cover:imageUrl(episode?(item.images||item.show?.images):item.album?.images)||'',
+      playing:!!player.is_playing,durationMs:duration,
+      progressMs:duration?Math.min(duration,progress):progress,
+      canToggle:!disallows[player.is_playing?'pausing':'resuming'],
+      canPrev:!disallows.skipping_prev,canNext:!disallows.skipping_next};
+  }
+  let lastNavPollAt=0;
+  function navPoll(nativeSurface=false){
+    const now=Date.now();
+    // Android's native NavigationView may cover the main WebView; its offline
+    // trip WebView must still receive fresh status without a second OAuth flow.
+    if(!st.token||st.mounted||(!nativeSurface&&document.hidden)||now-lastNavPollAt<4500)return false;
+    lastNavPollAt=now;
+    void poll(nativeSurface===true);
+    return true;
+  }
+  async function navAction(action){
+    const state=navState();
+    if(!state)return false;
+    if(action==='toggle'&&state.canToggle)return toggle();
+    if(action==='prev'&&state.canPrev)return skip('previous');
+    if(action==='next'&&state.canNext)return skip('next');
+    return false;
+  }
+  function playerSignature(player) {
+    if (!player) return 'none';
+    const disallows = player.actions?.disallows || {};
+    return [
+      player.item?.uri || '',
+      player.item?.duration_ms || 0,
+      player.is_playing ? '1' : '0',
+      player.shuffle_state || '',
+      player.repeat_state || '',
+      player.device?.id || '',
+      Object.keys(disallows).filter(key => disallows[key]).sort().join(',')
+    ].join('|');
+  }
+  async function poll(force) {
+    if (!st.token || pollBusy) return;
+    if (!force && (document.hidden || Date.now() < st.pollBlockedUntil)) return;
+    pollBusy = true;
+    const previous = st.player;
+    const previousSignature = playerSignature(previous);
+    try {
+      const data = await api('/me/player');
+      st.player = data || null;
+      st.playerLoaded = true;
+      st.playerAt = Date.now();
+      st.progressBase = Number(data?.progress_ms) || 0;
+      st.error = '';
+      if (!data) {
+        st.liked = null;
+        st.likedUri = '';
+        if (previous || !$('sp-now-region')?.querySelector('.sp-empty')) paintNow();
+        else paintNow();
+      } else {
+        const signature = playerSignature(data);
+        if (signature !== previousSignature) paintNow();
+        else tickProgress();
+        const uri = data.item?.uri || '';
+        if (uri && uri !== st.likedUri) {
+          st.liked = null;
+          st.likedUri = uri;
+          syncLiked(data.item);
+        }
+        if (st.queueOpen && (data.item?.uri || '') !== (previous?.item?.uri || '')) loadQueue();
+      }
+      paintBanner();
+      window.MeviNavTrip?.paintSpotify?.(document,navState());
+    } catch (error) {
+      if (error.code === 'auth') { handleApiError(error, true); return; }
+      if (error.code === 'no-device' || error.code === 'not-found') {
+        st.player = null;
+        st.playerLoaded = true;
+        st.liked = null;
+        st.likedUri = '';
+      }
+      handleApiError(error, true);
+      paintNow();
+      window.MeviNavTrip?.paintSpotify?.(document,navState());
+    } finally { pollBusy = false; }
+  }
+  function tickProgress(force) {
+    const player = st.player;
+    if (!player?.item) return;
+    const duration = Number(player.item.duration_ms) || 0;
+    const base = Number(st.progressBase) || 0;
+    const elapsed = player.is_playing ? base + Math.max(0, Date.now() - st.playerAt) : base;
+    const clamped = duration ? Math.min(elapsed, duration) : elapsed;
+    const seek = $('sp-seek');
+    if (seek && (force || document.activeElement !== seek)) {
+      const pct = duration ? Math.round(clamped / duration * 1000) : 0;
+      seek.value = String(pct);
+      seek.style.setProperty('--seek', (pct / 10) + '%');
+    }
+    const elapsedEl = $('sp-elapsed');
+    if (elapsedEl) elapsedEl.textContent = fmtMs(clamped);
+    const durationEl = $('sp-duration');
+    if (durationEl) durationEl.textContent = fmtMs(duration);
+  }
+
+  function saveClient(value) {
+    const id = String(value || '').trim();
+    if (!validClientId(id)) {
+      st.authError = 'Bitte eine gültige Spotify Client ID eintragen (8–64 Buchstaben oder Ziffern).';
+      rerender();
+      return;
+    }
+    if (st.clientId && st.clientId !== id) clearAuthState();
+    try { localStorage.setItem(KEYS.client, id); } catch { /* ignore */ }
+    st.clientId = id;
+    st.authError = '';
+    setNotice('Client ID gespeichert. Jetzt mit Spotify verbinden.');
+    rerender();
+  }
+  function resetClient(force) {
+    if (force === false) { st.confirmReset = false; rerender(); return; }
+    if (force !== true) { st.confirmReset = true; rerender(); return; }
+    clearAuthState();
+    try { localStorage.removeItem(KEYS.client); } catch { /* ignore */ }
+    st.clientId = '';
+    st.confirmReset = false;
+    st.accountOpen = false;
+    st.authError = '';
+    setNotice('Client ID entfernt. Eine neue Einrichtung ist nötig.');
+    rerender();
+  }
+  function clearAuthState() {
+    clearPendingAuth();
+    clearToken();
+    st.player = null;
+    st.playerLoaded = false;
+    st.profile = null;
+    st.queue = null;
+    st.queueOpen = false;
+    st.liked = null;
+    st.likedUri = '';
+    st.browseData = {};
+    st.browseError = '';
+    st.results = null;
+    st.searchLoading = false;
+    st.searchError = '';
+    st.query = '';
+    st.pendingPlay = null;
+    st.confirmReset = false;
+    try { localStorage.removeItem(KEYS.device); } catch { /* ignore */ }
+  }
+  function disconnect() {
+    clearAuthState();
+    st.accountOpen = false;
+    st.authError = '';
+    setNotice('Spotify getrennt. Die Client ID bleibt gespeichert.');
+    rerender();
+  }
+  function account() {
+    st.accountOpen = !st.accountOpen;
+    st.confirmReset = false;
+    rerender();
+  }
+  function openInSystemBrowser() {
+    if (!nativeOAuthBridge()) { setNotice('Browsermodus ist nur in der APK verfügbar.'); return; }
+    try {
+      window.MeviNativeBridge.postMessage(JSON.stringify({
+        id:'spotify-browser-'+Date.now(), action:'spotify.browser'
+      }));
+      setNotice('Die MeviCar-Web-App wird in Chrome geöffnet. Dort ist gegebenenfalls eine erneute Anmeldung nötig.');
+    } catch {
+      setNotice('Browser konnte nicht geöffnet werden.');
+    }
+  }
+  function openSpotify() {
+    const link = document.createElement('a');
+    link.href = 'https://open.spotify.com';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+  async function copyRedirect() {
+    const text = redirectUri();
+    try {
+      await navigator.clipboard.writeText(text);
+      setNotice('Redirect-URI kopiert.');
+    } catch {
+      const input = $('sp-redirect');
+      if (input) { input.focus(); input.select(); }
+      setNotice('Bitte die markierte Redirect-URI manuell kopieren.');
+    }
+  }
+  function playLink(queue) {
+    const input = $('sp-link');
+    const parsed = parseLink(input?.value);
+    if (!parsed) {
+      st.error = 'Kein gültiger Spotify-Link. Erlaubt sind open.spotify.com-Links und spotify:-URIs.';
+      paintBanner();
+      return;
+    }
+    const kind = parsed.kind;
+    const item = {
+      kind, uri: parsed.uri,
+      title: kind === 'track' ? 'Spotify-Titel' : kind === 'episode' ? 'Podcast-Folge' : typeLabel(kind)
+    };
+    if (queue) queueItem(item);
+    else playItem(item);
+  }
+  function pauseForSource(target) {
+    if (target === 'spotify' || !st.token || !st.webDeviceId || !st.player?.is_playing ||
+        st.player.device?.id !== st.webDeviceId) return;
+    api('/me/player/pause?device_id=' + encodeURIComponent(st.webDeviceId), { method: 'PUT' }).then(() => {
+      if (st.player) st.player.is_playing = false;
+      paintNow();
+      paintBanner();
+    }).catch(() => { /* best effort when switching to local audio */ });
+  }
+
+  function bindGlobals() {
+    if (globalsBound) return;
+    globalsBound = true;
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden && st.mounted) poll(true);
+    });
+    window.addEventListener('online', () => {
+      st.pollBlockedUntil = 0;
+      if (st.mounted) poll(true);
+    });
+    window.addEventListener('offline', () => {
+      if (st.mounted) { st.error = 'Offline: Spotify benötigt eine Internetverbindung.'; paintBanner(); }
+    });
+  }
+  function mount() {
+    bindGlobals();
+    const shell = document.querySelector('.sp-shell');
+    if (!shell || !st.token) { unmount(); return; }
+    const firstOpen = !st.mounted;
+    st.mounted = true;
+    // iOS: preload only. Starting and transferring on mount has no trusted
+    // touch gesture and can create a silently playing Safari SDK device.
+    if (firstOpen && !st.webDeviceId) {
+      if (iosWebAudio) loadWebPlaybackSDK().catch(()=>{});
+      else startWebPlayer().catch(() => {});
+    }
+    if (!pollTimer) pollTimer = setInterval(() => poll(false), 3000);
+    if (!tickTimer) tickTimer = setInterval(() => tickProgress(), 500);
+    poll(false);
+    if (!st.profile) loadProfile();
+    const cache = st.browseData[st.browse];
+    if (!cache) loadBrowse(false);
+  }
+  function unmount() {
+    if (st.voiceListening || voiceRecognition) stopVoice();
+    if (pollTimer) clearInterval(pollTimer);
+    if (tickTimer) clearInterval(tickTimer);
+    pollTimer = null;
+    tickTimer = null;
+    st.mounted = false;
+  }
+  // Public, read-only playback clock for the Spectrum display.
+  // No protected audio samples, no OAuth token, no second Spotify player.
+  // Only the *local MeviCar* SDK device is eligible for sync.
+  function spectrumState() {
+    const player = st.player;
+    const local = !!(st.webDeviceId && player?.device?.id === st.webDeviceId);
+    const duration = Number(player?.item?.duration_ms) || 0;
+    const elapsed = Math.max(0,Number(st.progressBase) || 0) +
+      (player?.is_playing && local ? Math.max(0,Date.now()-st.playerAt) : 0);
+    return {
+      source:'spotify', playing:!!(local && player?.is_playing),
+      available:local, track:local?(player?.item?.uri || ''):'',
+      progressMs:local?(duration?Math.min(duration,elapsed):elapsed):0,
+      durationMs:local?duration:0
+    };
+  }
+  let lastSpectrumPoll = 0;
+  function spectrumPoll() {
+    const now=Date.now();
+    if (!st.token || !st.webDeviceId || document.hidden || st.mounted ||
+        now-lastSpectrumPoll<3500) return;
+    lastSpectrumPoll=now;
+    // Update the existing Spotify state for a display that stays open while
+    // the full Spotify UI is unmounted. No extra device or audio instance.
+    poll(false).catch(()=>{});
+  }
+  function debug() {
+    return {
+      client: !!st.clientId,
+      connected: !!st.token,
+      tab: st.tab,
+      browse: st.browse,
+      browseCount: st.browseData[st.browse]?.items?.length || 0,
+      player: st.player ? {
+        playing: !!st.player.is_playing,
+        title: st.player.item?.name || '',
+        device: st.player.device?.name || '',
+        progress: Number(st.player.progress_ms) || 0
+      } : null,
+      pendingPlay: !!st.pendingPlay,
+      queue: Array.isArray(st.queue?.queue) ? st.queue.queue.length : 0,
+      liked: st.liked,
+      results: st.results ? Object.fromEntries(Object.entries(st.results).map(([key, value]) => [key, value.length])) : null,
+      mounted: st.mounted,
+      webPlayer: { status: st.webStatus, device: !!st.webDeviceId, transferBusy: st.webTransferBusy, widevine: widevineProbe,
+        ios: iosWebAudio, audioTapCount: st.iosAudioTapCount },
+      oauth: { pending: !!pendingAuth(), exchanging: !!oauthInFlight, diagnostic: oauthDiagnostic, nativeStage: nativeOAuthStage },
+      oauthLog: oauthLog.map(entry => ({ at: entry.at, text: entry.text })),
+      polling: !!pollTimer,
+      error: st.error,
+      notice: st.notice
+    };
+  }
+
+  Object.assign(window, {
+    meviSpotifyHTML: html,
+    meviSpotifyAcceptNativeCallback: acceptNativeCallback,
+    meviSpotifyNativeStage: acceptNativeStage,
+    meviSpotifyPullCallback: pullSpotifyCallbackNow,
+    meviSpotifyWebPlayer: startWebPlayer,
+    meviSpotifyActivateAudio: activateIOSAudio,
+    meviSpotifyMount: mount,
+    meviSpotifyUnmount: unmount,
+    meviSpotifyConnect: showDialog => connect(showDialog === true),
+    meviSpotifySaveClient: saveClient,
+    meviSpotifyResetClient: resetClient,
+    meviSpotifyDisconnect: disconnect,
+    meviSpotifyAccount: account,
+    meviSpotifyRefresh: refresh,
+    meviSpotifyTab: setTab,
+    meviSpotifyBrowse: setBrowse,
+    meviSpotifyReloadBrowse: refreshBrowse,
+    meviSpotifySearchInput: searchInput,
+    meviSpotifySearchNow: searchNow,
+    meviSpotifyVoice: voice,
+    meviSpotifyUseHistory: useHistory,
+    meviSpotifyClearHistory: clearHistory,
+    meviSpotifyPlayStored: playStored,
+    meviSpotifyToggle: toggle,
+    meviSpotifyNext: () => skip('next'),
+    meviSpotifyPrev: () => skip('previous'),
+    meviSpotifySeek: seek,
+    meviSpotifySeekPreview: seekPreview,
+    meviSpotifySeekBy: seekBy,
+    meviSpotifyShuffle: shuffle,
+    meviSpotifyRepeat: repeat,
+    meviSpotifyLike: likeCurrent,
+    meviSpotifyToggleQueue: toggleQueue,
+    meviSpotifyLoadQueue: loadQueue,
+    meviSpotifyVolume: setVolume,
+    meviSpotifyPlayLink: playLink,
+    meviSpotifyOpen: openSpotify,
+    meviSpotifyOpenBrowser: openInSystemBrowser,
+    meviSpotifyCopyRedirect: copyRedirect,
+    meviSpotifyPauseForSource: pauseForSource,
+    meviSpotifyParseLink: parseLink,
+    meviSpotifyDebug: debug,
+    meviSpotifySpectrumState: spectrumState,
+    meviSpotifySpectrumPoll: spectrumPoll,
+    MeviSpotify: {
+      parseLink,
+      redirectUri,
+      formatTime: fmtMs,
+      typeLabel,
+      scopes: SCOPES,
+      apiBase: API,
+      accountsBase: ACCOUNTS,
+      authBusy: () => !!oauthInFlight || !!st.authLoading,
+      navState,navPoll,navAction
+    }
+  });
+
+  function notifyNativeReady() {
+    if (!nativeOAuthBridge()) return;
+    try { window.MeviNativeBridge.postMessage(JSON.stringify({id:'spotify-ready',action:'spotify.ready'})); }
+    catch { setAuthDiagnostic('APK-Bridge nicht erreichbar'); }
+  }
+  notifyNativeReady();
+  // One pull at every start: completes an interrupted login after a WebView
+  // reload and releases a callback Android may still hold.
+  if (nativeOAuthBridge()) {
+    if (pendingAuth() && !st.token) startSpotifyCallbackPolling();
+    else pullSpotifyCallback();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      notifyNativeReady();
+      if (pendingAuth() && !st.token) startSpotifyCallbackPolling();
+      pullSpotifyCallback();
+    }
+  });
+  handleCallback().catch(error => {
+    st.authError = 'Anmeldung fehlgeschlagen: ' + errorText(error);
+    rerender();
+  });
+})();
