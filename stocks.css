@@ -1,0 +1,179 @@
+/* MeviCar Next TradingView finance cockpit. Dock and unrelated apps remain unchanged. */
+.full.stocks-host,.side.stocks-host{display:flex;min-width:0;min-height:0;padding:0!important;overflow:hidden!important}
+.stocks-host>.mevi-stocks{flex:1;min-height:0;min-width:0}
+.mevi-tv{height:100%;min-height:0;min-width:0;display:flex;flex-direction:column;color:#eefaff;background:#081420;border-radius:12px;overflow:hidden;font:inherit}
+.mevi-tv *{box-sizing:border-box}
+.mevi-tv button,.mevi-tv input{font:inherit;min-width:0;border-radius:8px}
+.mevi-tv button{background:#18354a;border:1px solid #5189a257;color:#eff9ff;min-height:31px;padding:5px 10px;cursor:pointer}
+.mevi-tv button.active{color:#8debf5;border-color:#5dd7e5;background:#16485b}
+.mevi-tv button:focus-visible,.mevi-tv input:focus-visible{outline:2px solid #6cdbef;outline-offset:2px}
+.mevi-tv-heading{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 13px;background:linear-gradient(110deg,#173950,#0a2335)}
+.mevi-tv-heading>div{display:flex;flex-direction:column;gap:4px}
+.mevi-tv-heading small{font-size:10px;letter-spacing:.08em;color:#9ec9d7}
+.mevi-tv-heading strong{font-size:clamp(17px,2.6vh,25px)}
+.mevi-tv-heading>span{font-size:11px;color:#a8c3d0}
+.mevi-tv-actions{display:flex;align-items:center;gap:6px;padding:7px 10px;flex:none;background:#0c2637}
+.mevi-tv-actions input,.mevi-tv-add input{background:#071724;border:1px solid #47758a;color:#effaff;min-height:32px;padding:6px 9px}
+.mevi-tv-actions input{flex:1}
+.mevi-tv-actions button{white-space:nowrap}
+.mevi-tv-add{display:flex;flex:none;gap:5px;padding:5px 10px;background:#123043}
+.mevi-tv-add[hidden]{display:none!important}
+.mevi-tv-add input{flex:1;min-width:0}
+.mevi-tv-layout{display:grid;grid-template-columns:clamp(150px,23%,280px) minmax(0,1fr);gap:7px;flex:1;min-height:0;padding:7px}
+.mevi-tv-list{min-height:0;min-width:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;background:#102738;border:1px solid #54799345;border-radius:10px;padding:4px}
+.mevi-tv-item{display:flex;align-items:center;gap:2px;min-width:0;min-height:55px;border-bottom:1px solid #7399a222}
+.mevi-tv-item.is-selected{background:#19506a;border-radius:9px;border-color:#6ee4e8}
+.mevi-tv-item button{border:0;background:transparent;min-height:43px;padding:3px}
+.mevi-tv-item .mevi-tv-star{width:29px;flex:none;font-size:21px;color:#829fb2}
+.mevi-tv-item .mevi-tv-star.is-favorite{color:#ffdc6b}
+.mevi-tv-item .mevi-tv-pick{flex:1;text-align:left;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:3px}
+.mevi-tv-item .mevi-tv-pick strong{font-size:clamp(12px,1.8vh,16px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mevi-tv-item .mevi-tv-pick small{font-size:10px;color:#9ec7d8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mevi-tv-item .mevi-tv-remove{width:24px;flex:none;color:#8ca9bb;font-size:19px}
+.mevi-tv-empty{padding:12px;color:#bdd4e1;font-size:12px}
+.mevi-tv-right{display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;border-radius:10px;border:1px solid #477d964d;background:#081622}
+.mevi-tv-charttools{display:flex;align-items:center;gap:6px;justify-content:space-between;padding:5px 8px;background:#143449;flex:none}
+.mevi-tv-charttools>strong{font-size:clamp(12px,1.9vh,17px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mevi-tv-periods{display:flex;align-items:center;gap:3px;flex:none}
+.mevi-tv-periods button{padding:4px 8px;min-height:27px;font-size:11px}
+.mevi-tv-chart{flex:1;min-height:0;min-width:0;position:relative;overflow:hidden}
+.mevi-tv-chart>.tradingview-widget-container{min-height:0}
+.mevi-tv-chart iframe{max-width:100%;border:0}
+.mevi-tv-loading{display:grid;place-items:center;height:100%;min-height:80px;color:#a7c7d6;font-size:12px;text-align:center;padding:12px}
+.mevi-tv-source{display:flex;justify-content:space-between;gap:6px;align-items:center;flex:none;min-height:24px;padding:3px 9px;font-size:10px;background:#0e2839;color:#a3c0cf}
+.mevi-tv-source a{color:#82def1;text-decoration:none;white-space:nowrap}
+.mevi-tv-feedback{font-size:11px;color:#a5c9d7;min-height:4px;background:#081420;padding:2px 9px;flex:none}
+.mevi-tv-feedback:empty{display:none}
+.mevi-tv.is-compact .mevi-tv-heading{padding:5px 7px}
+.mevi-tv.is-compact .mevi-tv-heading>span{display:none}
+.mevi-tv.is-compact .mevi-tv-actions{padding:4px 5px}
+.mevi-tv.is-compact .mevi-tv-actions button{font-size:11px;padding:3px 5px}
+.mevi-tv.is-compact .mevi-tv-actions input{font-size:11px}
+.mevi-tv.is-compact .mevi-tv-layout{display:flex;flex-direction:column;gap:4px;padding:3px 5px}
+.mevi-tv.is-compact .mevi-tv-list{display:flex;flex:none;overflow-x:auto;overflow-y:hidden;max-height:54px;min-height:54px;gap:5px;touch-action:pan-x}
+.mevi-tv.is-compact .mevi-tv-item{flex:none;min-height:44px;width:132px;border:0}
+.mevi-tv.is-compact .mevi-tv-item .mevi-tv-star{width:23px;font-size:16px}
+.mevi-tv.is-compact .mevi-tv-item .mevi-tv-remove{display:none}
+.mevi-tv.is-compact .mevi-tv-item .mevi-tv-pick strong{font-size:11px}
+.mevi-tv.is-compact .mevi-tv-item .mevi-tv-pick small{font-size:9px}
+.mevi-tv.is-compact .mevi-tv-charttools{padding:3px 5px;flex-wrap:wrap}
+.mevi-tv.is-compact .mevi-tv-periods button{padding:2px 5px;min-height:24px}
+.mevi-tv.is-compact .mevi-tv-source span{display:none}
+.mevi-tv.is-compact .mevi-tv-source{min-height:20px;padding:2px 5px}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-heading{padding:4px 9px}
+ .mevi-tv-heading strong{font-size:16px}
+ .mevi-tv-heading small{font-size:9px}
+ .mevi-tv-actions{padding:4px 7px}
+ .mevi-tv-actions input,.mevi-tv-actions button{min-height:27px;padding:3px 7px;font-size:12px}
+ .mevi-tv-layout{padding:4px;gap:4px}
+ .mevi-tv-item{min-height:48px}
+ .mevi-tv-item button{min-height:39px}
+ .mevi-tv-charttools{padding:3px 5px}
+ .mevi-tv-periods button{min-height:24px;padding:2px 6px}
+ .mevi-tv-source{padding:2px 5px;min-height:18px}
+ .mevi-tv-feedback{font-size:10px}
+}
+html[data-theme="cyberpunk"] .mevi-tv{background:#0b0815}
+html[data-theme="cyberpunk"] .mevi-tv-heading{background:linear-gradient(110deg,#29152e,#101020)}
+html[data-theme="cyberpunk"] .mevi-tv-item.is-selected{background:#54204b}
+html[data-theme="cyberpunk"] .mevi-tv-periods button.active{border-color:#ee55d4;color:#ffb4ed}
+html[data-theme="liquidglass"] .mevi-tv{background:#142a3d}
+html[data-theme="liquidglass"] .mevi-tv-item.is-selected{background:#295c76}
+
+/* Compact chart-first layout: controls live within the watchlist column.
+   Preserve the original dock and the independent split-screen container. */
+.mevi-tv-layout{gap:5px;padding:4px;grid-template-columns:clamp(148px,22%,270px) minmax(0,1fr)}
+.mevi-tv-sidebar{min-width:0;min-height:0;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+.mevi-tv-sidebar .mevi-tv-actions{background:transparent;padding:0;gap:4px;min-height:30px}
+.mevi-tv-sidebar .mevi-tv-actions input{min-height:30px;min-width:0;padding:4px 6px;font-size:12px}
+.mevi-tv-sidebar .mevi-tv-actions button{min-width:30px;min-height:30px;padding:2px 5px;font-size:16px;line-height:1}
+.mevi-tv-sidebar .mevi-tv-add{padding:3px;flex-wrap:wrap;border-radius:8px}
+.mevi-tv-sidebar .mevi-tv-add input{flex-basis:100%;min-height:28px;font-size:11px}
+.mevi-tv-sidebar .mevi-tv-list{flex:1;min-height:0;padding:3px}
+.mevi-tv-sidebar .mevi-tv-external{color:#87d5e7;text-decoration:none;font-size:10px;text-align:right;flex:none;padding:0 5px 2px}
+.mevi-tv-right{border-radius:8px}
+.mevi-tv-charttools{min-height:29px;padding:2px 7px}
+.mevi-tv-charttools>strong{font-size:clamp(12px,1.7vh,15px)}
+.mevi-tv-periods button{min-height:25px;padding:2px 7px;font-size:11px}
+.mevi-tv-chart{min-height:0}
+.mevi-tv-feedback:empty{display:none}
+.mevi-tv.is-compact .mevi-tv-layout{display:flex;flex-direction:column;gap:3px;padding:3px}
+.mevi-tv.is-compact .mevi-tv-sidebar{flex:none;gap:2px}
+.mevi-tv.is-compact .mevi-tv-actions{padding:0 2px}
+.mevi-tv.is-compact .mevi-tv-actions input{min-height:25px}
+.mevi-tv.is-compact .mevi-tv-actions button{min-height:25px;min-width:26px}
+.mevi-tv.is-compact .mevi-tv-list{flex:none;display:flex;overflow-x:auto;overflow-y:hidden;min-height:44px;max-height:44px;gap:4px;touch-action:pan-x}
+.mevi-tv.is-compact .mevi-tv-external{display:none}
+.mevi-tv.is-compact .mevi-tv-charttools{padding:2px 4px;min-height:26px;flex-wrap:nowrap}
+.mevi-tv.is-compact .mevi-tv-charttools>strong{max-width:42%}
+.mevi-tv.is-compact .mevi-tv-periods{gap:2px}
+.mevi-tv.is-compact .mevi-tv-periods button{padding:2px 4px;min-height:23px}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-layout{padding:3px;gap:3px}
+ .mevi-tv-sidebar{gap:2px}
+ .mevi-tv-sidebar .mevi-tv-actions input,.mevi-tv-sidebar .mevi-tv-actions button{min-height:26px}
+ .mevi-tv-sidebar .mevi-tv-actions button{min-width:27px}
+ .mevi-tv-sidebar .mevi-tv-item{min-height:42px}
+ .mevi-tv-charttools{padding:1px 5px;min-height:25px}
+ .mevi-tv-periods button{min-height:22px;padding:1px 5px}
+}
+
+/* Finance usability: reach-friendly ranges in the left column and live selected quote. */
+.mevi-tv-sidebar>.mevi-tv-periods{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;flex:none;width:100%}
+.mevi-tv-sidebar>.mevi-tv-periods button{min-width:0;min-height:37px;padding:3px 1px;text-align:center;font-size:12px;touch-action:manipulation}
+.mevi-tv-item.is-selected{flex-wrap:wrap;border:1px solid #7cf0ec;border-radius:10px;background:#17465d}
+.mevi-tv-item.is-selected .mevi-tv-pick{flex:1}
+.mevi-tv-quote{flex:0 0 100%;width:100%;min-width:0;min-height:112px;overflow:hidden;background:#0b2131;border-top:1px solid #4e899f5c;border-radius:0 0 8px 8px}
+.mevi-tv-quote>.tradingview-widget-container{width:100%;min-height:112px}
+.mevi-tv-quote .tradingview-widget-container__widget{width:100%}
+.mevi-tv-quote>span{display:block;padding:14px 8px;font-size:12px;color:#a0cad9}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-periods{order:3}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-list{order:2}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-actions{order:1}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-external{order:4}
+.mevi-tv.is-compact .mevi-tv-item.is-selected{flex-wrap:nowrap}
+.mevi-tv.is-compact .mevi-tv-quote{display:none}
+.mevi-tv.is-compact .mevi-tv-sidebar>.mevi-tv-periods button{min-height:30px}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-sidebar>.mevi-tv-periods button{min-height:33px;font-size:11px}
+ .mevi-tv-quote{min-height:102px}
+ .mevi-tv-quote>.tradingview-widget-container{min-height:102px}
+}
+
+/* The modern Single Ticker is responsive; never reserve the tall Symbol Info card. */
+.mevi-tv-item.is-selected .mevi-tv-quote{height:64px;min-height:64px;max-height:64px;padding:2px 4px;overflow:hidden}
+.mevi-tv-item.is-selected .mevi-tv-quote tv-single-ticker{display:block;width:100%;height:58px;max-width:100%;overflow:hidden}
+.mevi-tv-item.is-selected .mevi-tv-quote>span{padding:10px 6px;font-size:11px}
+.mevi-tv-list{overflow-x:hidden}
+.mevi-tv.is-compact .mevi-tv-quote{display:none}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-item.is-selected .mevi-tv-quote{height:58px;min-height:58px;max-height:58px}
+ .mevi-tv-item.is-selected .mevi-tv-quote tv-single-ticker{height:52px}
+}
+
+/* Compact, manually entered reference price; not an automatically updating quote. */
+.mevi-tv-item.is-selected{flex-wrap:wrap}
+.mevi-tv-manual-quote{flex:0 0 100%;width:100%;min-width:0;display:grid;grid-template-columns:minmax(0,1fr) 34px;grid-template-rows:auto auto;align-items:center;column-gap:5px;padding:4px 7px;border-top:1px solid #54859a4d;background:#0b2332;border-radius:0 0 8px 8px;max-height:58px}
+.mevi-tv-manual-quote strong{grid-column:1;font-size:clamp(15px,2.2vh,20px);line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mevi-tv-manual-quote small{grid-column:1;white-space:nowrap;font-size:10px;color:#95b9ca}
+.mevi-tv .mevi-tv-manual-quote button{grid-column:2;grid-row:1/3;min-width:30px;min-height:30px;padding:2px;font-size:17px}
+.mevi-tv.is-compact .mevi-tv-manual-quote{display:none}
+@media (orientation:landscape) and (max-height:480px){
+ .mevi-tv-manual-quote{max-height:51px;padding:3px 6px}
+}
+
+/* iPhone landscape: selected quote remains in its own narrow column, no clipped date. */
+.mevi-tv-item.is-selected .mevi-tv-manual-quote{
+ width:100%;max-width:100%;height:auto;min-height:46px;max-height:none;
+ display:grid;grid-template-columns:minmax(0,1fr) 32px;grid-template-rows:auto auto;
+ padding:4px 5px;column-gap:4px;overflow:hidden;
+}
+.mevi-tv-manual-quote strong,.mevi-tv-manual-quote small{
+ min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+}
+.mevi-tv-manual-quote strong{font-size:clamp(13px,1.9vh,18px);line-height:1.18;}
+.mevi-tv-manual-quote small{font-size:10px;line-height:1.1;letter-spacing:0;white-space:nowrap;}
+.mevi-tv .mevi-tv-manual-quote button{width:30px;height:30px;align-self:center;justify-self:end}
+.mevi-tv-add{max-width:100%;min-width:0}
+.mevi-tv-add[hidden]{display:none!important}

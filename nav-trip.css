@@ -1,0 +1,197 @@
+/* Shared trip strip. The exact same HTML/typography runs in Web and native host. */
+:root{
+ --trip-panel:#102332;--trip-ink:#edf9ff;--trip-muted:#b8d1dd;
+ --trip-accent:#8beaff;--trip-border:#448899;
+}
+html[data-theme="cyberpunk"]{
+ --trip-panel:#261432;--trip-ink:#ffeaff;--trip-muted:#d8b3df;
+ --trip-accent:#5ee8ff;--trip-border:#bd45d5;
+}
+html[data-theme="liquidglass"]{
+ --trip-panel:#142a42;--trip-ink:#f5faff;--trip-muted:#d7e8f6;
+ --trip-accent:#b3efff;--trip-border:#91cdf7;
+}
+.mevi-trip{
+ display:flex;align-items:center;box-sizing:border-box;
+ height:100%;width:100%;min-width:0;min-height:0;
+ color:var(--trip-ink);font:15px system-ui,sans-serif;
+}
+/* Compact two-line trip card: readable at a glance, not a button.
+   Route values stay on two separate rows instead of shrinking to fit a line. */
+.mevi-trip .mg-guidance-trip-main{
+ box-sizing:border-box;border:0;border-radius:10px;background:transparent;
+ color:var(--trip-ink);width:max-content;max-width:100%;min-width:0;height:100%;
+ min-height:54px;padding:5px 10px;
+ display:flex;align-items:center;gap:clamp(8px,1vw,14px);
+ text-align:left;overflow:hidden;font:inherit;pointer-events:none;cursor:default;
+ font-variant-numeric:tabular-nums;
+}
+.mevi-trip .mevi-trip-primary{
+ display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;
+}
+.mevi-trip .mevi-trip-primary strong{
+ display:block;font-size:clamp(19px,3.2vh,26px);line-height:1.08;
+ font-weight:850;letter-spacing:-.015em;white-space:nowrap;color:var(--trip-ink);
+}
+.mevi-trip .mevi-trip-primary #mg-trip-summary{
+ display:block;font-size:clamp(16px,2.7vh,21px);line-height:1.12;
+ font-weight:740;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ color:var(--trip-ink);opacity:1;
+}
+.mevi-trip .mevi-trip-secondary{
+ display:flex;flex-direction:column;justify-content:center;gap:3px;
+ min-width:0;max-width:220px;
+}
+.mevi-trip .mevi-trip-secondary span{
+ font-size:clamp(13px,2.1vh,17px);line-height:1.15;font-weight:730;
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--trip-accent);
+}
+.mevi-trip .mevi-trip-secondary #mg-trip-muted{color:var(--trip-ink)}
+.mevi-trip [hidden]{display:none!important}
+.mevi-trip-standalone{
+ width:100%;height:100%;margin:0;padding:0;overflow:hidden;
+ background:transparent;color:var(--trip-ink,#edf9ff);
+}
+html:has(body.mevi-trip-standalone){width:100%;height:100%;margin:0;padding:0;overflow:hidden}
+.mevi-trip-standalone #mevi-trip-host{width:100%;height:100%}
+.mevi-trip-standalone .mevi-trip .mg-guidance-trip-main{
+ flex:none;min-height:100%;max-width:100%;background:var(--trip-panel);
+ border:1px solid var(--trip-border);border-radius:13px;padding:6px 12px;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mevi-trip .mg-guidance-trip-main{gap:8px;padding:5px 9px}
+ .mevi-trip .mevi-trip-primary strong{font-size:20px}
+ .mevi-trip .mevi-trip-primary #mg-trip-summary{font-size:16px}
+ .mevi-trip .mevi-trip-secondary span{font-size:13px}
+}
+
+/* The Android map hosts this very same CSS in a small offline WebView. */
+.mevi-trip-standalone .mevi-trip .mevi-trip-primary strong{font-size:21px}
+.mevi-trip-standalone .mevi-trip .mevi-trip-primary #mg-trip-summary{font-size:17px}
+.mevi-trip-standalone .mevi-trip .mevi-trip-secondary span{font-size:14px}
+
+
+/* Identical Google-style map actions in the browser and Android WebView. */
+.mevi-nav-controls{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ gap:7px;pointer-events:auto;isolation:isolate;
+}
+.mevi-nav-controls button{
+ -webkit-appearance:none;appearance:none;display:grid;place-items:center;
+ box-sizing:border-box;width:48px;height:48px;min-width:44px;min-height:44px;
+ padding:9px;margin:0;border:1px solid var(--trip-border);
+ border-radius:50%;background:var(--trip-panel);color:var(--trip-ink);
+ box-shadow:0 4px 15px #0008;cursor:pointer;touch-action:manipulation;
+}
+.mevi-nav-controls button:focus-visible{outline:2px solid var(--trip-accent);outline-offset:2px}
+.mevi-nav-controls button:active{filter:brightness(1.2)}
+.mevi-nav-controls svg{display:block;width:100%;height:100%}
+.mevi-nav-controls [data-nav-control="voice"] .mevi-nav-volume-off{display:none}
+.mevi-nav-controls [data-nav-control="voice"][aria-pressed="true"] .mevi-nav-volume-on{display:none}
+.mevi-nav-controls [data-nav-control="voice"][aria-pressed="true"] .mevi-nav-volume-off{display:block}
+.mevi-nav-controls-standalone #mevi-trip-host{height:100%;width:100%}
+.mevi-nav-controls-standalone .mevi-nav-controls{height:100%;width:100%}
+@media(orientation:landscape) and (max-height:480px){
+ .mevi-nav-controls{gap:5px}
+ .mevi-nav-controls button{width:44px;height:44px;padding:8px}
+}
+/* One Spotify mini UI reused by dashboard, Web trip, and APK trip WebView. */
+.mevi-trip-spotify{box-sizing:border-box;display:flex;position:relative;align-items:center;gap:clamp(4px,.6vw,10px);
+ width:100%;height:100%;max-height:100%;min-width:0;overflow:hidden;color:var(--trip-ink);font-family:system-ui,sans-serif}
+.mevi-trip-spotify[hidden],.mevi-trip-spotify [hidden]{display:none!important}
+.mevi-trip-spotify button{touch-action:manipulation;box-sizing:border-box;-webkit-appearance:none;appearance:none}
+.mevi-trip-spotify .mg-sp-cover-button{flex:none;width:clamp(43px,7vh,72px);height:clamp(43px,7vh,72px);
+ padding:0;display:grid;place-items:center;overflow:hidden;color:var(--trip-accent);
+ background:#0d1c2a;border:1px solid var(--trip-border);border-radius:11px}
+.mevi-trip-spotify .mg-sp-cover-button img{width:100%;height:100%;display:block;object-fit:cover}
+.mevi-trip-spotify .mg-sp-cover-button span{font-size:30px}
+.mevi-trip-spotify .mg-sp-meta{flex:1 1 0;min-width:0;text-align:left;display:flex;flex-direction:column;
+ justify-content:center;gap:3px;padding:0;border:0;background:transparent;color:inherit;overflow:hidden}
+.mevi-trip-spotify .mg-sp-meta strong,.mevi-trip-spotify .mg-sp-meta small{
+ max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mevi-trip-spotify .mg-sp-meta strong{font-size:clamp(11px,1.7vh,18px);font-weight:800}
+.mevi-trip-spotify .mg-sp-meta small{font-size:clamp(10px,1.4vh,15px);color:var(--trip-muted)}
+.mevi-trip-spotify .mg-sp-transport{display:flex;align-items:center;flex:none;gap:clamp(2px,.3vw,6px)}
+.mevi-trip-spotify .mg-sp-transport button{flex:none;display:grid;place-items:center;width:clamp(30px,5.2vh,44px);
+ height:clamp(30px,5.2vh,44px);padding:7px;border:1px solid var(--trip-border);
+ border-radius:10px;background:#1a3444;color:var(--trip-ink)}
+.mevi-trip-spotify .mg-sp-transport button[data-sp-action="toggle"]{color:var(--trip-accent);border-color:var(--trip-accent)}
+.mevi-trip-spotify .mg-sp-transport button:disabled{opacity:.25;cursor:default}
+.mevi-trip-spotify .mg-sp-transport svg{width:100%;height:100%;display:block}
+.mevi-trip-spotify button:focus-visible{outline:2px solid var(--trip-accent);outline-offset:1px}
+.mevi-trip-spotify .mg-sp-progress{position:absolute;left:0;right:0;bottom:0;height:2px;background:#3c627855;pointer-events:none}
+.mevi-trip-spotify .mg-sp-progress>span{height:100%;display:block;width:0;background:var(--trip-accent)}
+/* The existing arrival card simply grows to show the mini player. */
+.mevi-trip.has-spotify{gap:8px}
+.mevi-trip.has-spotify .mg-guidance-trip-main{flex:0 0 auto;max-width:min(42%,340px)}
+.mevi-trip.has-spotify .mevi-trip-spotify{flex:1 1 0;width:auto;min-width:0}
+.mevi-trip-standalone .mevi-trip.has-spotify{padding:3px 7px;border:1px solid var(--trip-border);
+ border-radius:13px;background:var(--trip-panel)}
+.mevi-trip-standalone .mevi-trip.has-spotify .mg-guidance-trip-main{
+ min-height:0;border:0;background:transparent;padding:3px 5px}
+@media(orientation:landscape) and (max-height:480px){
+ .mevi-trip-spotify .mg-sp-cover-button{width:43px;height:43px}
+ .mevi-trip-spotify .mg-sp-transport button{width:32px;height:32px;padding:5px}
+ .mevi-trip-spotify .mg-sp-meta strong{font-size:12px}
+ .mevi-trip-spotify .mg-sp-meta small{font-size:10px}
+ .mevi-trip.has-spotify .mg-guidance-trip-main{max-width:42%}
+}
+
+/* Only the long title scrolls. Cover, artist, trip information and buttons stay still. */
+.mevi-trip-spotify .mg-sp-title-viewport{
+ display:block;min-width:0;width:100%;max-width:100%;overflow:hidden;white-space:nowrap;
+}
+.mevi-trip-spotify .mg-sp-title-viewport [data-sp-title]{
+ display:inline-block;width:max-content;max-width:none;overflow:visible;
+ text-overflow:clip;white-space:nowrap;
+}
+.mevi-trip-spotify .mg-sp-title-viewport [data-sp-title][data-scroll="true"]{
+ animation:mg-sp-title-marquee var(--mg-sp-scroll-time,12s) ease-in-out infinite alternate;
+}
+@keyframes mg-sp-title-marquee{
+ 0%,13%{transform:translateX(0)}
+ 87%,100%{transform:translateX(calc(-1 * var(--mg-sp-overflow,0px)))}
+}
+@media(prefers-reduced-motion:reduce){
+ .mevi-trip-spotify .mg-sp-title-viewport [data-sp-title][data-scroll="true"]{
+  animation:none;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+ }
+}
+/* Fullscreen trip only: thin divider and narrower text/control column. Dashboard
+   album art is preserved. Height and Apps-dock bottom alignment are unchanged. */
+.mevi-trip.has-spotify .mg-guidance-trip-main{
+ border-right:1px solid var(--trip-border);border-radius:0;
+ padding-right:clamp(9px,1vw,13px);
+}
+.mevi-trip .mg-sp-trip{gap:4px}
+.mevi-trip .mg-sp-trip .mg-sp-meta{flex:1 1 0;max-width:clamp(86px,12vw,112px)}
+.mevi-trip .mg-sp-trip .mg-sp-transport{gap:3px}
+.mevi-trip .mg-sp-trip .mg-sp-transport button{
+ width:30px;height:34px;padding:5px;border-radius:9px;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mevi-trip .mg-sp-trip .mg-sp-transport button{
+  width:28px;height:32px;padding:5px;
+ }
+}
+/* Full-map Spotify title inset: protect the initial letter of both title and
+   artist from the clip boundary. Only the trip version changes; its marquee
+   continues to measure actual text overflow inside the smaller viewport. */
+.mevi-trip .mg-sp-trip .mg-sp-meta{
+ padding-inline-start:5px;
+}
+/* Green destination flag + ETA in the common Web/Android trip footer.
+   The dashboard and second line of remaining time/distance are unchanged. */
+.mevi-trip .mevi-trip-primary #mg-trip-arrival{
+ display:inline-flex;align-items:center;gap:6px;
+}
+.mevi-trip .mevi-trip-primary .mg-trip-arrival-flag{
+ display:block;flex:0 0 auto;width:21px;height:23px;
+ color:#73e3a4;stroke:currentColor;
+}
+.mevi-trip .mevi-trip-primary #mg-trip-arrival-value{
+ display:inline-block;min-width:0;white-space:nowrap;
+}
+
+
+.mevi-nav-controls [data-nav-control="overview"][aria-pressed="true"]{background:var(--trip-accent);color:#102332;border-color:var(--trip-accent)}

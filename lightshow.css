@@ -1,0 +1,73 @@
+/* MeviCar Next · Lichtshow – live MeviDarts canvas, independent from idle screensaver. */
+.lightshow-host.full,.lightshow-host.side{padding:0!important;overflow:hidden!important;gap:0!important;background:#040817!important;min-height:0;min-width:0;display:flex;flex-direction:column}
+.lightshow-host.side{width:clamp(250px,41%,610px)}
+.lightshow-app{--ls-accent:#60effb;--ls-lilac:#fa74f2;position:relative;display:flex;flex-direction:column;flex:1;min-width:0;min-height:0;overflow:hidden;border:1px solid #74e7fa4d;border-radius:clamp(10px,1.4vw,17px);color:#eff9ff;
+background:linear-gradient(130deg,#090c1e,#110922 65%,#08192a)}
+.lightshow-app *{box-sizing:border-box}
+.lightshow-head{flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:clamp(7px,1.2vh,13px) clamp(9px,1.4vw,19px);border-bottom:1px solid #6bd6fb37;min-width:0;background:linear-gradient(90deg,#210a36e6,#102136d9)}
+.lightshow-heading{min-width:0;display:flex;flex-direction:column;gap:2px}
+.lightshow-eyebrow{color:#83eefa;font-size:clamp(8px,1.3vh,11px);letter-spacing:.19em;font-weight:760;white-space:nowrap}
+.lightshow-title{font-size:clamp(15px,2.75vh,25px);font-weight:950;letter-spacing:.07em;white-space:nowrap}
+.lightshow-title b{color:#ff6fe9;text-shadow:0 0 13px #ef38d874}
+.lightshow-quick{display:flex;gap:clamp(4px,.65vw,8px);align-items:center;flex:none}
+.lightshow-btn{display:inline-grid;place-items:center;min-width:clamp(35px,5.5vh,46px);height:clamp(35px,5.5vh,46px);border-radius:11px;padding:5px;color:#d1f8ff;background:#183951c2;border:1px solid #65d4f56b;font-size:clamp(12px,1.7vh,15px);font-weight:800;touch-action:manipulation}
+.lightshow-btn[aria-pressed="true"]{border-color:#ff8be8;background:#682c69b8;color:#ffcffc;box-shadow:0 0 10px #e238cf55}
+.lightshow-btn:focus-visible,.lightshow-effect-select:focus-visible{outline:2px solid #60f9ff;outline-offset:2px}
+.lightshow-btn:active{transform:scale(.94)}
+.lightshow-btn svg{display:block;width:clamp(18px,3vh,25px);height:clamp(18px,3vh,25px);fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lightshow-stage{position:relative;flex:1;min-height:0;min-width:0;overflow:hidden;background:#03040f;isolation:isolate}
+.lightshow-stage canvas{display:block;width:100%;height:100%;touch-action:none}
+.lightshow-glass{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 47%,#01020e9c 100%);box-shadow:inset 0 0 24px #0f4fb22a}
+.lightshow-overlay{position:absolute;bottom:clamp(8px,1.4vh,17px);left:clamp(10px,1.4vw,20px);right:clamp(10px,1.4vw,20px);display:flex;justify-content:space-between;align-items:flex-end;gap:8px;pointer-events:none}
+.lightshow-now{min-width:0;display:flex;flex-direction:column;gap:3px}
+.lightshow-now small{color:#94eaf4;font-weight:740;letter-spacing:.14em;font-size:clamp(9px,1.4vh,12px)}
+.lightshow-now strong{font-size:clamp(16px,3vh,28px);line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-shadow:0 0 15px #000,0 0 10px #d348eb55}
+.lightshow-total{flex:none;border:1px solid #a3f2ff50;background:#091c3291;backdrop-filter:blur(8px);padding:5px 8px;border-radius:8px;font-weight:800;font-size:clamp(9px,1.5vh,12px);white-space:nowrap}
+.lightshow-controls{display:flex;gap:clamp(5px,.9vw,12px);align-items:center;justify-content:space-between;padding:clamp(6px,1.2vh,12px) clamp(8px,1.4vw,18px);flex:none;min-width:0;background:#0b1428e8;border-top:1px solid #78e5ff35}
+.lightshow-selector{display:flex;align-items:center;gap:clamp(4px,.8vw,10px);flex:1;min-width:0}
+.lightshow-selector label,.lightshow-interval label{font-size:clamp(9px,1.4vh,12px);letter-spacing:.04em;color:#b4d9ea;font-weight:770;white-space:nowrap}
+.lightshow-effect-select{min-width:0;flex:1;border-radius:10px;border:1px solid #6ebbf18f;background:#1b2b49;color:#f5fdff;padding:clamp(6px,1.2vh,11px);height:clamp(36px,6vh,47px);font-size:clamp(11px,1.75vh,15px);font-weight:650;max-width:300px}
+.lightshow-interval{display:flex;gap:5px;align-items:center;flex:none}
+.lightshow-interval button{border:1px solid #5d91ad85;background:#162640;color:#cee9f4;min-width:45px;min-height:36px;border-radius:10px;padding:5px 8px;font-weight:750;font-size:clamp(10px,1.55vh,13px)}
+.lightshow-interval button[aria-pressed="true"]{color:#e1fcff;background:#1b5770;border-color:#71f0fa}
+.lightshow-app[data-effect-mode="manual"] .lightshow-interval{opacity:.34}
+html[data-theme="cyberpunk"] .lightshow-app{border-color:#ef55dc81;background:#120820}
+html[data-theme="cyberpunk"] .lightshow-head{background:linear-gradient(90deg,#35123f,#12102b);border-bottom-color:#e64bcc56}
+html[data-theme="cyberpunk"] .lightshow-controls{background:#170d2bf5;border-top-color:#d44ab84c}
+html[data-theme="liquidglass"] .lightshow-app{border-color:#d9eeffaf;background:linear-gradient(130deg,#152842,#1d274a)}
+html[data-theme="liquidglass"] .lightshow-controls{background:#17314acc}
+.lightshow-app.is-compact .lightshow-head{padding:5px 7px}
+.lightshow-app.is-compact .lightshow-title{font-size:clamp(12px,2.3vh,18px)}
+.lightshow-app.is-compact .lightshow-eyebrow{font-size:8px}
+.lightshow-app.is-compact .lightshow-btn{min-width:32px;width:32px;height:32px;padding:5px}
+.lightshow-app.is-compact .lightshow-btn svg{width:19px;height:19px}
+.lightshow-app.is-compact .lightshow-controls{padding:5px;gap:4px;flex-wrap:wrap}
+.lightshow-app.is-compact .lightshow-selector{flex:1 1 100%;gap:5px}
+.lightshow-app.is-compact .lightshow-selector label{display:none}
+.lightshow-app.is-compact .lightshow-effect-select{height:33px;padding:4px 6px;font-size:11px;max-width:100%}
+.lightshow-app.is-compact .lightshow-interval{flex:1;justify-content:flex-end}
+.lightshow-app.is-compact .lightshow-interval label{display:none}
+.lightshow-app.is-compact .lightshow-interval button{min-height:29px;min-width:39px;padding:3px 5px}
+.lightshow-app.is-compact .lightshow-overlay{bottom:7px;left:8px;right:8px}
+.lightshow-app.is-compact .lightshow-now strong{font-size:clamp(13px,2.6vh,21px)}
+.lightshow-app.is-compact .lightshow-total{font-size:9px;padding:3px 5px}
+@media(max-height:430px){.lightshow-head{padding:4px 8px}.lightshow-controls{padding:4px 8px}
+.lightshow-effect-select{height:32px;padding:3px 6px}.lightshow-interval button{min-height:30px}
+.lightshow-app.is-compact .lightshow-total{display:none}
+}
+@media(prefers-reduced-motion:reduce){.lightshow-btn:active{transform:none}}
+/* 13+ launcher apps: preserve usable icons and keep every tile inside viewport. */
+.app-home-grid:has(> .app-home-tile:nth-child(13)){grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr))}
+.app-home-grid:has(> .app-home-tile:nth-child(13)) .app-home-icon{height:min(14vh,150px);width:min(100%,14vh)}
+.app-home-side .app-home-grid:has(> .app-home-tile:nth-child(13)) .app-home-icon{height:min(9.2vh,89px);width:min(100%,9.2vh)}
+.app-lightshow .app-home-icon{color:#b18aff;--app-icon-second:#5ef5fc}
+html[data-theme="cyberpunk"] .app-lightshow .app-home-icon{color:#d471ff!important;--app-icon-second:#78efff!important}
+@media(max-width:500px) and (orientation:portrait){
+ .app-home-grid:has(> .app-home-tile:nth-child(13)){grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(5,minmax(0,1fr))}
+ .app-home-side .app-home-grid:has(> .app-home-tile:nth-child(13)){grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(7,minmax(0,1fr))}
+ .app-home-grid:has(> .app-home-tile:nth-child(13)) .app-home-icon{height:min(11.2vh,110px);width:min(100%,11.2vh)}
+}
+@media(orientation:landscape) and (max-height:470px){
+ .app-home-grid:has(> .app-home-tile:nth-child(13)) .app-home-icon{height:10vh;width:10vh}
+ .app-home-side .app-home-grid:has(> .app-home-tile:nth-child(13)) .app-home-icon{height:7vh;width:7vh}
+}

@@ -1,0 +1,69 @@
+
+/* MeviCar Next ambient light show; motifs adapted from the user's MeviDarts effects demo.
+   Isolated overlay avoids altering underlying cockpit, and is paused outside idle mode. */
+#mevi-saver[hidden]{display:none!important}
+#mevi-saver{position:fixed;inset:0;z-index:20000;overflow:hidden;isolation:isolate;color:#f2faff;
+  background:#030611;cursor:none;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#mevi-saver canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.mevi-saver-vignette{pointer-events:none;position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 45%,transparent 16%,#03061172 79%,#010208d4 100%),
+    linear-gradient(0deg,#020410c9,transparent 28%,transparent 75%,#02041078);}
+.mevi-saver-content{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:clamp(8px,2vh,22px);pointer-events:none;animation:mevi-saver-drift 31s ease-in-out infinite alternate}
+.mevi-saver-logo{position:relative;letter-spacing:.22em;text-transform:uppercase;font-weight:950;
+  font-size:clamp(24px,7vw,85px);text-align:center;color:#f4faff;
+  text-shadow:0 0 8px #5be5ffdd,0 0 30px #04cfff90,0 0 80px #ce27ff88;
+  filter:drop-shadow(0 4px 19px #0009)}
+.mevi-saver-logo b{font-weight:950;color:#ff5fe0;text-shadow:0 0 12px #ff44e0,0 0 45px #ff15d6a8}
+.mevi-saver-line{width:clamp(100px,28vw,390px);height:2px;
+  background:linear-gradient(90deg,transparent,#4ef6ff,#ff4cdf,transparent);box-shadow:0 0 22px #a842ffbb}
+.mevi-saver-time{font-size:clamp(38px,11vw,138px);font-weight:200;line-height:1.02;letter-spacing:.085em;
+  font-variant-numeric:tabular-nums;color:#f7fcff;text-shadow:0 0 25px #75ddff92,0 8px 45px #000b}
+.mevi-saver-date{font-size:clamp(12px,2.3vw,24px);font-weight:570;letter-spacing:.14em;
+  text-transform:uppercase;color:#c6dbf7;text-shadow:0 3px 12px #000d}
+.mevi-saver-hint{position:absolute;bottom:max(16px,env(safe-area-inset-bottom));left:0;right:0;
+  text-align:center;pointer-events:none;font-size:11px;letter-spacing:.09em;color:#bfcced83}
+#mevi-saver[data-content="lights"] .mevi-saver-content{opacity:0}
+#mevi-saver[data-content="lights"] .mevi-saver-hint{opacity:.5}
+#mevi-saver[data-theme="liquidglass"] .mevi-saver-logo b{color:#b6e5ff;text-shadow:0 0 28px #85d8ff}
+#mevi-saver[data-theme="default"] .mevi-saver-logo b{color:#64e9ff;text-shadow:0 0 28px #35e7ff}
+@keyframes mevi-saver-drift{
+  0%{transform:translate(-2.7vw,-2.1vh) scale(.98)}
+  50%{transform:translate(2.2vw,-.2vh) scale(1.01)}
+  100%{transform:translate(-.6vw,2.5vh) scale(.99)}
+}
+@media(prefers-reduced-motion:reduce){.mevi-saver-content{animation:none!important}}
+/* Screensaver Settings panel scales down within both full-screen and compact split-screen. */
+.saver-settings{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;gap:clamp(6px,1.3vh,14px);overflow:auto;padding:2px}
+.saver-settings .saver-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:clamp(5px,1vh,12px) clamp(9px,1.3vw,16px);background:#1c384240;
+  border:1px solid #a9d3e522;border-radius:13px}
+.saver-settings .saver-row-info{min-width:0;display:flex;flex-direction:column;gap:3px}
+.saver-settings .saver-row-info b{font-size:clamp(11px,1.9vh,15px)}
+.saver-settings .saver-row-info small{font-size:clamp(9px,1.4vh,12px);color:#b1c9df}
+.saver-settings .saver-toggle{flex:none;font-weight:750;min-width:60px}
+.saver-settings .saver-toggle[aria-pressed="true"]{background:#157886;border-color:#45ddea}
+.saver-settings .saver-options{display:flex;flex-wrap:wrap;gap:clamp(4px,.6vw,10px)}
+.saver-settings .saver-options button{font-size:clamp(10px,1.6vh,13px);padding:clamp(5px,.8vh,10px) clamp(7px,1vw,13px)}
+.saver-settings .saver-options button[aria-pressed="true"]{background:#116781;border-color:#63e6f6}
+.saver-settings select{max-width:65%;min-width:0;border-radius:11px;background:#162e45;color:#e8f8ff;
+  border:1px solid #779abb88;font:inherit;font-size:clamp(10px,1.65vh,14px);padding:8px}
+.saver-settings .saver-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.saver-settings .saver-preview{background:linear-gradient(130deg,#8825a2,#154e80);border:1px solid #ff82ee99;
+  box-shadow:0 0 14px #a92ce844;font-weight:750}
+.settings-tabs{display:flex;flex:0 0 auto;gap:5px}
+.settings-tabs button{min-width:0;flex:1;padding:clamp(5px,.9vh,9px);font-size:clamp(10px,1.65vh,13px)}
+.settings-tabs button[aria-selected="true"]{background:#25627c;border-color:#76d9e8}
+html[data-theme="cyberpunk"] .saver-settings .saver-row{background:#32133966;border-color:#fd49cf35}
+html[data-theme="cyberpunk"] .settings-tabs button[aria-selected="true"],
+html[data-theme="cyberpunk"] .saver-settings .saver-options button[aria-pressed="true"]{background:#702c7378;border-color:#ff59dc}
+html[data-theme="liquidglass"] .saver-settings .saver-row{background:#ddecff28;border-color:#f3faff75;backdrop-filter:blur(14px)}
+html[data-theme="liquidglass"] .saver-settings select{background:#334b6c;color:#fff}
+@media(max-height:450px){
+ .settings-ui{gap:3px}.saver-settings{gap:3px}
+ .saver-settings .saver-row{padding:4px 7px;gap:6px}
+ .saver-settings .saver-row-info small{display:none}
+ .saver-settings .saver-options button{padding:4px 7px;font-size:10px}
+ .saver-settings select{padding:4px;font-size:10px}
+}
+@media(max-width:760px){.saver-settings .saver-row{flex-wrap:wrap}.saver-settings select{max-width:100%}}

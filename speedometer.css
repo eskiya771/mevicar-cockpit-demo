@@ -1,0 +1,733 @@
+/* Premium dual-gauge cockpit. Full layout and split layout are different compositions. */
+.tacho-host{overflow:hidden!important;min-width:0;min-height:0;padding:clamp(4px,.7vh,8px)!important;gap:0!important}
+.full.tacho-host,.side.tacho-host{display:flex;flex-direction:column}
+.side.tacho-host{overflow:hidden;width:min(46%,640px);scrollbar-width:none}
+.side.tacho-host::-webkit-scrollbar{display:none}
+.tacho-app{
+  --tacho-face:#07141e;
+  --tacho-face-hi:#1a4158;
+  --tacho-ink:#e7f7ff;
+  --tacho-dim:#8eb4c6;
+  --tacho-accent:#3ee7ff;
+  --tacho-accent-2:#6d7cff;
+  --tacho-red:#ff4b63;
+  --tacho-metal:#9fd4e4;
+  flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;gap:clamp(3px,.6vh,8px);overflow:hidden;
+  color:var(--tacho-ink);background:
+    radial-gradient(ellipse at 50% 0%,color-mix(in srgb,var(--tacho-accent) 16%,transparent),transparent 46%),
+    linear-gradient(180deg,#071018,#05090f);
+  border-radius:16px;padding:clamp(4px,.7vh,8px) clamp(6px,.8vw,10px);
+}
+html[data-theme="cyberpunk"] .tacho-app{--tacho-face:#140816;--tacho-face-hi:#4a1848;--tacho-ink:#ffe8fb;--tacho-dim:#e7a6d8;--tacho-accent:#ff3adf;--tacho-accent-2:#7d5cff;--tacho-red:#ff2d55;--tacho-metal:#ffc4ef}
+html[data-theme="liquidglass"] .tacho-app{--tacho-face:#102033;--tacho-face-hi:#3d6284;--tacho-ink:#f4f8ff;--tacho-dim:#d5e6f4;--tacho-accent:#d8f4ff;--tacho-accent-2:#9fd0ff;--tacho-red:#ff6d88;--tacho-metal:#f7fbff;background:linear-gradient(160deg,#d7ecff2e,#081321ea 42%,#102033);border:1px solid #ffffff55;box-shadow:inset 0 1px #ffffff66}
+.tacho-status{display:flex;align-items:center;gap:8px;min-height:22px;font-size:clamp(10px,1.7vh,12px);color:var(--tacho-dim);letter-spacing:.04em}
+.tacho-status #tachoStatus{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tacho-badge{flex:0 0 auto;border:1px solid color-mix(in srgb,var(--tacho-accent) 65%,transparent);color:var(--tacho-accent);border-radius:999px;padding:2px 7px;font-size:10px;font-weight:750;letter-spacing:.12em}
+.tacho-app.is-demo .tacho-badge{color:#ffd56a;border-color:#ffd56a;background:#ffd56a1a}
+.tacho-cluster{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:minmax(0,1.18fr) minmax(0,.82fr);grid-template-areas:"speed rpm";align-items:center;justify-items:center}
+/* Full layout: the cluster is a size container, so each dial grows to the smaller of its column width and the cluster height. */
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-cluster{container-type:size;container-name:tacho-cluster}
+.tacho-dial{grid-area:speed;width:auto;height:auto;max-width:100%;max-height:100%;aspect-ratio:1;min-width:0;min-height:0;position:relative;display:grid;place-items:center;align-self:center;justify-self:center}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-dial{container-type:size;container-name:tacho-dial;width:min(100%,100cqh);height:auto;max-height:none;aspect-ratio:1}
+.tacho-dial-rpm{grid-area:rpm}
+.tacho-dial svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 8px 16px #000a)}
+/* SVG scale numerals stay in viewBox units (they scale with the dial automatically); only HTML overlays use container units. */
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero b{font-size:clamp(44px,13cqmin,124px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero span{font-size:clamp(11px,2.4cqmin,20px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-hero small{font-size:clamp(10px,1.6cqmin,14px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-rpm-readout b{font-size:clamp(18px,7cqmin,56px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-rpm-readout small{font-size:clamp(8px,2cqmin,14px)}
+.tacho-stop-hi{stop-color:var(--tacho-face-hi)}.tacho-stop-mid{stop-color:var(--tacho-face)}
+.tacho-bezel{fill:none;stroke:var(--tacho-metal);stroke-width:3;opacity:.8}
+.tacho-track{fill:none;stroke:color-mix(in srgb,var(--tacho-accent) 55%,transparent);stroke-width:4;stroke-linecap:round}
+.tacho-redzone{fill:none;stroke:var(--tacho-red);stroke-width:6;stroke-linecap:round;opacity:.95}
+.tacho-tick{stroke:var(--tacho-ink);stroke-width:1.6}
+.tacho-tick.is-red,.tacho-num.is-red{stroke:var(--tacho-red);fill:var(--tacho-red)}
+.tacho-num{fill:var(--tacho-ink);font-size:11px;font-weight:650;text-anchor:middle;dominant-baseline:middle;font-family:system-ui,sans-serif}
+.tacho-scale-note{fill:var(--tacho-dim);font-size:9px;text-anchor:middle;font-family:system-ui,sans-serif;letter-spacing:.08em}
+.tacho-glint{fill:#ffffff;opacity:.08}
+.tacho-needle{fill:var(--tacho-accent);filter:drop-shadow(0 0 4px color-mix(in srgb,var(--tacho-accent) 70%,transparent))}
+.tacho-dial.is-unavailable .tacho-needle{opacity:.28}
+.tacho-hero{position:absolute;left:0;right:0;bottom:20%;z-index:2;text-align:center;pointer-events:none;line-height:.9}
+.tacho-hero b{display:block;font-size:clamp(34px,7.2vh,78px);font-weight:760;font-variant-numeric:tabular-nums;letter-spacing:-.04em;text-shadow:0 0 18px color-mix(in srgb,var(--tacho-accent) 45%,transparent)}
+.tacho-hero span{display:block;margin-top:2px;font-size:clamp(11px,1.8vh,16px);letter-spacing:.14em;color:var(--tacho-dim)}
+.tacho-hero small{display:block;margin-top:3px;font-size:10px;letter-spacing:.08em;color:var(--tacho-accent)}
+.tacho-rpm-readout{position:absolute;left:0;right:0;top:64%;text-align:center;pointer-events:none;z-index:2}
+.tacho-rpm-readout b{display:block;font-size:clamp(16px,3.1vh,32px);font-variant-numeric:tabular-nums;font-weight:740}
+.tacho-rpm-readout small{display:block;color:var(--tacho-dim);font-size:clamp(8px,1.4vh,11px);letter-spacing:.06em}
+.tacho-info{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,.9fr) auto minmax(0,1.3fr);gap:clamp(4px,.6vw,10px);align-items:center;min-height:0}
+.tacho-stat{min-width:0}
+.tacho-stat span,.tacho-compass small,.tacho-stat small{display:block;color:var(--tacho-dim);font-size:10px;letter-spacing:.12em}
+.tacho-stat strong,.tacho-compass b{font-variant-numeric:tabular-nums;font-size:clamp(17px,4.4vh,26px);font-weight:730;line-height:1.05}
+.tacho-stat small{letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tacho-compass{display:flex;align-items:center;gap:7px;min-width:0}
+.tacho-compass svg{width:clamp(40px,10vh,56px);height:clamp(40px,10vh,56px);flex:0 0 auto}
+.tacho-compass-ring{fill:none;stroke:var(--tacho-metal);stroke-width:2;opacity:.7}
+.tacho-north{fill:var(--tacho-red)}
+.tacho-south{fill:var(--tacho-dim)}
+.tacho-lubber{fill:var(--tacho-accent)}
+.tacho-compass-n{fill:var(--tacho-red);font-size:10px;text-anchor:middle;dominant-baseline:middle;font-family:system-ui,sans-serif;font-weight:750}
+.tacho-compass-c{fill:var(--tacho-dim);font-size:8.5px;text-anchor:middle;dominant-baseline:middle;font-family:system-ui,sans-serif;font-weight:650}
+.tacho-compass-tick{stroke:var(--tacho-dim);stroke-width:1.4;opacity:.7}
+/* Full layout: odometer, trip and compass scale with the viewport height instead of staying at phone size. */
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-info{gap:clamp(8px,1.2vw,24px);padding-top:clamp(2px,.6vh,8px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-stat span,.tacho-app:not(.is-compact):not(.is-tight) .tacho-stat small,.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass small{font-size:clamp(10px,1.4vh,15px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-stat strong,.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass b{font-size:clamp(24px,5.2vh,56px);line-height:1.05}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass{gap:clamp(8px,.9vw,16px)}
+.tacho-app:not(.is-compact):not(.is-tight) .tacho-compass svg{width:clamp(56px,12vh,140px);height:clamp(56px,12vh,140px)}
+/* Large split hosts (DeX, Full HD, Panorama): same idea with a smaller ceiling. */
+.tacho-app.is-compact:not(.is-tight) .tacho-stat span,.tacho-app.is-compact:not(.is-tight) .tacho-stat small,.tacho-app.is-compact:not(.is-tight) .tacho-compass small{font-size:clamp(10px,1.35vh,15px)}
+.tacho-app.is-compact:not(.is-tight) .tacho-stat strong,.tacho-app.is-compact:not(.is-tight) .tacho-compass b{font-size:clamp(20px,3.8vh,42px);line-height:1.05}
+.tacho-app.is-compact:not(.is-tight) .tacho-compass svg{width:clamp(44px,8.5vh,100px);height:clamp(44px,8.5vh,100px)}
+.tacho-actions{display:flex;gap:4px;justify-content:flex-end;min-width:0}
+.tacho-actions button{min-width:44px;min-height:44px;padding:0 8px;border-radius:12px;background:#102433;border:1px solid color-mix(in srgb,var(--tacho-accent) 45%,#39566c);color:var(--tacho-ink);font-size:12px}
+.tacho-actions button[aria-pressed="true"]{background:color-mix(in srgb,var(--tacho-accent) 24%,#0c2433);border-color:var(--tacho-accent)}
+html[data-theme="cyberpunk"] .tacho-actions button{background:#2a1038;border-color:#ff4adf88}
+html[data-theme="liquidglass"] .tacho-actions button{background:#e7f3ff33;border-color:#ffffff77}
+
+/* Split and tight containers: digital speed leads, both dials sit underneath. */
+.tacho-app.is-compact .tacho-cluster,.tacho-app.is-tight .tacho-cluster{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  grid-template-rows:auto minmax(0,1fr);
+  grid-template-areas:"hero hero" "speed rpm";
+}
+.tacho-app.is-compact .tacho-dial-speed,.tacho-app.is-tight .tacho-dial-speed{display:contents}
+.tacho-app.is-compact .tacho-dial-speed svg,.tacho-app.is-tight .tacho-dial-speed svg{grid-area:speed;width:auto;height:100%;max-width:100%;max-height:100%;aspect-ratio:1;justify-self:center;align-self:center}
+.tacho-app.is-compact .tacho-hero,.tacho-app.is-tight .tacho-hero{position:static;grid-area:hero;margin:0}
+.tacho-app.is-compact .tacho-hero b,.tacho-app.is-tight .tacho-hero b{font-size:clamp(40px,9vh,68px)}
+/* Side-by-side split: the RPM dial fills its column instead of stopping at the SVG's intrinsic 300 px. */
+.tacho-app.is-compact .tacho-dial-rpm,.tacho-app.is-tight .tacho-dial-rpm{width:100%;height:100%;aspect-ratio:auto;container-type:size;container-name:tacho-rpm}
+.tacho-app.is-compact .tacho-dial-rpm svg,.tacho-app.is-tight .tacho-dial-rpm svg{width:100%;height:100%;max-width:100%;max-height:100%}
+@supports (width:1cqh){
+  .tacho-app.is-compact .tacho-dial-rpm svg,.tacho-app.is-tight .tacho-dial-rpm svg{width:min(100cqw,100cqh);height:min(100cqw,100cqh)}
+  .tacho-app.is-compact .tacho-rpm-readout,.tacho-app.is-tight .tacho-rpm-readout{top:calc((100cqh - min(100cqw,100cqh)) / 2 + .64 * min(100cqw,100cqh))}
+  .tacho-app.is-compact .tacho-rpm-readout b,.tacho-app.is-tight .tacho-rpm-readout b{font-size:clamp(14px,7cqmin,34px)}
+  .tacho-app.is-compact .tacho-rpm-readout small,.tacho-app.is-tight .tacho-rpm-readout small{font-size:clamp(8px,2cqmin,12px)}
+}
+/* Tall split hosts: digital speed on top, both dials stacked, each as wide as the host allows. */
+.tacho-app.is-compact.is-tall .tacho-cluster{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1.15fr) minmax(0,.85fr);grid-template-areas:"hero" "speed" "rpm";row-gap:clamp(4px,1vh,12px)}
+.tacho-app.is-compact.is-tall .tacho-dial-speed svg{grid-area:speed}
+.tacho-app.is-compact.is-tall .tacho-dial-rpm{grid-area:rpm}
+.tacho-app.is-compact .tacho-info,.tacho-app.is-tight .tacho-info{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;grid-template-areas:"odo trip compass" "actions actions actions"}
+.tacho-app.is-compact .tacho-stat:first-child,.tacho-app.is-tight .tacho-stat:first-child{grid-area:odo}
+.tacho-app.is-compact .tacho-stat:nth-child(2),.tacho-app.is-tight .tacho-stat:nth-child(2){grid-area:trip}
+.tacho-app.is-compact .tacho-compass,.tacho-app.is-tight .tacho-compass{grid-area:compass}
+.tacho-app.is-compact .tacho-actions,.tacho-app.is-tight .tacho-actions{grid-area:actions;justify-content:stretch}
+.tacho-app.is-compact .tacho-actions button,.tacho-app.is-tight .tacho-actions button{flex:1}
+
+/* iPhone 17 874×402 and Galaxy S20 FE 915×412 */
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+  .side.tacho-host{width:min(48%,420px);padding:3px!important}
+  .tacho-app{padding:3px 4px;gap:2px;border-radius:12px}
+  .tacho-status{min-height:16px;font-size:10px}
+  .tacho-hero b{font-size:clamp(32px,8vh,46px)}
+  .tacho-hero span{font-size:12px;letter-spacing:.12em}
+  .tacho-hero small{font-size:11px}
+  .tacho-num{font-size:10px}
+  .tacho-actions button{min-height:44px;padding:0 4px;font-size:11px}
+  .tacho-stat span,.tacho-compass small,.tacho-stat small{font-size:10px;letter-spacing:.08em}
+  .tacho-stat strong,.tacho-compass b{font-size:clamp(17px,4.4vh,20px)}
+  .tacho-compass{gap:6px}
+  .tacho-compass svg{width:clamp(44px,11.5vh,52px);height:clamp(44px,11.5vh,52px)}
+}
+/* Full-width short viewports (phones in landscape): keep the footer on one row so the
+   dials gain height, and let the readouts grow with the free width. Below 760 px the
+   two-row footer stays because compass and actions would collide. */
+@media(min-width:760px){
+  .tacho-app.is-tight:not(.is-compact) .tacho-info{
+    grid-template-columns:minmax(0,.85fr) minmax(0,.85fr) auto minmax(0,1.55fr);
+    grid-template-areas:"odo trip compass actions";
+    gap:clamp(6px,.8vw,12px);
+  }
+  .tacho-app.is-tight:not(.is-compact) .tacho-stat strong,.tacho-app.is-tight:not(.is-compact) .tacho-compass b{font-size:clamp(20px,5vh,26px)}
+  .tacho-app.is-tight:not(.is-compact) .tacho-compass svg{width:clamp(46px,12vh,56px);height:clamp(46px,12vh,56px)}
+  .tacho-app.is-tight:not(.is-compact) .tacho-actions{justify-content:flex-end}
+  .tacho-app.is-tight:not(.is-compact) .tacho-actions button{flex:0 0 auto}
+}
+/* Panorama / Infotainment 1920×720 */
+@media(orientation:landscape) and (min-width:1500px) and (max-height:820px){
+  .side.tacho-host{width:min(38%,680px)}
+  .tacho-app.is-tight .tacho-hero b{font-size:clamp(42px,8vh,64px)}
+}
+/* DeX 1920×1200 and Full HD 1920×1080 */
+@media(orientation:landscape) and (min-width:1500px) and (min-height:880px){
+  .side.tacho-host{width:min(36%,760px)}
+  .tacho-app.is-tight .tacho-hero b{font-size:clamp(44px,8vh,68px)}
+  .tacho-num{font-size:13px}
+}
+@media(prefers-reduced-motion:reduce){
+  .tacho-needle{filter:none}
+}
+
+
+/* iPhone landscape split — one coordinated layout, not stacked overrides.
+   Center gauges use full width; status and bottom actions respect corner zones. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .side.tacho-host{padding:2px 0 2px 3px!important;overflow:hidden!important;}
+ .side.tacho-host .tacho-app{
+   min-width:0;padding:4px 3px 5px 5px!important;gap:3px;overflow:hidden;
+ }
+ /* Keep all three status items readable and prevent RPM from reaching the corner. */
+ .side.tacho-host .tacho-status{
+   display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+   gap:7px;align-items:center;min-width:0;
+   padding:4px 18px 1px 3px!important;
+   font-size:10px;letter-spacing:0;
+ }
+ .side.tacho-host .tacho-status #tachoStatus{
+   display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+ }
+ .side.tacho-host .tacho-status #tachoSources{
+   display:block;min-width:0;max-width:100%;white-space:nowrap;
+   font-size:10px;letter-spacing:0;
+ }
+ /* No global right inset for the two gauges. */
+ .side.tacho-host .tacho-cluster{
+   min-width:0;width:100%;max-width:100%;padding:0!important;
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+   column-gap:2px!important;
+ }
+ .side.tacho-host .tacho-dial-speed,
+ .side.tacho-host .tacho-dial-rpm{min-width:0;max-width:100%;}
+ /* Telemetry uses the straight edge; only action buttons need corner protection. */
+ .side.tacho-host .tacho-info{
+   min-width:0;grid-template-columns:minmax(0,1.05fr) minmax(0,.82fr) minmax(0,1.28fr);
+   column-gap:6px;row-gap:4px;padding:0 3px 3px 2px!important;
+   align-items:center;
+ }
+ .side.tacho-host .tacho-info > .tacho-actions{grid-column:1 / -1;}
+ .side.tacho-host .tacho-info > .tacho-stat{
+   display:flex;flex-direction:column;justify-content:center;gap:2px;
+ }
+ .side.tacho-host .tacho-info > .tacho-compass{
+   display:flex;justify-content:flex-end;align-items:center;gap:4px;
+ }
+ .side.tacho-host .tacho-compass > div{min-width:0;}
+ .side.tacho-host .tacho-compass b{font-size:18px;}
+ .side.tacho-host .tacho-stat small{font-size:9px;letter-spacing:0;}
+
+ .side.tacho-host .tacho-stat,.side.tacho-host .tacho-compass{min-width:0;}
+ .side.tacho-host .tacho-stat span,.side.tacho-host .tacho-stat small,
+ .side.tacho-host .tacho-compass small{
+   display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+   letter-spacing:0;font-size:10px;
+ }
+ .side.tacho-host .tacho-compass{gap:3px;}
+ .side.tacho-host .tacho-compass svg{width:36px;height:36px;flex:0 0 36px;}
+ .side.tacho-host .tacho-actions{
+   display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));
+   gap:3px!important;width:100%;min-width:0;
+   padding:0 13px 0 0!important;box-sizing:border-box;
+ }
+ .side.tacho-host .tacho-actions button{
+   min-width:0!important;width:100%;min-height:40px;
+   padding:2px 1px!important;font-size:clamp(9px,1.1vw,11px);
+   letter-spacing:-.02em;white-space:nowrap;
+   margin:0!important;
+ }
+}
+
+
+/* Fullscreen tachometer polish: one surface, unclipped telemetry, separate actions.
+   Split-screen composition is intentionally unaffected. */
+.full.tacho-host{
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  padding:0!important;
+  border-radius:0!important;
+}
+.full.tacho-host > .tacho-app{
+  border:0!important;
+  box-shadow:none!important;
+  outline:0!important;
+  border-radius:0!important;
+  padding:clamp(7px,1.1vh,12px) clamp(10px,1.2vw,20px)!important;
+}
+.full.tacho-host .tacho-info{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,1.1fr)!important;
+  grid-template-rows:auto auto;
+  align-items:center;
+  gap:6px 16px!important;
+  padding:4px 8px max(7px,env(safe-area-inset-bottom,0px))!important;
+}
+.full.tacho-host .tacho-info > .tacho-stat,
+.full.tacho-host .tacho-info > .tacho-compass{
+  min-width:0;
+  align-self:center;
+}
+.full.tacho-host .tacho-info > .tacho-stat small,
+.full.tacho-host .tacho-info > .tacho-compass small{
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:break-word;
+  letter-spacing:0!important;
+  line-height:1.15;
+}
+.full.tacho-host .tacho-info > .tacho-actions{
+  grid-column:1 / -1;
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:clamp(5px,.8vw,12px)!important;
+  width:100%;
+  min-width:0;
+}
+.full.tacho-host .tacho-actions button{
+  width:100%;
+  min-width:0!important;
+  min-height:clamp(38px,9vh,46px);
+  border-radius:12px;
+  padding:3px 5px;
+}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-info{
+   grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,1.1fr)!important;
+   gap:3px 10px!important;
+ }
+ .full.tacho-host .tacho-actions button{min-height:36px;}
+}
+
+
+/* Fix fullscreen footer collision: named grid areas must match the actual
+   two-row structure. The earlier column-only override left is-tight's
+   one-row named areas active, so telemetry and buttons occupied one row. */
+.full.tacho-host .tacho-info{
+  grid-template-areas:"odo trip compass" "actions actions actions"!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,.85fr) minmax(0,1.1fr)!important;
+  grid-template-rows:minmax(0,auto) auto!important;
+  flex:0 0 auto;
+  min-height:0;
+  row-gap:5px!important;
+}
+.full.tacho-host .tacho-info > .tacho-stat:first-child{grid-area:odo;}
+.full.tacho-host .tacho-info > .tacho-stat:nth-child(2){grid-area:trip;}
+.full.tacho-host .tacho-info > .tacho-compass{grid-area:compass;}
+.full.tacho-host .tacho-info > .tacho-actions{
+  grid-area:actions!important;
+  grid-column:1 / -1;
+}
+.full.tacho-host .tacho-cluster{flex:1 1 auto;min-height:0;}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-info{row-gap:3px!important;}
+ .full.tacho-host .tacho-info > .tacho-stat small{font-size:10px!important;line-height:1.1;}
+ .full.tacho-host .tacho-info > .tacho-compass svg{width:40px;height:40px;}
+ .full.tacho-host .tacho-info > .tacho-actions button{min-height:34px;}
+}
+
+
+/* Fullscreen landscape: protect the upper header from the rounded display edge.
+   Keep the split-screen header and the two gauges unchanged. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host > .tacho-app{
+   padding-top:max(12px,env(safe-area-inset-top,0px))!important;
+ }
+ .full.tacho-host .tacho-status{
+   min-height:26px;
+   padding-left:max(8px,env(safe-area-inset-left,0px));
+   padding-right:max(8px,env(safe-area-inset-right,0px));
+   box-sizing:border-box;
+ }
+}
+
+
+/* Larger fullscreen landscape gauges: reclaim unused space between the
+   digital speed readout and dial faces, without changing split-screen. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+   grid-template-rows:minmax(48px,auto) minmax(0,1fr);
+   row-gap:0;
+   align-content:stretch;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-hero{
+   line-height:1;
+   align-self:start;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-hero b{
+   line-height:.9;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-speed svg{
+   height:100%;
+   max-height:100%;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-rpm{
+   height:100%;
+ }
+ .full.tacho-host .tacho-info{
+   padding-top:0!important;
+   padding-bottom:4px!important;
+ }
+}
+
+
+/* Fullscreen landscape dial enlargement: free vertical space from the
+   oversized hero row and center the two dials higher. Split view untouched. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+   grid-template-rows:minmax(34px,auto) minmax(0,1fr)!important;
+   align-items:start;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-hero{
+   margin:0!important;
+   padding:0!important;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-speed svg,
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-rpm svg{
+   align-self:start;
+ }
+ .full.tacho-host .tacho-info{
+   row-gap:2px!important;
+ }
+}
+
+
+/* Fullscreen cockpit composition: central compass, odometer beneath speed,
+   trip beneath RPM. Split screen retains its own three-column footer. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster{
+  position:relative;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+  position:absolute;
+  left:50%;
+  top:56%;
+  transform:translate(-50%,-50%);
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0;
+  width:clamp(54px,7vw,92px);
+  pointer-events:none;
+  text-align:center;
+}
+.full.tacho-host .tacho-cluster > .tacho-compass svg{
+  width:clamp(42px,5vw,62px);
+  height:clamp(42px,5vw,62px);
+  flex:none;
+}
+.full.tacho-host .tacho-cluster > .tacho-compass b{font-size:clamp(13px,2.3vh,18px);}
+.full.tacho-host .tacho-cluster > .tacho-compass small{
+  font-size:10px;letter-spacing:0;white-space:normal;line-height:1.1;
+}
+.full.tacho-host .tacho-info{
+  grid-template-areas:"odo trip" "actions actions"!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  column-gap:clamp(12px,2vw,32px)!important;
+}
+.full.tacho-host .tacho-info > .tacho-stat:first-child{
+  grid-area:odo;justify-self:start;
+}
+.full.tacho-host .tacho-info > .tacho-stat:nth-child(2){
+  grid-area:trip;justify-self:end;text-align:right;
+}
+.full.tacho-host .tacho-info > .tacho-actions{grid-area:actions!important;}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-info{
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   column-gap:12px!important;
+ }
+ .full.tacho-host .tacho-cluster > .tacho-compass{top:58%;}
+}
+
+
+/* Prominent central compass in fullscreen cockpit only. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+  width:clamp(82px,9vw,126px);
+  gap:3px;
+}
+.full.tacho-host .tacho-cluster > .tacho-compass svg{
+  width:clamp(66px,7.2vw,96px);
+  height:clamp(66px,7.2vw,96px);
+}
+.full.tacho-host .tacho-cluster > .tacho-compass b{
+  font-size:clamp(15px,2.8vh,22px);
+}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-cluster > .tacho-compass{
+   width:clamp(112px,13vw,150px);
+   top:53%;
+ }
+ .full.tacho-host .tacho-cluster > .tacho-compass svg{
+   width:clamp(96px,11vw,126px);
+   height:clamp(96px,11vw,126px);
+ }
+}
+
+
+/* Fullscreen only: second 10% increase, cumulative 1.10 x 1.10.
+   Make the instrument cluster use available space without changing split view. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed svg,
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-rpm svg{
+  transform:scale(1.38);
+  transform-origin:center center;
+}
+@media (orientation:landscape) and (max-height:480px){
+  .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+    row-gap:0!important;
+    column-gap:0!important;
+    grid-template-rows:minmax(30px,auto) minmax(0,1fr)!important;
+  }
+  .full.tacho-host .tacho-info{
+    row-gap:2px!important;
+    padding-top:0!important;
+    padding-bottom:2px!important;
+  }
+}
+
+/* Use the open horizontal/vertical space around the fullscreen dials.
+   The compass stays in the center and footer telemetry stays at the edges. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+   column-gap:clamp(12px,2vw,32px)!important;
+ }
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-speed svg,
+ .full.tacho-host .tacho-app.is-tight .tacho-dial-rpm svg{
+   transform:scale(1.38);
+   transform-origin:center center;
+ }
+}
+
+
+/* Lift only the fullscreen speedometer face to clear the odometer label.
+   Keep RPM, central compass and split-screen geometry unchanged. */
+@media (orientation:landscape) and (max-height:480px){
+  .full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed svg{
+    transform:translateY(-14px) scale(1.38);
+    transform-origin:center center;
+  }
+}
+
+
+/* Align RPM face with the already lifted speedometer face in phone fullscreen. */
+@media (orientation:landscape) and (max-height:480px){
+  .full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-rpm svg{
+    transform:translateY(-14px) scale(1.38);
+    transform-origin:center center;
+  }
+}
+
+
+/* Fullscreen: remove redundant LIVE/GPS/RPM header and give its height
+   back to the gauges. Split-screen retains its telemetry header. */
+.full.tacho-host .tacho-status{display:none!important;}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster{
+  flex:1 1 auto;
+  min-height:0;
+}
+@media (orientation:landscape) and (max-height:480px){
+  .full.tacho-host > .tacho-app{
+    padding-top:max(4px,env(safe-area-inset-top,0px))!important;
+  }
+  .full.tacho-host .tacho-app.is-tight .tacho-cluster{
+    grid-template-rows:minmax(30px,auto) minmax(0,1fr)!important;
+  }
+}
+
+
+/* Place the fullscreen compass in the free lower central gap between gauges.
+   Move its heading/readout with it, without changing the split layout. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+  top:78%!important;
+}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+   top:78%!important;
+ }
+}
+
+
+/* Fullscreen compass: center in lower gap, no redundant unavailable-data label.
+   The smaller rose stays clear of both dial rims at phone landscape sizes. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+  top:88%!important;
+  width:clamp(78px,8vw,108px)!important;
+  gap:0!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass svg{
+  width:clamp(60px,6.6vw,86px)!important;
+  height:clamp(60px,6.6vw,86px)!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-compass-readout{
+  display:none!important;
+}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app:not(.is-compact) .tacho-cluster > .tacho-compass{
+   top:88%!important;
+ }
+}
+
+
+/* Fullscreen gauge correction: avoid cropped/overlapping rims and put
+   the compass inside the lower face of the speedometer. */
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed svg:not(.tacho-compass svg),
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-rpm > svg{
+  transform:translateY(-5px) scale(1.08)!important;
+  transform-origin:center center!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed{
+  position:relative!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+  position:absolute!important;
+  left:50%!important;
+  top:79%!important;
+  transform:translate(-50%,-50%)!important;
+  z-index:5;
+  width:clamp(55px,6.8vw,90px)!important;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed > .tacho-compass > svg{
+  width:clamp(52px,6vw,76px)!important;
+  height:clamp(52px,6vw,76px)!important;
+  transform:none!important;
+}
+.full.tacho-host .tacho-app:not(.is-compact) .tacho-dial-speed > .tacho-compass .tacho-compass-readout{
+  display:none!important;
+}
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed svg:not(.tacho-compass svg),
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   transform:translateY(-5px) scale(1.08)!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   top:79%!important;
+ }
+}
+
+
+/* In tight landscape the speed dial is display:contents, so anchor the
+   embedded compass against the cluster's left gauge cell instead. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-cluster{
+   position:relative!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   left:25%!important;
+   top:76%!important;
+ }
+}
+
+
+/* Balanced phone fullscreen dials: modest increase, retain safe clearance
+   above odometer/trip and keep the compass within the left dial. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > svg,
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   transform:translateY(-10px) scale(1.17)!important;
+   transform-origin:center center!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   left:25%!important;
+   top:77%!important;
+   width:clamp(76px,8vw,108px)!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass > svg{
+   width:clamp(70px,7.5vw,96px)!important;
+   height:clamp(70px,7.5vw,96px)!important;
+   transform:none!important;
+ }
+}
+
+
+/* Reference composition (phone landscape): symmetrical large dials, compass
+   inside left dial, and a reserved bottom strip for mileage + controls.
+   Bounded dial dimensions prevent the previous uncontrolled 138% overflow. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-cluster{
+   position:relative!important;
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   grid-template-rows:minmax(28px,auto) minmax(0,1fr)!important;
+   column-gap:clamp(18px,3vw,48px)!important;
+   overflow:visible;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > svg,
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   transform:translateY(-12px) scale(1.24)!important;
+   transform-origin:center center!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   left:25%!important;
+   top:77%!important;
+   width:clamp(80px,9vw,116px)!important;
+   z-index:6!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass > svg{
+   width:clamp(76px,8vw,106px)!important;
+   height:clamp(76px,8vw,106px)!important;
+   transform:none!important;
+ }
+ .full.tacho-host .tacho-info{
+   position:relative;
+   z-index:7;
+   padding-top:6px!important;
+ }
+}
+
+
+/* Match the RPM dial's rendered diameter to the speed dial: both use
+   the same height-limited square SVG, not different container sizing. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm{
+   display:grid!important;
+   place-items:center!important;
+   min-height:0!important;
+   min-width:0!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > svg,
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   width:auto!important;
+   height:100%!important;
+   max-width:100%!important;
+   max-height:100%!important;
+   aspect-ratio:1!important;
+   justify-self:center!important;
+   align-self:center!important;
+   transform:translateY(-12px) scale(1.24)!important;
+ }
+}
+
+
+/* Correct the mismatched SVG sizing seen on iPhone: previous height:100%
+   made the RPM face expand with its container, unlike the speed face.
+   Both faces now have one explicit, viewport-bounded square size. */
+@media (orientation:landscape) and (max-height:480px){
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-cluster{
+   --cockpit-dial-size:min(68vh, 32vw);
+   grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+   align-items:center!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > svg,
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm > svg{
+   box-sizing:border-box!important;
+   width:var(--cockpit-dial-size)!important;
+   height:var(--cockpit-dial-size)!important;
+   min-width:0!important;
+   min-height:0!important;
+   max-width:var(--cockpit-dial-size)!important;
+   max-height:var(--cockpit-dial-size)!important;
+   aspect-ratio:1 / 1!important;
+   transform:translateY(-8px)!important;
+   transform-origin:center center!important;
+   justify-self:center!important;
+   align-self:center!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-rpm{
+   width:100%!important;
+   height:100%!important;
+   min-height:0!important;
+   min-width:0!important;
+   display:grid!important;
+   place-items:center!important;
+ }
+ .full.tacho-host .tacho-app.is-tight:not(.is-compact) .tacho-dial-speed > .tacho-compass{
+   left:25%!important;
+   top:77%!important;
+ }
+}

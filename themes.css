@@ -1,0 +1,625 @@
+/* MeviCar Next theme engine: default preserves the existing cockpit. */
+.settings-ui{flex:1;min-height:0;min-width:0;display:flex;flex-direction:column;gap:clamp(5px,1.4vh,13px);width:100%;overflow:hidden}
+.settings-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0}
+.settings-heading h2{font-size:clamp(15px,3.2vh,25px);margin:0;line-height:1.2}
+.settings-heading p{margin:3px 0 0;color:#a5c5d4;font-size:clamp(10px,1.6vh,13px)}
+.settings-version{font-size:clamp(9px,1.5vh,12px);color:#a1bfcd;white-space:nowrap}
+.theme-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(5px,1vw,13px);min-height:0;flex:1}
+.theme-card{min-width:0;min-height:0;display:flex;flex-direction:column;gap:clamp(3px,.6vh,7px);text-align:left;padding:clamp(5px,1vw,12px);border-radius:clamp(11px,2vw,20px);border:2px solid #365b71;background:#142b3b;overflow:hidden;transition:border-color .2s,box-shadow .2s,transform .2s}
+.theme-card.selected{border-color:#49ddf6;box-shadow:0 0 0 1px #49ddf650,inset 0 0 22px #11dcfa13}
+.theme-card:active{transform:scale(.985)}
+.theme-visual{position:relative;display:flex;min-height:45px;flex:1;overflow:hidden;border-radius:clamp(8px,1vw,15px);border:1px solid #ffffff33;padding:clamp(5px,1vw,12px);gap:clamp(5px,1vw,14px)}
+.theme-mini-dock{width:22%;display:flex;flex-direction:column;gap:8%;justify-content:center}
+.theme-mini-dock i{display:block;flex:1;max-height:24px;border-radius:6px;background:#39b1d1}
+.theme-mini-screen{flex:1;display:flex;flex-direction:column;gap:10%;justify-content:center}
+.theme-mini-screen b{display:block;width:78%;height:20%;min-height:5px;border-radius:15px;background:#c8d8ee55}
+.theme-mini-screen b:nth-child(2){width:100%;height:38%;min-height:10px}
+.theme-visual-default{background:linear-gradient(140deg,#071724,#194356)}
+.theme-visual-cyberpunk{background:radial-gradient(circle at 80% 25%,#f51cb45c,transparent 47%),linear-gradient(130deg,#090514,#26092d)}
+.theme-visual-cyberpunk .theme-mini-dock i{background:#ff2bda;box-shadow:0 0 12px #ff2bdac0}
+.theme-visual-cyberpunk .theme-mini-screen b{background:#db47f688;box-shadow:0 0 13px #f51cb45b}
+.theme-visual-liquidglass{background:radial-gradient(circle at 68% 10%,#fc9edb,transparent 40%),linear-gradient(140deg,#284769,#111c38)}
+.theme-visual-liquidglass .theme-mini-dock i,.theme-visual-liquidglass .theme-mini-screen b{background:#ffffff52;border:1px solid #ffffff92;box-shadow:inset 0 1px #ffffff8c,0 4px 15px #060f3a44;backdrop-filter:blur(6px)}
+.theme-name{font-size:clamp(11px,2vh,17px);font-weight:750;line-height:1.15}
+.theme-description{font-size:clamp(9px,1.55vh,12px);color:#a6c2d0;line-height:1.2}
+.theme-check{font-size:clamp(9px,1.5vh,12px);font-weight:700;color:#7adcee;margin-top:auto}
+.settings-bottom{display:flex;flex-shrink:0;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.settings-bottom button{font-size:clamp(10px,1.7vh,12px);padding:clamp(4px,.8vh,8px) 11px}
+@media(max-width:760px){.settings-heading p{display:none}.theme-card{padding:5px}.theme-name{font-size:11px}.theme-description{font-size:9px}}
+@media(max-height:440px){.settings-ui{gap:5px}.settings-heading h2{font-size:14px}.theme-card{gap:2px;padding:4px}.theme-visual{min-height:32px}.theme-description{display:none}.settings-bottom{gap:5px}.settings-bottom button{padding:4px 7px}}
+@media(max-width:600px) and (orientation:portrait){.theme-options{grid-template-columns:1fr}.theme-card{flex-direction:row;align-items:center;gap:9px}.theme-visual{max-width:26%;height:74px;flex:1}.theme-name{flex:1}.theme-description{display:none}}
+
+/* Neon City: bold magenta, cyan accents, vivid large symbols. */
+html[data-theme="cyberpunk"] body{color:#fff2ff;background:radial-gradient(ellipse at 80% 100%,#5c104a 0,transparent 52%),radial-gradient(ellipse at 7% 0,#102e5e 0,transparent 48%),#07050e}
+html[data-theme="cyberpunk"] .cockpit{background:radial-gradient(ellipse at 86% 88%,#4e103a82,transparent 58%),linear-gradient(145deg,#111323,#090713 55%,#19091c);border:1px solid #fd32da9c;box-shadow:inset 0 0 26px #ff28d522,0 0 28px #ef1ebe29}
+html[data-theme="cyberpunk"] .dock{background:linear-gradient(150deg,#180a29,#140d26);border:1px solid #a527a679;box-shadow:inset 0 0 18px #e13ed115}
+html[data-theme="cyberpunk"] .dock button{background:linear-gradient(150deg,#280f36,#160e2b);color:#fbe1fa;border:1px solid #a62d9440}
+html[data-theme="cyberpunk"] .dock button.active{background:linear-gradient(145deg,#58115c,#29144f);border-color:#ff43de;box-shadow:inset 0 0 17px #ef27d442,0 0 16px #ff22d654}
+html[data-theme="cyberpunk"] .dock .ico{font-size:clamp(23px,4.3vh,37px);line-height:1;color:#ff42de;text-shadow:0 0 12px #ff23db,0 0 22px #ff23db69}
+html[data-theme="cyberpunk"] .dock button.active .ico{color:#fff0fc}
+html[data-theme="cyberpunk"] .full,html[data-theme="cyberpunk"] .side{background:radial-gradient(circle at 88% 8%,#6c16446e,transparent 47%),linear-gradient(150deg,#1a0a29,#0e1026);border:1px solid #a32d9b6b;box-shadow:inset 0 0 28px #f12bd40d}
+html[data-theme="cyberpunk"] .full h3,html[data-theme="cyberpunk"] .side h3,html[data-theme="cyberpunk"] .status,html[data-theme="cyberpunk"] .media-eyebrow{color:#ff64e8;text-shadow:0 0 12px #ff2ad06b}
+html[data-theme="cyberpunk"] button{background:linear-gradient(150deg,#361541,#211632);border-color:#aa329a;color:#ffe6fc}
+html[data-theme="cyberpunk"] .grid button{background:radial-gradient(circle at 50% 10%,#84277966,transparent 72%),linear-gradient(155deg,#300f3d,#17152c);border:1px solid #eb42cf8c;box-shadow:inset 0 1px #ffcdfb12,0 0 14px #f32ad024;border-radius:18px;font-weight:650}
+html[data-theme="cyberpunk"] .grid .bigicon{color:#ff3ce3;font-size:clamp(34px,8.5vh,66px);line-height:1;text-shadow:0 0 14px #ff1eca,0 0 28px #ff1eca86}
+html[data-theme="cyberpunk"] :is(.active,.primary,.media-play){background:linear-gradient(135deg,#9c168f,#4e1975);border-color:#ff66e2;box-shadow:0 0 15px #ed24c74d}
+html[data-theme="cyberpunk"] :is(.glass,.preview,.overlay){background:linear-gradient(145deg,#351341e8,#181b38ed);border-color:#d535c888;box-shadow:0 0 28px #ee2bc43a,0 15px 38px #0008}
+html[data-theme="cyberpunk"] :is(.suggestion,.routeopt,.media-card,.calculator-display,.searchbox,.keyboard,.navbanner,.map-weather,.map-badge){background:#2c1438ed;border-color:#aa329a88}
+html[data-theme="cyberpunk"] .side .grid button{min-height:70px}
+html[data-theme="cyberpunk"] .fav .bubble{background:linear-gradient(130deg,#ff39dc,#7325a4);box-shadow:0 0 13px #f51bc77b}
+html[data-theme="cyberpunk"] .map{background:#18152b;box-shadow:inset 0 0 0 1px #b82cac55}
+html[data-theme="cyberpunk"] .map:before{background:radial-gradient(ellipse at 70% 40%,#284561,#151b39 55%,#100e26)}
+html[data-theme="cyberpunk"] .gpspanel{background:radial-gradient(ellipse at 50% 45%,#361745,#0e1026 75%);border-color:#ec39cb80;box-shadow:inset 0 0 22px #e52dc81a}
+html[data-theme="cyberpunk"] .gpsreadout{color:#ffcbf6;text-shadow:0 0 16px #f72bd6}
+html[data-theme="cyberpunk"] .gpscompasslabel{color:#fd9cf0}
+html[data-theme="cyberpunk"] .media-cover{background:linear-gradient(135deg,#ff29bc,#6811b4 52%,#093e64);box-shadow:0 0 27px #f729b54a,inset 0 0 35px #fff2}
+html[data-theme="cyberpunk"] .media-progress-fill{background:#fd2bc9;box-shadow:0 0 12px #f72cdb}
+html[data-theme="cyberpunk"] .theme-card.selected{border-color:#ff49df;box-shadow:0 0 20px #f72dc751}
+html[data-theme="cyberpunk"] :is(.theme-check,.sectiontitle){color:#ff7be6}
+
+/* Liquid Glass: layered translucent surfaces and soft Apple-like lighting. */
+html[data-theme="liquidglass"] body{color:#f3f8ff;background:radial-gradient(ellipse at 85% 15%,#6f6494 0,transparent 43%),radial-gradient(ellipse at 15% 95%,#266a8c 0,transparent 46%),#081321}
+html[data-theme="liquidglass"] .cockpit{background:radial-gradient(circle at 75% -15%,#e9caea45,transparent 40%),linear-gradient(145deg,#1d3554,#0f2035 65%,#17283e);border:1px solid #e9f5ff6d;border-radius:26px;box-shadow:inset 0 1px #ffffff54,0 16px 48px #0712209e}
+html[data-theme="liquidglass"] .dock{background:#d8edff19;border:1px solid #f5faff63;box-shadow:inset 0 1px #ffffff69,0 12px 30px #03172935;backdrop-filter:blur(25px) saturate(170%);-webkit-backdrop-filter:blur(25px) saturate(170%);border-radius:22px}
+html[data-theme="liquidglass"] .dock button{background:#e9f3ff19;border:1px solid #ffffff2a;border-radius:16px;color:#f5f9ff}
+html[data-theme="liquidglass"] .dock button.active{background:linear-gradient(140deg,#e9f6ff51,#ffffff1a);border-color:#ffffff99;box-shadow:inset 0 1px #ffffff93,0 4px 18px #c9eafa38}
+html[data-theme="liquidglass"] .dock .ico{font-size:clamp(23px,4vh,34px);color:#eef8ff;text-shadow:0 2px 9px #7cd9ff80}
+html[data-theme="liquidglass"] :is(.full,.side,.glass,.preview,.overlay){background:linear-gradient(140deg,#e6f2ff35,#aacbde18 65%,#f7faff26);border:1px solid #eff8ff6f;border-radius:24px;box-shadow:inset 0 1px #ffffff63,0 14px 35px #051b3560;backdrop-filter:blur(26px) saturate(165%);-webkit-backdrop-filter:blur(26px) saturate(165%)}
+html[data-theme="liquidglass"] .full h3,html[data-theme="liquidglass"] .side h3,html[data-theme="liquidglass"] .status{color:#b9eaff}
+html[data-theme="liquidglass"] button{background:linear-gradient(145deg,#e4f0ff32,#8fa9ce18);border:1px solid #ebf6ff65;border-radius:17px;color:#f8fbff;box-shadow:inset 0 1px #ffffff36,0 4px 12px #0618322a}
+html[data-theme="liquidglass"] :is(.active,.primary,.media-play){background:linear-gradient(135deg,#a9d6ff67,#6f95dd66);border-color:#f0faffb0;box-shadow:inset 0 1px #fff9,0 7px 18px #68bbff35}
+html[data-theme="liquidglass"] .grid button{background:linear-gradient(155deg,#ffffff35,#9fb7e320);border:1px solid #ffffff75;border-radius:23px;box-shadow:inset 0 1px #fff9,0 10px 28px #061e3851}
+html[data-theme="liquidglass"] .grid .bigicon{font-size:clamp(32px,7.6vh,60px);color:#edf6ff;text-shadow:0 4px 13px #8dcdfd}
+html[data-theme="liquidglass"] :is(.suggestion,.routeopt,.media-card,.calculator-display,.searchbox,.keyboard,.navbanner,.map-weather,.map-badge){background:#d0e8ff28;border:1px solid #f4faff62;box-shadow:inset 0 1px #ffffff3d;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:18px}
+html[data-theme="liquidglass"] .fav .bubble{background:linear-gradient(145deg,#d6f2ff99,#6ca8e999);border:1px solid #ffffffaa;box-shadow:inset 0 1px #fff9,0 5px 18px #c0ebff50}
+html[data-theme="liquidglass"] .map{background:#1d3b58;border:1px solid #f5faff66;border-radius:22px}
+html[data-theme="liquidglass"] .map:before{background:radial-gradient(ellipse at 68% 44%,#506f8d,#264967 58%,#132a47)}
+html[data-theme="liquidglass"] .gpspanel{background:radial-gradient(ellipse at 50% 45%,#a2bdd844,#29466699 68%,#152843ac);border-color:#eaf7ff72;box-shadow:inset 0 1px #ffffff6b}
+html[data-theme="liquidglass"] .gpsreadout{color:#f5fbff;text-shadow:0 2px 15px #83d2ff}
+html[data-theme="liquidglass"] .media-cover{background:linear-gradient(145deg,#d4ace6aa,#6c80c6aa 58%,#6acccca9);border:1px solid #ffffff96;box-shadow:inset 0 1px #ffffff79,0 12px 36px #9dc9ff45}
+html[data-theme="liquidglass"] .media-progress-fill{background:linear-gradient(90deg,#9bd8ff,#f4d8ff)}
+html[data-theme="liquidglass"] .theme-card{background:#daeaff1c;border-color:#ffffff60}
+html[data-theme="liquidglass"] .theme-card.selected{border-color:#e8f8ff;box-shadow:inset 0 1px #ffffff9b,0 0 18px #b5e6ff65}
+html[data-theme="liquidglass"] :is(.theme-check,.sectiontitle){color:#cdeeff}
+@media(prefers-reduced-motion:reduce){.theme-card{transition:none}}
+
+/* Classic-inspired launcher: large original vector artwork, no heavy tile frames. */
+.app-home-surface{overflow:hidden!important;padding:clamp(7px,1.4vh,20px)!important}
+.app-home-side{overflow:hidden!important;padding:clamp(4px,.7vh,10px)!important}
+.app-home-side>.row{display:none!important}
+.app-home{width:100%;height:100%;min-width:0;min-height:0;display:flex;flex-direction:column;gap:clamp(4px,1vh,10px);overflow:hidden}
+.app-home-heading{flex:0 0 auto;display:flex;align-items:center;gap:12px;line-height:1.2;padding:2px clamp(4px,1vw,15px);font-size:clamp(11px,1.8vh,16px);font-weight:750;letter-spacing:.15em;color:#89e5f2}
+.app-home-heading span{font-size:.68em;opacity:.42;letter-spacing:.2em}
+.app-home-grid{flex:1;min-height:0;min-width:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:clamp(2px,.8vh,14px)}
+.app-home-tile{position:relative;min-width:0;min-height:0;border:1px solid transparent!important;border-radius:24px!important;background:transparent!important;box-shadow:none!important;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(2px,.8vh,12px);padding:clamp(3px,.8vh,14px)!important;color:inherit;cursor:pointer;isolation:isolate;transition:transform .18s ease,background .18s ease}
+.app-home-tile:hover{background:radial-gradient(ellipse at center,#9fc8ec16,transparent 73%)!important;transform:scale(1.025)}
+.app-home-tile:active{transform:scale(.96)}
+.app-home-tile:focus-visible{outline:2px solid currentColor;outline-offset:-3px}
+.app-home-icon{width:min(100%,min(18vh,195px));height:min(18vh,195px);min-height:0;position:relative;display:grid;place-items:center;flex:0 1 auto;color:#65e8fa}
+.app-home-icon:before{content:'';position:absolute;inset:19%;border-radius:50%;background:currentColor;opacity:.13;filter:blur(26px);pointer-events:none}
+.app-illustration{position:relative;width:100%;height:100%;overflow:visible;fill:none;color:inherit;filter:drop-shadow(0 0 5px #21bddc65)}
+.app-illustration :is(.main,.secondary,.soft){fill:none;stroke:currentColor;stroke-width:4.5;stroke-linecap:round;stroke-linejoin:round}
+.app-illustration .secondary{stroke:var(--app-icon-second,#af8bfa);stroke-width:3.3}
+.app-illustration .soft{stroke-width:1.8;opacity:.42}
+.app-illustration .solid{fill:var(--app-icon-second,#af8bfa);stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.app-illustration .node{fill:var(--app-icon-second,#af8bfa);stroke:currentColor;stroke-width:2.2}
+.app-home-label{font-size:clamp(12px,2.25vh,22px);font-weight:680;line-height:1.17;letter-spacing:.015em;text-align:center;max-width:100%;overflow-wrap:anywhere;color:#e7faff;text-shadow:0 2px 7px #05101f99}
+.app-home-side .app-home{gap:3px}
+.app-home-side .app-home-heading{font-size:clamp(9px,1.4vh,12px);padding:0 3px}
+.app-home-side .app-home-heading span{display:none}
+.app-home-side .app-home-grid{gap:clamp(1px,.45vh,6px)}
+.app-home-side .app-home-tile{gap:2px;padding:1px!important;border-radius:12px!important}
+.app-home-side .app-home-icon{width:min(100%,min(11vh,106px));height:min(11vh,106px)}
+.app-home-side .app-home-icon:before{filter:blur(11px);opacity:.13}
+.app-home-side .app-home-label{font-size:clamp(8px,1.4vh,12px);line-height:1.08;max-width:100%}
+html[data-theme="cyberpunk"] .app-home-surface{background:radial-gradient(ellipse at 30% 15%,#37103e91,transparent 50%),radial-gradient(ellipse at 85% 88%,#2c0b4677,transparent 48%),#11071d}
+html[data-theme="cyberpunk"] .app-home-heading{color:#ff81ec;text-shadow:0 0 13px #f522c788}
+html[data-theme="cyberpunk"] .app-home-icon{color:#ff3ade;--app-icon-second:#21ddf7}
+html[data-theme="cyberpunk"] .app-home-icon:before{opacity:.24;filter:blur(34px)}
+html[data-theme="cyberpunk"] .app-illustration{filter:drop-shadow(0 0 5px #ff2bde8c) drop-shadow(0 0 15px #e529d55c)}
+html[data-theme="cyberpunk"] .app-home-label{color:#ffedfb;text-shadow:0 0 9px #f620ac7d}
+html[data-theme="cyberpunk"] .app-home-tile:nth-child(3n+2) .app-home-icon{color:#f763ff;--app-icon-second:#5cefff}
+html[data-theme="cyberpunk"] .app-home-tile:hover{background:radial-gradient(ellipse at center,#ee2ccb24,transparent 71%)!important}
+html[data-theme="liquidglass"] .app-home-surface{background:radial-gradient(ellipse at 16% 4%,#9fd4ff32,transparent 60%),radial-gradient(ellipse at 89% 95%,#c8aeec2b,transparent 60%),#162941}
+html[data-theme="liquidglass"] .app-home-heading{color:#e5f6ff}
+html[data-theme="liquidglass"] .app-home-icon{color:#d5f4ff;--app-icon-second:#a2bdff}
+html[data-theme="liquidglass"] .app-home-icon:before{opacity:.17;filter:blur(35px)}
+html[data-theme="liquidglass"] .app-illustration{filter:drop-shadow(0 2px 5px #001e4755) drop-shadow(0 0 9px #99e7ff60)}
+html[data-theme="liquidglass"] .app-home-label{color:#f5faff}
+html[data-theme="liquidglass"] .app-home-tile:hover{background:radial-gradient(ellipse at center,#ffffff25,transparent 75%)!important}
+@media (max-height:450px){.app-home-surface{padding:4px!important}.app-home-heading{font-size:10px;padding:0 4px}.app-home{gap:2px}.app-home-grid{gap:1px}.app-home-tile{gap:1px;padding:1px!important}.app-home-label{font-size:clamp(9px,2.6vh,12px)}.app-home-icon{width:min(100%,18vh);height:18vh}.app-home-side .app-home-icon{width:min(100%,10.5vh);height:10.5vh}.app-home-side .app-home-label{font-size:clamp(7px,1.9vh,10px)}}
+@media (max-width:500px) and (orientation:portrait){.app-home-grid{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(4,minmax(0,1fr))}.app-home-side .app-home-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(6,minmax(0,1fr))}.app-home-icon{width:min(100%,13vh);height:13vh}.app-home-side .app-home-icon{width:min(100%,6.8vh);height:6.8vh}}
+@media(prefers-reduced-motion:reduce){.app-home-tile{transition:none}}
+
+/* MeviCar Classic visual reference: near-black canvas, floating multicolour icons, no tile frames. */
+html[data-theme="cyberpunk"] .app-home-surface{
+  background:radial-gradient(ellipse at 50% 5%,#180b2659,transparent 58%),#06060b!important;
+  border-color:#24153170;
+}
+html[data-theme="cyberpunk"] .app-home-side{
+  background:linear-gradient(150deg,#0c0914,#06060b)!important;
+}
+html[data-theme="cyberpunk"] .app-home-heading{
+  color:#eaf5ff;text-shadow:0 0 8px #3aa8ee48;
+  justify-content:center;letter-spacing:.14em;
+}
+html[data-theme="cyberpunk"] .app-home-label{
+  color:#e4f2ff;text-shadow:0 2px 6px #0008;
+  font-weight:640;
+}
+html[data-theme="cyberpunk"] .app-home-tile{
+  background:transparent!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+html[data-theme="cyberpunk"] .app-home-icon{color:#f53de1;--app-icon-second:#ab8bff;--app-icon-glow:#ff31db66}
+html[data-theme="cyberpunk"] .app-home-icon:before{opacity:.10;filter:blur(21px)}
+html[data-theme="cyberpunk"] .app-illustration{
+  filter:drop-shadow(0 0 5px var(--app-icon-glow,#f82dce66)) drop-shadow(0 0 12px var(--app-icon-glow,#f82dce44))
+}
+/* Individual tones echo the original Classic dashboard, with a distinct accent per app. */
+html[data-theme="cyberpunk"] .app-weather .app-home-icon{color:#ffe879;--app-icon-second:#ffa843;--app-icon-glow:#ffe87960}
+html[data-theme="cyberpunk"] .app-ha .app-home-icon{color:#9b88ff;--app-icon-second:#72e3ff;--app-icon-glow:#9a78ff60}
+html[data-theme="cyberpunk"] .app-obd .app-home-icon{color:#22e7f7;--app-icon-second:#7e83ff;--app-icon-glow:#25d9fa60}
+html[data-theme="cyberpunk"] .app-whatsapp .app-home-icon{color:#43f68e;--app-icon-second:#9affbd;--app-icon-glow:#36f49a60}
+html[data-theme="cyberpunk"] .app-youtube .app-home-icon{color:#ff6c80;--app-icon-second:#ffb28e;--app-icon-glow:#ff536a60}
+html[data-theme="cyberpunk"] .app-teams .app-home-icon{color:#a68bff;--app-icon-second:#ed8fff;--app-icon-glow:#937aff60}
+html[data-theme="cyberpunk"] .app-trips .app-home-icon{color:#20dbed;--app-icon-second:#5ff2cb;--app-icon-glow:#16dbea60}
+html[data-theme="cyberpunk"] .app-calendar .app-home-icon{color:#ff46db;--app-icon-second:#ff9aed;--app-icon-glow:#ff35c960}
+html[data-theme="cyberpunk"] .app-stocks .app-home-icon{color:#57f6bd;--app-icon-second:#f1f873;--app-icon-glow:#43f8a260}
+html[data-theme="cyberpunk"] .app-calculator .app-home-icon{color:#2ce4fe;--app-icon-second:#ad90ff;--app-icon-glow:#2ddffc60}
+html[data-theme="cyberpunk"] .app-clock .app-home-icon{color:#9a8dff;--app-icon-second:#d7acff;--app-icon-glow:#917aff60}
+html[data-theme="cyberpunk"] .app-settings .app-home-icon{color:#af8aff;--app-icon-second:#f090ff;--app-icon-glow:#af8aff60}
+
+/* Shared vector toolbar: identical glyph art in app launcher, dock and status controls.
+   Inactive dock icons stay neutral; the selected app gains its own Classic accent. */
+.dock button{--dock-neutral:#9daec1;transition:background .18s,border-color .18s,box-shadow .18s}
+.dock button .ico{
+  width:clamp(24px,4.9vh,43px);
+  height:clamp(24px,4.9vh,43px);
+  min-height:0;min-width:0;display:grid;place-items:center;
+  color:var(--dock-neutral);font-size:initial!important;line-height:1;
+  flex:0 1 auto;
+}
+.dock button .ico .app-illustration{width:100%;height:100%;max-width:100%;max-height:100%;filter:none}
+.dock button .ico .app-illustration .secondary{stroke:var(--app-icon-second,#8490a7)}
+.dock button .ico .app-illustration .node{fill:var(--app-icon-second,#8490a7)}
+.dock button.active .ico{
+  color:var(--dock-accent,#4de3f5);
+  --app-icon-second:#e5f8ff;
+}
+.dock button.active .ico .app-illustration{
+  filter:drop-shadow(0 0 3px var(--dock-accent,#7feaff)) drop-shadow(0 0 9px #85dfff48);
+}
+.dock button .dock-label{display:block;font-size:clamp(9px,1.5vh,12px);line-height:1.1;font-weight:550;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dock button.active .dock-label{color:#f4fcff;font-weight:700}
+.dock button.active{border-color:#61d7ed45;background:#13758b1b;box-shadow:inset 0 1px #b3f7ff16}
+html[data-theme="cyberpunk"] .dock button{
+  --dock-neutral:#ada1bf;
+  background:#1b122850!important;
+  border-color:transparent!important;
+}
+html[data-theme="cyberpunk"] .dock button:not(.active) .ico{--app-icon-second:#827592}
+html[data-theme="cyberpunk"] .dock button.active{
+  background:linear-gradient(140deg,#61245b6a,#30163f78)!important;
+  border-color:#d989ca61!important;
+  box-shadow:inset 0 1px #fff1,0 0 12px #ed39c828!important;
+}
+html[data-theme="cyberpunk"] .dock button.active .ico{
+  color:var(--dock-accent,#ff42de)!important;
+  --app-icon-second:#f9eaff;
+  text-shadow:none!important;
+}
+html[data-theme="cyberpunk"] .dock button:not(.active) .ico{color:var(--dock-neutral)!important;text-shadow:none!important}
+html[data-theme="cyberpunk"] .dock button.active .ico .app-illustration{filter:drop-shadow(0 0 4px var(--dock-accent,#ff42de)) drop-shadow(0 0 11px #ff36ca61)}
+html[data-theme="liquidglass"] .dock button{--dock-neutral:#b4cadf}
+html[data-theme="liquidglass"] .dock button.active{
+  border-color:#fff8!important;
+  background:linear-gradient(150deg,#e5efff33,#f4fbff14)!important;
+  box-shadow:inset 0 1px #fff7,0 7px 22px #a6d7fa29!important
+}
+html[data-theme="liquidglass"] .dock button.active .ico{color:var(--dock-accent,#b3eaff)!important;--app-icon-second:#e9f8ff}
+html[data-theme="liquidglass"] .dock button.active .ico .app-illustration{filter:drop-shadow(0 2px 7px #c9edff83)}
+@media(orientation:landscape) and (max-height:550px){
+  .dock button .ico{width:clamp(21px,5.7vh,33px);height:clamp(21px,5.7vh,33px)}
+  .dock button .dock-label{font-size:clamp(8px,1.8vh,11px)}
+}
+@media(max-width:760px){
+  .dock.left button .ico{width:clamp(20px,4.5vh,30px);height:clamp(20px,4.5vh,30px)}
+  .dock.bottom button .ico{width:clamp(19px,4vh,27px);height:clamp(19px,4vh,27px)}
+  .dock button .dock-label{font-size:clamp(8px,1.3vh,10px)}
+}
+
+/* Action glyphs share the exact SVG paths, colours and line weights. */
+.tool-control{
+  display:inline-flex;justify-content:center;align-items:center;gap:4px;
+  min-width:0;line-height:1;
+}
+.toolbar-icon{
+  display:inline-grid;place-items:center;flex:none;
+  width:clamp(13px,1.9vh,18px);height:clamp(13px,1.9vh,18px);
+  color:inherit;--app-icon-second:#b6d5e7;
+}
+.toolbar-icon .app-illustration{
+  width:100%;height:100%;filter:none;
+}
+#updateBtn.checking .toolbar-icon{animation:mevicar-refresh-spin .8s linear infinite}
+@keyframes mevicar-refresh-spin{to{transform:rotate(360deg)}}
+.tool-control .toolbar-icon{width:19px;height:19px}
+.map-tools .map-control{padding:7px!important;min-width:40px;min-height:40px}
+.map-tools .map-control .tool-label{display:none}
+.map-tools .map-control .toolbar-icon{width:25px;height:25px}
+.close-control{padding:5px 9px}
+@media(prefers-reduced-motion:reduce){
+  .dock button{transition:none}
+  #updateBtn.checking .toolbar-icon{animation:none}
+}
+
+/* Branded Spotify SVG and source-aware Audio player.
+   All three themes retain the same clear brand silhouette. */
+.app-illustration .spotify-disc{fill:#1ed760;stroke:#74ff9f;stroke-width:1.35}
+.app-illustration .spotify-arc{fill:none;stroke:#073015;stroke-linecap:round;stroke-linejoin:round}
+.app-illustration .spotify-arc-top{stroke-width:9}
+.app-illustration .spotify-arc-mid{stroke-width:8}
+.app-illustration .spotify-arc-low{stroke-width:7}
+.app-illustration .spotify-gloss{fill:none;stroke:#ddffed;stroke-width:2.5;stroke-linecap:round;opacity:.19}
+.dock button[data-app="audio-spotify"] .ico .app-illustration{
+  filter:drop-shadow(0 1px 3px #06351285) drop-shadow(0 0 5px #1ed76075);
+}
+.dock button[data-app="audio-spotify"].active .ico .app-illustration,
+html[data-theme="cyberpunk"] .dock button[data-app="audio-spotify"].active .ico .app-illustration,
+html[data-theme="liquidglass"] .dock button[data-app="audio-spotify"].active .ico .app-illustration{
+  filter:drop-shadow(0 0 4px #36f77c) drop-shadow(0 0 12px #1ed7609a);
+}
+.dock button[data-app="audio-spotify"] .dock-label{letter-spacing:0}
+.media-cover-icon{display:block;width:clamp(65px,12vh,134px);height:clamp(65px,12vh,134px);
+  max-width:55%;max-height:62%;flex:none}
+.media-cover .media-cover-icon .app-illustration{display:block;width:100%;height:100%;filter:drop-shadow(0 0 12px #4ae0ff72)}
+.media-cover.media-cover-spotify{
+  background:radial-gradient(circle at 34% 20%,#1d5d42 0%,#082e25 56%,#091e1d 100%);
+  box-shadow:inset 0 1px #a8ffc02d,inset 0 0 35px #18ed6426,0 8px 30px #0009;
+}
+.media-cover.media-cover-spotify .media-cover-icon .app-illustration{
+  filter:drop-shadow(0 8px 8px #0007) drop-shadow(0 0 16px #23f16c8c)
+}
+.media-cover.media-cover-radio{
+  background:linear-gradient(145deg,#70451c,#3c2732 54%,#1d2746);
+}
+.media-cover.media-cover-media{
+  background:linear-gradient(145deg,#124a5b,#24397d 52%,#2a2252);
+}
+.media-cover.media-cover-spotify>span:last-child{color:#baffcd}
+.media-cover.media-cover-radio>span:last-child{color:#ffe0a6}
+.media-cover.media-cover-media>span:last-child{color:#aff4ff}
+.media-mini .media-cover-icon{width:clamp(28px,7vh,60px);height:clamp(28px,7vh,60px)}
+@media (max-height:450px){.media-cover-icon{width:clamp(33px,9vh,72px);height:clamp(33px,9vh,72px)}}
+
+/* Quality pass 01: consistent, single-purpose CarPlay-inspired navigation controls. */
+
+.suggestion{min-height:clamp(56px,9vh,73px);gap:10px;flex:none}
+.suggestion:focus-visible,.fav:focus-visible{outline:2px solid #8af1ff;outline-offset:1px}
+.suggestion .circle{width:clamp(37px,6.6vh,46px);height:clamp(37px,6.6vh,46px);
+  flex:0 0 auto;background:linear-gradient(140deg,#15536a,#2f3c6f);border:1px solid #66dfe97c}
+.suggestion .circle .app-illustration{height:55%;width:55%;filter:none;color:#8ef3fb}
+.suggestion-chevron{margin-left:auto;flex:0 0 auto;font-size:22px;color:#9ed6e3}
+.fav .bubble .app-illustration{width:54%;height:54%;color:#eaffff;filter:drop-shadow(0 0 6px #a4f3fe77)}
+.navbanner{max-width:calc(100% - 32px);border:1px solid #8cdfe65b;box-shadow:0 10px 28px #04121b66}
+.navbanner .small{letter-spacing:.04em;color:#9ee7eb}
+.navbanner .controls button{min-height:43px}
+html[data-theme="cyberpunk"] .suggestion .circle{background:linear-gradient(130deg,#582162,#273b64);border-color:#f96bdb7a}
+html[data-theme="cyberpunk"] .suggestion .circle .app-illustration{color:#ffa7ef}
+html[data-theme="cyberpunk"] .navbanner{border-color:#e956d263}
+html[data-theme="liquidglass"] .suggestion .circle{background:#b2e2ff2e;border-color:#dcf5ff9c}
+@media(max-width:700px){
+  .preview.nav-preview{width:min(94%,460px);left:13px;top:13px}
+}
+@media(max-height:500px){
+  .fav .bubble{height:clamp(38px,10vh,60px);width:clamp(38px,10vh,60px)}
+  .fav{min-width:clamp(57px,12vw,85px)}
+  .suggestion{min-height:48px;padding:7px}
+}
+
+/* UX polish 02: in short landscape viewports, show results and keyboard together.
+   Previously the full-width keyboard covered the complete results list. */
+@media (orientation:landscape) and (max-height:520px) and (min-width:700px){
+  .map.searchmode .keyboard{
+    left:auto;right:clamp(8px,1.3vw,14px);
+    bottom:clamp(8px,1.3vh,13px);
+    width:55%;max-width:58%;padding:clamp(7px,1.2vh,11px);
+    gap:clamp(3px,.9vh,6px);
+    border:1px solid #75d9f85a;
+    border-radius:clamp(11px,1.6vw,19px);
+  }
+  .map.searchmode .keyboard .keyrow{gap:clamp(3px,.5vw,6px)}
+  .map.searchmode .keyboard .keyrow button{
+    min-height:clamp(37px,10vh,48px);
+    padding:3px 0;
+    border-radius:8px;
+    font-size:clamp(11px,2.7vh,16px);
+  }
+  .map.searchmode .keyboard .keyrow .special,.map.searchmode .keyboard .keyrow .go{font-size:clamp(10px,2.4vh,14px)}
+}
+
+/* Keep the app dock fully opaque above the Google Maps canvas.
+   Shared for Web and Hybrid: selected tabs retain their app accent. */
+html[data-theme] .cockpit .dock{
+  --dock-panel-bg:#102438;
+  --dock-tile-bg:#203a50;
+  --dock-tile-border:#385a70;
+  background:var(--dock-panel-bg);
+  border:1px solid var(--dock-tile-border);
+  box-shadow:0 6px 18px #06101c99;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+html[data-theme="cyberpunk"] .cockpit .dock{
+  --dock-panel-bg:#1b102a;
+  --dock-tile-bg:#32203f;
+  --dock-tile-border:#62406f;
+}
+html[data-theme="liquidglass"] .cockpit .dock{
+  --dock-panel-bg:#172d45;
+  --dock-tile-bg:#2c455f;
+  --dock-tile-border:#57738b;
+}
+/* The left dock needs no second dark frame behind its opaque app buttons.
+   Preserve spacing and each button's background, border and active glow.
+   Scoped to the side dock only: the optional bottom dock stays unchanged. */
+html[data-theme] .cockpit .dock.left{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+
+
+/* Active dock page: stronger app-colored focus while keeping inactive tabs quiet. */
+html .cockpit .dock button.active{
+  border:2px solid var(--dock-accent,#64dfff)!important;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--dock-accent,#64dfff) 26%,#173149),#142b43 78%)!important;
+  box-shadow:inset 0 0 18px color-mix(in srgb,var(--dock-accent,#64dfff) 16%,transparent),0 0 13px color-mix(in srgb,var(--dock-accent,#64dfff) 35%,transparent)!important;
+}
+html .cockpit .dock button.active .dock-label{
+  color:#fff!important;
+  font-weight:750!important;
+}
+html .cockpit .dock button.active .ico{
+  color:var(--dock-accent,#64dfff)!important;
+  filter:drop-shadow(0 0 5px color-mix(in srgb,var(--dock-accent,#64dfff) 60%,transparent));
+}
+html .cockpit .dock button:not(.active){
+  background:var(--dock-tile-bg,#203a50)!important;
+  border-color:var(--dock-tile-border,#385a70)!important;
+  box-shadow:inset 0 1px 0 #ffffff12;
+  opacity:1!important;
+  --dock-neutral:#e3f0fa;
+  --app-icon-second:#aec9df;
+}
+html .cockpit .dock button:not(.active) .dock-label{
+  color:#f1f7ff!important;
+  font-weight:650;
+}
+html .cockpit .dock button:not(.active) .ico{
+  opacity:1!important;
+  color:var(--dock-neutral)!important;
+}
+
+/* Canonical app launcher geometry: a fixed illustration cell and a separate
+   caption cell. No app-specific transforms; the app grid alone scrolls. */
+.app-home-surface .app-home-grid,
+.app-home-side .app-home-grid{
+ display:grid;
+ overflow-x:hidden;
+ overflow-y:auto;
+ overscroll-behavior:contain;
+ -webkit-overflow-scrolling:touch;
+ touch-action:pan-y;
+ align-content:start;
+ grid-template-rows:none;
+ scrollbar-width:thin;
+ scrollbar-color:#85aecd66 transparent;
+}
+.app-home-surface .app-home-grid{
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ grid-auto-rows:205px;
+ column-gap:clamp(8px,1.5vw,22px);
+ row-gap:10px;
+}
+.app-home-surface .app-home-tile,
+.app-home-side .app-home-tile{
+ box-sizing:border-box;
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr);
+ grid-template-rows:minmax(0,1fr) 42px;
+ align-items:stretch;
+ justify-items:stretch;
+ justify-content:initial;
+ align-content:initial;
+ gap:6px!important;
+ min-height:0;
+ overflow:hidden;
+ padding:12px 8px!important;
+}
+.app-home-surface .app-home-icon,
+.app-home-side .app-home-icon{
+ box-sizing:border-box;
+ grid-column:1;
+ grid-row:1;
+ justify-self:center;
+ align-self:center;
+ display:block;
+ flex:none;
+ position:relative;
+ min-width:0;min-height:0;
+ max-height:100%;
+ width:112px;
+ height:112px;
+ transform:none!important;
+}
+.app-home-surface .app-home-icon .app-illustration,
+.app-home-side .app-home-icon .app-illustration{
+ display:block;
+ width:100%;
+ height:100%;
+ overflow:hidden;
+}
+.app-home-surface .app-home-label,
+.app-home-side .app-home-label{
+ grid-column:1;
+ grid-row:2;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ align-self:stretch;
+ justify-self:stretch;
+ box-sizing:border-box;
+ min-height:0;
+ margin:0!important;
+ padding:0 4px!important;
+ position:static;
+ transform:none;
+ text-align:center;
+ white-space:normal;
+ overflow-wrap:normal;
+ word-break:normal;
+ line-height:1.15;
+ font-size:clamp(19px,2.55vh,25px);
+ font-weight:700;
+}
+.app-home-side .app-home-grid{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ grid-auto-rows:122px;
+ gap:5px;
+}
+.app-home-side .app-home-tile{
+ grid-template-rows:minmax(0,1fr) 27px;
+ padding:4px 2px!important;
+ gap:2px!important;
+}
+.app-home-side .app-home-icon{
+ width:65px;
+ height:65px;
+ max-width:100%;
+}
+.app-home-side .app-home-label{
+ font-size:clamp(12px,1.65vh,16px);
+}
+@media (orientation:landscape) and (max-height:529px){
+ .app-home-surface .app-home-grid{
+  grid-auto-rows:132px;
+  row-gap:4px;
+ }
+ .app-home-surface .app-home-tile{
+  grid-template-rows:minmax(0,1fr) 28px;
+  padding:4px 3px!important;
+  gap:3px!important;
+ }
+ .app-home-surface .app-home-icon{
+  width:70px;height:70px;max-width:100%;
+ }
+ .app-home-surface .app-home-label{
+  font-size:clamp(13px,3vh,17px);
+ }
+ .app-home-side .app-home-grid{grid-auto-rows:96px}
+ .app-home-side .app-home-icon{width:48px;height:48px}
+ .app-home-side .app-home-label{font-size:12px}
+}
+
+
+/* App launcher: touch-first, large icons and independent vertical scrolling.
+   Keep the dock and all non-launcher screens untouched. */
+.app-home-surface{min-height:0;overflow:hidden}
+.app-home-surface .app-home{display:flex;flex-direction:column;flex:1;min-height:0;height:100%;overflow:hidden}
+.app-home-surface .app-home-heading{flex:0 0 auto}
+.app-home-surface .app-home-grid{
+ flex:1 1 auto;min-height:0;max-height:100%;overflow-y:auto!important;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ grid-template-rows:none!important;grid-auto-rows:clamp(180px,24vh,235px);
+ gap:clamp(8px,1.4vh,16px);padding:4px 8px 16px;
+ scroll-behavior:smooth;-webkit-overflow-scrolling:touch;touch-action:pan-y;
+}
+.app-home-surface .app-home-tile{
+ grid-template-rows:minmax(0,1fr) 26px!important;
+ padding:8px 5px!important;gap:3px!important;
+}
+.app-home-surface .app-home-icon{
+ width:clamp(108px,16vh,160px)!important;
+ height:clamp(108px,16vh,160px)!important;
+ max-width:100%;max-height:100%;
+}
+.app-home-surface .app-home-label{
+ font-size:clamp(11px,1.7vh,15px)!important;
+ line-height:1.15;font-weight:650;
+}
+@media (orientation:landscape) and (max-height:529px){
+ .app-home-surface .app-home-grid{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-auto-rows:178px;row-gap:10px;
+ }
+ .app-home-surface .app-home-tile{
+  grid-template-rows:minmax(0,1fr) 24px!important;
+  padding:5px 4px!important;gap:2px!important;
+ }
+ .app-home-surface .app-home-icon{
+  width:126px!important;height:126px!important;
+ }
+ .app-home-surface .app-home-label{font-size:12px!important}
+}
+@media (orientation:landscape) and (max-width:700px){
+ .app-home-surface .app-home-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* 2026-11-12: phone landscape launcher – 17 apps in one compact 5×4 grid.
+   Scoped to the full app launcher; dock, split launcher and desktop stay untouched.
+   This override comes after the historic small-height app launcher rules. */
+@media (orientation:landscape) and (min-width:701px) and (max-width:1100px) and (max-height:480px){
+ .app-home-surface .app-home{
+  gap:3px;
+ }
+ .app-home-surface .app-home-heading{
+  padding:0 6px;
+  font-size:clamp(10px,1.5vh,13px);
+  line-height:1.1;
+ }
+ .app-home-surface .app-home-grid{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-rows:repeat(4,minmax(0,1fr))!important;
+  grid-auto-rows:minmax(0,1fr);
+  align-content:stretch;
+  gap:clamp(2px,.8vh,5px);
+  padding:2px 5px 5px;
+  overflow:hidden!important;
+  min-height:0;
+  scroll-behavior:auto;
+ }
+ .app-home-surface .app-home-tile{
+  grid-template-rows:minmax(0,1fr) minmax(17px,auto)!important;
+  gap:2px!important;
+  padding:2px 3px!important;
+  border-radius:12px!important;
+  min-width:0;
+  min-height:0;
+ }
+ .app-home-surface .app-home-icon{
+  width:clamp(38px,12vh,54px)!important;
+  height:clamp(38px,12vh,54px)!important;
+  min-width:0;
+  min-height:0;
+  max-width:100%;
+  max-height:100%;
+ }
+ .app-home-surface .app-home-icon .app-illustration{
+  width:100%;
+  height:100%;
+ }
+ .app-home-surface .app-home-label{
+  font-size:clamp(11px,3.4vh,14px)!important;
+  font-weight:650;
+  line-height:1.1;
+  padding:0 2px!important;
+  white-space:normal;
+  overflow-wrap:anywhere;
+ }
+}

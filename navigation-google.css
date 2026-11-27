@@ -1,0 +1,561 @@
+/* MeviCar Next Google Maps: preserve Classic-like full-map navigation overlays. */
+.mg-navigation{isolation:isolate;background:#162737}
+.mg-navigation:before{display:none!important}
+.mg-navigation .mg-map{position:absolute;inset:0;z-index:0;width:100%;height:100%;background:#132a3b}
+.mg-navigation .overlay,.mg-navigation .preview,.mg-navigation .navbanner{z-index:3}
+.mg-navigation .keyboard{z-index:4}
+.mg-map-state{position:absolute;z-index:1;top:12px;right:12px;max-width:min(340px,44%);border-radius:12px;background:#10283edc;color:#e2f6ff;font-size:12px;padding:9px 12px;pointer-events:none}
+.mg-map-state[hidden]{display:none}
+.mg-my-location{position:absolute;z-index:3;right:14px;bottom:20px;width:48px;height:48px;border:1px solid #7aeaff86;border-radius:14px;color:#e7fdff;background:#17394be8;font-size:30px;display:grid;place-items:center;box-shadow:0 5px 18px #0006}
+.mg-my-location[hidden]{display:none!important}
+/* Map orientation is a camera control, not a second navigation overlay. */
+.mg-map-orientation{position:absolute;z-index:9;right:clamp(8px,1.2vw,16px);top:calc(max(8px,env(safe-area-inset-top,0px)) + 60px);bottom:auto;width:48px;height:48px;border:1px solid #7aeaff86;border-radius:50%;color:#e7fdff;background:#102332;font-size:25px;font-weight:800;display:grid;place-items:center;box-shadow:0 5px 18px #0006;cursor:pointer;touch-action:manipulation}
+.mg-map-orientation[aria-pressed="true"]{color:#092b40;background:#7aeaff;border-color:#b5f7ff}
+
+.mg-search-message{display:block;padding:12px;color:#d2e8f5;font-size:clamp(12px,1.55vh,15px);line-height:1.45}
+.mg-setup{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;gap:9px;max-width:min(440px,90%);width:100%;padding:clamp(13px,2vw,22px);border:1px solid #59dffc77;border-radius:16px;background:#12283ef5;box-shadow:0 12px 48px #000a;color:#e9faff;text-align:left}
+.mg-setup strong{font-size:clamp(17px,2.7vh,24px)}
+.mg-setup p,.mg-setup small{font-size:clamp(10px,1.5vh,13px);line-height:1.4;margin:0}
+.mg-setup code{font-size:11px;overflow-wrap:anywhere}
+.mg-setup input{width:100%;min-height:42px;border-radius:9px;padding:8px;background:#091c30;color:#fff;border:1px solid #75a9ce88}
+.mg-setup button{min-height:43px;border-radius:10px;background:#1aaec3;border:1px solid #bbffff;color:#021b27;font-weight:800}
+.mg-navigation .nav-preview{max-width:min(480px,85%);z-index:5}
+@media (orientation:landscape) and (max-height:500px){
+ .mg-setup{gap:4px;padding:9px;max-width:400px}
+ .mg-setup strong{font-size:15px}
+ .mg-setup p,.mg-setup small{font-size:10px}
+ .mg-setup input,.mg-setup button{min-height:30px;padding:5px}
+ .mg-my-location{width:39px;height:39px;font-size:22px;bottom:7px;right:7px}
+ .mg-map-orientation{width:44px;height:44px;font-size:23px;bottom:auto}
+ .mg-map-state{font-size:10px;padding:5px;max-width:35%}
+}
+
+/* Keep controls readable if Google rejects the key and shows a light error map. */
+.mg-navigation .nav-preview{
+ background:linear-gradient(140deg,#142e43f5,#1a3453f4);
+ color:#f3fbff;
+ border:1px solid #6da5c65e;
+ box-shadow:0 9px 25px #08132269;
+}
+.mg-navigation .sectiontitle{color:#eaf9ff}
+.mg-map-state{pointer-events:auto;display:flex;flex-direction:column;gap:7px;z-index:5}
+.mg-map-state[hidden]{display:none!important}
+.mg-change-key{
+ align-self:flex-start;
+ border:1px solid #83efff70;
+ border-radius:9px;
+ background:#1b657d;
+ color:#f3fbff;
+ font-size:12px;font-weight:700;
+ padding:7px 10px;
+ cursor:pointer;
+}
+.mg-change-key[hidden]{display:none}
+
+/* The Google map is often bright, so target the navigation card directly.
+   In Liquid Glass this must be stronger than the generic translucent theme. */
+html[data-theme="liquidglass"] .mg-navigation .nav-preview{
+ background:linear-gradient(145deg,rgba(14,36,54,.97),rgba(22,48,70,.96));
+ border:1px solid rgba(135,211,238,.63);
+ box-shadow:0 12px 32px rgba(4,17,30,.55),inset 0 1px rgba(255,255,255,.15);
+ color:#f2fcff;
+ backdrop-filter:blur(12px);
+}
+html[data-theme="liquidglass"] .mg-navigation .nav-preview .small{
+ color:#d1e8f5;
+}
+html[data-theme="liquidglass"] .mg-navigation .nav-preview button{
+ background:#24475e;
+ border:1px solid #8acbe080;
+ color:#f1fbff;
+}
+.mg-navigation.mg-selecting-origin .mg-map{cursor:crosshair!important}
+.mg-origin-instruction{
+ position:absolute;z-index:6;left:50%;top:12px;
+ transform:translateX(-50%);
+ display:flex;align-items:center;justify-content:center;gap:10px;
+ max-width:min(580px,90%);width:max-content;
+ padding:10px 13px;border:1px solid #71daf7;
+ border-radius:12px;background:#102d45f5;
+ box-shadow:0 9px 30px #041423aa;
+ color:#f1fdff;font-size:clamp(12px,1.65vh,16px);font-weight:650;
+}
+.mg-origin-instruction button,.mg-manual-action{
+ padding:6px 10px;border-radius:9px;
+ border:1px solid #81dcee8c;
+ background:#16475f;color:#f0fbff;font-weight:750;
+ cursor:pointer;
+}
+.mg-map-state .mg-manual-action[hidden]{display:none}
+@media(max-height:500px){
+ .mg-origin-instruction{max-width:83%;font-size:11px;padding:6px 8px;gap:4px}
+ .mg-origin-instruction button{padding:4px 7px}
+}
+
+/* Classic-like Web Guidance: route ready -> navigation start -> live turn cards.
+   Scoped to Next's nav only so radio, media and other split apps stay untouched. */
+
+.mg-guidance-turn{display:grid;grid-template-columns:clamp(55px,7vw,94px) minmax(0,1fr);gap:12px;align-items:center}
+.mg-guidance-turn #mg-next-arrow{font-size:clamp(48px,10vh,88px);font-weight:850;color:#64edff;line-height:1;text-align:center}
+.mg-guidance-instruction{min-width:0;display:flex;flex-direction:column;gap:3px}
+.mg-guidance-instruction #mg-next-distance{font-size:clamp(24px,4.1vh,37px);color:#fff}
+.mg-guidance-instruction #mg-next-turn{font-size:clamp(16px,2.5vh,23px);line-height:1.2;overflow-wrap:anywhere}
+@media (orientation:landscape) and (max-height:540px){
+ .mg-guidance-turn{grid-template-columns:45px minmax(0,1fr);gap:5px}
+ .mg-guidance-turn #mg-next-arrow{font-size:41px}
+ .mg-guidance-instruction #mg-next-distance{font-size:21px}
+ .mg-guidance-instruction #mg-next-turn{font-size:13px}
+}
+
+/* First-run: only one setup card, always above the inactive map. */
+.mg-navigation.mg-first-run .mg-setup{
+ z-index:6;
+ width:min(520px,calc(100% - 28px));
+ max-width:calc(100% - 28px);
+ max-height:calc(100% - 20px);
+ overflow-y:auto;
+ top:50%;left:50%;transform:translate(-50%,-50%);
+ padding:clamp(14px,2.2vw,24px);
+ gap:clamp(8px,1.5vh,14px);
+ border-radius:18px;
+ box-shadow:0 16px 50px rgba(0,0,0,.50);
+}
+.mg-navigation.mg-first-run .mg-setup strong{font-size:clamp(17px,3.5vh,25px)}
+.mg-navigation.mg-first-run .mg-setup p{font-size:clamp(12px,1.9vh,15px);line-height:1.5}
+.mg-navigation.mg-first-run .mg-setup button{min-height:clamp(42px,7.5vh,50px);padding:9px 15px;font-size:clamp(13px,2.1vh,16px)}
+@media (orientation:landscape) and (max-height:430px){
+ .mg-navigation.mg-first-run .mg-setup{padding:12px 16px;gap:8px}
+ .mg-navigation.mg-first-run .mg-setup strong{font-size:17px}
+ .mg-navigation.mg-first-run .mg-setup p{font-size:12px}
+}
+
+.mg-route-preview-layout {
+ --route-pane-width: clamp(360px, 40%, 420px);
+ --route-pane-bg: #0a1721;
+ --route-control: #152837;
+ --route-ink: #edf9ff;
+ --route-muted: #b8d1dd;
+ --route-accent: #8beaff;
+ --route-divider: #448899;
+}
+html[data-theme="cyberpunk"] .mg-route-preview-layout {
+ --route-pane-bg: #0b0815;
+ --route-control: #1c1030;
+ --route-ink: #ffe8fb;
+ --route-muted: #e7a6d8;
+ --route-accent: #64eaff;
+ --route-divider: #b03a9c;
+}
+html[data-theme="liquidglass"] .mg-route-preview-layout {
+ --route-pane-bg: #102033;
+ --route-control: #1b3350;
+ --route-ink: #f4f8ff;
+ --route-muted: #d5e6f4;
+ --route-accent: #b3edff;
+ --route-divider: #7fa9c9;
+}
+.mg-navigation.mg-route-preview-layout .mg-map {
+ left:var(--route-pane-width); width:calc(100% - var(--route-pane-width));
+}
+.mg-native-route-preview .mg-native-setup { display:none; }
+.mg-route-preview-pane {
+ position:absolute; inset:0 auto 0 0; width:var(--route-pane-width); z-index:3;
+ display:flex; flex-direction:column; min-width:0; min-height:0; box-sizing:border-box;
+ gap:clamp(7px,1.25vh,13px);
+ /* Keep native-style side controls outside the iPhone landscape cutout. */
+ padding:max(7px,env(safe-area-inset-top,0px)) 9px
+   max(8px,env(safe-area-inset-bottom,0px)) max(9px,env(safe-area-inset-left,0px));
+ background:var(--route-pane-bg); color:var(--route-ink);
+ font-size:clamp(17px,2.65vh,23px);
+ line-height:1.3;
+}
+.mg-route-preview-heading,.mg-route-preview-actions,.mg-route-preview-options {
+ display:flex; align-items:center; gap:clamp(4px,.7vw,10px);
+}
+.mg-route-preview-heading { justify-content:space-between; flex:0 0 auto; min-height:44px; flex-wrap:wrap; }
+.mg-route-preview-trip { flex:0 0 auto; min-height:0; }
+.mg-route-preview-actions { flex:0 0 auto; padding-top:5px; }
+/* Readable while driving: large route figures, clear supporting text, and a
+   scrollable middle section so buttons stay usable on shallow landscape phones. */
+.mg-route-preview-heading .mg-route-preview-summary{ flex:1 1 auto; min-width:0; font-size:clamp(24px,4.2vh,38px); }
+.mg-route-preview-heading .mg-route-preview-end{ flex:0 0 auto; }
+.mg-route-preview-scroll { flex:1; min-height:0; overflow:auto; overscroll-behavior:contain; }
+.mg-route-preview-summary { display:block; font-size:clamp(29px,4.5vh,42px);line-height:1.14; }
+.mg-route-preview-meta { font-size:clamp(17px,2.6vh,22px);line-height:1.35; }
+.mg-route-preview-meta,.mg-route-preview-destination p { margin:.26em 0 .55em; }
+.mg-route-preview-meta,.mg-route-preview-options>span { color:var(--route-muted); }
+.mg-route-preview-options { margin-top:.65em; flex-wrap:nowrap; min-width:0; }
+.mg-route-preview-options button { padding-inline:5px!important; font-size:clamp(16px,2.6vh,21px); min-height:50px!important; }
+.mg-route-preview-options>span { flex:0 0 auto; white-space:nowrap;font-size:clamp(16px,2.45vh,20px); }
+.mg-route-preview-destination { border-top:1px solid var(--route-divider); margin-top:.65em; padding-top:.48em; }
+.mg-route-preview-destination p { font-size:clamp(18px,2.75vh,23px);font-weight:650;line-height:1.32;overflow-wrap:anywhere; }
+.mg-navigation .mg-route-preview-pane button {
+ background:var(--route-control); color:var(--route-ink); border:0;
+ border-radius:clamp(8px,1.8vh,20px); min-height:clamp(44px,7vh,68px);
+ padding:6px clamp(7px,.9vw,15px); line-height:1.18;
+ font-size:clamp(17px,2.6vh,22px);
+}
+/* Route preview cancellation: same red exit treatment as the Navi dashboard.
+   Explicit class scopes it to Beenden; Maut, Fähren and Los are unchanged. */
+.mg-navigation .mg-route-preview-pane .mg-route-preview-end {
+ background:#743545;
+ color:#ffebf1;
+ border:1px solid #b86b7a;
+ font-weight:700;
+}
+.mg-navigation .mg-route-preview-pane .mg-route-preview-end:active {
+ background:#963d50;
+}
+.mg-route-preview-options button,.mg-route-preview-actions button { flex:1; min-width:0; }
+.mg-navigation .mg-route-preview-pane button[aria-pressed="true"],
+.mg-navigation .mg-route-preview-pane .mg-route-preview-start { background:var(--route-accent); color:#091823; font-weight:650; }
+.mg-navigation .mg-route-preview-actions button { min-height:60px; font-size:clamp(18px,2.9vh,24px); }
+.mg-navigation .mg-route-preview-start { font-weight:800; font-size:clamp(22px,3.5vh,29px)!important; }
+/* Road Assist is embedded in this same route-preview scroll area. Override its
+   tiny generic/short-viewport typography here only; no global Road Assist changes. */
+.mg-route-preview-pane #mevi-ra-summary {font-size:clamp(16px,2.45vh,21px);line-height:1.32;overflow-wrap:anywhere}
+.mg-route-preview-pane .mevi-ra-summary {padding:clamp(9px,1.3vh,14px);gap:clamp(7px,1vh,11px);font-size:clamp(16px,2.45vh,21px)}
+.mg-route-preview-pane .mevi-ra-summary-line {gap:7px;line-height:1.32}
+.mg-route-preview-pane .mevi-ra-summary-line b {font-size:clamp(17px,2.55vh,21px);letter-spacing:.04em}
+.mg-route-preview-pane .mevi-ra-summary-line span {font-size:clamp(16px,2.45vh,21px)}
+.mg-route-preview-pane .mevi-ra-summary-actions {gap:7px}
+.mg-navigation .mg-route-preview-pane .mevi-ra-summary-actions button {
+ min-height:44px;padding:8px 11px;font-size:clamp(15px,2.3vh,20px);font-weight:750;
+}
+.mg-route-preview-pane .mevi-ra-summary small {font-size:clamp(13px,1.9vh,17px);line-height:1.3;}
+@media(max-width:720px) {
+ .mg-route-preview-layout { --route-pane-width: min(52%, 420px); }
+ .mg-route-preview-options { flex-wrap:wrap; }
+ .mg-route-preview-options>span { flex-basis:100%; }
+}
+
+/* The browser and native bridge use the same readyRouteOverlay markup. */
+@media (orientation:landscape) and (max-height:480px){
+ .mg-navigation.mg-route-preview-layout .mg-map{min-width:0}
+ .mg-navigation .mg-route-preview-pane{gap:6px}
+ .mg-route-preview-heading{min-height:44px}
+ .mg-route-preview-heading .mg-route-preview-summary{font-size:clamp(23px,5.5vh,30px)}
+
+ .mg-route-preview-trip .mg-route-preview-meta{
+  font-size:clamp(15px,3.7vh,18px);line-height:1.3;margin:4px 0 7px;
+ }
+ .mg-route-preview-scroll{padding-bottom:5px}
+ .mg-route-preview-options{gap:5px}
+ .mg-route-preview-options>span{font-size:15px}
+ .mg-route-preview-options button{font-size:clamp(15px,3.7vh,18px);min-height:44px!important}
+ .mg-route-preview-destination p{font-size:clamp(16px,4vh,20px)}
+ .mg-navigation .mg-route-preview-actions button{min-height:56px}
+ .mg-navigation .mg-route-preview-pane .mevi-ra-summary-actions button{font-size:15px;min-height:44px}
+}
+
+/* Native-style Web guidance: Google JS provides the maneuver, the same route state
+   feeds the slim NavTripBar-equivalent. The Kotlin APK retains NavigationView. */
+.mg-navigation.mg-web-driving .mg-web-guidance{
+ --guidance-panel:#102332;--guidance-border:#4f92a4c9;--guidance-accent:#7cefff;
+ --guidance-text:#eff9ff;--guidance-muted:#c4d8e6;
+ position:absolute;inset:0;z-index:5;pointer-events:none;
+ color:var(--guidance-text);
+}
+html[data-theme="cyberpunk"] .mg-navigation.mg-web-driving .mg-web-guidance{
+ --guidance-panel:#261432;--guidance-border:#bd45d5c7;
+ --guidance-accent:#5ee8ff;--guidance-text:#ffeaff;--guidance-muted:#d8b3df;
+}
+html[data-theme="liquidglass"] .mg-navigation.mg-web-driving .mg-web-guidance{
+ --guidance-panel:#142a42;--guidance-border:#91cdf7b0;
+ --guidance-accent:#b3efff;--guidance-text:#f5faff;--guidance-muted:#d7e8f6;
+}
+.mg-web-guidance .mg-guidance-cue{
+ position:absolute;z-index:6;top:max(7px,env(safe-area-inset-top,0px));
+ left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ width:min(395px,calc(100% - 145px));box-sizing:border-box;
+ padding:10px 13px;pointer-events:auto;overflow:hidden;
+ border-radius:14px;border:1px solid var(--guidance-border);
+ background:var(--guidance-panel);box-shadow:0 7px 22px #06132180;
+}
+.mg-web-guidance .mg-guidance-turn{
+ display:grid;grid-template-columns:56px minmax(0,1fr);gap:10px;
+ align-items:center;min-width:0;
+}
+.mg-web-guidance .mg-guidance-turn #mg-next-arrow{
+ font-size:52px;color:var(--guidance-accent);font-weight:800;
+ text-align:center;line-height:1;
+}
+.mg-web-guidance .mg-guidance-instruction{min-width:0;display:flex;flex-direction:column;gap:2px}
+.mg-web-guidance #mg-next-distance{font-size:clamp(19px,3.3vh,29px);line-height:1.05;color:#fff}
+.mg-web-guidance #mg-next-turn{
+ font-size:clamp(13px,2.15vh,18px);line-height:1.16;
+ display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;
+ overflow:hidden;overflow-wrap:anywhere;
+}
+.mg-navigation.mg-web-driving .mg-guidance-trip{
+ position:absolute;z-index:8;left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ right:auto;width:max-content;max-width:calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px)));
+ bottom:max(7px,env(safe-area-inset-bottom,0px));
+ height:66px;display:flex;gap:6px;box-sizing:border-box;
+ padding:3px 6px;align-items:center;
+ border:1px solid var(--guidance-border);border-radius:14px;
+ background:var(--guidance-panel);box-shadow:0 8px 24px #07101c89;
+ /* Read-only trip data: tapping it must not open the dashboard. */
+ pointer-events:none;
+}
+.mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
+ bottom:calc(80px + env(safe-area-inset-bottom,0px));
+ /* In fullscreen, keep Road Assist warnings above the trip footer. */
+}
+/* The split already shows trip information on the right. With the lower
+   trip card gone, Road Assist can use the newly freed map space. */
+.mg-navigation.mg-web-driving:has(.mg-web-guidance-split) .mevi-ra-overlay-shell{
+ bottom:calc(10px + env(safe-area-inset-bottom,0px));
+}
+.mg-navigation.mg-web-driving .mg-my-location{
+ bottom:auto;top:calc(max(8px,env(safe-area-inset-top,0px)) + 60px);right:calc(clamp(8px,1.2vw,16px) + 56px);z-index:9;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-web-guidance .mg-guidance-cue{padding:6px 9px;width:min(380px,calc(100% - 145px))}
+ .mg-web-guidance .mg-guidance-turn{grid-template-columns:40px minmax(0,1fr);gap:6px}
+ .mg-web-guidance .mg-guidance-turn #mg-next-arrow{font-size:39px}
+ .mg-web-guidance #mg-next-distance{font-size:19px}
+ .mg-web-guidance #mg-next-turn{font-size:13px;-webkit-line-clamp:2}
+ .mg-navigation.mg-web-driving .mg-guidance-trip{height:62px}
+ .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+}
+@media(orientation:portrait){
+ .mg-web-guidance .mg-guidance-cue{left:max(8px,env(safe-area-inset-left,0px));width:calc(100% - 16px)}
+ .mg-navigation.mg-web-driving .mg-guidance-trip{left:max(8px,env(safe-area-inset-left,0px))}
+}
+
+/* Shared route detail rows now render only inside the right dashboard. */
+.mg-guidance-detail-list{display:flex;flex-direction:column;margin:0;padding:0}
+.mg-guidance-detail-row{
+ display:grid;grid-template-columns:minmax(94px,38%) minmax(0,1fr);
+ gap:10px;align-items:start;padding:9px 5px;
+ border-bottom:1px solid #789ab54a;font-size:clamp(12px,1.85vh,15px);
+ line-height:1.4;
+}
+.mg-guidance-detail-row dt{font-weight:650;color:var(--guidance-muted);hyphens:auto;overflow-wrap:anywhere}
+.mg-guidance-detail-row dd{margin:0;font-weight:650;color:var(--guidance-text);
+ overflow-wrap:anywhere;white-space:pre-line}
+.mg-navigation.mg-web-driving .mg-my-location[hidden]{display:none!important}
+/* Real Road Assist warnings use the native banner position, not a permanent
+   right-hand status box. Empty/no-alert states now render no overlay at all. */
+.mg-navigation.mg-web-driving .mevi-ra-overlay-shell{
+ right:auto!important;left:50%!important;transform:translateX(-50%);
+ width:min(350px,calc(100% - 160px));
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-guidance-detail-row{padding:7px 4px;gap:7px;font-size:12px}
+ .mg-navigation.mg-web-driving .mevi-ra-overlay-shell{width:min(330px,calc(100% - 150px))}
+}
+
+
+
+/* The iPhone's fixed map extends behind the left dock while a right split
+   is open. Its overlay coordinates therefore start at the viewport edge, not
+   the visible map edge. Always retain the dock + notch offset for all three
+   navigation surfaces, including the bottom trip entry. */
+.screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-web-guidance{
+ --mg-split-nav-left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ --mg-split-nav-right:max(8px,env(safe-area-inset-right,0px));
+}
+.screen:has(> .mg-nav-dashboard-side) .mg-web-guidance .mg-guidance-cue{
+ left:var(--mg-split-nav-left);
+ width:min(395px,calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right)));
+}
+.screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-guidance-trip{
+ left:var(--mg-split-nav-left);
+ max-width:calc(100% - var(--mg-split-nav-left) - var(--mg-split-nav-right));
+}
+/* In compact iPhone landscape, the map is position:fixed at 100vw. Its
+   apparent width is NOT the space beside the 40%-wide dashboard. Also limit
+   the guidance panels before they can extend under the right split. */
+@media(orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .screen:has(> .mg-nav-dashboard-side) .mg-web-guidance .mg-guidance-cue{
+  width:min(395px,calc(60vw - var(--mg-split-nav-left) - 8px));
+ }
+ .screen:has(> .mg-nav-dashboard-side) .mg-navigation.mg-web-driving .mg-guidance-trip{
+  max-width:calc(60vw - var(--mg-split-nav-left) - 8px);
+ }
+}
+/* Shared arrival card outside the native map touch area. */
+.mg-native-arrival .mg-native-setup{display:none!important}
+.mg-arrival-pane{justify-content:center}
+.mg-arrival-content{display:flex;flex-direction:column;align-items:stretch;gap:clamp(8px,2vh,16px);text-align:center;min-width:0}
+.mg-arrival-content h2{font-size:clamp(19px,3.8vh,32px);margin:0;line-height:1.15}
+.mg-arrival-content p{font-size:clamp(13px,2.5vh,21px);margin:0;overflow-wrap:anywhere;color:var(--route-muted)}
+.mg-arrival-actions{display:flex;flex-direction:column;gap:clamp(6px,1.5vh,12px)}
+.mg-navigation .mg-arrival-pane button{min-height:44px;font-weight:750;font-size:clamp(12px,2.5vh,19px)}
+
+
+/* Minimal Web map surface (iOS PWA/browser).
+   Scope these styles to the Maps JavaScript container only; the native
+   Google Navigation SDK in the S20 APK does not use this DOM.
+   This deliberately hides Google attribution and therefore is NOT compliant
+   with Google Maps Platform's current attribution requirements. */
+.mg-navigation #mg-map .gm-style-cc,
+.mg-navigation #mg-map .gmnoprint.gm-style-cc,
+.mg-navigation #mg-map .gm-style a[href*="google.com/maps"],
+.mg-navigation #mg-map .gm-style a[href*="maps.google.com"],
+.mg-navigation #mg-map .gm-style a[title*="Google Maps"],
+.mg-navigation #mg-map .gm-style a[aria-label*="Google Maps"],
+.mg-navigation #mg-map .gm-style img[alt="Google"],
+.mg-navigation #mg-map .gm-style img[alt="Google Maps"]{
+ display:none!important;
+}
+
+
+/* Match the Google Maps +/- controls: anchor directly at the visible map edge.
+   On iPhone landscape env(safe-area-inset-right) can be large even when the
+   notch is on the opposite side. The map/dock already handles the cutout.
+   In split view the map itself is only 66vw wide: do NOT subtract the side
+   panel width a second time, or buttons drift into the middle of the map. */
+.mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{
+ position:absolute;z-index:8;top:50%;
+ /* One narrow column, flush with the visible map's right edge. The former
+    two-button search/Gemini row must not reserve horizontal space. */
+ right:clamp(8px,1.2vw,16px);left:auto;
+ width:48px;min-width:44px;max-width:48px;
+ align-items:center;
+ transform:translateY(-50%);pointer-events:auto;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{
+  width:44px;max-width:44px;
+ }
+}
+
+/* Navi full map: one small, opaque system bar in the top-right corner.
+   Dashboard split keeps only clock + route actions; there are no duplicate
+   update/version controls anywhere else in the cockpit. */
+.screen > .mg-nav-fullscreen-head{
+ position:absolute;z-index:30;top:max(8px,env(safe-area-inset-top,0px));
+ right:max(8px,env(safe-area-inset-right,0px));
+ max-width:calc(100% - 24px);min-height:44px;
+ display:flex;align-items:center;gap:clamp(7px,1vw,14px);
+ border:1px solid #4688a1;border-radius:14px;
+ background:rgba(12,32,47,.96);color:#f0faff;
+ box-shadow:0 5px 20px #06132180;padding:5px 7px 5px 12px;
+ pointer-events:auto;-webkit-tap-highlight-color:transparent;
+}
+.mg-nav-fullscreen-head .mg-dash-clock{
+ font-size:clamp(20px,4.2vh,34px);font-weight:820;line-height:1;
+ color:#f0faff;white-space:nowrap;font-variant-numeric:tabular-nums;
+}
+.mg-nav-fullscreen-version{
+ min-width:0;display:flex;flex-direction:column;justify-content:center;gap:2px;
+ font-size:clamp(11px,1.8vh,16px);font-weight:680;
+ color:#c6dbe8;line-height:1.16;
+}
+.mg-nav-fullscreen-version span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mg-nav-fullscreen-version #updateMessage{color:#72edff}
+.mg-nav-fullscreen-version #updateMessage:empty{display:none}
+.mg-nav-fullscreen-update{
+ flex:0 0 auto;display:grid;place-items:center;
+ width:44px;height:44px;min-width:44px;min-height:44px;
+ padding:7px;margin:0;border:1px solid #72edff;border-radius:12px;
+ background:#12384b;color:#72edff;cursor:pointer;
+}
+.mg-nav-fullscreen-update .toolbar-icon,
+.mg-nav-fullscreen-update .toolbar-icon svg{display:block;width:100%;height:100%}
+.mg-nav-fullscreen-update .tool-label{display:none}
+.mg-nav-fullscreen-update:disabled{opacity:.7}
+.mg-nav-fullscreen-update:focus-visible{outline:2px solid #72edff;outline-offset:2px}
+html[data-theme="cyberpunk"] .screen > .mg-nav-fullscreen-head{
+ background:rgba(26,12,44,.97);border-color:#a32d9b;
+}
+html[data-theme="cyberpunk"] .mg-nav-fullscreen-update{color:#ff64e8;border-color:#ff64e8;background:#2a1040}
+html[data-theme="liquidglass"] .screen > .mg-nav-fullscreen-head{
+ background:rgba(30,53,78,.94);border-color:#a6cce6;
+}
+html[data-theme="liquidglass"] .mg-nav-fullscreen-update{color:#b9eaff;border-color:#b9eaff;background:#27465c}
+@media(orientation:landscape) and (max-height:480px){
+ .screen > .mg-nav-fullscreen-head{gap:7px;padding:3px 5px 3px 9px}
+ .mg-nav-fullscreen-head .mg-dash-clock{font-size:clamp(19px,5.3vh,27px)}
+ .mg-nav-fullscreen-version{font-size:11px}
+ .mg-nav-fullscreen-update{width:44px;height:44px}
+}
+
+/* During active guidance leave only the clock at the outer top-right.
+   Normal version/update controls come back when guidance ends. */
+.screen > .mg-nav-fullscreen-head[data-guidance-active="true"]{
+ gap:0;padding:5px 12px;
+}
+.screen > .mg-nav-fullscreen-head[data-guidance-active="true"] .mg-nav-fullscreen-version,
+.screen > .mg-nav-fullscreen-head[data-guidance-active="true"] .mg-nav-fullscreen-update{
+ display:none;
+}
+/* Extend the existing arrival card in place, never add a separate overlay.
+   The two-line arrival stays visible; Spotify shrinks only the text region. */
+.mg-navigation.mg-web-driving .mg-guidance-trip:has(.mevi-trip.has-spotify){
+ width:min(520px,calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px))));
+}
+.mg-navigation.mg-web-driving .mg-guidance-trip .mevi-trip-spotify,
+.mg-navigation.mg-web-driving .mg-guidance-trip .mevi-trip-spotify button{pointer-events:auto}
+/* Preserve the existing left dock/safe-area offset in compact landscape. */
+
+/* iPhone landscape: shorten the joined arrival/Spotify strip without moving it
+   across the dock or safe areas. Only Spotify's title viewport may scroll. */
+@media(orientation:landscape) and (max-height:480px){
+ .mg-navigation.mg-web-driving .mg-guidance-trip:has(.mevi-trip.has-spotify){
+  width:min(340px,calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px))));
+ }
+}
+/* Spotify on an idle map: same compact title, artist and controls as the
+   navigation trip, but without the arrival block. It remains hidden until
+   the existing session provides a valid Spotify playback snapshot. */
+.mg-navigation .mg-spotify-idle-trip{
+ position:absolute;z-index:8;box-sizing:border-box;
+ left:calc(max(7px,env(safe-area-inset-left,0px)) + clamp(78px,7.5vw,110px));
+ bottom:max(7px,env(safe-area-inset-bottom,0px));
+ width:min(248px,calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px))));
+ height:66px;padding:3px 8px;
+ border:1px solid var(--guidance-border,#91cdf7);border-radius:14px;
+ background:var(--guidance-panel,#102536);box-shadow:0 8px 24px #07101c89;
+ pointer-events:auto;
+}
+.mg-navigation .mg-spotify-idle-trip[hidden]{display:none!important}
+.mg-navigation .mg-spotify-idle-trip .mevi-trip-spotify-only{width:100%;height:100%;min-height:0}
+.mg-navigation .mg-spotify-idle-trip .mevi-trip-spotify{flex:1 1 auto;min-width:0}
+.mg-navigation .mg-spotify-idle-trip .mevi-trip-spotify button{pointer-events:auto}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-navigation .mg-spotify-idle-trip{
+  height:62px;
+  width:min(220px,calc(100% - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - max(8px,env(safe-area-inset-right,0px))));
+ }
+}
+@media(orientation:landscape){
+ .screen:has(> .side) .mg-navigation .mg-spotify-idle-trip{
+  max-width:calc(60vw - max(7px,env(safe-area-inset-left,0px)) - clamp(78px,7.5vw,110px) - 12px);
+ }
+}
+
+
+/* Preview list: show the exact selected Google Places street/locality below
+   the chain name; a generic franchise label alone is not an identity. */
+.mg-waypoint-row span{min-width:0;overflow-wrap:anywhere}
+.mg-waypoint-row span strong{display:block;font-weight:800}
+.mg-waypoint-row span small{display:block;margin-top:3px;font-size:.85em;
+ line-height:1.25;opacity:.85;white-space:normal;overflow-wrap:anywhere}
+
+
+/* Route-preview legend matches markers on the EXISTING Google map.
+   Blue number = planned Google Places stop; amber ! = matched HA camera. */
+.mg-route-preview-map-legend{
+ display:flex;align-items:center;flex-wrap:wrap;gap:clamp(9px,1.8vw,18px);
+ padding:6px 0;color:#d6eafa;font-size:clamp(12px,1.9vh,16px);
+ font-weight:650;line-height:1.25
+}
+.mg-route-preview-map-legend span{display:inline-flex;align-items:center;gap:7px}
+.mg-route-preview-map-legend i{
+ display:inline-grid;place-items:center;flex:0 0 23px;width:23px;height:23px;
+ border:2px solid #f2fbff;border-radius:50%;font-style:normal;
+ font-size:13px;font-weight:900;box-shadow:0 2px 7px #0005
+}
+.mg-route-preview-pin-stop{background:#177ce8;color:#fff}
+.mg-route-preview-pin-camera{background:#f6ad24;color:#101820}
+
+/* In the compact landscape cockpit keep the compass above, not on top of, the three map actions. */
+@media(orientation:landscape) and (max-height:480px){
+ .mg-navigation.mg-web-driving .mg-map-orientation{top:max(8px,env(safe-area-inset-top,0px))}
+ .mg-navigation.mg-web-driving .mg-my-location{top:max(8px,env(safe-area-inset-top,0px));right:calc(clamp(8px,1.2vw,16px) + 52px)}
+ .mg-navigation.mg-web-driving .mg-web-guidance > .mevi-nav-controls{top:clamp(132px,50%,calc(100% - 78px))}
+}

@@ -1,0 +1,91 @@
+/* MeviCar Next · Wer ist schuld? – responsive landscape bottle spinner */
+.wis-root{
+ --wis-neon:#63e7ed;
+ display:flex;align-items:center;justify-content:center;
+ width:100%;height:100%;min-height:0;min-width:0;overflow:hidden;
+ box-sizing:border-box;padding:clamp(4px,1.6vh,16px);
+ gap:clamp(8px,2vw,34px);color:#ecfaff;
+ background:radial-gradient(ellipse at 33% 55%,#123b4f 0%,#0a1b2f 56%,#070f1d 100%);
+}
+.wis-wheel-wrap{display:flex;align-items:center;justify-content:center;flex:1 1 auto;min-width:0;min-height:0;height:100%}
+.wis-wheel{position:relative;flex:none;width:min(100%,min(66vh,520px));height:auto;aspect-ratio:1;
+ border-radius:50%;isolation:isolate;filter:drop-shadow(0 10px 24px #0008);overflow:visible}
+.wis-wheel-face{position:absolute;inset:3%;border-radius:50%;background:var(--wis-wedges);
+ border:3px solid #4eb4c6;box-shadow:0 0 0 5px #08293c,0 0 0 7px #4fa5bb77,0 0 35px #2fe9ee20,inset 0 0 55px #40abcb12}
+.wis-wheel-face:after{content:"";position:absolute;inset:15%;border:1px dashed #83f7e657;border-radius:50%;box-shadow:inset 0 0 22px #072035}
+.wis-wheel-glow{position:absolute;inset:26%;background:radial-gradient(circle,#15d0cf2f,transparent 69%);pointer-events:none}
+.wis-party{position:absolute;display:flex;align-items:center;justify-content:center;
+ transform:translate(-50%,-50%);font-size:clamp(10px,1.3vw,15px);font-weight:800;
+ letter-spacing:.015em;line-height:1.1;padding:6px 9px;min-height:27px;max-width:30%;
+ text-align:center;overflow-wrap:anywhere;white-space:normal;
+ color:#e9fbff;background:#123148ed;border:1px solid #38869c;border-radius:9px;
+ box-shadow:0 3px 8px #0007;z-index:3;transition:background .15s,border-color .15s,color .15s}
+.wis-party.wis-chosen{background:#f5c66b;color:#212536;border-color:#fff6c2;box-shadow:0 0 18px #facc7499;z-index:5}
+.wis-bottle{position:absolute;z-index:4;inset:9%;width:82%;height:82%;border:0!important;background:none!important;
+ padding:0!important;display:flex;align-items:center;justify-content:center;border-radius:50%;
+ touch-action:manipulation;will-change:transform;transition:none;cursor:pointer}
+.wis-bottle:disabled{cursor:wait;opacity:1}
+.wis-bottle-shape{display:block;width:100%;height:100%;filter:drop-shadow(3px 6px 7px #000a)}
+.wis-bottle:focus-visible{outline:2px solid #fff7c7;outline-offset:3px}
+.wis-hub{position:absolute;z-index:6;left:50%;top:50%;width:9px;height:9px;transform:translate(-50%,-50%);
+ border-radius:50%;background:#fff8da;border:2px solid #16718c;box-shadow:0 0 8px #40fff7}
+.wis-panel{display:flex;flex-direction:column;align-items:stretch;gap:clamp(5px,1.2vh,12px);
+ width:clamp(190px,28%,360px);max-height:100%;min-width:0;flex:none;overflow-y:auto;scrollbar-width:thin;box-sizing:border-box;padding:4px 2px}
+.wis-heading span{font-size:clamp(10px,1.2vh,13px);letter-spacing:.17em;color:#64dbe0;font-weight:800}
+.wis-heading h2{font-size:clamp(18px,3.8vh,34px);line-height:1.12;letter-spacing:.02em;margin:3px 0 1px}
+.wis-heading p{font-size:clamp(11px,1.7vh,15px);line-height:1.25;margin:3px 0;color:#b3cddd}
+.wis-result{min-height:76px;background:linear-gradient(120deg,#132f45,#0d2738);
+ border:1px solid #467c91;border-radius:14px;display:flex;flex-direction:column;justify-content:center;align-items:center;
+ padding:clamp(8px,1.7vh,18px);gap:6px;text-align:center;box-shadow:inset 0 0 18px #123c5544}
+.wis-result small{font-size:10px;letter-spacing:.15em;color:#99d4e2;font-weight:800}
+.wis-result strong{font-size:clamp(16px,3vh,29px);line-height:1.16;font-weight:900}
+.wis-result.wis-has-result{border-color:#f9cf83;background:linear-gradient(125deg,#3e341f,#183446);box-shadow:0 0 22px #ffc46d35}
+.wis-result.wis-has-result strong{color:#ffdd8d;text-shadow:0 1px 14px #ffb54344}
+.wis-spin{width:100%;min-height:48px;padding:10px 12px!important;font-size:clamp(14px,2.5vh,20px)!important;font-weight:900!important;
+ letter-spacing:.04em;border-radius:12px!important;border:1px solid #bffcff!important;
+ background:linear-gradient(120deg,#116985,#0b9e94)!important;box-shadow:0 6px 18px #00b4b32e;color:white!important}
+.wis-spin:disabled{opacity:.75;cursor:wait}
+.wis-count{color:#99b9c6;font-size:11px;text-align:center}
+.wis-config{border-top:1px solid #40667966;padding-top:4px}
+.wis-config summary{cursor:pointer;color:#81e4ea;font-size:12px;font-weight:750;list-style:none;min-height:24px;display:flex;align-items:center}
+.wis-config summary:after{content:"▾";margin-left:auto}
+.wis-config[open] summary:after{content:"▴"}
+.wis-config-inner{display:flex;flex-direction:column;gap:7px;padding-top:7px}
+.wis-chips{display:flex;gap:5px;flex-wrap:wrap;max-height:95px;overflow-y:auto}
+.wis-chip{display:inline-flex;align-items:center;gap:4px;background:#1a4256;border:1px solid #356c7f;
+ border-radius:30px;padding:3px 5px 3px 9px;font-size:11px;color:#e5faff}
+.wis-chip button{border:0;background:#255468;border-radius:50%;width:19px;height:19px;min-height:0;padding:0;color:#c8eaf0;font-size:13px}
+.wis-add{display:flex;gap:5px;min-width:0}
+.wis-add input{min-width:0;flex:1;background:#0c2234;border:1px solid #3b7584;color:#f1fbff;border-radius:8px;padding:5px 8px;font-size:12px}
+.wis-add button{width:35px;flex:none;min-height:32px;padding:0;font-size:20px;font-weight:800;background:#1b6374}
+.wis-restore{font-size:11px!important;min-height:28px;padding:3px 6px!important}
+.wis-config-inner small{font-size:10px;color:#8daeba}
+.wis-feedback{font-size:11px;color:#dfe28e;min-height:0;line-height:1.2}
+.wis-feedback:empty{display:none}
+[data-theme=cyberpunk] .wis-root{--wis-neon:#fc6bcd;background:radial-gradient(ellipse at 40% 55%,#37213d,#140e2a 72%)}
+[data-theme=cyberpunk] .wis-wheel-face{border-color:#f47ad7;box-shadow:0 0 0 5px #251531,0 0 0 7px #b85aa477,0 0 25px #fa67cc33}
+[data-theme=cyberpunk] .wis-spin{background:linear-gradient(110deg,#8c347d,#b2569a)!important;border-color:#fdade5!important}
+[data-theme=liquidglass] .wis-root{background:radial-gradient(ellipse at 40% 50%,#25425b,#19293b 72%)}
+[data-theme=liquidglass] .wis-panel,.wis-result{backdrop-filter:blur(12px)}
+.wis-root.wis-split{flex-direction:column;gap:2px;padding:3px}
+.wis-split .wis-wheel-wrap{flex:0 1 56%;max-height:56%;width:100%}
+.wis-split .wis-wheel{width:min(100%,min(47vh,230px));max-height:100%}
+.wis-split .wis-party{font-size:clamp(7px,1.25vh,10px);padding:2px 4px;min-height:16px;max-width:32%;border-radius:5px}
+.wis-split .wis-panel{width:100%;max-width:100%;max-height:44%;flex:1;overflow-y:auto;gap:4px;padding:3px 5px}
+.wis-split .wis-heading h2{font-size:clamp(14px,2.2vh,19px);margin:0}
+.wis-split .wis-heading span,.wis-split .wis-heading p,.wis-split .wis-count{display:none}
+.wis-split .wis-result{min-height:38px;padding:5px;gap:0}
+.wis-split .wis-result strong{font-size:clamp(12px,2vh,18px)}
+.wis-split .wis-result small{font-size:8px}
+.wis-split .wis-spin{min-height:34px;padding:5px!important;font-size:13px!important}
+.wis-split .wis-config summary{min-height:22px;font-size:10px}
+@media(max-height:480px){
+ .wis-root:not(.wis-split){padding:3px 8px;gap:9px}
+ .wis-root:not(.wis-split) .wis-wheel{width:min(100%,min(65vh,330px))}
+ .wis-root:not(.wis-split) .wis-panel{gap:3px;width:clamp(180px,34%,280px)}
+ .wis-heading h2{font-size:20px}.wis-heading p{display:none}
+ .wis-result{min-height:54px;padding:5px}.wis-result strong{font-size:18px}
+ .wis-spin{min-height:38px;padding:5px!important;font-size:14px!important}
+ .wis-party{font-size:10px;padding:4px 6px;min-height:21px}
+}
+@media(prefers-reduced-motion:reduce){.wis-party{transition:none}.wis-bottle{will-change:auto}}

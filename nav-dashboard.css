@@ -1,0 +1,1076 @@
+/* Shared, landscape-first active-navigation dashboard: browser and APK WebView. */
+.mg-nav-dashboard{
+ --dash-bg:#102434;--dash-border:#427b95;--dash-ink:#f0faff;--dash-sub:#b9d5e5;--dash-accent:#72edff;
+ display:grid;grid-template-columns:minmax(0,1.18fr) repeat(2,minmax(0,1fr));
+ grid-template-rows:repeat(3,minmax(0,1fr));gap:clamp(5px,.85vw,12px);
+ width:100%;height:100%;min-height:0;min-width:0;box-sizing:border-box;
+ color:var(--dash-ink);font-family:system-ui,-apple-system,"Roboto",sans-serif;
+}
+.mg-nav-dashboard *{box-sizing:border-box}
+.mg-dash-cell{
+ display:flex;flex-direction:column;justify-content:space-between;min-height:0;min-width:0;
+ padding:clamp(6px,1.3vh,14px);border:1px solid var(--dash-border);
+ border-radius:clamp(9px,1.4vw,17px);background:var(--dash-bg);overflow:hidden;
+}
+.mg-dash-label{font-size:clamp(10px,1.7vh,17px);font-weight:700;line-height:1.1;color:var(--dash-sub);overflow-wrap:anywhere}
+.mg-dash-cell>strong{font-size:clamp(17px,3.6vh,36px);font-weight:820;line-height:1.04;white-space:nowrap;letter-spacing:-.035em}
+.mg-dash-speed{grid-column:1;grid-row:1/span 2;justify-content:space-around;border-color:var(--dash-accent);background:linear-gradient(155deg,#122e40,#071b2a)}
+/* The noncompact grid keeps its original large speed tile, independently
+   of the chronological DOM order used by the right-side split. */
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-arrival{grid-column:2;grid-row:1}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-time{grid-column:3;grid-row:1}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-distance{grid-column:2;grid-row:2}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-spotify{grid-column:3;grid-row:2/span 2}
+.mg-dash-value{display:flex;align-items:baseline;gap:4px;min-width:0}
+.mg-dash-value strong{font-weight:850;line-height:1;letter-spacing:-.05em;white-space:nowrap}
+.mg-dash-value small{font-size:clamp(10px,1.7vh,18px);font-weight:700;color:var(--dash-sub);white-space:nowrap}
+.mg-dash-speed .mg-dash-value{flex-direction:column;align-items:center;gap:2px}
+.mg-dash-speed .mg-dash-value strong{font-size:clamp(50px,9.8vw,130px);color:var(--dash-accent)}
+/* Visual speeding alert only when a known limit exceeds the configured margin.
+   Preserve legibility in all themes and never hide the numerical speed. */
+.mg-dash-speed-alert[hidden]{display:none!important}
+.mg-dash-speed-alert{
+ display:block;align-self:center;max-width:100%;
+ font-size:clamp(10px,2vh,16px);line-height:1.05;
+ color:#ffdce0;font-weight:780;white-space:nowrap;
+}
+.mg-nav-dashboard .mg-dash-speed[data-overspeed="true"]{
+ border:2px solid #f45b66!important;
+ background:linear-gradient(155deg,#4e1625,#2c1223)!important;
+}
+.mg-nav-dashboard .mg-dash-speed[data-overspeed="true"] .mg-dash-value strong{
+ color:#ff6974!important;
+ text-shadow:0 0 7px rgba(255,77,100,.28);
+}
+.mg-nav-dashboard .mg-dash-speed[data-overspeed="true"] .mg-dash-label{color:#ffd6df}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dashboard-compact .mg-dash-speed-alert{font-size:clamp(9px,2.3vh,12px)}
+}
+.mg-dash-speed .mg-dash-value small{font-size:clamp(16px,2.7vh,27px)}
+.mg-dash-average .mg-dash-value strong,.mg-dash-maximum .mg-dash-value strong{font-size:clamp(21px,4vh,43px)}
+.mg-dash-camera{grid-column:1/span 2;grid-row:3}
+.mg-dash-camera strong{font-size:clamp(22px,4.8vh,42px)!important;line-height:1.06!important;white-space:nowrap!important;font-variant-numeric:tabular-nums}
+/* The next-camera tile is a real touch target. Yellow means the current
+   route is still being scanned; scan failure is not reported as zero cameras. */
+.mg-nav-dashboard .mg-dash-camera{
+ position:relative;padding:0!important;font:inherit;color:var(--dash-ink);
+ cursor:default;text-align:left;
+}
+.mg-nav-dashboard .mg-dash-camera-open{
+ display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;
+ width:100%;height:100%;min-width:0;min-height:0;
+ border:0;border-radius:inherit;background:transparent;color:inherit;
+ padding:clamp(6px,1.3vh,14px);font:inherit;text-align:left;cursor:pointer;
+ -webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.mg-nav-dashboard .mg-dash-camera-open .mg-dash-label{padding-right:42px}
+.mg-nav-dashboard .mg-dash-camera-open:focus-visible,
+.mg-nav-dashboard .mg-dash-camera-refresh:focus-visible{
+ outline:2px solid var(--dash-accent);outline-offset:-2px;
+}
+.mg-nav-dashboard .mg-dash-camera-open:disabled{cursor:default}
+.mg-nav-dashboard .mg-dash-camera-refresh{
+ position:absolute;z-index:1;top:3px;right:3px;
+ display:grid;place-items:center;width:40px;height:40px;
+ min-width:0;min-height:0;padding:8px;
+ border:1px solid transparent;border-radius:50%;
+ background:transparent;color:var(--dash-sub);
+ cursor:pointer;opacity:.72;touch-action:manipulation;
+ -webkit-tap-highlight-color:transparent;
+}
+.mg-nav-dashboard .mg-dash-camera-refresh svg{
+ width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;
+ stroke-linecap:round;stroke-linejoin:round;
+}
+.mg-nav-dashboard .mg-dash-camera-refresh:not(:disabled):active,
+.mg-nav-dashboard .mg-dash-camera-refresh:not(:disabled):hover{
+ color:var(--dash-accent);background:rgba(114,237,255,.1);opacity:1;
+}
+.mg-nav-dashboard .mg-dash-camera-refresh:disabled{opacity:.26;cursor:default}
+.mg-dash-camera[data-camera-state="scanning"] .mg-dash-camera-refresh svg{
+ animation:mg-dash-camera-spin 1.2s linear infinite;
+}
+@keyframes mg-dash-camera-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){
+ .mg-dash-camera[data-camera-state="scanning"] .mg-dash-camera-refresh svg{animation:none}
+}
+.mg-dash-camera-hint{font-size:clamp(10px,1.6vh,14px);color:var(--dash-sub);font-weight:650;line-height:1.05}
+.mg-dash-camera[data-camera-state="scanning"] [data-dash="camera"],
+.mg-dash-camera[data-camera-state="idle"] [data-dash="camera"]{
+ color:#ffd766!important;
+}
+.mg-dash-camera[data-camera-state="error"] [data-dash="camera"]{color:#ff9a9a!important}
+.mg-dash-camera[data-camera-state="unavailable"] [data-dash="camera"]{color:var(--dash-sub)!important}
+@media(orientation:landscape) and (max-height:420px){
+ .mg-dashboard-compact .mg-dash-camera-hint{font-size:10px}
+}
+.mg-dash-maximum{grid-column:3;grid-row:3}
+.mg-dash-maximum .mg-dash-value strong{font-size:clamp(25px,5.5vh,52px)}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-cell{padding:5px 7px}
+ .mg-dash-label{font-size:clamp(10px,2.3vh,13px)}
+ .mg-dash-cell>strong{font-size:clamp(16px,4.8vh,24px)}
+ .mg-dash-speed .mg-dash-value strong{font-size:clamp(46px,9.4vw,90px)}
+ .mg-dash-maximum .mg-dash-value strong{font-size:clamp(20px,5vh,34px)}
+}
+@media(max-width:520px){
+ .mg-nav-dashboard:not(.mg-dashboard-compact){grid-template-columns:1fr 1fr;grid-template-rows:repeat(4,minmax(0,1fr))}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-speed{grid-column:1;grid-row:1/span 2}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-arrival{grid-column:2;grid-row:1}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-time{grid-column:2;grid-row:2}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-distance{grid-column:1;grid-row:3}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-spotify{grid-column:2;grid-row:3/span 2}
+ .mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-camera{grid-column:1;grid-row:4}
+ 
+ .mg-dash-speed .mg-dash-value strong{font-size:clamp(40px,12vw,65px)}
+}
+
+/* Shared compact raster in the ordinary right .side pane of the split screen;
+   browser and APK WebView render the identical markup. */
+.side.mg-nav-dashboard-side{
+ overflow:hidden;min-height:0;min-width:0;
+ padding:clamp(4px,.75vw,12px);gap:clamp(3px,.6vh,7px);
+}
+.mg-dashboard-split-content{flex:1;min-width:0;min-height:0;overflow:hidden}
+
+/* Dashboard panel: head (clock, build, update), controls, trip data. */
+.mg-dash-panel{
+ --dash-bg:#102434;--dash-border:#427b95;--dash-ink:#f0faff;--dash-sub:#b9d5e5;--dash-accent:#72edff;
+ --dash-button:#12384b;--dash-touch:clamp(44px,7.4vh,72px);
+ display:flex;flex-direction:column;gap:clamp(4px,.9vh,10px);
+ width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;
+ color:var(--dash-ink);font-family:system-ui,-apple-system,"Roboto",sans-serif;
+}
+.mg-dash-panel *{box-sizing:border-box}
+.mg-dash-panel>.mg-nav-dashboard{flex:1 1 0;height:auto}
+.mg-dash-head{
+ flex:0 0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;
+ gap:clamp(6px,.9vw,14px);min-width:0;min-height:var(--dash-touch);
+}
+.mg-dash-clock{
+ font-size:clamp(26px,5.6vh,54px);font-weight:820;line-height:1;letter-spacing:-.04em;
+ font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--dash-ink);
+}
+.mg-dash-build{display:flex;flex-direction:column;justify-content:center;gap:1px;min-width:0}
+.mg-dash-build span{
+ font-size:clamp(10px,1.7vh,15px);font-weight:650;line-height:1.15;color:var(--dash-sub);
+ white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;
+}
+.mg-dash-build #updateMessage{color:var(--dash-accent)}
+.mg-dash-build #updateMessage:empty{display:none}
+.side.mg-nav-dashboard-side .mg-dash-update,
+.side.mg-nav-dashboard-side .mg-dash-action{
+ display:inline-flex;align-items:center;justify-content:center;margin:0;min-width:0;
+ border:1px solid var(--dash-border);border-radius:clamp(9px,1.2vw,15px);
+ background:var(--dash-button);color:var(--dash-ink);box-shadow:none;cursor:pointer;
+ font:inherit;font-weight:750;-webkit-tap-highlight-color:transparent;touch-action:manipulation;
+}
+.side.mg-nav-dashboard-side .mg-dash-update{
+ width:var(--dash-touch);height:var(--dash-touch);min-width:44px;min-height:44px;padding:0;flex:none;
+}
+.mg-dash-update .toolbar-icon{display:inline-flex;width:58%;height:58%}
+.mg-dash-update .toolbar-icon svg{width:100%;height:100%}
+.mg-dash-update .tool-label{display:none}
+.mg-dash-update:disabled{opacity:.72}
+.mg-dash-actions{
+ flex:0 0 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:clamp(4px,.7vw,10px);min-width:0;
+}
+.side.mg-nav-dashboard-side .mg-dash-action{
+ flex-direction:row;gap:clamp(4px,.5vw,9px);min-height:var(--dash-touch);
+ padding:2px clamp(3px,.5vw,10px);font-size:clamp(12px,2.1vh,19px);line-height:1.08;
+}
+.mg-dash-action span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mg-dash-icon{flex:none;width:clamp(17px,3vh,28px);height:clamp(17px,3vh,28px);fill:currentColor}
+.side.mg-nav-dashboard-side .mg-dash-fullmap{border-color:var(--dash-accent);color:var(--dash-accent)}
+.side.mg-nav-dashboard-side :is(.mg-dash-update,.mg-dash-action):active{filter:brightness(1.25)}
+.side.mg-nav-dashboard-side :is(.mg-dash-update,.mg-dash-action):focus-visible{outline:2px solid var(--dash-accent);outline-offset:1px}
+html[data-theme="cyberpunk"] :is(.mg-dash-panel,.mg-nav-dashboard){
+ --dash-bg:#1a0c2c;--dash-border:#a32d9b;--dash-ink:#fff2ff;--dash-sub:#e6b6ea;--dash-accent:#ff64e8;--dash-button:#2a1040;
+}
+html[data-theme="cyberpunk"] .mg-dash-speed{background:linear-gradient(155deg,#32104a,#150a26)}
+html[data-theme="liquidglass"] :is(.mg-dash-panel,.mg-nav-dashboard){
+ --dash-bg:#e9f3ff1c;--dash-border:#eff8ff6f;--dash-ink:#f5f9ff;--dash-sub:#cfe6f7;--dash-accent:#b9eaff;--dash-button:#e9f3ff26;
+}
+html[data-theme="liquidglass"] .mg-dash-speed{background:linear-gradient(155deg,#e6f2ff3a,#aacbde1c)}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-panel{--dash-touch:44px;gap:4px}
+ .mg-dash-clock{font-size:clamp(24px,7vh,32px)}
+ .mg-dash-build span{font-size:10px}
+ .side.mg-nav-dashboard-side .mg-dash-action{font-size:clamp(10.5px,2.9vh,13px);gap:3px;padding:2px 3px}
+ .mg-dash-icon{width:15px;height:15px}
+ /* Two labelled controls keep their full text; the full-map control is an icon square. */
+ .mg-dash-actions{grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto}
+ .side.mg-nav-dashboard-side .mg-dash-fullmap{min-width:48px;padding:2px}
+ .mg-dash-fullmap span{display:none}
+ .mg-dash-fullmap .mg-dash-icon{width:20px;height:20px}
+}
+.mg-nav-dashboard.mg-dashboard-compact{
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ grid-template-rows:repeat(5,minmax(0,1fr));
+ gap:clamp(3px,.7vh,8px);
+}
+.mg-dashboard-compact .mg-dash-cell{padding:clamp(3px,.7vh,9px);border-radius:clamp(6px,1vw,12px)}
+.mg-dashboard-compact .mg-dash-label{font-size:clamp(9px,1.6vh,13px);line-height:1.05}
+.mg-dashboard-compact .mg-dash-cell>strong{font-size:clamp(15px,3.5vh,27px)}
+.mg-dashboard-compact .mg-dash-speed{
+ grid-column:2;grid-row:3;flex-direction:column;align-items:stretch;justify-content:space-between;
+}
+.mg-dashboard-compact .mg-dash-speed .mg-dash-value{flex-direction:row;align-items:baseline;gap:5px;min-width:0}
+.mg-dashboard-compact .mg-dash-speed .mg-dash-value strong{font-size:clamp(25px,6vh,48px)}
+.mg-dashboard-compact .mg-dash-speed .mg-dash-value small{font-size:clamp(10px,2vh,17px)}
+/* Keep the speed tile typographically aligned with the other metrics,
+   including taller landscape displays. Its value still auto-fits. */
+@media(min-height:600px){
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-label{font-size:clamp(14px,1.9vh,20px)}
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-value{gap:8px}
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-value small{font-size:clamp(14px,2vh,22px)}
+}
+/* Reading order matches the fullscreen trip bar: ETA → time → distance.
+   Speed and driving statistics follow; the camera gets a full-width row. */
+.mg-dashboard-compact .mg-dash-arrival{grid-column:1;grid-row:1}
+.mg-dashboard-compact .mg-dash-time{grid-column:2;grid-row:1}
+.mg-dashboard-compact .mg-dash-distance{grid-column:1;grid-row:2}
+.mg-dashboard-compact .mg-dash-driven{grid-column:2;grid-row:2}
+.mg-dashboard-compact .mg-dash-progress{grid-column:1;grid-row:3}
+.mg-dashboard-compact .mg-dash-spotify{grid-column:1/-1;grid-row:5}
+/* Only this row is asymmetrical: 63% camera, 37% GPS altitude.
+   Other rows retain their original balanced two-column widths. */
+.mg-dashboard-compact .mg-dash-camera-altitude-row{
+ grid-column:1/-1;grid-row:4;display:grid;
+ grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);
+ gap:clamp(8px,1vw,14px);min-width:0;min-height:0;height:100%;
+}
+.mg-dashboard-compact .mg-dash-camera{grid-column:1;grid-row:1}
+.mg-dashboard-compact .mg-dash-altitude{grid-column:2;grid-row:1;align-items:stretch;justify-content:space-between}
+.mg-dashboard-compact .mg-dash-altitude .mg-dash-value{display:flex;align-items:baseline;gap:5px;min-width:0}
+.mg-dashboard-compact .mg-dash-altitude .mg-dash-value strong{font-variant-numeric:tabular-nums;white-space:nowrap}
+.mg-dashboard-compact .mg-dash-altitude .mg-dash-value small{flex:0 0 auto}
+.mg-dashboard-compact .mg-dash-camera-open{padding:clamp(5px,1.2vh,11px)}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dashboard-compact .mg-dash-camera-refresh{width:36px;height:36px;padding:7px}
+ .mg-dashboard-compact .mg-dash-camera-open .mg-dash-label{padding-right:36px}
+}
+.mg-dashboard-compact .mg-dash-value strong{font-size:clamp(18px,4vh,31px)}
+.mg-dashboard-compact .mg-dash-value small{font-size:clamp(9px,1.6vh,14px)}
+.mg-dashboard-compact .mg-dash-camera strong{
+ font-size:clamp(16px,3.6vh,29px)!important;white-space:nowrap;
+}
+/* Tall displays: tiles are large, so labels and values grow with them. */
+@media(min-height:600px){
+ .mg-dashboard-compact .mg-dash-cell{padding:clamp(10px,1.5vh,18px) clamp(12px,1vw,20px)}
+ .mg-dashboard-compact .mg-dash-label{font-size:clamp(14px,1.9vh,20px)}
+ .mg-dashboard-compact .mg-dash-cell>strong,
+ .mg-dashboard-compact .mg-dash-value strong{font-size:clamp(32px,4.6vh,50px)}
+ .mg-dashboard-compact .mg-dash-camera strong{font-size:clamp(32px,4.6vh,50px)!important}
+
+ .mg-dashboard-compact .mg-dash-value small{font-size:clamp(14px,2vh,22px)}
+}
+@media(orientation:landscape) and (max-height:420px){
+ .mg-dashboard-compact .mg-dash-cell{padding:3px 5px}
+ .mg-dashboard-compact .mg-dash-speed .mg-dash-value strong{font-size:clamp(36px,8vh,60px)}
+ .mg-dashboard-compact .mg-dash-label{font-size:clamp(9px,1.5vh,11px)}
+}
+
+/* Upper right: update and fullscreen are equal-size icon buttons. */
+.mg-dash-head-tools{display:flex;align-items:center;gap:clamp(4px,.7vw,10px);min-width:0}
+.side.mg-nav-dashboard-side .mg-dash-head-tools .mg-dash-fullmap{
+ width:var(--dash-touch);height:var(--dash-touch);min-width:44px;min-height:44px;padding:0;flex:none;
+}
+.mg-dash-head-tools .mg-dash-fullmap span{display:none}
+.mg-dash-head-tools .mg-dash-fullmap .mg-dash-icon{width:clamp(20px,3.5vh,30px);height:clamp(20px,3.5vh,30px)}
+/* One unified destination search occupies the second row. */
+.mg-dash-actions{grid-template-columns:minmax(0,1fr)}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-actions{grid-template-columns:minmax(0,1fr)}
+}
+/* Idle: header, search and places only. Keep all route metrics intact for guidance. */
+.mg-dash-panel[data-route-active="false"]>.mg-nav-dashboard.mg-dashboard-compact{display:none}
+
+/* Idle Navi split: Apple-Maps-style saved-place quick actions, driven by the
+   single destination provider. During a route, the normal trip grid takes over. */
+.mg-dash-panel[data-route-active="true"] .mg-dash-quick{display:none}
+.mg-dash-quick{
+ flex:1 1 0;display:flex;flex-direction:column;min-width:0;min-height:0;
+ padding:clamp(7px,1.15vh,14px) clamp(6px,.8vw,12px);
+ border:1px solid var(--dash-border);border-radius:clamp(10px,1.25vw,17px);
+ background:color-mix(in srgb,var(--dash-bg) 85%,transparent);
+ overflow:hidden;
+}
+.mg-dash-quick-heading{
+ flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;gap:8px;
+ min-height:clamp(25px,4.1vh,42px);color:var(--dash-ink);
+}
+.mg-dash-quick-heading strong{
+ display:inline-flex;align-items:center;gap:clamp(5px,.8vw,12px);
+ font-size:clamp(15px,2.7vh,25px);font-weight:780;
+}
+.mg-dash-quick-heading .mg-dash-icon{width:clamp(18px,3.3vh,28px);height:clamp(18px,3.3vh,28px)}
+.mg-dash-quick-hint{
+ flex:0 0 auto;color:var(--dash-sub);
+ font-size:clamp(11px,1.8vh,16px);font-weight:650;white-space:nowrap;
+}
+.mg-dash-quick-rail{
+ display:flex;align-items:flex-start;gap:clamp(7px,.8vw,14px);
+ flex:0 0 auto;height:clamp(92px,20vh,155px);min-width:0;min-height:0;overflow-x:auto;overflow-y:hidden;
+ padding:clamp(1px,.4vh,5px) 0 clamp(4px,.75vh,10px);
+ scroll-snap-type:x proximity;overscroll-behavior-x:contain;
+ -webkit-overflow-scrolling:touch;scrollbar-width:thin;
+}
+.mg-dash-quick-rail::-webkit-scrollbar{height:3px}
+.mg-dash-quick-rail::-webkit-scrollbar-thumb{background:var(--dash-border);border-radius:3px}
+.side.mg-nav-dashboard-side .mg-dash-quick-place{
+ flex:0 0 clamp(76px,10vw,128px);min-width:76px;min-height:44px;
+ display:flex;flex-direction:column;align-items:center;gap:clamp(2px,.5vh,6px);
+ margin:0;padding:0 2px 3px;border:0;background:transparent;
+ font:inherit;color:var(--dash-ink);cursor:pointer;scroll-snap-align:start;
+ text-align:center;touch-action:pan-x;-webkit-tap-highlight-color:transparent;
+}
+.mg-dash-quick-circle{
+ width:clamp(57px,10vh,104px);height:clamp(57px,10vh,104px);
+ max-width:100%;flex:0 0 auto;display:grid;place-items:center;
+ border-radius:50%;border:1px solid #ffffff33;
+ background:linear-gradient(145deg,#6476a0,#313b5b);
+ box-shadow:inset 0 1px 2px #ffffff24,0 3px 10px #0004;
+ color:#fff;
+}
+.mg-dash-quick-place[data-kind="home"] .mg-dash-quick-circle,
+.mg-dash-quick-circle[data-icon="home"]{background:linear-gradient(145deg,#25d9e7,#087b9c)}
+.mg-dash-quick-place[data-kind="work"] .mg-dash-quick-circle,
+.mg-dash-quick-circle[data-icon="work"]{background:linear-gradient(145deg,#c99b83,#86554d)}
+.mg-dash-quick-circle[data-icon="fuel"]{background:linear-gradient(145deg,#fc9b66,#c65053)}
+.mg-dash-quick-circle[data-icon="food"]{background:linear-gradient(145deg,#bfa77f,#8a633c)}
+.mg-dash-quick-circle[data-icon="parking"]{background:linear-gradient(145deg,#73aee8,#3367aa)}
+.mg-dash-quick-circle svg{
+ width:48%;height:48%;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;
+ stroke-linejoin:round;fill:none;
+}
+.mg-dash-quick-place>strong{
+ max-width:100%;font-size:clamp(11px,1.95vh,17px);line-height:1.1;
+ font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.mg-dash-quick-place:active .mg-dash-quick-circle{transform:scale(.95);filter:brightness(1.2)}
+.mg-dash-quick-place:focus-visible{outline:2px solid var(--dash-accent);outline-offset:2px;border-radius:7px}
+.mg-dash-quick-empty{margin:6px 0;color:var(--dash-sub);font-size:clamp(12px,2vh,17px);line-height:1.35}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-quick{padding:3px 6px}
+ .mg-dash-quick-heading{min-height:30px}
+ .mg-dash-quick-rail{gap:6px;padding:0 0 2px;height:clamp(78px,22vh,104px)}
+ .side.mg-nav-dashboard-side .mg-dash-quick-place{flex-basis:clamp(73px,10vw,98px)}
+ .mg-dash-quick-circle{width:clamp(52px,14vh,64px);height:clamp(52px,14vh,64px)}
+ .mg-dash-quick-place>strong{font-size:clamp(11px,2.6vh,14px)}
+}
+
+/* Route-free digital GPS speedometer; shared in Browser and Android WebView. */
+.mg-dash-idle-speed{
+ --idle-glow:color-mix(in srgb,var(--dash-accent) 25%,transparent);
+ display:flex;flex-direction:column;flex:1 1 auto;
+ min-height:0;min-width:0;overflow:hidden;
+ margin-top:clamp(5px,.9vh,12px);
+ padding:clamp(8px,1.15vh,15px) clamp(12px,1.25vw,22px);
+ border:1px solid color-mix(in srgb,var(--dash-accent) 78%,var(--dash-border));
+ border-radius:clamp(11px,1.5vw,22px);
+ background:radial-gradient(ellipse at 50% 100%,var(--idle-glow),transparent 75%),
+            linear-gradient(145deg,var(--dash-bg),color-mix(in srgb,var(--dash-bg) 65%,#020718));
+ box-shadow:inset 0 1px 0 #ffffff0d,0 0 18px color-mix(in srgb,var(--dash-accent) 10%,transparent);
+}
+.mg-dash-panel[data-route-active="true"] .mg-dash-idle-speed{display:none}
+.mg-dash-idle-speed-stage{
+ position:relative;flex:1 1 0;min-height:55px;max-height:250px;
+ display:grid;place-items:center;overflow:hidden;
+}
+.mg-dash-idle-speed-arc{
+ position:absolute;width:100%;height:100%;inset:0;
+ overflow:visible;pointer-events:none;
+}
+.mg-dash-idle-speed-track,.mg-dash-idle-speed-fill{
+ fill:none;stroke-width:7;stroke-linecap:round;
+}
+.mg-dash-idle-speed-track{stroke:color-mix(in srgb,var(--dash-border) 50%,transparent)}
+.mg-dash-idle-speed-fill{
+ stroke:url(#mg-idle-speed-gradient);
+ filter:drop-shadow(0 0 6px var(--dash-accent));
+ transition:stroke-dashoffset .55s cubic-bezier(.25,.8,.25,1);
+}
+.mg-dash-idle-speed-readout{
+ position:relative;z-index:1;display:flex;flex-direction:column;
+ align-items:center;justify-content:center;gap:0;
+ transform:translateY(9%);font-variant-numeric:tabular-nums;
+ text-shadow:0 0 18px color-mix(in srgb,var(--dash-accent) 30%,transparent);
+}
+.mg-dash-idle-speed-readout strong{
+ font-size:clamp(45px,10.5vh,112px);font-weight:850;line-height:.94;
+ letter-spacing:-.045em;min-width:2ch;text-align:center;color:var(--dash-ink);
+}
+.mg-dash-idle-speed-readout span{
+ font-size:clamp(12px,2.1vh,21px);font-weight:780;letter-spacing:.06em;
+ color:var(--dash-accent);
+}
+.mg-dash-idle-speed-scale{
+ display:flex;justify-content:space-between;align-items:center;gap:8px;
+ color:var(--dash-sub);font-size:clamp(10px,1.4vh,14px);
+ font-variant-numeric:tabular-nums;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-idle-speed{margin-top:3px;padding:5px 9px}
+ .mg-dash-idle-speed-readout strong{font-size:clamp(38px,10.5vh,55px)}
+ .mg-dash-idle-speed-readout span{font-size:11px}
+ .mg-dash-idle-speed-stage{min-height:42px}
+ .mg-dash-idle-speed-scale{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+ .mg-dash-idle-speed-fill{transition:none}
+}
+
+/* Navigation state swaps the single large dashboard action in place.
+   No second trip action or duplicate renderer is introduced. */
+.mg-dash-panel[data-route-active="false"] [data-dash-action="end"],
+.mg-dash-panel[data-route-active="true"] [data-dash-action="search"]{display:none!important}
+.side.mg-nav-dashboard-side .mg-dash-actions [data-dash-action="end"]{
+ width:100%;border:1px solid #b86b7a;background:#743545;color:#ffebf1;
+ font-weight:790;
+}
+.side.mg-nav-dashboard-side .mg-dash-actions [data-dash-action="end"]:disabled{
+ opacity:.65;cursor:wait;
+}
+
+
+/* Route-active details share the same right split; the metrics swap out instead
+   of compressing into a tiny fixed-height card. Header/end button stay visible. */
+.mg-dash-panel[data-route-active="false"] [data-dash-action="details"]{display:none!important}
+.mg-dash-panel[data-route-active="true"] .mg-dash-actions{
+ grid-template-columns:minmax(0,1fr) minmax(86px,26%);
+}
+.side.mg-nav-dashboard-side .mg-dash-details-toggle{
+ border-color:var(--dash-accent);color:var(--dash-accent);
+}
+.mg-dash-panel[data-details-open="true"] .mg-dash-details-toggle{
+ background:var(--dash-accent);color:#10212f;
+}
+.mg-dash-panel[data-details-open="true"]>.mg-nav-dashboard.mg-dashboard-compact{display:none}
+.mg-dash-route-details{
+ display:none;flex:1 1 0;flex-direction:column;min-width:0;min-height:0;
+ border:1px solid var(--dash-border);border-radius:12px;
+ background:var(--dash-bg);overflow:hidden;padding:clamp(6px,1vh,12px);
+}
+.mg-dash-panel[data-route-active="true"][data-details-open="true"] .mg-dash-route-details{
+ display:flex;
+}
+.mg-dash-route-details-heading{
+ flex:0 0 auto;padding:4px 8px 12px;color:var(--dash-accent);
+ font-size:clamp(18px,3vh,29px);font-weight:850;
+}
+.mg-dash-route-detail-scroll{
+ flex:1 1 0;min-height:0;min-width:0;overflow-x:hidden;overflow-y:auto;
+ overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;
+ scrollbar-width:thin;scrollbar-color:var(--dash-border) transparent;
+ padding:0 5px 5px 2px;
+}
+.mg-dash-route-detail-scroll:focus-visible{outline:2px solid var(--dash-accent)}
+/* Prioritize readable trip values like the dashboard tiles. Long destination
+   names and addresses wrap within their column; the list keeps scrolling. */
+.mg-dash-route-detail-scroll .mg-guidance-detail-row{
+ grid-template-columns:minmax(110px,42%) minmax(0,1fr);
+ gap:clamp(8px,1.25vw,18px);
+ padding:clamp(11px,1.9vh,20px) clamp(5px,.7vw,12px);
+ line-height:1.25;align-items:center;
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-row dt{
+ color:var(--dash-sub);font-size:clamp(15px,2.45vh,23px);
+ font-weight:650;
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-row dd{
+ color:var(--dash-ink);font-size:clamp(19px,3.25vh,31px);
+ font-weight:850;line-height:1.2;letter-spacing:-.015em;
+ font-variant-numeric:tabular-nums;overflow-wrap:anywhere;
+}
+/* Exact Google Places waypoint identity in the scrollable route details.
+   Long streets and town names wrap, instead of clipping as in B1701. */
+.mg-dash-route-detail-scroll .mg-guidance-detail-row dd{white-space:pre-line}
+.mg-dash-route-detail-scroll .mg-guidance-detail-next-stop dd{
+ display:flex;flex-direction:column;align-items:flex-start;min-width:0;gap:4px;
+ white-space:normal
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-next-stop dd strong{
+ font-size:clamp(19px,3vh,29px);font-weight:850;line-height:1.18;overflow-wrap:anywhere
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-next-stop .mg-guidance-stop-address{
+ font-size:clamp(15px,2.3vh,21px);font-weight:550;color:var(--dash-sub);
+ line-height:1.25;white-space:normal;overflow-wrap:anywhere
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-next-stop .mg-guidance-stop-eta{
+ font-size:clamp(13px,2.1vh,19px);font-weight:650;color:var(--dash-accent);
+ line-height:1.2;overflow-wrap:anywhere
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-stops dd{
+ display:flex;flex-direction:column;align-items:stretch;gap:clamp(8px,1.3vh,13px);
+ min-width:0;white-space:normal
+}
+.mg-guidance-stop-entry{display:flex;flex-direction:column;align-items:flex-start;
+ gap:clamp(3px,.5vh,6px);min-width:0;padding:clamp(7px,1.1vh,12px);
+ border:1px solid var(--dash-border);border-radius:12px;background:rgba(94,176,200,.07)}
+.mg-dash-route-detail-scroll .mg-guidance-stop-entry strong{
+ font-size:clamp(17px,2.65vh,25px);line-height:1.15;overflow-wrap:anywhere
+}
+.mg-dash-route-detail-scroll .mg-guidance-stop-address{
+ font-size:clamp(14px,2.15vh,19px);font-weight:550;line-height:1.3;
+ color:var(--dash-sub);white-space:normal;overflow-wrap:anywhere
+}
+.mg-guidance-stop-map{
+ display:inline-flex;align-items:center;justify-content:center;
+ min-height:40px;margin-top:3px;padding:5px 12px;border:1px solid var(--dash-accent);
+ border-radius:9px;background:rgba(50,205,239,.13);color:var(--dash-accent);
+ font-family:inherit;font-size:clamp(13px,2.15vh,17px);font-weight:750;line-height:1.1;cursor:pointer
+}
+.mg-guidance-stop-map:focus-visible{outline:2px solid var(--dash-accent);outline-offset:2px}
+.mg-dash-detail-pending{padding:10px;color:var(--dash-sub)}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-panel[data-route-active="true"] .mg-dash-actions{
+  grid-template-columns:minmax(0,1fr) minmax(82px,25%);
+ }
+ .side.mg-nav-dashboard-side .mg-dash-details-toggle{font-size:12px;padding:2px 6px}
+ .mg-dash-route-details-heading{font-size:16px;padding-bottom:6px}
+ .mg-dash-route-detail-scroll .mg-guidance-detail-row{
+  grid-template-columns:minmax(88px,41%) minmax(0,1fr);
+  padding:9px 4px;gap:8px;
+ }
+ .mg-dash-route-detail-scroll .mg-guidance-detail-row dt{font-size:clamp(13px,2.9vh,18px)}
+ .mg-dash-route-detail-scroll .mg-guidance-detail-row dd{font-size:clamp(17px,3.8vh,24px)}
+}
+
+/* The same right-hand split hosts either trip metrics, route details or
+   the entire scanned camera list. The map and navigation controls never move. */
+.mg-dash-camera-list{
+ display:none;flex:1 1 0;flex-direction:column;min-width:0;min-height:0;
+ background:var(--dash-bg);border:1px solid var(--dash-border);
+ border-radius:12px;padding:clamp(7px,1vh,13px);overflow:hidden;
+}
+.mg-dash-panel[data-route-active="true"][data-cameras-open="true"]>.mg-nav-dashboard.mg-dashboard-compact,
+.mg-dash-panel[data-cameras-open="true"] .mg-dash-route-details{display:none!important}
+.mg-dash-panel[data-route-active="true"][data-cameras-open="true"] .mg-dash-camera-list{display:flex}
+.mg-dash-camera-list-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mg-dash-camera-list-head strong{font-size:clamp(18px,3vh,27px);line-height:1.15}
+.side.mg-nav-dashboard-side .mg-dash-camera-list-head button{
+ border:1px solid var(--dash-accent);color:var(--dash-accent);
+ background:var(--dash-button);border-radius:10px;
+ min-width:70px;min-height:44px;padding:5px 10px;
+ font-size:clamp(15px,2.2vh,20px);font-weight:750;
+}
+.mg-dash-camera-status{margin:6px 0 9px;color:var(--dash-sub);font-size:clamp(15px,2.2vh,20px);line-height:1.25}
+.mg-dash-camera-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+.mg-dash-camera-hits{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px}
+.mg-dash-camera-hit{
+ min-width:0;display:flex;align-items:center;gap:clamp(8px,1vw,15px);
+ padding:clamp(8px,1.25vh,13px);border:1px solid var(--dash-border);
+ border-radius:10px;background:rgba(255,255,255,.035);
+}
+.mg-dash-camera-hit.is-passed{opacity:.57}
+.mg-dash-camera-limit{
+ flex:0 0 auto;display:grid;place-items:center;width:clamp(36px,6vh,50px);
+ height:clamp(36px,6vh,50px);border:3px solid #ff5361;border-radius:50%;
+ background:#f9fdff;color:#162333;font-weight:850;font-size:clamp(17px,2.8vh,23px);
+}
+.mg-dash-camera-location{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.mg-dash-camera-location strong{font-size:clamp(16px,2.55vh,23px);line-height:1.2;overflow-wrap:anywhere}
+.mg-dash-camera-location small{font-size:clamp(13px,2vh,18px);color:var(--dash-sub);line-height:1.2}
+.mg-dash-camera-range{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;
+ font-size:clamp(17px,2.8vh,25px);font-weight:800;white-space:nowrap}
+.mg-dash-camera-range small{font-size:clamp(11px,1.8vh,16px);font-weight:650;color:var(--dash-sub)}
+.mg-dash-camera-empty{font-size:clamp(17px,2.5vh,23px);line-height:1.4;color:var(--dash-sub)}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-camera-list-head strong{font-size:18px}
+ .mg-dash-camera-status{font-size:14px}
+ .mg-dash-camera-location strong{font-size:16px}
+ .mg-dash-camera-location small{font-size:13px}
+}
+/* Route metric typography scales to each tile, not just viewport height. */
+.mg-dashboard-compact .mg-dash-cell>strong,
+.mg-dashboard-compact .mg-dash-value strong{
+ font-size:clamp(26px,8.5vh,60px);line-height:1.02;font-variant-numeric:tabular-nums;
+}
+.mg-dashboard-compact .mg-dash-speed .mg-dash-value strong{font-size:clamp(26px,8vh,60px)}
+.mg-dashboard-compact .mg-dash-time .mg-dash-value{align-items:baseline;gap:4px}
+.mg-dash-time [data-dash-time-unit][hidden]{display:none!important}
+.mg-dash-time [data-dash-time-unit]{flex:0 0 auto;white-space:nowrap}
+.mg-dashboard-compact .mg-dash-value small{font-size:clamp(11px,2.2vh,20px)}
+
+/* Navigation cockpit: use the freed row for traveled kilometers and progress.
+   Header uses time, eye (details) and a red exit X. Update/version/full-map
+   are intentionally shown only on the navigation full-map surface. */
+.mg-dash-head{grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.mg-dash-head-tools{justify-self:end}
+.side.mg-nav-dashboard-side .mg-dash-head-tools .mg-dash-action{
+ width:clamp(44px,8vh,64px);height:clamp(44px,8vh,64px);
+ min-width:44px;min-height:44px;flex:none;padding:0;
+}
+.mg-dash-head-tools .mg-dash-icon{width:clamp(22px,4.5vh,33px);height:clamp(22px,4.5vh,33px)}
+.mg-dash-head-tools .mg-dash-end-route .mg-dash-icon,
+.mg-dash-head-tools .mg-dash-details-toggle .mg-dash-icon{
+ fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;
+}
+.side.mg-nav-dashboard-side .mg-dash-head-tools .mg-dash-end-route{
+ background:#743545;color:#ffebf1;border-color:#b86b7a;
+}
+.side.mg-nav-dashboard-side .mg-dash-head-tools .mg-dash-end-route:active{background:#963d50}
+.side.mg-nav-dashboard-side .mg-dash-head-tools .mg-dash-details-toggle{
+ border-color:var(--dash-accent);color:var(--dash-accent);
+}
+.mg-dash-panel[data-details-open="true"] .mg-dash-head-tools .mg-dash-details-toggle{
+ background:var(--dash-accent);color:#10212f;
+}
+.mg-dash-panel[data-route-active="false"] .mg-dash-head-tools{display:none}
+.mg-dash-panel[data-route-active="true"] .mg-dash-actions{display:none!important}
+.mg-dash-visually-hidden{
+ position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;
+ overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;
+}
+.mg-nav-dashboard:not(.mg-dashboard-compact){
+ grid-template-rows:repeat(4,minmax(0,1fr));
+}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-driven{grid-column:3;grid-row:2}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-progress{grid-column:1;grid-row:3}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-average{grid-column:2;grid-row:3}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-maximum{grid-column:3;grid-row:3}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-camera{grid-column:1/-1;grid-row:4}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-head{min-height:44px}
+ .side.mg-nav-dashboard-side .mg-dash-head-tools .mg-dash-action{width:44px;height:44px}
+ .mg-dashboard-compact .mg-dash-cell{padding:3px 6px}
+ .mg-dashboard-compact .mg-dash-label{font-size:clamp(10px,2.4vh,13px)}
+}
+
+/* Personal speed alert options live in Settings > Darstellung. These controls
+   remain tappable in shallow landscape layouts and in all cockpit themes. */
+.mg-speed-settings{
+ display:flex;flex-direction:column;gap:clamp(8px,1.5vh,14px);
+ margin-top:clamp(12px,2vh,22px);padding:clamp(12px,2vh,20px);
+ border:1px solid #4f839d;border-radius:14px;
+ background:rgba(13,35,51,.88);color:#f0faff;
+}
+.mg-speed-settings h3{margin:0;font-size:clamp(18px,3vh,24px);line-height:1.2}
+.mg-speed-settings p{margin:0;line-height:1.35;font-size:clamp(14px,2.15vh,18px);color:#cfdfeb}
+.mg-speed-settings .mg-speed-settings-field{
+ display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+ gap:8px;font-weight:700;font-size:clamp(15px,2.3vh,19px);
+}
+.mg-speed-settings select{
+ flex:0 1 auto;min-width:140px;max-width:100%;min-height:44px;
+ font:inherit;font-size:clamp(16px,2.6vh,20px);font-weight:730;
+ padding:6px 12px;color:#f0faff;background:#23475b;
+ border:1px solid #6baabb;border-radius:10px;
+}
+.mg-speed-settings select:focus-visible{outline:2px solid #72edff;outline-offset:2px}
+.mg-speed-settings .mg-speed-settings-note{font-size:clamp(12px,1.8vh,16px);color:#a9c3d5}
+html[data-theme="cyberpunk"] .mg-speed-settings{background:rgba(39,15,55,.92);border-color:#ac3b9b}
+html[data-theme="cyberpunk"] .mg-speed-settings select{background:#452354;border-color:#c45ab0}
+html[data-theme="liquidglass"] .mg-speed-settings{background:rgba(31,58,82,.88);border-color:#9fc3dd}
+html[data-theme="liquidglass"] .mg-speed-settings select{background:#315474;border-color:#bfd4e8}
+/* Spotify replaces Ø/max speed in row four, preserving all upper tiles. */
+.mg-nav-dashboard .mg-dash-spotify{min-width:0;min-height:0;overflow:hidden;
+ padding:clamp(3px,.65vh,9px);background:var(--dash-bg);border-color:var(--dash-border)}
+.mg-nav-dashboard .mg-dash-spotify .mevi-trip-spotify{
+ --trip-ink:var(--dash-ink);--trip-muted:var(--dash-sub);
+ --trip-accent:var(--dash-accent);--trip-border:var(--dash-border)}
+.mg-dashboard-compact .mg-dash-spotify .mg-sp-cover-button{
+ width:min(100%,clamp(48px,18vh,165px));height:min(100%,clamp(48px,18vh,165px));
+ aspect-ratio:1;flex-shrink:0}
+
+/* Blitzer above Spotify in the wide dashboard; the first six metrics stay put. */
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-camera{grid-column:2/-1;grid-row:3}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-altitude{grid-column:1;grid-row:3}
+.mg-nav-dashboard:not(.mg-dashboard-compact) .mg-dash-spotify{grid-column:1/-1;grid-row:4}
+/* Split header: hold eye and red stop button clear of the right-hand edge.
+   Do not alter the clock or any dashboard metric / tile sizing. */
+.side.mg-nav-dashboard-side .mg-dash-head{
+ padding-inline-end:8px;
+}
+
+
+/* Route-free split: search next to the clock, the shared Spotify mini under
+   the real GPS tachometer. No second player or map overlay is introduced. */
+.mg-dash-panel[data-route-active="false"]>.mg-dash-head{
+ grid-template-columns:max-content minmax(0,1fr);gap:clamp(8px,1.1vw,18px);
+}
+.side.mg-nav-dashboard-side .mg-dash-head .mg-dash-search{
+ display:inline-flex;width:100%;min-width:0;min-height:var(--dash-touch);
+ padding:4px clamp(7px,1vw,15px);justify-content:center;
+ gap:clamp(4px,.6vw,9px);font-size:clamp(12px,2.4vh,20px);
+ white-space:nowrap;overflow:hidden;
+}
+.mg-dash-panel[data-route-active="true"] .mg-dash-head .mg-dash-search{display:none!important}
+.mg-dash-panel[data-route-active="false"] .mg-dash-quick{gap:clamp(4px,.7vh,9px)}
+.mg-dash-panel[data-route-active="false"] .mg-dash-quick-rail{height:clamp(80px,21vh,160px)}
+/* The idle GPS arc floats directly on the places surface: no nested card. */
+.mg-dash-panel[data-route-active="false"] .mg-dash-idle-speed{
+ margin-top:0;flex:1 1 0;border:0;border-radius:0;
+ background:transparent;box-shadow:none;
+}
+/* Single unframed Spotify strip under the GPS arc in route-free split only.
+   The strip gets extra height at landscape phone sizes without growing the
+   places container or touching active-route dashboard tiles. */
+.mg-dash-idle-spotify{
+ display:flex;align-items:center;flex:0 0 clamp(68px,17.5vh,86px);
+ min-height:68px;min-width:0;padding:3px clamp(3px,.55vw,7px);
+ border:0;border-radius:0;background:transparent;box-shadow:none;
+ overflow:hidden;
+}
+.mg-dash-panel[data-route-active="true"] .mg-dash-idle-spotify{display:none}
+/* Give Spotify titles breathing room in the idle right split.
+   Keep the active-route player, shared source and scrolling titles unchanged. */
+.mg-dash-idle-spotify .mevi-trip-spotify{
+ --trip-ink:var(--dash-ink);--trip-muted:var(--dash-sub);
+ --trip-accent:var(--dash-accent);--trip-border:var(--dash-border);
+ gap:2px;min-width:0;
+}
+.mg-dash-idle-spotify .mg-sp-cover-button{
+ width:clamp(44px,7.6vh,60px);height:clamp(44px,7.6vh,60px);
+ aspect-ratio:1;flex:0 0 auto;
+}
+/* .mg-sp-meta is a <button> and would otherwise inherit the cockpit's
+   12px button border-radius. With overflow:hidden this clips the first
+   glyph against the curved left edge even when the title fully fits. */
+.mg-dash-idle-spotify .mg-sp-meta{
+ flex:1 1 0;min-width:0;overflow:hidden;
+ border-radius:0;padding-inline:6px 0;
+}
+.mg-dash-idle-spotify .mg-sp-title-viewport{
+ display:block;width:100%;min-width:0;overflow:hidden;border-radius:0;
+}
+/* Short or inactive titles must ellipsize instead of being hard-clipped.
+   Long active titles with data-scroll=true retain their marquee. */
+.mg-dash-idle-spotify .mg-sp-title-viewport [data-sp-title]:not([data-scroll="true"]){
+ max-width:100%;overflow:hidden;text-overflow:ellipsis;
+}
+.mg-dash-idle-spotify .mg-sp-transport{
+ flex:0 0 auto;gap:2px;
+}
+.mg-dash-idle-spotify .mg-sp-transport button{
+ width:clamp(40px,7.2vh,48px);height:clamp(40px,7.2vh,48px);
+ min-width:40px;min-height:40px;padding:5px;
+}
+.mg-dash-idle-spotify .mg-sp-meta strong{font-size:clamp(12px,2.3vh,18px)}
+.mg-dash-idle-spotify .mg-sp-meta small{font-size:clamp(11px,1.9vh,15px);text-overflow:ellipsis;white-space:nowrap;overflow:hidden;}
+/* The progress track is the extra horizontal line visible under this
+   compact idle player. Remove only here, not in the active-route dashboard. */
+.mg-dash-idle-spotify .mg-sp-progress{display:none!important}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-panel[data-route-active="false"]>.mg-dash-head{gap:6px}
+ .side.mg-nav-dashboard-side .mg-dash-head .mg-dash-search{
+  font-size:clamp(12px,3.2vh,16px);min-height:44px;padding-inline:4px;
+ }
+ .mg-dash-idle-spotify{flex-basis:clamp(68px,17.5vh,76px);padding:3px 4px}
+ .mg-dash-idle-spotify .mg-sp-cover-button{width:46px;height:46px}
+ .mg-dash-idle-spotify .mg-sp-transport button{width:40px;height:40px}
+}
+
+
+/* First-pass route-active dashboard: horizontal dividers instead of tiled cards.
+   Scope to the guided compact split only: idle shortcuts and other app layouts
+   continue to use their existing design, and route metrics keep their grid. */
+.side.mg-nav-dashboard-side .mg-dash-panel[data-route-active="true"]>.mg-dash-head{
+ padding-inline-end:24px; /* 16px farther left than the previous 8px inset */
+}
+.mg-dash-panel[data-route-active="true"]>.mg-nav-dashboard.mg-dashboard-compact{
+ --dash-row-divider:color-mix(in srgb,var(--dash-border) 42%,transparent);
+ column-gap:clamp(8px,1vw,14px);
+ row-gap:0;
+ background-color:transparent;
+ background-image:
+  linear-gradient(to right,var(--dash-row-divider),var(--dash-row-divider)),
+  linear-gradient(to right,var(--dash-row-divider),var(--dash-row-divider)),
+  linear-gradient(to right,var(--dash-row-divider),var(--dash-row-divider)),
+  linear-gradient(to right,var(--dash-row-divider),var(--dash-row-divider));
+ background-position:0 20%,0 40%,0 60%,0 80%;
+ background-size:100% 1px,100% 1px,100% 1px,100% 1px;
+ background-repeat:no-repeat;
+}
+.mg-dash-panel[data-route-active="true"]>.mg-nav-dashboard.mg-dashboard-compact .mg-dash-cell{
+ border:0;
+ border-radius:0;
+ background:transparent;
+ box-shadow:none;
+ padding:clamp(4px,.7vh,9px) clamp(6px,.7vw,11px);
+}
+.mg-dash-panel[data-route-active="true"]>.mg-nav-dashboard.mg-dashboard-compact .mg-dash-camera{
+ padding:0!important; /* click and refresh targets own their padding */
+}
+.mg-dash-panel[data-route-active="true"]>.mg-nav-dashboard.mg-dashboard-compact .mg-dash-spotify{
+ background:transparent;
+ padding:clamp(3px,.65vh,9px) clamp(5px,.7vw,11px);
+}
+/* The overspeed alert deliberately stays red and prominent. */
+.mg-dash-panel[data-route-active="true"]>.mg-nav-dashboard.mg-dashboard-compact .mg-dash-speed[data-overspeed="true"]{
+ border:0!important;
+ background:linear-gradient(90deg,rgba(244,91,102,.14),transparent)!important;
+}
+
+/* One Gemini entry point in the split header. Route-free it sits after
+   the destination search; during guidance it sits directly left of Eye/X.
+   The map overlay remains limited to its three driving controls. */
+.mg-dash-panel[data-route-active="false"]>.mg-dash-head{
+ grid-template-columns:max-content minmax(0,1fr) var(--dash-touch);
+}
+.side.mg-nav-dashboard-side .mg-dash-gemini{
+ display:inline-grid;place-items:center;
+ width:var(--dash-touch);height:var(--dash-touch);
+ min-width:44px;min-height:44px;
+ padding:0;justify-self:end;
+ border-color:var(--dash-accent);color:var(--dash-accent);
+}
+.mg-dash-gemini>span{font-size:clamp(24px,4.5vh,31px);line-height:1;overflow:visible}
+/* Active route: time | Gemini | Eye and end-navigation. Explicit grid
+   placement avoids the Gemini button pushing the Eye/X row down. */
+.mg-dash-panel[data-route-active="true"]>.mg-dash-head{
+ grid-template-columns:minmax(0,1fr) var(--dash-touch) auto;
+}
+.mg-dash-panel[data-route-active="true"]>.mg-dash-head>.mg-dash-clock{
+ grid-column:1;grid-row:1;min-width:0;
+}
+.mg-dash-panel[data-route-active="true"]>.mg-dash-head>.mg-dash-gemini{
+ grid-column:2;grid-row:1;display:inline-grid;justify-self:end;
+}
+.mg-dash-panel[data-route-active="true"]>.mg-dash-head>.mg-dash-head-tools{
+ grid-column:3;grid-row:1;
+}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-panel[data-route-active="false"]>.mg-dash-head{
+  grid-template-columns:max-content minmax(0,1fr) 44px;gap:5px;
+ }
+ .side.mg-nav-dashboard-side .mg-dash-gemini{width:44px;height:44px}
+}
+
+
+/* The dashboard's next-camera line now contains its reported type and limit.
+   Allow it to wrap on narrow landscape split panels instead of clipping. */
+.mg-dash-camera [data-dash-camera-detail]{
+ display:block;white-space:normal;overflow-wrap:anywhere;
+ max-width:100%;line-height:1.18;font-weight:650
+}
+.mg-dashboard-compact .mg-dash-camera [data-dash-camera-detail]{
+ font-size:clamp(11px,1.8vh,15px);line-height:1.12
+}
+
+/* Two equal panes in row four: actual GPS altitude and next route camera.
+   The Spotify row and all six other drive metrics retain their position. */
+.mg-dash-camera-label-compact{display:none}
+.mg-dashboard-compact .mg-dash-camera-label-full{display:none}
+.mg-dashboard-compact .mg-dash-camera-label-compact{display:inline}
+.mg-dashboard-compact .mg-dash-camera-open{
+ justify-content:space-between;gap:1px;overflow:hidden;
+ padding:clamp(3px,.6vh,7px) clamp(5px,.7vw,10px);
+}
+.mg-dashboard-compact .mg-dash-camera-open .mg-dash-label{
+ padding-right:clamp(26px,4vh,35px);overflow-wrap:normal;white-space:nowrap;
+}
+.mg-dashboard-compact .mg-dash-camera strong{
+ display:block;min-width:0;max-width:100%;
+ font-size:clamp(17px,3.9vh,31px)!important;
+ line-height:1!important;white-space:nowrap;overflow:visible;
+ font-variant-numeric:tabular-nums;letter-spacing:-.025em;
+}
+.mg-dashboard-compact .mg-dash-camera-refresh{
+ width:clamp(30px,5vh,36px);height:clamp(30px,5vh,36px);
+ padding:5px;top:2px;right:2px;
+}
+.mg-dashboard-compact .mg-dash-camera [data-dash-camera-detail]{
+ font-size:clamp(9px,1.65vh,13px);line-height:1.06;
+ overflow-wrap:anywhere;max-width:100%;
+}
+.mg-dash-altitude .mg-dash-value strong{font-variant-numeric:tabular-nums}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dashboard-compact .mg-dash-camera-refresh{width:30px;height:30px;padding:4px}
+ .mg-dashboard-compact .mg-dash-camera-open .mg-dash-label{padding-right:29px}
+ .mg-dashboard-compact .mg-dash-altitude{padding:3px 6px}
+ .mg-dashboard-compact .mg-dash-altitude .mg-dash-value{gap:3px}
+}
+
+/* The measured auto-fit picks a lower font-size when a long distance needs it.
+   Camera status and count stay readable without intruding into the height tile. */
+.mg-dashboard-compact .mg-dash-camera[data-camera-value-kind="empty"] strong{
+ font-size:clamp(17px,3.4vh,27px)!important;
+}
+.mg-dashboard-compact .mg-dash-camera[data-camera-value-kind="status"] strong{
+ font-size:clamp(16px,3.1vh,25px)!important;
+}
+.mg-dashboard-compact .mg-dash-camera .mg-dash-camera-open{
+ min-width:0;overflow:visible;
+}
+.mg-dashboard-compact .mg-dash-camera .mg-dash-camera-hint{
+ white-space:normal;overflow-wrap:normal;word-break:normal;
+}
+
+.mg-dash-traffic[hidden]{display:none!important}
+.mg-dash-traffic{font-size:clamp(9px,1.6vh,13px);line-height:1.12;color:#ffc36c;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.mg-dash-traffic[data-traffic-status="heavy"]{color:#ff9292}
+
+/* Optional vertical remaining-route rail inside existing route details; never
+   shrink the normal driving dashboard. Destination at top, vehicle at bottom. */
+.mg-dash-detail-body{display:flex;flex:1 1 0;min-height:0;min-width:0;gap:8px}
+.mg-dash-route-rail[hidden]{display:none!important}
+.mg-dash-route-rail{flex:0 0 38px;display:flex;flex-direction:column;align-items:center;gap:5px;min-height:0;padding:4px 0;border:1px solid var(--dash-border);border-radius:12px;background:#0c1c29}
+.mg-rail-track{position:relative;width:9px;flex:1 1 0;min-height:0;border-radius:6px;background:#647681}
+.mg-rail-section{position:absolute;left:0;width:100%;border-radius:2px}
+.mg-rail-section[data-speed="NORMAL"]{background:#35c879}
+.mg-rail-section[data-speed="SLOW"]{background:#ffb344}
+.mg-rail-section[data-speed="TRAFFIC_JAM"]{background:#f05252}
+.mg-rail-marker{position:absolute;left:50%;transform:translate(-50%,50%);width:19px;height:19px;border-radius:50%;display:grid;place-items:center;background:#102332;color:#ff9494;border:1px solid currentColor;font-size:12px;font-weight:800;line-height:1}
+.mg-rail-marker[data-kind="stop"]{color:#72edff}
+.mg-rail-end,.mg-rail-start{font-size:17px;color:#e5f6ff;line-height:1}
+.mg-rail-caption{font-size:9px;color:#b9d5e5;text-align:center;line-height:1.1}
+
+.mg-dash-traffic-check[hidden],.mg-dash-traffic-check button[hidden]{display:none!important}
+.mg-dash-traffic-check{display:flex;flex-wrap:wrap;gap:4px;align-items:center;padding:3px;flex:0 0 auto}
+.side.mg-nav-dashboard-side .mg-dash-traffic-check button{min-height:44px;border:1px solid var(--dash-border);border-radius:9px;background:var(--dash-button);color:var(--dash-ink);padding:4px 8px;font-size:clamp(11px,1.7vh,15px);font-weight:700}
+.mg-dash-traffic-check button:disabled{opacity:.5}
+.mg-dash-traffic-check small{flex:1 1 95px;font-size:clamp(10px,1.5vh,13px);color:var(--dash-sub)}
+
+/* Keep traffic actions inside the existing scrolling detail body, so a
+   result with two alternatives cannot consume the compact cockpit height. */
+.mg-dash-route-detail-scroll .mg-dash-traffic-check{margin-bottom:6px;min-width:0}
+
+/* Shared fallback typography for the eight route values before measured fit.
+   Units and secondary hints retain their original smaller type. */
+.mg-dashboard-compact [data-dash],
+.mg-dashboard-compact .mg-dash-camera[data-camera-value-kind="distance"] [data-dash="camera"]{
+ font-size:clamp(20px,7vh,50px)!important;
+ font-variant-numeric:tabular-nums;
+}
+
+/* Route detail polish: reserve the full text column for names and addresses.
+   No change to the active dashboard grid or the map split. */
+.mg-dash-detail-body{gap:5px}
+.mg-dash-route-rail{flex-basis:30px;border-radius:8px}
+.mg-rail-track{width:8px}
+.mg-rail-marker[data-kind="mixed"]{color:#f5c77a}
+.mg-rail-marker:not([data-count="1"]){width:23px;height:23px;font-size:11px}
+.mg-rail-caption{font-size:8px}
+.mg-dash-route-detail-scroll{container-type:inline-size;padding-inline:2px}
+.mg-dash-route-detail-scroll .mg-guidance-detail-row{
+ grid-template-columns:minmax(72px,35%) minmax(0,1fr);gap:6px;
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-location,
+.mg-dash-route-detail-scroll .mg-guidance-detail-next-stop,
+.mg-dash-route-detail-scroll .mg-guidance-detail-stops{
+ grid-template-columns:minmax(0,1fr);gap:4px;align-items:start;
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-location dd,
+.mg-dash-route-detail-scroll .mg-guidance-detail-next-stop dd strong,
+.mg-dash-route-detail-scroll .mg-guidance-stop-address{
+ overflow-wrap:break-word;word-break:normal;hyphens:auto;
+}
+.mg-dash-route-detail-scroll .mg-guidance-detail-location dd{
+ font-size:clamp(16px,3.1vh,27px);line-height:1.22;
+}
+.mg-dash-route-detail-scroll .mg-dash-traffic-check{
+ padding:0;gap:3px 6px;margin-bottom:4px;
+}
+.mg-dash-traffic-check small[hidden]{display:none!important}
+.side.mg-nav-dashboard-side .mg-dash-traffic-check button{
+ padding:3px 7px;line-height:1.12;max-width:100%;white-space:normal;
+}
+.mg-dash-traffic-check small{flex:1 1 80px;line-height:1.18}
+
+/* UX: arrival and remaining time are full-tile touch targets, but the normal
+   eight-field grid and measured value sizes stay exactly as before. */
+.mg-dashboard-compact button[data-dash-traffic-open]{font:inherit;color:inherit;text-align:left;appearance:none;cursor:pointer;touch-action:manipulation; -webkit-tap-highlight-color:transparent}
+.mg-dashboard-compact button[data-dash-traffic-open]:disabled{opacity:1;cursor:default}
+.mg-dashboard-compact button[data-dash-traffic-open]:focus-visible{outline:2px solid var(--dash-accent);outline-offset:-2px}
+.mg-dash-traffic-heading{display:flex;align-items:center;gap:8px;min-width:0}
+.side.mg-nav-dashboard-side .mg-dash-traffic-heading button{flex:0 0 44px;min-height:44px;border:1px solid var(--dash-border);border-radius:9px;background:var(--dash-button);color:var(--dash-ink);font-size:26px;line-height:1}
+.mg-dash-traffic-summary{display:flex;flex-direction:column;gap:6px;min-width:0;margin-bottom:8px;color:var(--dash-ink)}
+.mg-traffic-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;min-width:0}
+.mg-traffic-summary-tile{display:flex;flex-direction:column;gap:3px;padding:6px;min-width:0;border:1px solid var(--dash-border);border-radius:8px;background:var(--dash-bg);overflow-wrap:anywhere}
+.mg-traffic-summary-tile span,.mg-traffic-breakdown>span,.mg-dash-traffic-summary small{font-size:clamp(10px,1.55vh,14px);color:var(--dash-sub);line-height:1.2}
+.mg-traffic-summary-tile strong{font-size:clamp(14px,3.4vh,28px);line-height:1.1;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.mg-traffic-jam-summary{display:flex;flex-direction:column;gap:4px;border:1px solid var(--dash-border);border-radius:9px;padding:6px;min-width:0}
+.mg-traffic-jam-summary>strong{font-size:clamp(12px,2.1vh,19px);line-height:1.15;overflow-wrap:anywhere}
+.mg-traffic-jam-summary[data-status="heavy"]>strong{color:#ff9292}
+.mg-traffic-jam-summary[data-status="slow"]>strong{color:#ffc36c}
+.mg-traffic-breakdown{display:flex;flex-direction:column;gap:4px;padding:6px;border:1px solid var(--dash-border);border-radius:8px;min-width:0}
+.mg-traffic-breakdown>div{display:grid;grid-template-columns:8px minmax(0,1fr) auto;align-items:center;gap:5px;font-size:clamp(11px,1.75vh,16px);min-width:0;overflow-wrap:anywhere}
+.mg-traffic-breakdown i{width:8px;height:8px;border-radius:50%;background:#647681}
+.mg-traffic-breakdown i[data-speed="NORMAL"]{background:#35c879}
+.mg-traffic-breakdown i[data-speed="SLOW"]{background:#ffb344}
+.mg-traffic-breakdown i[data-speed="TRAFFIC_JAM"]{background:#f05252}
+.mg-dash-panel[data-details-open="true"] .mg-dash-route-rail{flex-basis:clamp(36px,7vh,60px)}
+.mg-dash-panel[data-details-open="true"] .mg-rail-track{width:12px}
+@container (max-width:160px){.mg-traffic-summary-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Collapsible diagnostics stay in the existing scrolling traffic details. */
+.mg-dash-traffic-diagnostics[hidden]{display:none!important}
+.mg-dash-traffic-diagnostics{margin:8px 0;padding:0 6px;border:1px solid var(--dash-border);border-radius:8px;color:var(--dash-ink);min-width:0}
+.mg-dash-traffic-diagnostics summary{min-height:44px;align-content:center;cursor:pointer;color:var(--dash-sub);font-size:clamp(12px,1.9vh,17px);font-weight:700}
+.mg-dash-traffic-diagnostics dl{margin:0 0 6px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.mg-dash-traffic-diagnostics dl>div{display:grid;grid-template-columns:minmax(0,40%) minmax(0,1fr);gap:5px;border-top:1px solid var(--dash-border);padding:5px 0;font-size:clamp(10px,1.5vh,14px);line-height:1.25;overflow-wrap:anywhere}
+.mg-dash-traffic-diagnostics dt{color:var(--dash-sub)}
+.mg-dash-traffic-diagnostics dd{margin:0;min-width:0}
+
+/* Distances beside the existing rail, not a second rail or wider dashboard. */
+.mg-dash-panel[data-details-open="true"] .mg-dash-route-rail:has(.mg-rail-has-traffic-labels){flex-basis:clamp(58px,10vh,86px)}
+.mg-rail-has-traffic-labels{margin-right:36px}
+.mg-rail-traffic-label{position:absolute;left:calc(100% + 4px);transform:translateY(50%);white-space:nowrap;font-size:clamp(8px,1.25vh,11px);font-weight:700;line-height:1.2;background:#0c1c29;border-radius:3px;padding:1px 2px;z-index:2;color:#ffc36c}
+.mg-rail-traffic-label[data-speed="TRAFFIC_JAM"]{color:#ff9292}
+.mg-traffic-next,.mg-traffic-more-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px 8px;align-items:center;min-width:0;overflow-wrap:anywhere}
+.mg-traffic-next>strong{font-size:clamp(16px,3.5vh,30px);line-height:1.1}
+.mg-traffic-next>small,.mg-traffic-more-row>small{grid-column:1/-1}
+.mg-traffic-next[data-speed="SLOW"]>span,.mg-traffic-more-row[data-speed="SLOW"]>span{color:#ffc36c}
+.mg-traffic-next[data-speed="TRAFFIC_JAM"]>span,.mg-traffic-more-row[data-speed="TRAFFIC_JAM"]>span{color:#ff9292}
+.mg-traffic-more{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--dash-border);padding-top:5px;font-size:clamp(11px,1.8vh,16px)}
+.mg-traffic-more>span{color:var(--dash-sub)}
+.mg-traffic-more-row{padding:5px 0;border-bottom:1px solid var(--dash-border)}
+
+/* Traffic details only: strong glance hierarchy for short landscape displays. */
+.mg-traffic-kpis [data-metric="time"] strong,.mg-traffic-kpis [data-metric="delay"] strong{font-size:clamp(19px,4.5vh,36px);font-weight:800;letter-spacing:-.025em}
+.mg-traffic-kpis [data-metric="arrival"] strong{font-size:clamp(16px,3.6vh,29px)}
+.mg-traffic-kpis [data-metric="distance"] strong{font-size:clamp(15px,3.1vh,25px)}
+.mg-traffic-kpis [data-metric="delay"] strong{color:#ffc36c}
+.mg-traffic-jam-summary{padding:8px;gap:5px}
+.mg-traffic-next{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+.mg-traffic-next-distance{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 7px;min-width:0}
+.mg-traffic-next-distance>strong{font-size:clamp(27px,6.4vh,48px);font-weight:850;line-height:1.05;letter-spacing:-.03em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.mg-traffic-next-distance>small:empty{display:none}
+.mg-traffic-next-meta{display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 8px;font-size:clamp(14px,2.8vh,20px);font-weight:700}
+.mg-traffic-next-meta small{font-weight:500;font-size:clamp(12px,2.1vh,16px)}
+.mg-traffic-next[data-speed="SLOW"] .mg-traffic-next-meta>span{color:#ffc36c}
+.mg-traffic-next[data-speed="TRAFFIC_JAM"] .mg-traffic-next-meta>span{color:#ff9292}
+.mg-traffic-more-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 8px;align-items:baseline;font-size:clamp(12px,2vh,16px);padding:4px 0}
+.mg-traffic-more-row>small{grid-column:auto;font-size:inherit;white-space:normal}
+.mg-traffic-more-row>strong{font-size:inherit;white-space:normal;font-variant-numeric:tabular-nums}
+.mg-traffic-breakdown-details{border:1px solid var(--dash-border);border-radius:8px;padding:0 7px;min-width:0}
+.mg-traffic-breakdown-details>summary{min-height:44px;align-content:center;cursor:pointer;font-size:clamp(12px,2vh,17px);font-weight:700;color:var(--dash-sub)}
+.mg-traffic-breakdown-details .mg-traffic-breakdown{border:0;padding:0 0 6px}
+.mg-traffic-breakdown-count{display:block;padding-bottom:6px}
+@media(orientation:landscape) and (max-height:480px){
+ .mg-dash-traffic-heading{gap:5px}
+ .mg-dash-traffic-heading>span{font-size:clamp(15px,4vh,20px)}
+ .mg-dash-panel[data-details-open="true"] .mg-dash-route-rail{flex-basis:28px}
+ .mg-dash-panel[data-details-open="true"] .mg-dash-route-rail:has(.mg-rail-has-traffic-labels){flex-basis:49px}
+ .mg-dash-panel[data-details-open="true"] .mg-rail-track{width:8px}
+ .mg-rail-has-traffic-labels{margin-right:25px}
+ .mg-rail-traffic-label{font-size:9px;left:calc(100% + 2px)}
+ .mg-dash-traffic-summary{gap:5px}
+ .mg-traffic-jam-summary{order:-1;padding:6px}
+ .mg-traffic-jam-summary>strong{font-size:14px}
+ .mg-traffic-kpis .mg-traffic-summary-tile{padding:4px;gap:2px}
+ .mg-traffic-kpis .mg-traffic-summary-tile>span{font-size:11px}
+ .mg-traffic-kpis [data-metric="time"] strong,.mg-traffic-kpis [data-metric="delay"] strong{font-size:clamp(19px,5.4vh,26px)}
+ .mg-traffic-kpis [data-metric="arrival"] strong{font-size:clamp(17px,4.7vh,23px)}
+ .mg-traffic-kpis [data-metric="distance"] strong{font-size:clamp(15px,4.2vh,20px)}
+ .mg-dash-traffic-diagnostics{margin:4px 0}
+}
+@container (max-width:300px){
+ .mg-traffic-jam-summary{order:-1}
+ .mg-traffic-next-distance>strong{font-size:clamp(26px,7vh,36px)}
+ .mg-traffic-next-distance>small{font-size:11px}
+ .mg-traffic-next-meta{font-size:14px}
+ .mg-traffic-more-row{gap:3px 5px}
+ .mg-traffic-more-row>span{overflow-wrap:normal;hyphens:auto}
+}
+@container (max-width:200px){
+ .mg-traffic-more-row{grid-template-columns:minmax(0,1fr) auto}
+ .mg-traffic-more-row>small{grid-column:1/-1}
+ .mg-traffic-kpis [data-metric] strong{overflow-wrap:normal;word-break:normal}
+}
+
+/* Keep follow-up reports below the main distance and KPI group, even on long routes. */
+.mg-dash-traffic-summary>.mg-traffic-more{border:1px solid var(--dash-border);border-radius:8px;padding:5px 7px}

@@ -1,0 +1,625 @@
+/* MeviCar Next – five supported landscape CSS-viewport profiles:
+   iPhone 17 874×402; S20 FE 915×412; DeX 1920×1200;
+   FullHD 1920×1080; panoramic 1920×720.
+   Ranges cover browser toolbars, zoom, safe-area insets. */
+:root{--car-touch:44px}
+html,body{min-height:0;overscroll-behavior:none}
+.shell,.cockpit,.body,.screen,.map,.side,.full{min-height:0}
+.screen{min-width:0}
+.shell{padding-left:max(3px,env(safe-area-inset-left,0px));padding-right:max(3px,env(safe-area-inset-right,0px))}
+.dock button .dock-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+/* The six left dock buttons share the entire available height. Keep the SVG
+   icons at their current size and give their captions slightly more space.
+   This affects only the left dock, never the optional bottom toolbar. */
+.cockpit .dock.left .ico{flex:0 0 auto}
+.cockpit .dock.left .dock-label{
+  font-size:clamp(11px,2.55vh,14px);
+  line-height:1.12;
+}
+/* DeX, FullHD, panoramic: desktop-sized touch keyboard beside the search results. */
+@media(orientation:landscape) and (min-width:1150px){
+ .map.searchmode .keyboard{
+   left:auto;right:clamp(20px,3vw,58px);top:50%;bottom:auto;transform:translateY(-50%);
+   width:min(50%,840px);max-height:calc(100% - 40px);padding:clamp(12px,1.3vw,19px);
+   gap:clamp(7px,1.05vh,12px);border:1px solid #7fdaef59;
+   border-radius:clamp(14px,1.6vw,24px);box-shadow:0 15px 48px #030919a8;
+ }
+ .map.searchmode .keyboard .keyrow{gap:clamp(6px,.65vw,10px)}
+ .map.searchmode .keyboard .keyrow button{
+   min-height:clamp(48px,5.1vh,67px);padding:6px 2px;
+   font-size:clamp(15px,1.02vw,19px);border-radius:clamp(8px,.65vw,12px);
+ }
+ .map.searchmode .keyboard .keyrow .special,
+ .map.searchmode .keyboard .keyrow .go{font-size:clamp(12px,.95vw,18px)}
+}
+/* iPhone 17 and S20 FE in landscape: protect nav width and touch controls. */
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .dock.left{width:clamp(64px,7.4vw,70px)}
+ .dock.left button{min-height:clamp(44px,9vh,57px);padding:3px 1px}
+ .dock.left .dock-label{font-size:clamp(10px,2.15vh,12px)}
+ .screen{gap:clamp(4px,.55vw,7px)}
+ .side.mm-host{width:42%;min-width:0}
+ .map.searchmode .keyboard{
+   left:auto;right:8px;top:auto;bottom:8px;transform:none;
+   width:54%;max-width:54%;padding:7px;
+ }
+ .map.searchmode .keyboard .keyrow button{
+   min-height:clamp(39px,9.8vh,44px);font-size:clamp(12px,2.8vh,14px);
+ }
+ :is(.mm-shell,.sp-shell).is-compact .mm-top-actions{gap:clamp(3px,.5vw,6px)}
+ :is(.mm-shell,.sp-shell).is-compact .mm-mode-button{
+   min-height:var(--car-touch);min-width:0;padding:4px 7px;
+   font-size:clamp(10px,2.35vh,12px);
+ }
+ .mm-shell.is-compact .mm-compact-toggle button{
+   min-height:clamp(38px,10vh,44px);font-size:clamp(11px,2.4vh,13px);
+ }
+ .mm-shell.is-compact .mm-now{gap:clamp(4px,1vh,6px)}
+ .mm-shell.is-compact .mm-track-details{gap:clamp(3px,1vh,7px)}
+ .mm-shell.is-compact .mm-now-title{font-size:clamp(12px,3.2vh,17px)}
+ .mm-shell.is-compact .mm-transport button{max-width:44px;max-height:44px}
+ .mm-shell.is-compact .mm-transport .mm-primary{max-width:54px;max-height:54px}
+}
+/* DeX 1920x1200 and FullHD 1920x1080: visible library and player simultaneously. */
+@media(orientation:landscape) and (min-width:1500px) and (min-height:880px){
+ .mm-shell.is-compact .mm-compact-toggle{display:none}
+ .mm-shell.is-compact .mm-content{
+   display:grid;grid-template-columns:minmax(0,1fr);
+   grid-template-rows:minmax(0,47%) minmax(0,53%);min-height:0;overflow:hidden;
+ }
+ .mm-shell.is-compact[data-pane="player"] .mm-library,
+ .mm-shell.is-compact[data-pane="library"] .mm-library{
+   display:flex;flex-direction:column;min-height:0;overflow:hidden;
+   padding:clamp(11px,1.05vw,19px);border-right:0;
+   border-bottom:1px solid #7ce7f640;
+ }
+ .mm-shell.is-compact[data-pane="player"] .mm-now,
+ .mm-shell.is-compact[data-pane="library"] .mm-now{
+   display:grid;min-height:0;grid-template-columns:minmax(0,1fr);
+   grid-template-rows:minmax(0,1fr) auto auto;gap:clamp(8px,1.1vh,13px);
+   padding:clamp(11px,1.1vw,19px) clamp(16px,1.5vw,23px)
+     max(18px,env(safe-area-inset-bottom,0px));
+ }
+ .mm-shell.is-compact .mm-library-header{gap:8px}
+ .mm-shell.is-compact .mm-search{height:clamp(43px,4.2vh,52px)}
+ .mm-shell.is-compact .mm-tab{
+   font-size:clamp(12px,1.2vh,15px);min-height:clamp(39px,4vh,47px);padding:7px 12px;
+ }
+ .mm-shell.is-compact .mm-tabs{overflow-x:auto}
+ .mm-shell.is-compact .mm-track,.mm-shell.is-compact .mm-group{
+   min-height:clamp(58px,6vh,75px);padding:7px 9px;
+ }
+ .mm-shell.is-compact .mm-track-icon{
+   width:clamp(42px,5vh,56px);height:clamp(42px,5vh,56px);
+ }
+ .mm-shell.is-compact .mm-track-fav{width:44px;min-width:44px;height:44px}
+ .mm-shell.is-compact .mm-now-top{
+   grid-template-columns:minmax(0,39%) minmax(0,61%);gap:clamp(12px,1vw,20px);
+   padding:clamp(8px,1vw,15px);
+ }
+ .mm-shell.is-compact .mm-artwork{width:min(100%,28vh);height:auto;max-height:100%}
+ .mm-shell.is-compact .mm-now-title{font-size:clamp(20px,2.5vh,30px)}
+ .mm-shell.is-compact .mm-now-sub{font-size:clamp(13px,1.5vh,17px)}
+ .mm-shell.is-compact .mm-now-album{display:block}
+ .mm-shell.is-compact .mm-icon-button{min-width:44px;width:44px;height:44px}
+ .mm-shell.is-compact .mm-transport{max-width:440px;gap:clamp(8px,.9vw,14px)}
+ .mm-shell.is-compact .mm-transport button{
+   width:clamp(46px,4.8vh,60px);height:clamp(46px,4.8vh,60px);
+   max-width:60px;max-height:60px;
+ }
+ .mm-shell.is-compact .mm-transport .mm-primary{
+   width:clamp(61px,6vh,77px);height:clamp(61px,6vh,77px);
+   max-width:77px;max-height:77px;
+ }
+}
+/* Panoramic 1920x720: nav prioritized, 2-pane search, compact media. */
+@media(orientation:landscape) and (min-width:1500px) and (max-height:820px){
+ .mm-shell.is-compact .mm-top{
+   padding:clamp(6px,1.2vh,11px) clamp(9px,.9vw,16px);
+ }
+ .mm-shell.is-compact .mm-compact-toggle button{
+   min-height:clamp(40px,6vh,51px);font-size:clamp(12px,1.9vh,15px);
+ }
+ .mm-shell.is-compact .mm-now-top{
+   grid-template-columns:minmax(0,39%) minmax(0,61%);
+ }
+ .mm-shell.is-compact .mm-artwork{width:min(100%,29vh)}
+ .mm-shell.is-compact .mm-track-details{gap:clamp(6px,1.2vh,10px)}
+ .mm-shell.is-compact .mm-now-title{font-size:clamp(19px,3.1vh,28px)}
+ .mm-shell.is-compact .mm-transport button{min-width:48px;min-height:48px}
+ .mm-shell.is-compact .mm-transport .mm-primary{min-width:66px;min-height:66px}
+}
+
+/* UX quality round 3 – touch targets tested on all five landscape profiles. */
+.status{height:clamp(36px,4.5vh,44px);align-items:center;flex:none}
+:is(.mm-shell,.sp-shell).is-compact .mm-mode-button{min-height:44px;padding:7px clamp(6px,.65vw,11px);font-size:clamp(11px,1.55vh,15px)}
+.mm-shell.is-compact .mm-compact-toggle button{min-height:44px}
+.mm-shell .mm-icon-button{min-height:44px;min-width:44px;width:44px;height:44px}
+.mm-shell .mm-transport button{min-width:44px;min-height:44px}
+.mm-shell .mm-transport .mm-primary{min-width:56px;min-height:56px}
+.mm-shell.is-compact .mm-transport button{min-width:44px;min-height:44px}
+.mm-shell.is-compact .mm-transport .mm-primary{min-width:56px;min-height:56px}
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .map.searchmode .keyboard{width:60%;max-width:60%;padding:6px;gap:3px}
+ .map.searchmode .keyboard .keyrow{gap:2px}
+ .map.searchmode .keyboard .keyrow button{min-height:44px;padding:3px 0}
+ :is(.mm-shell,.sp-shell).is-compact .mm-top-actions{gap:3px}
+ :is(.mm-shell,.sp-shell).is-compact .mm-mode-button{min-height:44px;padding:6px 5px;font-size:clamp(10px,2.6vh,12px)}
+ .mm-shell.is-compact .mm-now-top{padding:5px;gap:6px}
+ .mm-shell.is-compact .mm-transport button{min-width:44px;max-width:48px;min-height:44px;max-height:48px}
+ .mm-shell.is-compact .mm-transport .mm-primary{min-width:56px;max-width:58px;min-height:56px;max-height:58px}
+}
+/* Override older compact sizing rules with the final measured touch widths. */
+:is(.mm-shell,.sp-shell) .mm-mode-button{min-height:44px}
+:is(.mm-shell,.sp-shell).is-compact .mm-mode-button{min-width:44px}
+.mm-shell.is-compact .mm-now .mm-icon-button{width:44px;min-width:44px;height:44px;min-height:44px}
+
+/* Quality pass 4: larger iPhone/S20 landscape keyboard.
+   The QWERTZ row has ten keys: protect key width, not only key height.
+   Hide the dock only while entering a destination; it returns on Back/Done. */
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .cockpit:has(.map.searchmode) .dock{display:none}
+ .cockpit:has(.map.searchmode) .body{gap:0}
+ .cockpit:has(.map.searchmode) .workspace{min-width:0;width:100%}
+ .map.searchmode .keyboard{width:72%;max-width:72%;
+   left:auto;right:4px;top:auto;bottom:4px;transform:none;
+   padding:6px;gap:5px;border-radius:15px;
+ }
+ .map.searchmode .keyboard .keyrow{gap:3px}
+ .map.searchmode .keyboard .keyrow button{
+   min-width:0;min-height:clamp(51px,13.5vh,58px);
+   padding:4px 0;font-size:clamp(16px,4.3vh,20px);border-radius:9px;
+ }
+ .map.searchmode .keyboard .keyrow .special,
+ .map.searchmode .keyboard .keyrow .go{
+   font-size:clamp(11px,3.3vh,15px);
+ }
+}
+
+/* Radio reuses MeviMedia's demo shell and responsive library/player panes.
+   Spotify has its own sp-* shell. */
+.mm-demo{--demo-accent:#ffc978}
+.mm-demo .mm-heading,.mm-demo .mm-now-eyebrow{color:var(--demo-accent)}
+.mm-demo-notice{flex:none;padding:6px 12px;color:#d4e4ef;background:#07101c80;border-bottom:1px solid #8caac32b;font-size:12px;line-height:1.35}
+.mm-demo-library-head{display:flex;align-items:center;justify-content:space-between;gap:8px;flex:none;font-size:clamp(12px,1.7vh,18px)}
+.mm-demo.mm-shell .mm-tab,.mm-demo.mm-shell.is-compact .mm-tab{min-height:44px}
+.mm-demo .mm-list{flex:1}
+.mm-demo-item{display:flex;align-items:center;gap:10px;flex:none;min-height:64px;width:100%;padding:10px;text-align:left;color:inherit;background:#18304970;border:1px solid #7199b333;border-radius:12px}
+.mm-demo-item.selected{border-color:var(--demo-accent);background:#28516b55}
+.mm-demo-item-icon{display:grid;place-items:center;width:44px;height:44px;flex:none;border-radius:10px;background:#b7dfff12;color:var(--demo-accent)}
+.mm-demo-item .mm-icon{width:22px;height:22px;flex:none}
+.mm-demo-item-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.mm-demo-item-text strong{font-size:clamp(13px,1.9vh,21px)}
+.mm-demo-item-text small{font-size:clamp(11px,1.4vh,15px);color:#bed1e3}
+.mm-demo-item-text strong,.mm-demo-item-text small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mm-demo-empty{padding:16px;color:#c1d5e4;font-size:14px;line-height:1.5}
+.mm-demo.mm-shell .mm-now{grid-template-rows:minmax(0,1fr) auto auto;padding-bottom:12px}
+.mm-demo .mm-demo-art{background:radial-gradient(circle at 30% 20%,#98743360,#173047 70%);border-color:var(--demo-accent)}
+.mm-demo .mm-demo-art span{color:var(--demo-accent)}
+.mm-demo .mm-icon-button[aria-pressed="true"]{color:var(--demo-accent);border-color:var(--demo-accent)}
+.mm-demo-unavailable{display:flex;justify-content:center;align-items:center;gap:9px;min-height:44px;border-top:1px solid #7895b440;color:#b9c9d7;font-size:clamp(12px,1.8vh,17px)}
+.mm-demo-unavailable .mm-icon{width:20px;height:20px;flex:none}
+.mm-demo-help{font-size:clamp(11px,1.5vh,14px);color:#b9c9d7;line-height:1.4;text-align:center}
+.mm-demo .mm-compact-toggle button{display:flex;align-items:center;justify-content:center;gap:6px;min-width:44px}
+.mm-demo .mm-compact-toggle .mm-icon{width:18px;height:18px}
+.mm-demo.mm-shell .mm-now-top{grid-template-columns:minmax(0,2fr) minmax(0,3fr)}
+.mm-demo .mm-mode-button:focus-visible,.mm-demo button:focus-visible{outline:2px solid var(--demo-accent);outline-offset:-3px}
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .mm-demo.is-compact .mm-identity{display:none}
+ .mm-demo.is-compact .mm-top-actions{width:100%}
+ .mm-demo.is-compact .mm-mode-button{flex:1}
+ .mm-demo.is-compact .mm-demo-notice{font-size:11px;padding:4px 7px}
+ .mm-demo.is-compact .mm-library{gap:3px}
+ .mm-demo.is-compact .mm-demo-item{min-height:52px;padding:5px;gap:6px}
+ .mm-demo.is-compact .mm-demo-item-icon{width:32px;height:32px}
+ .mm-demo.is-compact .mm-now{gap:3px;padding:4px 7px 5px}
+ .mm-demo.is-compact .mm-now-top{padding:3px;gap:6px}
+ .mm-demo.is-compact .mm-track-details{gap:3px}
+ .mm-demo.is-compact .mm-now-title{font-size:15px}
+ .mm-demo.is-compact .mm-now-eyebrow{font-size:8px;letter-spacing:.08em}
+ .mm-demo.is-compact .mm-now-sub{font-size:10px}
+ .mm-demo.is-compact .mm-demo-help{font-size:10px}
+ .mm-demo.is-compact .mm-demo-unavailable{min-height:25px;font-size:11px}
+}
+
+/* Radio library tools: search, favorites filter and custom HTTPS streams. */
+.mm-radio-tools{display:flex;flex-direction:column;gap:6px;flex:none;min-width:0}
+.mm-radio.is-adding .mm-radio-tools{flex:1;min-height:0;overflow-y:auto}
+.mm-radio.is-adding .mm-radio-search,
+.mm-radio.is-adding .mm-radio-tools-row,
+.mm-radio.is-adding .mm-list{display:none}
+.mm-radio-search{flex:none;width:100%;min-height:44px}
+.mm-radio-tools-row{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;flex-wrap:wrap}
+.mm-radio-tools-row>strong{font-size:clamp(12px,1.7vh,18px);min-width:0}
+.mm-radio-actions{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
+.mm-radio-add{display:flex;flex-direction:column;gap:6px;padding:8px;border:1px solid #7199b355;border-radius:12px;background:#10223570}
+.mm-radio-add label{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:12px;color:#cfe2f0}
+.mm-radio-add input{width:100%;min-width:0;min-height:44px;border-radius:9px;border:1px solid #7abde65b;background:#1a2c44;color:#eefaff;padding:0 10px;font-size:16px}
+.mm-radio-add input::placeholder{color:#8fa9ba}
+.mm-radio-add input:focus-visible{outline:2px solid var(--demo-accent);outline-offset:1px}
+.mm-radio-add-actions{display:flex;gap:6px;flex-wrap:wrap}
+.mm-radio-add-actions button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:0 12px;border-radius:10px;border:1px solid #557c9b58;background:#19294099;color:#e8f6ff;font:inherit;font-size:13px}
+.mm-radio-add-actions button.primary{border-color:var(--demo-accent);background:#3a2f1a;color:#ffe2b0}
+.mm-radio-add-actions .mm-icon{width:18px;height:18px;flex:none}
+.mm-radio-notice{font-size:12px;line-height:1.35;color:var(--demo-accent);overflow-wrap:anywhere}
+.mm-radio-own{display:inline-block;padding:1px 5px;border-radius:5px;border:1px solid #ffc97888;background:#ffc9781f;color:#ffd89d;font-size:9px;font-weight:700;letter-spacing:.06em;vertical-align:middle}
+.mm-radio-remove{color:#ffb2ad;border-color:#ff8c8455}
+.mm-radio-remove.selected{color:#ffe3e0;border-color:#ff7a70;background:#5c221f99}
+
+/* Live radio controls: preserve space for transport and volume on short displays. */
+.mm-radio-status{min-width:0;color:var(--demo-accent);font-size:clamp(12px,1.7vh,17px);line-height:1.35;text-align:center;overflow-wrap:anywhere}
+.mm-radio-controls{display:flex;align-items:center;justify-content:center;gap:clamp(10px,2vw,24px);min-width:0}
+.mm-radio.mm-shell .mm-radio-controls .mm-transport{flex:1;max-width:260px;min-width:156px;margin:0;border:0;padding:0;gap:6px}
+.mm-radio-volume{display:flex;align-items:center;gap:6px;min-width:0;max-width:220px;flex:1;color:var(--demo-accent)}
+.mm-radio-volume .mm-icon{width:20px;height:20px;flex:none}
+.mm-radio-volume input{width:100%;min-width:0;min-height:44px;margin:0;accent-color:var(--demo-accent)}
+.mm-radio-volume input:focus-visible{outline:2px solid var(--demo-accent)}
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .mm-radio.mm-shell.is-compact .mm-now-top{grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:6px}
+ .mm-radio.is-compact .mm-track-details{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:3px}
+ .mm-radio.is-compact .mm-track-details .mm-now-buttons{grid-column:2;grid-row:1/4;justify-content:flex-end;align-content:start;gap:3px}
+ .mm-radio.is-compact .mm-now-title{font-size:14px;max-height:3.3em}
+ .mm-radio.is-compact .mm-now-sub,.mm-radio.is-compact .mm-now-album{display:none}
+ .mm-radio.is-compact .mm-now-eyebrow{font-size:8px;letter-spacing:0}
+ .mm-radio.is-compact .mm-radio-status{font-size:11px;line-height:1.25}
+ .mm-radio.is-compact .mm-radio-controls{gap:8px}
+ .mm-radio.is-compact .mm-radio-volume{gap:3px}
+ .mm-radio.is-compact .mm-radio-volume .mm-icon{width:16px;height:16px}
+ .mm-radio.mm-shell.is-compact .mm-radio-controls .mm-transport{flex:none;width:156px}
+ .mm-radio.is-compact .mm-radio-tools{gap:3px}
+ .mm-radio.is-compact .mm-radio-tools-row>strong{font-size:11px}
+ .mm-radio.is-compact .mm-radio-actions .mm-tab{min-height:44px;padding:4px 8px;font-size:11px}
+ .mm-radio.is-compact .mm-radio-add{padding:5px;gap:4px}
+ .mm-radio.is-compact .mm-radio-add label{font-size:10px;gap:2px}
+ .mm-radio.is-compact .mm-radio-add input{min-height:44px;font-size:14px}
+ .mm-radio.is-compact .mm-radio-add-actions button{min-height:44px;font-size:11px}
+ .mm-radio.is-compact .mm-radio-notice{font-size:10px}
+}
+
+/* iPhone 17 compact cockpit: reclaim decorative margins and float status over map.
+   Safe-area padding remains on the outer shell; no changes to larger displays. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .shell{padding-top:max(2px,env(safe-area-inset-top,0px));padding-bottom:max(2px,env(safe-area-inset-bottom,0px));}
+ .cockpit{padding:3px;gap:3px;border-radius:12px;}
+ .cockpit .body{gap:3px;}
+ .cockpit .workspace{position:relative;gap:0;min-width:0;}
+ .cockpit .screen{gap:3px;}
+ .cockpit .map{border-radius:10px;}
+ .cockpit .status{
+   position:absolute;top:4px;right:5px;left:auto;z-index:12;
+   width:auto;height:36px;min-height:36px;max-width:calc(100% - 12px);
+   padding:2px 5px;border-radius:12px;
+   background:linear-gradient(90deg,#10253bd9,#10253bf2);
+   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+   border:1px solid #9ad5ec45;pointer-events:auto;
+ }
+ .cockpit .status>span:first-child{display:none;}
+ .cockpit .dock.left{width:62px;padding:3px;gap:3px;border-radius:10px;}
+ .cockpit .dock.left button{min-height:44px;}
+ /* About 10% larger at 874x402 (~32.5px) versus the previous build.
+    Keep the same tile and caption sizes. Reserve 8px horizontally and
+    23px vertically so glyphs can shrink rather than overlap labels. */
+ .cockpit .dock.left button .ico{
+   width:clamp(29.7px,8.085vh,34.65px);
+   height:clamp(29.7px,8.085vh,34.65px);
+   max-width:calc(100% - 8px);
+   max-height:calc(100% - 23px);
+   flex:0 0 auto;
+ }
+}
+
+/* iPhone landscape edge-to-edge: paint the cockpit into the unsafe regions,
+   but keep touch controls clear of the cutout and rounded corners.
+   The dock remains in the safe left zone; the map extends to the right edge. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .shell{
+   padding:0 !important;
+   width:100vw;
+   height:100dvh;
+   max-width:none;
+   background:#081823;
+ }
+ .cockpit{
+   border:0;
+   border-radius:0;
+   padding:0;
+   margin:0;
+   background:#081823;
+ }
+ .cockpit .body{
+   padding-left:env(safe-area-inset-left,0px);
+   padding-right:0;
+   padding-top:env(safe-area-inset-top,0px);
+   padding-bottom:env(safe-area-inset-bottom,0px);
+ }
+ .cockpit .map{border-radius:0;}
+ .cockpit .screen{border-radius:0;}
+ .cockpit .status{
+   right:max(6px,env(safe-area-inset-right,0px));
+   top:max(5px,env(safe-area-inset-top,0px));
+ }
+ .cockpit .map .map-tools{
+   right:max(8px,env(safe-area-inset-right,0px));
+ }
+ .cockpit .dock.left{margin-left:2px;}
+}
+/* When the phone rotates 180 degrees, the notch-safe left inset swaps sides.
+   Respect both sides for interactive controls without clipping the map artwork. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit .body{padding-right:env(safe-area-inset-right,0px);}
+}
+
+/* iPhone landscape: actual map canvas fills the physical viewport.
+   Keep navigation controls above the map and inside the safe insets. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit .body{padding:0 !important;}
+ .cockpit .workspace,.cockpit .screen{position:static;overflow:visible;}
+ .cockpit .map{
+   position:fixed !important;
+   inset:0 !important;
+   width:100vw !important;
+   height:100dvh !important;
+   max-width:none !important;
+   border:0 !important;
+   border-radius:0 !important;
+   z-index:0;
+ }
+ .cockpit .dock.left{
+   position:relative;
+   z-index:15;
+   /* The iPhone cutout ends before the safe-area boundary. Reclaim 8px
+      while retaining a minimum clearance in either landscape orientation. */
+   margin-left:max(4px,calc(env(safe-area-inset-left,0px) - 8px));
+   margin-top:max(4px,env(safe-area-inset-top,0px));
+   /* Keep the top position; extend the dock downward by matching the
+      bottom inset to exactly the same inset used at the top. */
+   margin-bottom:max(4px,env(safe-area-inset-top,0px));
+ }
+ .cockpit .status{position:fixed;z-index:20;}
+}
+
+/* iPhone 17 landscape navigation polish: compact Apple Maps-style panels.
+   Keep the status pill away from the search panel; keyboard is subordinate
+   to the active address field and leaves map visible above it. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit .status{
+   top:max(6px,env(safe-area-inset-top,0px));
+   right:max(8px,env(safe-area-inset-right,0px));
+   left:auto;
+   max-width:40vw;
+ }
+ .cockpit .map.searchmode .keyboard{
+   width:59vw !important;
+   max-width:59vw !important;
+   right:max(6px,env(safe-area-inset-right,0px)) !important;
+   left:auto !important;
+   bottom:max(6px,env(safe-area-inset-bottom,0px)) !important;
+   top:auto !important;
+   transform:none !important;
+   padding:5px !important;
+   gap:3px !important;
+ }
+ .cockpit .map.searchmode .keyboard .keyrow{gap:3px !important;}
+ .cockpit .map.searchmode .keyboard .keyrow button{
+   min-height:44px !important;
+   height:44px;
+   padding:2px 0 !important;
+   font-size:15px !important;
+ }
+ .cockpit .map.searchmode .keyboard .keyrow .special,
+ .cockpit .map.searchmode .keyboard .keyrow .go{font-size:12px !important;}
+}
+
+/* Size the browse panel to three full favorites and a quarter of the next.
+   Shared dimensions keep the scroll hint consistent across themes. */
+
+
+/* Search is a stable mode: removing the keyboard must never move the
+   result panel or bring back the app dock. Use the vacated dock width. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit .map.searchmode .keyboard{
+   right:max(7px,env(safe-area-inset-right,0px)) !important;
+   width:56vw !important;
+   max-width:56vw !important;
+   z-index:17;
+ }
+}
+
+/* Restore the route preview to the dock-safe position after a destination
+   is selected. Search temporarily hides the dock, but preview shows it again. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit:has(.nav-preview) .preview.nav-preview{
+   left:calc(max(4px,env(safe-area-inset-left,0px)) + 72px) !important;
+   top:max(8px,env(safe-area-inset-top,0px)) !important;
+   width:min(42vw,370px) !important;
+   max-width:calc(100vw - max(4px,env(safe-area-inset-left,0px)) - 88px) !important;
+   box-sizing:border-box;
+   z-index:16;
+ }
+}
+
+/* iPhone landscape search: reserve disjoint horizontal lanes for suggestions
+   and the keyboard, including the right-hand notch/safe-area inset. */
+
+/* Compact, stable search field with an unframed clear glyph. */
+
+
+/* Search input: visible software caret without triggering the native iOS keyboard. */
+
+@keyframes mevi-nav-caret-blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+@media (orientation:landscape) and (max-height:480px){
+ .cockpit .keyboard .keyrow button.special{background:#35485e;border:1px solid #a2c7e052;}
+ .cockpit .keyboard .keyrow button.go{background:#087eae;border:1px solid #74d8ff8c;}
+}
+
+
+/* Keep the app dock hidden through destination preview, until close or route start. */
+.cockpit:has(.nav-preview) .dock{display:none!important;}
+.cockpit:has(.nav-preview) .body{gap:0!important;}
+.cockpit:has(.nav-preview) .workspace{min-width:0;width:100%;}
+@media (orientation:landscape) and (max-height:480px){
+ .cockpit:has(.nav-preview) .preview.nav-preview{
+   left:max(8px,env(safe-area-inset-left,0px))!important;
+   max-width:calc(100% - 16px)!important;
+ }
+}
+
+
+/* iPhone landscape split: full-height map on the left, edge-aligned app on the right.
+   The map retains its full-screen treatment only when no app panel is open. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit .screen:has(> .side){
+   position:static!important;
+   display:flex!important;
+   overflow:visible!important;
+   gap:0!important;
+ }
+ .cockpit .screen:has(> .side) > .map{
+   position:fixed!important;
+   top:0!important;bottom:0!important;left:0!important;right:auto!important;
+   width:66vw!important;
+   height:100dvh!important;
+   max-width:none!important;
+   flex:none!important;
+   border:0!important;border-radius:0!important;
+   z-index:0;
+ }
+ .cockpit .screen:has(> .side) > .side{
+   position:fixed!important;
+   top:0!important;right:0!important;
+   bottom:0!important;left:auto!important;
+   width:34vw!important;min-width:0!important;max-width:34vw!important;
+   box-sizing:border-box!important;
+   padding-right:8px!important; /* Do not consume panel width with the large landscape safe inset. */
+   height:100dvh!important;max-height:100dvh!important;
+   flex:none!important;overflow:auto;z-index:16;
+   border-radius:12px;
+ }
+ .cockpit:has(.screen > .side) .status{
+   position:fixed!important;
+   top:max(6px,env(safe-area-inset-top,0px))!important;
+   right:calc(34vw + 10px)!important;
+   left:auto!important;
+   max-width:calc(66vw - env(safe-area-inset-left,0px) - 24px)!important;
+   z-index:20;
+ }
+}
+
+/* Compact right-side apps without clipping their controls. */
+@media (orientation:landscape) and (min-width:780px) and (max-width:900px) and (max-height:440px){
+ .cockpit .screen > .side{
+   padding-left:6px!important;
+   overflow-x:hidden!important;
+ }
+ .cockpit .screen > .side.tacho-host{
+   container-type:inline-size;
+ }
+ .cockpit .screen > .side.tacho-host button{
+   min-width:0;
+ }
+}
+
+
+/* The workspace has no title bar: the navigation main page is map only. Clock,
+   build and update live in the dashboard split (nav-dashboard.css). The element
+   only carries the trip row while guidance runs behind another app. */
+.cockpit .workspace > .status{display:none!important;}
+
+/* Standalone Tacho Next embedded as an app, never inherits card scrolling. */
+.tacho-next-host{padding:0!important;overflow:hidden!important;min-height:0!important;display:flex!important;flex-direction:column!important;}
+.tacho-next-frame{display:block;width:100%;height:100%;min-height:0;flex:1;border:0;background:#070b11;border-radius:inherit;}
+.side.tacho-next-host{padding:0!important;}
+
+/* Search stays anchored at the top; dismissed keyboard space becomes list space.
+   Paint keyboard to the map bottom. A small internal gesture margin replaces
+   the external bottom safe-area gap; lateral cutout insets remain unchanged. */
+
+.cockpit .map.searchmode .keyboard{
+ left:var(--nav-search-inset)!important;right:var(--nav-search-inset)!important;
+ top:auto!important;bottom:0!important;
+ width:auto!important;max-width:none!important;height:calc(var(--nav-keyboard-height) + var(--nav-keyboard-foot))!important;max-height:none!important;
+ transform:none!important;padding:5px 5px calc(5px + var(--nav-keyboard-foot))!important;gap:3px!important;
+}
+.cockpit .map.searchmode .keyboard .keyrow{flex:1;min-height:0;gap:5px!important}
+.cockpit .map.searchmode .keyboard .keyrow button{height:auto!important;min-height:44px!important;padding:4px 0!important;font-size:clamp(15px,1.3vw,22px)}
+
+/* Expand downward only, preserving the search field and current scroll position. */
+
+
+/* One keyboard bottom accent only. No second outer border; leave keyboard,
+   rows, keys, and result panel at their existing positions and dimensions. */
+.cockpit .map.searchmode .keyboard{
+ background:transparent!important;
+ border:0!important;
+ box-shadow:none!important;
+ -webkit-backdrop-filter:none!important;
+ backdrop-filter:none!important;
+}
+.cockpit .map.searchmode .keyboard::before{
+ content:"";
+ position:absolute;
+ inset:0;
+ border-radius:21px;
+ background:#24364bef;
+ box-shadow:0 10px 45px #06111d9c;
+ -webkit-backdrop-filter:blur(14px);
+ backdrop-filter:blur(14px);
+ pointer-events:none;
+ z-index:0;
+}
+.cockpit .map.searchmode .keyboard::after{
+ content:"";
+ position:absolute;
+ left:18px;
+ right:18px;
+ bottom:7px;
+ height:1px;
+ background:#a2c5d8;
+ opacity:.8;
+ pointer-events:none;
+ z-index:2;
+}
+.cockpit .map.searchmode .keyboard .keyrow{position:relative;z-index:1}
+
+#mg-native-header-slot { display: none; }
+/* Next manoeuvre and arrival time while another app covers the native map. */
+#mg-native-trip {
+ flex: 1 1 auto;
+ min-width: 0;
+ white-space: nowrap;
+ overflow: hidden;
+ text-overflow: ellipsis;
+ font-weight: 600;
+}
+#mg-native-trip[hidden] { display: none; }
+/* Guidance behind another app: the otherwise hidden header becomes one compact trip row. */
+.cockpit.mg-trip-active .workspace > .status {
+ display: flex !important;
+ position: static !important;
+ flex: 0 0 24px;
+ width: auto;
+ max-width: none;
+ height: 24px;
+ min-height: 24px;
+ box-sizing: border-box;
+ align-items: center;
+ justify-content: center;
+ padding: 0 10px;
+ border: 0;
+ border-radius: 0;
+ background: transparent;
+ backdrop-filter: none;
+ font-size: 13px;
+ line-height: 24px;
+}
+.cockpit.mg-trip-active .workspace > .status > :not(#mg-native-trip) { display: none !important; }
+.cockpit.mg-trip-active #mg-native-trip { flex: 0 1 auto; text-align: center; }
+/* Compact landscape navigation: reserve the full viewport for a ready-route
+   sheet (Android-style), then restore the app dock after the sheet closes.
+   During live guidance the dock stays available, so turn instructions are
+   shifted beyond the physical dock and the device's left safe-area inset. */
+@media(orientation:landscape) and (max-width:1024px) and (max-height:480px){
+ .cockpit:has(.mg-route-preview-pane) .dock{display:none!important}
+ .cockpit:has(.mg-route-preview-pane) .body{gap:0!important}
+ .cockpit:has(.mg-route-preview-pane) .workspace{min-width:0;width:100%}
+}
